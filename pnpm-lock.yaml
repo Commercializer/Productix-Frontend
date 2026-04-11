@@ -125,7 +125,11 @@ importers:
         specifier: ^5.7.0
         version: 5.9.3
 
-  packages/config: {}
+  packages/config:
+    devDependencies:
+      tailwindcss:
+        specifier: ^3.4.17
+        version: 3.4.19
 
   packages/db:
     dependencies:
