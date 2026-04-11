@@ -1,0 +1,9 @@
+{
+  "extends": "../../packages/config/typescript/react-library.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "./dist",
+    "jsx": "react-jsx"
+  },
+  "include": ["stories/**/*.ts", "stories/**/*.tsx", ".storybook/**/*.ts", ".storybook/**/*.tsx"]
+}
