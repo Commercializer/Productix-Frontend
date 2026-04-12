@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Package, BarChart2, Mail, Settings } from "lucide-react";
+import { Home, Package, BarChart2, Mail, Settings, LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/auth-context";
 
 const navItems = [
   { href: "/dashboard", label: "Home", icon: <Home size={22} strokeWidth={1.8} /> },
@@ -14,6 +15,7 @@ const navItems = [
 
 export function DashboardSidebar() {
   const pathname = usePathname();
+  const { signOut } = useAuth();
 
   return (
     <aside className="sidebar">
@@ -46,9 +48,19 @@ export function DashboardSidebar() {
         })}
       </nav>
 
-      {/* Bottom Logo */}
-      <div className="mt-auto pb-4 text-[var(--ds-text-primary)] font-bold text-xl tracking-tighter">
-        PX
+      {/* Logout */}
+      <div className="flex flex-col items-center gap-3 mt-auto pb-4">
+        <button
+          onClick={signOut}
+          className="w-[44px] h-[44px] rounded-[12px] flex items-center justify-center transition-colors text-[var(--ds-text-secondary)] hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10"
+          title="Sign out"
+          id="dashboard-logout-btn"
+        >
+          <LogOut size={22} strokeWidth={1.8} />
+        </button>
+        <span className="text-[var(--ds-text-primary)] font-bold text-xl tracking-tighter">
+          PX
+        </span>
       </div>
     </aside>
   );

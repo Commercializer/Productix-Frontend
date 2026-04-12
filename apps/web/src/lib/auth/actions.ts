@@ -1,37 +1,47 @@
 "use server";
 
-import { signIn, signOut } from "@/auth";
+import { signIn, signOut, auth } from "@/auth";
 import { AuthError } from "next-auth";
-import { revalidatePath } from "next/cache";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
+import { prisma } from "@productix/db";
 
 export async function loginAction(email: string, password: string) {
   try {
-    // Attempt sign in without throwing Next.js redirect from NextAuth
-    // In Server Actions with Credentials, `redirect: false` is supported for Credentials.
-    const result = await signIn("credentials", {
+    await signIn("credentials", {
       email,
       password,
       redirect: false,
     });
-    
-    // In v5 beta, if redirect=false, it returns an error or success object
-    if (result?.error) {
-       return { error: "Authentication failed." };
+  } catch (error) {
+    // NextAuth v5 in server actions may throw NEXT_REDIRECT internally.
+    // We must re-throw it so Next.js handles it properly, not swallow it.
+    if (isRedirectError(error)) {
+      throw error;
     }
 
-    revalidatePath("/", "layout");
-    
-    return { success: true };
-  } catch (error) {
     if (error instanceof AuthError) {
       if (error.type === "CredentialsSignin") {
         return { error: "Invalid credentials or password reset required." };
       }
       return { error: error.message };
     }
-    // If it's a redirect error from next.js, we catch it but signIn w/ redirect: false doesn't throw
     return { error: "Authentication failed." };
   }
+
+  // If we reach here, signIn succeeded. Now determine the correct redirect
+  // target based on the user's role by reading the fresh session.
+  const session = await auth();
+  const role = (session?.user as any)?.role as string | undefined;
+
+  let redirectTo = "/dashboard";
+  if (role === "SUPER_ADMIN") {
+    redirectTo = "/admin";
+  } else if (role === "TENANT_ADMIN") {
+    redirectTo = "/tenant";
+  }
+  // COMPANY_ADMIN and COMPANY_USER → /dashboard (default)
+
+  return { success: true, redirectTo };
 }
 
 export async function logoutAction() {

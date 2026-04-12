@@ -1,11 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { loginAction } from "@/lib/auth/actions";
 
 export function LoginForm() {
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,9 +21,10 @@ export function LoginForm() {
         return;
       }
 
-      // Route to dashboard. The DashboardLayout will further redirect to /admin or /tenant if needed based on the fetched session.
-      router.push("/dashboard");
-      router.refresh();
+      // Use hard navigation (window.location) instead of router.push()
+      // to ensure the browser makes a fresh request with the new session cookie.
+      // The server action returns the correct role-based redirect URL.
+      window.location.href = result.redirectTo || "/dashboard";
     });
   };
 

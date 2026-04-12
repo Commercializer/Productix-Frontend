@@ -11,7 +11,13 @@ export const authConfig = {
       const isOnLogin = nextUrl.pathname.startsWith("/login");
       
       if (isOnLogin) {
-        if (isLoggedIn) return Response.redirect(new URL("/dashboard", nextUrl));
+        if (isLoggedIn) {
+          const role = (auth?.user as any)?.role as string | undefined;
+          let target = "/dashboard";
+          if (role === "SUPER_ADMIN") target = "/admin";
+          else if (role === "TENANT_ADMIN") target = "/tenant";
+          return Response.redirect(new URL(target, nextUrl));
+        }
         return true;
       }
 
