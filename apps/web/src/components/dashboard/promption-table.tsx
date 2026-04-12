@@ -105,9 +105,9 @@ export function PromptionTable({
   return (
     <div className="w-full">
       {/* Table Header / Toolbar */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4 sm:gap-0">
         {/* Search */}
-        <div className="relative w-full max-w-[280px]">
+        <div className="relative w-full sm:max-w-[280px]">
           <Search
             size={15}
             className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--ds-text-muted)]"
@@ -121,7 +121,7 @@ export function PromptionTable({
         </div>
 
         {/* Filter Pills */}
-        <div className="hidden sm:flex items-center gap-2 mx-4 text-[12px]">
+        <div className="hidden lg:flex items-center gap-2 mx-4 text-[12px]">
           <span className="px-2.5 py-1 rounded-full bg-[#f1f5f9] dark:bg-[#1e293b] text-[var(--ds-text-secondary)] font-medium">
             All {promptions.length}
           </span>
@@ -134,8 +134,8 @@ export function PromptionTable({
         </div>
 
         {/* Actions Menu */}
-        <div className="flex items-center gap-3">
-          <div className="hidden lg:flex items-center gap-3 text-[var(--ds-text-muted)] mr-4">
+        <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
+          <div className="hidden xl:flex items-center gap-3 text-[var(--ds-text-muted)] mr-4">
             <button className="hover:text-[var(--ds-text-primary)] transition-colors">
               <LineChart size={16} strokeWidth={2} />
             </button>
@@ -154,7 +154,7 @@ export function PromptionTable({
           </div>
           <Link
             href="/dashboard/new"
-            className="h-[38px] px-4 bg-[#bae6fd] hover:bg-[#7dd3fc] text-black font-medium text-[13px] rounded-md flex items-center justify-center gap-2 transition-colors"
+            className="w-full sm:w-auto h-[38px] px-4 bg-[#bae6fd] hover:bg-[#7dd3fc] text-black font-medium text-[13px] rounded-md flex items-center justify-center gap-2 transition-colors"
           >
             <Plus size={16} strokeWidth={2} />
             Add New
@@ -164,9 +164,9 @@ export function PromptionTable({
 
       {/* Table Container */}
       <div className="bg-[var(--ds-surface)] border border-[var(--ds-border)] rounded-xl">
-        <div className="overflow-visible lg:overflow-visible">
-          <table className="w-full text-[13px] whitespace-nowrap">
-            <thead>
+        <div className="overflow-x-visible sm:overflow-x-auto min-h-[300px]">
+          <table className="w-full text-[13px] whitespace-normal sm:whitespace-nowrap block sm:table">
+            <thead className="hidden sm:table-header-group">
               <tr className="border-b border-[var(--ds-border)] text-[var(--ds-text-secondary)] font-medium">
                 <th className="py-4 px-4 text-left w-[40px]">
                   <div className="w-4 h-4 rounded-[4px] border border-[var(--ds-border)]"></div>
@@ -198,12 +198,12 @@ export function PromptionTable({
                 </th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="block sm:table-row-group gap-4 p-4 sm:p-0">
               {filtered.length === 0 ? (
-                <tr>
+                <tr className="block sm:table-row">
                   <td
                     colSpan={6}
-                    className="py-12 text-center text-[var(--ds-text-muted)]"
+                    className="py-12 text-center text-[var(--ds-text-muted)] block sm:table-cell"
                   >
                     No products found.
                   </td>
@@ -216,12 +216,12 @@ export function PromptionTable({
                   return (
                     <tr
                       key={p.id}
-                      className={`border-b border-[var(--ds-border)] hover:bg-black/5 dark:hover:bg-white/5 transition-colors group relative ${
+                      className={`flex flex-col sm:table-row border border-[var(--ds-border)] sm:border-0 sm:border-b mb-4 sm:mb-0 rounded-xl sm:rounded-none p-4 sm:p-0 bg-white sm:bg-transparent dark:bg-[#1e293b] sm:dark:bg-transparent hover:bg-black/5 dark:hover:bg-white/5 transition-colors group relative ${
                         activeMenu === p.id ? "z-[50]" : "z-[1]"
                       }`}
                     >
                       {/* Checkbox */}
-                      <td className="py-3 px-4">
+                      <td className="absolute top-4 right-4 sm:relative sm:top-auto sm:right-auto py-0 sm:py-3 px-0 sm:px-4 block sm:table-cell">
                         <button
                           onClick={() => toggleSelect(p.id)}
                           className={`w-4 h-4 rounded-[4px] border flex items-center justify-center transition-colors ${
@@ -248,12 +248,12 @@ export function PromptionTable({
                       </td>
 
                       {/* Name */}
-                      <td className="py-3 px-4">
+                      <td className="block sm:table-cell py-1 sm:py-3 px-0 sm:px-4 pr-10 sm:pr-4 mb-3 sm:mb-0">
                         <Link
                           href={`/editor?profileId=${p.id}`}
                           className="flex items-center gap-3 hover:opacity-80 transition-opacity"
                         >
-                          <div className="w-8 h-8 rounded-full bg-[#f1f5f9] dark:bg-[#1e293b] text-[var(--ds-text-secondary)] flex items-center justify-center text-[11px] font-semibold tracking-wider">
+                          <div className="w-8 h-8 rounded-full bg-[#f1f5f9] dark:bg-[#0f172a] sm:dark:bg-[#1e293b] text-[var(--ds-text-secondary)] flex items-center justify-center text-[11px] font-semibold tracking-wider flex-shrink-0">
                             {p.productName.substring(0, 2).toUpperCase()}
                           </div>
                           <div>
@@ -270,14 +270,15 @@ export function PromptionTable({
                       </td>
 
                       {/* Public URL */}
-                      <td className="py-3 px-4">
+                      <td className="block sm:table-cell py-1.5 sm:py-3 px-0 sm:px-4">
                         <div className="flex items-center gap-2">
-                          <span className="text-[var(--ds-text-secondary)] max-w-[180px] truncate font-mono text-[12px]">
+                          <span className="sm:hidden font-medium text-[11px] text-[var(--ds-text-secondary)] mr-1">URL:</span>
+                          <span className="text-[var(--ds-text-secondary)] max-w-[180px] break-all font-mono text-[12px] leading-tight">
                             {publicUrl}
                           </span>
                           <button
                             onClick={() => handleCopyLink(p.slug, p.id)}
-                            className="w-6 h-6 flex items-center justify-center text-[var(--ds-text-muted)] hover:text-[#0284c7] rounded transition-colors"
+                            className="w-6 h-6 flex items-center justify-center text-[var(--ds-text-muted)] hover:text-[#0284c7] rounded transition-colors flex-shrink-0"
                             title="Copy link"
                           >
                             {copiedId === p.id ? (
@@ -291,7 +292,7 @@ export function PromptionTable({
                               href={publicUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="w-6 h-6 flex items-center justify-center text-[var(--ds-text-muted)] hover:text-[#0284c7] rounded transition-colors"
+                              className="w-6 h-6 flex items-center justify-center text-[var(--ds-text-muted)] hover:text-[#0284c7] rounded transition-colors flex-shrink-0"
                               title="Open public page"
                             >
                               <ExternalLink size={12} />
@@ -301,32 +302,38 @@ export function PromptionTable({
                       </td>
 
                       {/* Status */}
-                      <td className="py-3 px-4">
-                        {p.isPublished ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium leading-none bg-[#eafafa] text-[#0f766e]">
-                            <Globe size={10} />
-                            Published
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium leading-none bg-[#f1f5f9] dark:bg-[#1e293b] text-[#475569] dark:text-[#94a3b8]">
-                            <GlobeLock size={10} />
-                            Draft
-                          </span>
-                        )}
+                      <td className="block sm:table-cell py-1.5 sm:py-3 px-0 sm:px-4">
+                        <div className="flex items-center gap-2">
+                          <span className="sm:hidden font-medium text-[11px] text-[var(--ds-text-secondary)] mr-1">Status:</span>
+                          {p.isPublished ? (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium leading-none bg-[#eafafa] text-[#0f766e]">
+                              <Globe size={10} />
+                              Published
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium leading-none bg-[#f1f5f9] dark:bg-[#0f172a] sm:dark:bg-[#1e293b] text-[#475569] dark:text-[#94a3b8]">
+                              <GlobeLock size={10} />
+                              Draft
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       {/* Last Modified */}
-                      <td className="py-3 px-4 text-[var(--ds-text-secondary)]">
-                        {formatDate(p.updatedAt)}
+                      <td className="block sm:table-cell py-1.5 sm:py-3 px-0 sm:px-4 text-[var(--ds-text-secondary)]">
+                        <div className="flex items-center gap-2 text-[12px] sm:text-[13px]">
+                          <span className="sm:hidden font-medium text-[11px] mr-1">Updated:</span>
+                          {formatDate(p.updatedAt)}
+                        </div>
                       </td>
 
                       {/* Actions */}
-                      <td className="py-3 px-4">
+                      <td className="flex sm:table-cell justify-start sm:justify-start items-center gap-2 py-3 sm:py-3 px-0 sm:px-4 mt-3 sm:mt-0 border-t border-[var(--ds-border)] sm:border-0 pt-3 sm:pt-3">
                         <div className="flex items-center gap-2">
                           {/* Sweep (Design) Button */}
                           <Link
                             href={`/editor?profileId=${p.id}`}
-                            className="w-9 h-9 flex items-center justify-center text-[#0f172a] dark:text-white bg-white dark:bg-[#0f172a] rounded-[10px] border-[1.5px] border-[#e2e8f0] dark:border-[#334155] hover:border-[#bae6fd] hover:text-[#0284c7] hover:bg-[#f0f9ff] dark:hover:bg-[#1e293b] shadow-sm transition-all relative group"
+                            className="w-9 h-9 flex items-center justify-center text-[#0f172a] dark:text-white bg-white dark:bg-[#0f172a] sm:dark:bg-[#1e293b] rounded-[10px] border-[1.5px] border-[#e2e8f0] dark:border-[#334155] hover:border-[#bae6fd] hover:text-[#0284c7] hover:bg-[#f0f9ff] dark:hover:bg-[#334155] shadow-sm transition-all relative group"
                             title="Design / Sweep"
                           >
                             <Brush size={17} strokeWidth={2.5} />
@@ -340,7 +347,7 @@ export function PromptionTable({
                                 slug: p.slug,
                               })
                             }
-                            className="w-9 h-9 flex items-center justify-center text-[#0f172a] dark:text-white bg-white dark:bg-[#0f172a] rounded-[10px] border-[1.5px] border-[#e2e8f0] dark:border-[#334155] hover:border-[#bae6fd] hover:text-[#0284c7] hover:bg-[#f0f9ff] dark:hover:bg-[#1e293b] shadow-sm transition-all"
+                            className="w-9 h-9 flex items-center justify-center text-[#0f172a] dark:text-white bg-white dark:bg-[#0f172a] sm:dark:bg-[#1e293b] rounded-[10px] border-[1.5px] border-[#e2e8f0] dark:border-[#334155] hover:border-[#bae6fd] hover:text-[#0284c7] hover:bg-[#f0f9ff] dark:hover:bg-[#334155] shadow-sm transition-all"
                             title="View QR Code"
                           >
                             <QrCode size={17} strokeWidth={2.5} />
@@ -354,7 +361,7 @@ export function PromptionTable({
                                   activeMenu === p.id ? null : p.id
                                 )
                               }
-                              className="w-9 h-9 flex items-center justify-center text-[#0f172a] dark:text-white bg-white dark:bg-[#0f172a] rounded-[10px] border-[1.5px] border-[#e2e8f0] dark:border-[#334155] hover:border-[#bae6fd] hover:text-[#0284c7] hover:bg-[#f0f9ff] dark:hover:bg-[#1e293b] shadow-sm transition-all"
+                              className="w-9 h-9 flex items-center justify-center text-[#0f172a] dark:text-white bg-white dark:bg-[#0f172a] sm:dark:bg-[#1e293b] rounded-[10px] border-[1.5px] border-[#e2e8f0] dark:border-[#334155] hover:border-[#bae6fd] hover:text-[#0284c7] hover:bg-[#f0f9ff] dark:hover:bg-[#334155] shadow-sm transition-all"
                             >
                               <MoreVertical
                                 size={17}

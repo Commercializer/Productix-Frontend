@@ -35,7 +35,7 @@ export default function AdminLayout({
   if (!user || !isSuperAdmin) return null;
 
   return (
-    <div className="app-shell">
+    <div className="app-shell app-shell--admin">
       <AdminSidebar />
       <main className="app-main">{children}</main>
     </div>
