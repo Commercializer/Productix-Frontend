@@ -52,7 +52,7 @@ export default function NewPromptionPage() {
     const timer = setTimeout(async () => {
       const res = await checkSlugAction(finalSlug);
       if (!res.error) {
-        setSlugAvailable(res.available);
+        setSlugAvailable(res.available ?? null);
       }
       setCheckingSlug(false);
     }, 500);
