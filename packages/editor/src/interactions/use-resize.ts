@@ -61,6 +61,7 @@ export function useResize() {
         el,
         state.activeBreakpoint,
         ab?.width ?? 1440,
+        ab?.height ?? 900,
       );
 
       resizeRef.current = {

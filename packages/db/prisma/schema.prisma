@@ -1,0 +1,454 @@
+// ─────────────────────────────────────────────────────────────
+// Productix — Prisma Schema
+// Multi-tenant product management platform with QR & analytics
+// ─────────────────────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ENUMS
+// ═══════════════════════════════════════════════════════════════
+
+enum UserRole {
+  SUPER_ADMIN
+  TENANT_ADMIN
+  COMPANY_ADMIN
+  COMPANY_USER
+}
+
+enum TenantType {
+  RESELLER
+  CORPORATE
+}
+
+enum SubscriptionPlan {
+  FREE
+  BASIC
+  PREMIUM
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  SUSPENDED
+  CANCELLED
+}
+
+enum SocialPlatform {
+  FACEBOOK
+  INSTAGRAM
+  TWITTER
+  LINKEDIN
+  YOUTUBE
+  TIKTOK
+  PINTEREST
+  SNAPCHAT
+  OTHER
+}
+
+enum QrType {
+  MASTER
+  BATCH
+  SERIAL
+}
+
+enum QrSource {
+  ON_PACKAGE
+  FACEBOOK
+  INSTAGRAM
+  TWITTER
+  LINKEDIN
+  YOUTUBE
+  TIKTOK
+  EMAIL
+  SMS
+  OTHER
+}
+
+enum DeviceType {
+  MOBILE
+  TABLET
+  DESKTOP
+}
+
+enum FeedbackInquiryType {
+  FEEDBACK
+  INQUIRY
+}
+
+enum FeedbackType {
+  DAMAGED_GOODS
+  EXPIRED_ITEM
+  OTHER
+}
+
+enum FeedbackStatus {
+  NEW
+  IN_PROGRESS
+  RESPONDED
+  CLOSED
+}
+
+// ═══════════════════════════════════════════════════════════════
+// AUTHENTICATION & AUTHORIZATION
+// ═══════════════════════════════════════════════════════════════
+
+/// DO NOT store plain-text passwords here! Store bcrypt hashes in `passwordHash`.
+model User {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email        String    @unique
+  passwordHash String?   @map("password_hash")
+  role         UserRole  @default(COMPANY_USER)
+  isActive     Boolean   @default(true) @map("is_active")
+  lastSignInAt DateTime? @map("last_sign_in_at") @db.Timestamptz
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Organizational memberships
+  tenantAdmin  TenantAdmin?
+  companyAdmin CompanyAdmin?
+  companyUser  CompanyUser?
+
+  // Activity
+  feedbackResponses FeedbackResponse[]
+
+  @@map("users")
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TENANT MANAGEMENT
+// ═══════════════════════════════════════════════════════════════
+
+/// Root organizational unit. Tenants can be resellers or corporates.
+model Tenant {
+  id                    String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                  String     @db.VarChar(255)
+  email                 String     @db.VarChar(255)
+  customShareableDomain String?    @map("custom_shareable_domain") @db.VarChar(255)
+  customLoginDomain     String?    @map("custom_login_domain") @db.VarChar(255)
+  logoUrl               String?    @map("logo_url") @db.VarChar(500)
+  themeColor            String?    @map("theme_color") @db.VarChar(7)
+  tenantWebsiteUrl      String?    @map("tenant_website_url") @db.VarChar(500)
+  maximumBrandProfiles  Int        @default(5) @map("maximum_brand_profiles")
+  maximumProducts       Int        @default(50) @map("maximum_products")
+  maxCompanies          Int?       @map("max_companies") // null = unlimited
+  tenantType            TenantType @map("tenant_type")
+  isActive              Boolean    @default(true) @map("is_active")
+  createdAt             DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  admins    TenantAdmin[]
+  companies Company[]
+
+  @@map("tenants")
+}
+
+/// Junction: User ↔ Tenant (admin relationship)
+model TenantAdmin {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  userId    String   @unique @map("user_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("tenant_admins")
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COMPANY & TENANT RELATIONSHIP
+// ═══════════════════════════════════════════════════════════════
+
+/// Companies belong to a Tenant and contain Brand Profiles & Products.
+model Company {
+  id                   String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId             String             @map("tenant_id") @db.Uuid
+  name                 String             @db.VarChar(255)
+  email                String             @db.VarChar(255)
+  businessUsername     String             @map("business_username") @db.VarChar(255)
+  customDomain         String?            @map("custom_domain") @db.VarChar(255)
+  logoUrl              String?            @map("logo_url") @db.VarChar(500)
+  maximumBrandProfiles Int                @default(3) @map("maximum_brand_profiles")
+  maximumProducts      Int                @default(20) @map("maximum_products")
+  companyWebsiteUrl    String?            @map("company_website_url") @db.VarChar(500)
+  subscriptionPlan     SubscriptionPlan   @default(FREE) @map("subscription_plan")
+  subscriptionStatus   SubscriptionStatus @default(ACTIVE) @map("subscription_status")
+  maximumUsers         Int                @default(5) @map("maximum_users")
+  subscriptionAmount   Decimal?           @map("subscription_amount") @db.Decimal(10, 2)
+  isActive             Boolean            @default(true) @map("is_active")
+  createdAt            DateTime           @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt            DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  tenant            Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  admins            CompanyAdmin[]
+  users             CompanyUser[]
+  socialAccounts    CompanySocialAccount[]
+  brandProfiles     BrandProfile[]
+  products          Product[]
+  feedbackInquiries FeedbackInquiry[]
+
+  @@index([tenantId])
+  @@map("companies")
+}
+
+/// Junction: User ↔ Company (admin relationship)
+model CompanyAdmin {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId String   @map("company_id") @db.Uuid
+  userId    String   @unique @map("user_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@map("company_admins")
+}
+
+/// Junction: User ↔ Company (regular user relationship)
+model CompanyUser {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId String   @map("company_id") @db.Uuid
+  userId    String   @unique @map("user_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@map("company_users")
+}
+
+/// Social media accounts linked to a company
+model CompanySocialAccount {
+  id        String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId String         @map("company_id") @db.Uuid
+  platform  SocialPlatform
+  url       String         @db.VarChar(500)
+  createdAt DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("company_social_accounts")
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PRODUCT & BRAND PROFILE MANAGEMENT
+// ═══════════════════════════════════════════════════════════════
+
+/// Brand profiles within a company — provides branding context for products.
+model BrandProfile {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId    String   @map("company_id") @db.Uuid
+  brandName    String   @map("brand_name") @db.VarChar(255)
+  brandLogoUrl String?  @map("brand_logo_url") @db.VarChar(500)
+  themeColor   String?  @map("theme_color") @db.VarChar(7)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  company        Company                     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  products       Product[]
+  socialAccounts BrandProfileSocialAccount[]
+
+  @@index([companyId])
+  @@map("brand_profiles")
+}
+
+/// Social media accounts linked to a brand profile
+model BrandProfileSocialAccount {
+  id             String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  brandProfileId String         @map("brand_profile_id") @db.Uuid
+  platform       SocialPlatform
+  url            String         @db.VarChar(500)
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  brandProfile BrandProfile @relation(fields: [brandProfileId], references: [id], onDelete: Cascade)
+
+  @@map("brand_profile_social_accounts")
+}
+
+/// Core product entity — belongs to a company, optionally under a brand profile.
+model Product {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  brandProfileId      String?  @map("brand_profile_id") @db.Uuid
+  companyId           String   @map("company_id") @db.Uuid
+  defaultLanguageCode String   @default("en") @map("default_language_code") @db.VarChar(10)
+  isActive            Boolean  @default(true) @map("is_active")
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  brandProfile      BrandProfile?     @relation(fields: [brandProfileId], references: [id], onDelete: SetNull)
+  company           Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  profiles          ProductProfile[]
+  linkedFrom        LinkedProduct[]   @relation("SourceProduct")
+  linkedTo          LinkedProduct[]   @relation("LinkedProduct")
+  qrCodes           QrCode[]
+  qrScans           QrScan[]
+  feedbackInquiries FeedbackInquiry[]
+
+  @@index([companyId])
+  @@map("products")
+}
+
+/// Localized product profile — one per language per product.
+model ProductProfile {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productId       String    @map("product_id") @db.Uuid
+  languageCode    String    @map("language_code") @db.VarChar(10)
+  slug            String    @unique
+  productName     String    @map("product_name") @db.VarChar(255)
+  tagline         String?   @db.VarChar(500)
+  logoUrl         String?   @map("logo_url") @db.VarChar(500)
+  themeColor      String    @default("#000000") @map("theme_color") @db.VarChar(7)
+  description     String    @db.Text
+  redirectUrl     String?   @map("redirect_url") @db.VarChar(500)
+  redirectEnabled Boolean   @default(false) @map("redirect_enabled")
+  content         Json      @default("{}")
+  isPublished     Boolean   @default(false) @map("is_published")
+  publishedAt     DateTime? @map("published_at") @db.Timestamptz
+  /// SEO meta description for the public page
+  metaDescription String?   @map("meta_description") @db.VarChar(500)
+  /// Open Graph image URL for social sharing
+  ogImageUrl      String?   @map("og_image_url") @db.VarChar(500)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, languageCode])
+  @@index([productId])
+  @@map("product_profiles")
+}
+
+/// Cross-sell / related product links
+model LinkedProduct {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productId       String   @map("product_id") @db.Uuid
+  linkedProductId String   @map("linked_product_id") @db.Uuid
+  displayOrder    Int      @default(0) @map("display_order")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  product       Product @relation("SourceProduct", fields: [productId], references: [id], onDelete: Cascade)
+  linkedProduct Product @relation("LinkedProduct", fields: [linkedProductId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@map("linked_products")
+}
+
+// ═══════════════════════════════════════════════════════════════
+// QR CODE SYSTEM
+// ═══════════════════════════════════════════════════════════════
+
+/// QR codes linked to products — supports master, batch, and serial types.
+model QrCode {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productId      String    @map("product_id") @db.Uuid
+  qrType         QrType    @map("qr_type")
+  qrUrl          String?   @map("qr_url") @db.VarChar(500)
+  serialNumber   String?   @map("serial_number") @db.VarChar(255)
+  batchNumber    String?   @map("batch_number") @db.VarChar(255)
+  campaignName   String?   @map("campaign_name") @db.VarChar(255)
+  productionDate DateTime? @map("production_date") @db.Date
+  isActive       Boolean   @default(true) @map("is_active")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  product Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  scans   QrScan[]
+
+  @@unique([productId, qrType], map: "qr_codes_product_master_unique")
+  @@unique([productId, serialNumber], map: "qr_codes_product_serial_unique")
+  @@index([productId])
+  @@index([serialNumber])
+  @@index([batchNumber])
+  @@map("qr_codes")
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ANALYTICS & TRACKING
+// ═══════════════════════════════════════════════════════════════
+
+/// QR scan events — tracks every scan with geo + device metadata.
+model QrScan {
+  id         String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  qrCodeId   String      @map("qr_code_id") @db.Uuid
+  productId  String      @map("product_id") @db.Uuid
+  qrType     QrType      @map("qr_type")
+  scannedAt  DateTime    @default(now()) @map("scanned_at") @db.Timestamptz
+  qrSource   QrSource?   @map("qr_source")
+  ipAddress  String?     @map("ip_address") @db.VarChar(45)
+  country    String?     @db.VarChar(100)
+  city       String?     @db.VarChar(100)
+  deviceType DeviceType? @map("device_type")
+  browser    String?     @db.VarChar(100)
+
+  qrCode  QrCode  @relation(fields: [qrCodeId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([qrCodeId])
+  @@index([productId])
+  @@index([scannedAt])
+  @@map("qr_scans")
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FEEDBACK & INQUIRY SYSTEM
+// ═══════════════════════════════════════════════════════════════
+
+/// Customer feedback and inquiries — can be submitted anonymously.
+model FeedbackInquiry {
+  id           String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId    String              @map("company_id") @db.Uuid
+  productId    String?             @map("product_id") @db.Uuid
+  qrId         String?             @map("qr_id") @db.Uuid
+  type         FeedbackInquiryType
+  feedbackType FeedbackType?       @map("feedback_type")
+  name         String              @db.VarChar(255)
+  email        String              @db.VarChar(255)
+  phoneNumber  String?             @map("phone_number") @db.VarChar(50)
+  description  String              @db.Text
+  imageUrl     String?             @map("image_url") @db.VarChar(500)
+  status       FeedbackStatus      @default(NEW)
+  createdAt    DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company   Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  product   Product?           @relation(fields: [productId], references: [id], onDelete: SetNull)
+  responses FeedbackResponse[]
+
+  @@index([companyId])
+  @@index([productId])
+  @@map("feedback_inquiries")
+}
+
+/// Staff responses to feedback/inquiries
+model FeedbackResponse {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  feedbackInquiryId String   @map("feedback_inquiry_id") @db.Uuid
+  userId            String?  @map("user_id") @db.Uuid
+  responderName     String?  @map("responder_name") @db.VarChar(255)
+  responderEmail    String?  @map("responder_email") @db.VarChar(255)
+  responderPhone    String?  @map("responder_phone") @db.VarChar(50)
+  responseText      String   @map("response_text") @db.Text
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  feedbackInquiry FeedbackInquiry @relation(fields: [feedbackInquiryId], references: [id], onDelete: Cascade)
+  user            User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([feedbackInquiryId])
+  @@map("feedback_responses")
+}

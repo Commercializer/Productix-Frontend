@@ -9,7 +9,7 @@ import { registerElement, type ElementRenderProps, type PropertyPanelProps } fro
 
 /* ─── Component ─────────────────────────────── */
 
-function ButtonElementComponent({ props, isEditing }: ElementRenderProps) {
+function ButtonElementComponent({ props, isEditing, scaleFactor = 1 }: ElementRenderProps) {
   const text = (props.text as string) || "Click Me";
   const bgColor = (props.bgColor as string) || "#3b82f6";
   const textColor = (props.textColor as string) || "#ffffff";
@@ -17,7 +17,11 @@ function ButtonElementComponent({ props, isEditing }: ElementRenderProps) {
   const fontSize = (props.fontSize as number) || 15;
   const fontWeight = (props.fontWeight as string) || "600";
   const variant = (props.variant as string) || "filled";
-  const url = (props.url as string) || "#";
+
+  // Scale font size and padding proportionally
+  const scaledFontSize = Math.round(fontSize * scaleFactor);
+  const scaledPadH = Math.round(16 * scaleFactor);
+  const scaledBorderRadius = Math.round(borderRadius * scaleFactor);
 
   const style: React.CSSProperties = {
     width: "100%",
@@ -25,14 +29,14 @@ function ButtonElementComponent({ props, isEditing }: ElementRenderProps) {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    borderRadius,
-    fontSize,
+    borderRadius: scaledBorderRadius,
+    fontSize: scaledFontSize,
     fontWeight,
     cursor: isEditing ? "default" : "pointer",
     transition: "all 0.15s ease",
     textDecoration: "none",
     letterSpacing: "0.01em",
-    padding: "0 16px",
+    padding: `0 ${scaledPadH}px`,
     ...(variant === "filled"
       ? { background: bgColor, color: textColor, border: "none" }
       : variant === "outline"

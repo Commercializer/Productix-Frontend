@@ -49,7 +49,8 @@ import "../elements";
 
 interface EditRendererProps {
   initialDocument?: CanvasDocument;
-  onSave?: (document: CanvasDocument) => void;
+  onSave?: (document: CanvasDocument) => Promise<void> | void;
+  onPublish?: (document: CanvasDocument) => Promise<void> | void;
 }
 
 /* ─── Device Presets for the toolbar ───────── */
@@ -93,7 +94,7 @@ function computeFitZoom(
   return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, Math.min(fitW, fitH, 1)));
 }
 
-export function EditRenderer({ initialDocument, onSave }: EditRendererProps) {
+export function EditRenderer({ initialDocument, onSave, onPublish }: EditRendererProps) {
   const loadDocument = useCanvasStore((s) => s.loadDocument);
   const document = useCanvasStore((s) => s.document);
   const zoom = useCanvasStore((s) => s.zoom);
@@ -113,6 +114,8 @@ export function EditRenderer({ initialDocument, onSave }: EditRendererProps) {
   const setActiveBreakpoint = useCanvasStore((s) => s.setActiveBreakpoint);
 
   const [leftTab, setLeftTab] = useState<"elements" | "layers" | "artboard">("elements");
+  const [lastSavedJSON, setLastSavedJSON] = useState<string>("");
+  const [isSaving, setIsSaving] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
   const hasAutoFit = useRef(false);
 
@@ -133,6 +136,7 @@ export function EditRenderer({ initialDocument, onSave }: EditRendererProps) {
   useEffect(() => {
     if (initialDocument) {
       loadDocument(initialDocument);
+      setLastSavedJSON(JSON.stringify(initialDocument));
       hasAutoFit.current = false;
     }
   }, [initialDocument, loadDocument]);
@@ -258,12 +262,27 @@ export function EditRenderer({ initialDocument, onSave }: EditRendererProps) {
     });
   }, [setActiveBreakpoint, document.artboards, setZoom, centerCanvas]);
 
-  // ── Save ──
-  const handleSave = useCallback(() => {
+  // ── Document State ──
+  const documentJSON = JSON.stringify(document);
+  const isDirty = documentJSON !== lastSavedJSON;
+
+  // ── Save / Publish ──
+  const handleAction = useCallback(async () => {
     const state = useCanvasStore.getState();
     const doc = state.document;
-    onSave?.(doc);
-  }, [onSave]);
+    
+    setIsSaving(true);
+    try {
+      if (isDirty) {
+        await onSave?.(doc);
+        setLastSavedJSON(JSON.stringify(doc));
+      } else {
+        await onPublish?.(doc);
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  }, [isDirty, onSave, onPublish]);
 
   // ── Canvas pointer handlers ──
   // Combined: pan events + deselect on background click
@@ -486,10 +505,17 @@ export function EditRenderer({ initialDocument, onSave }: EditRendererProps) {
 
           <button
             type="button"
-            onClick={handleSave}
-            className="flex items-center h-8 px-4 rounded-md bg-blue-600 text-xs font-semibold text-white hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm"
+            onClick={handleAction}
+            disabled={isSaving}
+            className="flex items-center justify-center min-w-[84px] h-8 px-4 rounded-md bg-[#bae6fd] text-black hover:bg-[#7dd3fc] text-xs font-medium transition-colors shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            {t("toolbar.save")}
+            {isSaving && (
+              <svg className="animate-spin -ml-1 mr-2 h-3 w-3 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            )}
+            {isSaving ? (isDirty ? "Saving..." : "Publishing...") : (isDirty ? t("toolbar.save") : "Publish")}
           </button>
         </div>
       </header>

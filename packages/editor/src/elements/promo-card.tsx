@@ -9,7 +9,7 @@ import React from "react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
 import { ImageUploadWidget } from "../media/image-upload-widget";
 
-function PromoCardComponent({ props }: ElementRenderProps) {
+function PromoCardComponent({ props, scaleFactor = 1 }: ElementRenderProps) {
   const title = (props.title as string) || "Special Offer";
   const subtitle = (props.subtitle as string) || "Limited time only";
   const ctaText = (props.ctaText as string) || "Learn More";
@@ -20,6 +20,8 @@ function PromoCardComponent({ props }: ElementRenderProps) {
   const textColor = (props.textColor as string) || "#ffffff";
   const borderRadius = (props.borderRadius as number) || 20;
   const overlayOpacity = (props.overlayOpacity as number) || 0.5;
+
+  const s = scaleFactor;
 
   return (
     <div
@@ -34,7 +36,7 @@ function PromoCardComponent({ props }: ElementRenderProps) {
         display: "flex",
         flexDirection: "column",
         justifyContent: "flex-end",
-        padding: 24,
+        padding: Math.round(24 * s),
       }}
     >
       {bgImage && (
@@ -49,18 +51,18 @@ function PromoCardComponent({ props }: ElementRenderProps) {
         </>
       )}
       <div style={{ position: "relative", zIndex: 1 }}>
-        <h3 style={{ fontSize: 22, fontWeight: 700, marginBottom: 6, lineHeight: 1.2 }}>{title}</h3>
-        <p style={{ fontSize: 14, opacity: 0.85, marginBottom: 16, lineHeight: 1.5 }}>{subtitle}</p>
+        <h3 style={{ fontSize: Math.round(22 * s), fontWeight: 700, marginBottom: Math.round(6 * s), lineHeight: 1.2 }}>{title}</h3>
+        <p style={{ fontSize: Math.round(14 * s), opacity: 0.85, marginBottom: Math.round(16 * s), lineHeight: 1.5 }}>{subtitle}</p>
         {ctaText && (
           <span
             style={{
               display: "inline-flex",
               alignItems: "center",
-              padding: "8px 20px",
+              padding: `${Math.round(8 * s)}px ${Math.round(20 * s)}px`,
               background: "rgba(255,255,255,0.2)",
               backdropFilter: "blur(8px)",
-              borderRadius: 8,
-              fontSize: 13,
+              borderRadius: Math.round(8 * s),
+              fontSize: Math.round(13 * s),
               fontWeight: 600,
               cursor: "pointer",
             }}

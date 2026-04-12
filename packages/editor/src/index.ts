@@ -6,6 +6,16 @@
 export { useCanvasStore, type CanvasState } from "./engine/canvas-store";
 export { Artboard } from "./engine/artboard";
 export { ElementWrapper } from "./engine/element-wrapper";
+export {
+  isFlowElement,
+  getEffectiveLayout,
+  getEffectiveFlexContainer,
+  computeElementLayoutCSS,
+  computeFlexContainerCSS,
+  generateResponsiveStylesheet,
+  createFlowLayout,
+  createFlexContainer,
+} from "./engine/layout-engine";
 
 // ── Renderers ──
 export { EditRenderer } from "./renderer/edit-renderer";
@@ -52,9 +62,12 @@ export { generateElementId, generateArtboardId } from "./utils/id";
 export {
   getEffectiveTransform,
   autoScaleTransform,
+  autoScaleTransformByWidth,
   getArtboardPreviewWidth,
   getArtboardPreviewHeight,
+  isElementInFlow,
 } from "./utils/responsive";
+export { exportToHtml } from "./utils/export-html";
 
 // ── Media system ──
 export { MediaProvider, useMediaLibrary } from "./media/media-context";

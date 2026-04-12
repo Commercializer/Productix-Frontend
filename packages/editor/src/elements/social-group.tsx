@@ -17,7 +17,7 @@ const SOCIAL_ICONS: Record<string, string> = {
   tiktok: "♪",
 };
 
-function SocialGroupComponent({ props }: ElementRenderProps) {
+function SocialGroupComponent({ props, scaleFactor = 1 }: ElementRenderProps) {
   const platforms = (props.platforms as string[]) || ["twitter", "instagram", "linkedin"];
   const iconSize = (props.iconSize as number) || 36;
   const gap = (props.gap as number) || 12;
@@ -25,21 +25,25 @@ function SocialGroupComponent({ props }: ElementRenderProps) {
   const iconBg = (props.iconBg as string) || "#1a1a2e";
   const borderRadius = (props.borderRadius as number) || 999;
 
+  const s = scaleFactor;
+  const scaledIconSize = Math.round(iconSize * s);
+  const scaledGap = Math.round(gap * s);
+
   return (
-    <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap }}>
+    <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: scaledGap, flexWrap: "wrap" }}>
       {platforms.map((platform: string) => (
         <div
           key={platform}
           style={{
-            width: iconSize,
-            height: iconSize,
+            width: scaledIconSize,
+            height: scaledIconSize,
             borderRadius,
             backgroundColor: iconBg,
             color: iconColor,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: iconSize * 0.45,
+            fontSize: scaledIconSize * 0.45,
             fontWeight: 700,
             cursor: "pointer",
             transition: "transform 0.15s ease",

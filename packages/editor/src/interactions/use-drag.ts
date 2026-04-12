@@ -53,6 +53,7 @@ export function useDrag() {
         el,
         state.activeBreakpoint,
         ab?.width ?? 1440,
+        ab?.height ?? 900,
       );
 
       dragRef.current = {
@@ -100,7 +101,7 @@ export function useDrag() {
       );
       const abW = ab?.width ?? 1440;
       const abH = ab?.height ?? 900;
-      const effectiveT = getEffectiveTransform(el, state.activeBreakpoint, abW);
+      const effectiveT = getEffectiveTransform(el, state.activeBreakpoint, abW, abH);
 
       const movingTransform: Transform = {
         ...effectiveT,
@@ -111,7 +112,7 @@ export function useDrag() {
       // Get other elements transforms for snapping (using effective transforms)
       const otherTransforms = Object.values(state.document.elements)
         .filter((e) => e.id !== drag.elementId && e.visible)
-        .map((e) => getEffectiveTransform(e, state.activeBreakpoint, abW));
+        .map((e) => getEffectiveTransform(e, state.activeBreakpoint, abW, abH));
 
       // Use breakpoint-appropriate artboard dimensions for snap
       const previewW = state.activeBreakpoint === "desktop"

@@ -34,6 +34,19 @@ export default function DashboardPage() {
             >
               Preview
             </Link>
+            <div className="h-4 w-px bg-gray-200" />
+            <Link
+              href="/login"
+              className="text-sm font-medium text-gray-700 transition-colors hover:text-gray-900"
+            >
+              Log in
+            </Link>
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center justify-center rounded-full bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800"
+            >
+              Dashboard
+            </Link>
           </nav>
         </div>
       </header>

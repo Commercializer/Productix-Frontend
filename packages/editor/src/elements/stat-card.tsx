@@ -7,7 +7,7 @@
 import React from "react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
 
-function StatCardComponent({ props }: ElementRenderProps) {
+function StatCardComponent({ props, scaleFactor = 1 }: ElementRenderProps) {
   const value = (props.value as string) || "0";
   const label = (props.label as string) || "Metric";
   const trend = (props.trend as string) || "";
@@ -25,6 +25,8 @@ function StatCardComponent({ props }: ElementRenderProps) {
     lg: "0 8px 30px rgba(0,0,0,0.12)",
   };
 
+  const s = scaleFactor;
+
   return (
     <div
       style={{
@@ -37,20 +39,20 @@ function StatCardComponent({ props }: ElementRenderProps) {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        padding: 16,
-        gap: 4,
+        padding: Math.round(16 * s),
+        gap: Math.round(4 * s),
       }}
     >
-      <span style={{ fontSize: 24 }}>{icon}</span>
-      <span style={{ fontSize: 28, fontWeight: 800, color: valueColor, letterSpacing: "-0.02em" }}>{value}</span>
-      <span style={{ fontSize: 12, fontWeight: 500, color: labelColor, textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</span>
+      <span style={{ fontSize: Math.round(24 * s) }}>{icon}</span>
+      <span style={{ fontSize: Math.round(28 * s), fontWeight: 800, color: valueColor, letterSpacing: "-0.02em" }}>{value}</span>
+      <span style={{ fontSize: Math.round(12 * s), fontWeight: 500, color: labelColor, textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</span>
       {trend && (
         <span
           style={{
-            fontSize: 11,
+            fontSize: Math.round(11 * s),
             fontWeight: 600,
             color: trend.startsWith("-") ? "#ef4444" : "#22c55e",
-            marginTop: 2,
+            marginTop: Math.round(2 * s),
           }}
         >
           {trend}

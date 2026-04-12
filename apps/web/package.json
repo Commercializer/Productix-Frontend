@@ -11,17 +11,26 @@
     "clean": "rm -rf .next .turbo"
   },
   "dependencies": {
+    "@auth/core": "^0.41.0",
+    "@productix/db": "workspace:*",
     "@productix/editor": "workspace:*",
     "@productix/types": "workspace:*",
     "@productix/ui": "workspace:*",
     "@productix/utils": "workspace:*",
+    "bcryptjs": "^2.4.3",
     "lucide-react": "^0.468.0",
     "next": "^15.1.0",
+    "next-auth": "beta",
+    "next-themes": "^0.4.6",
+    "qrcode": "^1.5.4",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "recharts": "^3.8.1"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22.0.0",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "autoprefixer": "^10.4.20",

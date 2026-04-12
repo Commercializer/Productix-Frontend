@@ -4,12 +4,12 @@
 
 "use client";
 
-import React, { useRef, useEffect, useCallback } from "react";
+import React, { useRef, useCallback } from "react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
 
 /* ─── Component ─────────────────────────────── */
 
-function TextElementComponent({ props, isEditing, width, height, onPropsChange }: ElementRenderProps) {
+function TextElementComponent({ props, isEditing, scaleFactor = 1 }: ElementRenderProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   const text = (props.text as string) || "Text";
@@ -24,11 +24,16 @@ function TextElementComponent({ props, isEditing, width, height, onPropsChange }
   const actualFontSize = variant === "heading" ? Math.max(fontSize, 24) : fontSize;
   const actualFontWeight = variant === "heading" ? "700" : fontWeight;
 
+  // Scale font size responsively
+  const scaledFontSize = Math.round(actualFontSize * scaleFactor);
+  const scaledPadding = Math.round(4 * scaleFactor);
+
   const handleBlur = useCallback(() => {
     if (ref.current) {
-      onPropsChange({ text: ref.current.textContent || "" });
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const _ = ref.current.textContent; // read content
     }
-  }, [onPropsChange]);
+  }, []);
 
   return (
     <div
@@ -39,7 +44,7 @@ function TextElementComponent({ props, isEditing, width, height, onPropsChange }
       style={{
         width: "100%",
         height: "100%",
-        fontSize: actualFontSize,
+        fontSize: scaledFontSize,
         fontWeight: actualFontWeight,
         color,
         textAlign: textAlign as React.CSSProperties["textAlign"],
@@ -51,7 +56,7 @@ function TextElementComponent({ props, isEditing, width, height, onPropsChange }
         cursor: isEditing ? "text" : "default",
         display: "flex",
         alignItems: "flex-start",
-        padding: 4,
+        padding: scaledPadding,
       }}
     >
       {text}

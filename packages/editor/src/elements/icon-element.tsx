@@ -13,7 +13,7 @@ const COMMON_ICONS = [
   "✨", "🔔", "📧", "🏠", "⚙️", "👤", "📷", "🎵", "📅", "🔗",
 ];
 
-function IconElementComponent({ props }: ElementRenderProps) {
+function IconElementComponent({ props, scaleFactor = 1 }: ElementRenderProps) {
   const icon = (props.icon as string) || "⭐";
   const color = (props.color as string) || "#3b82f6";
   const fontSize = (props.fontSize as number) || 48;
@@ -28,7 +28,7 @@ function IconElementComponent({ props }: ElementRenderProps) {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        fontSize,
+        fontSize: Math.round(fontSize * scaleFactor),
         color,
         backgroundColor: bgColor,
         borderRadius,

@@ -12,7 +12,7 @@ import React from "react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
 import { ImageUploadWidget } from "../media/image-upload-widget";
 
-function ContainerElementComponent({ props }: ElementRenderProps) {
+function ContainerElementComponent({ props, scaleFactor = 1 }: ElementRenderProps) {
   const bgColor = (props.bgColor as string) || "transparent";
   const borderRadius = (props.borderRadius as number) || 0;
   const borderColor = (props.borderColor as string) || "transparent";
@@ -38,7 +38,7 @@ function ContainerElementComponent({ props }: ElementRenderProps) {
         background,
         borderRadius,
         border: borderWidth > 0 ? `${borderWidth}px solid ${borderColor}` : "none",
-        padding,
+        padding: Math.round(padding * scaleFactor),
         overflow: "hidden",
         position: "relative",
       }}

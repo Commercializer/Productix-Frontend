@@ -1,0 +1,230 @@
+/* ─────────────────────────────────────────────
+ * Export HTML — Standalone responsive page export
+ *
+ * Generates production-ready HTML/CSS that works
+ * independently in any browser without React.
+ *
+ * Features:
+ * - Full HTML5 document with viewport meta tag
+ * - Mobile-first responsive CSS with media queries
+ * - Semantic HTML structure
+ * - Google Fonts integration
+ * - No JavaScript runtime required
+ * - Proper viewport scaling for real devices
+ * - Prevents horizontal overflow on mobile
+ * ──────────────────────────────────────────── */
+
+import type { CanvasDocument, ElementNode, Artboard } from "@productix/types";
+import { DEFAULT_FLEX_CONTAINER } from "@productix/types";
+import { generateResponsiveStylesheet } from "../engine/layout-engine";
+
+/* ─── Element HTML Generators ──────────────── */
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/**
+ * Generate HTML for a single element based on its type and props.
+ */
+function elementToHtml(el: ElementNode, isFlowMode: boolean): string {
+  const type = el.type;
+  const p = el.props as Record<string, unknown>;
+
+  switch (type) {
+    case "text":
+    case "heading": {
+      const text = (p.text as string) || "";
+      const fontSize = (p.fontSize as number) || 16;
+      const fontWeight = (p.fontWeight as string) || "400";
+      const color = (p.color as string) || "#1a1a2e";
+      const textAlign = (p.textAlign as string) || "left";
+      const lineHeight = (p.lineHeight as number) || 1.5;
+      const variant = (p.variant as string) || "paragraph";
+      const actualFontSize = variant === "heading" ? Math.max(fontSize, 24) : fontSize;
+      const actualFontWeight = variant === "heading" ? "700" : fontWeight;
+      const tag = variant === "heading" ? "h2" : "p";
+      return `<${tag} style="font-size:${actualFontSize}px;font-weight:${actualFontWeight};color:${color};text-align:${textAlign};line-height:${lineHeight};margin:0;padding:4px;word-break:break-word;width:100%;">${escapeHtml(text)}</${tag}>`;
+    }
+
+    case "image": {
+      const src = (p.src as string) || "";
+      const alt = (p.alt as string) || "";
+      const objectFit = (p.objectFit as string) || "cover";
+      const borderRadius = (p.borderRadius as number) || 0;
+      if (!src) return `<div style="width:100%;height:100%;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border-radius:${borderRadius}px;"><span style="color:#9ca3af;font-size:14px;">🖼️ No image</span></div>`;
+      return `<img src="${escapeHtml(src)}" alt="${escapeHtml(alt)}" style="width:100%;height:auto;object-fit:${objectFit};border-radius:${borderRadius}px;display:block;max-width:100%;" loading="lazy" />`;
+    }
+
+    case "button": {
+      const text = (p.text as string) || "Click Me";
+      const bgColor = (p.bgColor as string) || "#3b82f6";
+      const textColor = (p.textColor as string) || "#ffffff";
+      const borderRadius = (p.borderRadius as number) || 8;
+      const fontSize = (p.fontSize as number) || 15;
+      const fontWeight = (p.fontWeight as string) || "600";
+      const url = (p.url as string) || "#";
+      const variant = (p.variant as string) || "filled";
+      const baseStyle = `display:inline-flex;align-items:center;justify-content:center;padding:12px 24px;border-radius:${borderRadius}px;font-size:${fontSize}px;font-weight:${fontWeight};text-decoration:none;cursor:pointer;transition:opacity 0.15s;width:100%;box-sizing:border-box;`;
+      const variantStyle = variant === "filled"
+        ? `background:${bgColor};color:${textColor};border:none;`
+        : variant === "outline"
+          ? `background:transparent;color:${bgColor};border:2px solid ${bgColor};`
+          : `background:transparent;color:${bgColor};border:none;text-decoration:underline;`;
+      return `<a href="${escapeHtml(url)}" style="${baseStyle}${variantStyle}">${escapeHtml(text)}</a>`;
+    }
+
+    case "container": {
+      const bgColor = (p.bgColor as string) || "transparent";
+      const borderRadius = (p.borderRadius as number) || 0;
+      const bgImage = (p.bgImage as string) || "";
+      const overlayColor = (p.overlayColor as string) || "";
+      const overlayOpacity = (p.overlayOpacity as number) ?? 0.5;
+      let html = `<div style="width:100%;height:100%;background:${bgColor};border-radius:${borderRadius}px;position:relative;overflow:hidden;">`;
+      if (bgImage) {
+        html += `<img src="${escapeHtml(bgImage)}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;" loading="lazy" />`;
+        if (overlayColor) {
+          html += `<div style="position:absolute;inset:0;background:${overlayColor};opacity:${overlayOpacity};z-index:1;"></div>`;
+        }
+      }
+      html += `</div>`;
+      return html;
+    }
+
+    case "row": {
+      const gap = (p.gap as number) ?? 16;
+      const justify = (p.justifyContent as string) || "flex-start";
+      const align = (p.alignItems as string) || "stretch";
+      const wrap = (p.wrap as string) || "wrap";
+      const padding = (p.padding as number) ?? 16;
+      const bgColor = (p.bgColor as string) || "transparent";
+      const borderRadius = (p.borderRadius as number) ?? 0;
+      return `<div style="display:flex;flex-direction:row;flex-wrap:${wrap};justify-content:${justify};align-items:${align};gap:${gap}px;padding:${padding}px;background:${bgColor};border-radius:${borderRadius}px;width:100%;box-sizing:border-box;"></div>`;
+    }
+
+    case "column": {
+      const padding = (p.padding as number) ?? 16;
+      const bgColor = (p.bgColor as string) || "transparent";
+      const borderRadius = (p.borderRadius as number) ?? 0;
+      const minWidth = (p.minWidth as number) ?? 200;
+      return `<div style="flex:1;min-width:${minWidth}px;padding:${padding}px;background:${bgColor};border-radius:${borderRadius}px;box-sizing:border-box;"></div>`;
+    }
+
+    case "divider": {
+      const color = (p.color as string) || "#e5e7eb";
+      const thickness = (p.thickness as number) || 1;
+      const style = (p.style as string) || "solid";
+      return `<hr style="border:none;border-top:${thickness}px ${style} ${color};margin:8px 0;width:100%;" />`;
+    }
+
+    case "icon": {
+      const icon = (p.icon as string) || "⭐";
+      const iconSize = (p.size as number) || 32;
+      const color = (p.color as string) || "#6b7280";
+      return `<span style="font-size:${iconSize}px;color:${color};display:flex;align-items:center;justify-content:center;width:100%;height:100%;">${icon}</span>`;
+    }
+
+    case "badge": {
+      const text = (p.text as string) || "Badge";
+      const bgColor = (p.bgColor as string) || "#3b82f6";
+      const textColor = (p.textColor as string) || "#ffffff";
+      const fontSize = (p.fontSize as number) || 12;
+      return `<span style="display:inline-flex;align-items:center;padding:4px 12px;background:${bgColor};color:${textColor};font-size:${fontSize}px;font-weight:600;border-radius:999px;">${escapeHtml(text)}</span>`;
+    }
+
+    default: {
+      // Generic fallback
+      return `<div style="width:100%;height:100%;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border-radius:4px;"><span style="color:#9ca3af;font-size:12px;">${type}</span></div>`;
+    }
+  }
+}
+
+/* ─── Full Page Export ─────────────────────── */
+
+/**
+ * Generate a complete, standalone HTML page from a canvas document.
+ * The output is fully responsive and works on any device without
+ * JavaScript.
+ */
+export function exportToHtml(doc: CanvasDocument): string {
+  const responsiveCSS = generateResponsiveStylesheet(doc);
+
+  const sections: string[] = [];
+
+  for (const ab of doc.artboards) {
+    const abElements = Object.values(doc.elements)
+      .filter((el) => ab.elements.includes(el.id) && el.visible)
+      .sort((a, b) => a.zIndex - b.zIndex);
+
+    const flowElements = abElements.filter((el) => el.layout?.layoutMode === "flow");
+    const absoluteElements = abElements.filter((el) => !el.layout || el.layout.layoutMode === "absolute");
+    const hasFlow = flowElements.length > 0;
+
+    // Build artboard styles
+    const flexProps = ab.flexContainer ?? DEFAULT_FLEX_CONTAINER;
+    let sectionStyle = `position:relative;width:100%;max-width:100%;overflow-x:hidden;background-color:${ab.backgroundColor};`;
+    if (ab.backgroundImage) {
+      sectionStyle += `background-image:url(${ab.backgroundImage});background-size:cover;background-position:center;`;
+    }
+
+    let sectionHtml = `  <section class="ab-${ab.id}" aria-label="${escapeHtml(ab.name)}" style="${sectionStyle}">\n`;
+
+    // Flow elements in flex container
+    if (hasFlow) {
+      sectionHtml += `    <div style="display:flex;flex-direction:${flexProps.direction};flex-wrap:${flexProps.wrap};justify-content:${flexProps.justifyContent};align-items:${flexProps.alignItems};gap:${flexProps.gap}px;padding:${flexProps.padding.join("px ")}px;width:100%;min-height:100%;position:relative;z-index:1;">\n`;
+      for (const el of flowElements) {
+        const elHtml = elementToHtml(el, true);
+        sectionHtml += `      <div class="el-${el.id}" style="z-index:${el.zIndex};opacity:${el.opacity};max-width:100%;">\n        ${elHtml}\n      </div>\n`;
+      }
+      sectionHtml += `    </div>\n`;
+    }
+
+    // Absolute elements
+    for (const el of absoluteElements) {
+      const pctX = (el.transform.x / ab.width) * 100;
+      const pctY = (el.transform.y / ab.height) * 100;
+      const pctW = (el.transform.width / ab.width) * 100;
+      const rotation = el.transform.rotation;
+      const elHtml = elementToHtml(el, false);
+      let absStyle = `position:absolute;left:${pctX.toFixed(2)}%;top:${pctY.toFixed(2)}%;width:${pctW.toFixed(2)}%;height:auto;z-index:${el.zIndex};opacity:${el.opacity};`;
+      if (rotation) absStyle += `transform:rotate(${rotation}deg);`;
+      sectionHtml += `    <div class="el-${el.id}" style="${absStyle}">\n      ${elHtml}\n    </div>\n`;
+    }
+
+    sectionHtml += `  </section>`;
+    sections.push(sectionHtml);
+  }
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="${escapeHtml(doc.pageTitle)}">
+  <title>${escapeHtml(doc.pageTitle)}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+    body { margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; overflow-x: hidden; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    img { max-width: 100%; height: auto; display: block; }
+    a { text-decoration: none; }
+
+    /* ── Responsive Styles ── */
+    ${responsiveCSS}
+  </style>
+</head>
+<body>
+  <main>
+${sections.join("\n\n")}
+  </main>
+</body>
+</html>`;
+}

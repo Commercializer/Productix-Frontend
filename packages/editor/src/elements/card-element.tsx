@@ -13,7 +13,7 @@ import { ImageUploadWidget } from "../media/image-upload-widget";
 
 /* ─── Component ─────────────────────────────── */
 
-function CardElementComponent({ props }: ElementRenderProps) {
+function CardElementComponent({ props, scaleFactor = 1 }: ElementRenderProps) {
   const bgColor = (props.bgColor as string) || "#ffffff";
   const borderRadius = (props.borderRadius as number) || 16;
   const shadow = (props.shadow as string) || "lg";
@@ -43,7 +43,7 @@ function CardElementComponent({ props }: ElementRenderProps) {
         backgroundColor: bgColor,
         boxShadow: shadowMap[shadow] || shadowMap.md,
         border: borderWidth > 0 ? `${borderWidth}px solid ${borderColor}` : "none",
-        padding,
+        padding: Math.round(padding * scaleFactor),
         overflow: "hidden",
         position: "relative",
         opacity,

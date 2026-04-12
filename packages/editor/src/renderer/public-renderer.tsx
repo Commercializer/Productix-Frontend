@@ -1,22 +1,34 @@
 /* ─────────────────────────────────────────────
- * Public Renderer — Minimal output for public pages
+ * Public Renderer — Production-ready responsive output
  *
- * Same as PreviewRenderer but with semantic HTML
- * and optimized for public-facing pages.
+ * RESPONSIVE APPROACH: CSS transform: scale()
  *
- * Responsive: auto-detects viewport breakpoint
- * and uses getEffectiveTransform for layout.
- * Uses CSS transform: scale() to fit the artboard
- * to the actual viewport width.
+ * The published page uses CSS to scale the entire
+ * design based on the viewport width. The design is
+ * rendered at its desktop coordinates and uniformly
+ * scaled — exactly like the editor preview.
+ *
+ * This means:
+ * - Design once on desktop → works everywhere
+ * - All fonts, padding, images scale together
+ * - No media query breakpoints needed
+ * - Aspect ratio preserved at every viewport width
  * ──────────────────────────────────────────── */
 
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import type { CanvasDocument, Breakpoint } from "@productix/types";
 import { BREAKPOINT_WIDTHS } from "@productix/types";
 import { getElementDefinition } from "../elements/registry";
-import { getEffectiveTransform, getArtboardPreviewWidth, getArtboardPreviewHeight } from "../utils/responsive";
+import { isElementInFlow } from "../utils/responsive";
+import {
+  getEffectiveFlexContainer,
+  getEffectiveLayout,
+  computeFlexContainerCSS,
+  computeElementLayoutCSS,
+  generateResponsiveStylesheet,
+} from "../engine/layout-engine";
 
 // Import elements to trigger registration
 import "../elements";
@@ -47,76 +59,159 @@ export function PublicRenderer({ document: doc, className }: PublicRendererProps
 
   const breakpoint = detectBreakpoint(viewportWidth);
 
+  // Generate responsive stylesheet for media-query-based layout
+  const responsiveCSS = useMemo(() => generateResponsiveStylesheet(doc), [doc]);
+
   return (
-    <main
-      className={className}
-      data-page-title={doc.pageTitle}
-    >
-      {doc.artboards.map((ab) => {
-        const previewWidth = getArtboardPreviewWidth(ab.width, breakpoint);
-        const previewHeight = getArtboardPreviewHeight(ab.width, ab.height, breakpoint);
+    <>
+      {/* Inject responsive stylesheet */}
+      <style dangerouslySetInnerHTML={{ __html: responsiveCSS }} />
 
-        // Scale the artboard to fit the actual viewport width
-        const scale = Math.min(1, viewportWidth / previewWidth);
+      <main
+        className={className}
+        data-page-title={doc.pageTitle}
+        style={{
+          width: "100%",
+          maxWidth: "100%",
+          overflowX: "hidden",
+          margin: 0,
+          padding: 0,
+        }}
+      >
+        {doc.artboards.map((ab) => {
+          // Separate flow vs absolute elements
+          const abElements = ab.elements
+            .map((id) => doc.elements[id])
+            .filter((el): el is NonNullable<typeof el> => !!el)
+            .filter((el) => el.visible);
 
-        return (
-          <section
-            key={ab.id}
-            aria-label={ab.name}
-            style={{
-              position: "relative",
-              width: previewWidth,
-              height: previewHeight,
-              backgroundColor: ab.backgroundColor,
-              backgroundImage: ab.backgroundImage ? `url(${ab.backgroundImage})` : undefined,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              margin: "0 auto",
-              overflow: "hidden",
-              transform: scale < 1 ? `scale(${scale})` : undefined,
-              transformOrigin: "top center",
-            }}
-          >
-            {ab.elements
-              .map((id) => doc.elements[id])
-              .filter((el): el is NonNullable<typeof el> => !!el)
-              .filter((el) => el.visible)
-              .sort((a, b) => a.zIndex - b.zIndex)
-              .map((el) => {
-                const def = getElementDefinition(el.type);
-                if (!def) return null;
+          const flowElements = abElements.filter((el) => isElementInFlow(el));
+          const absoluteElements = abElements.filter((el) => !isElementInFlow(el));
+          const hasFlow = flowElements.length > 0;
 
-                const Component = def.component;
-                const effectiveT = getEffectiveTransform(el, breakpoint, ab.width);
-                const { x, y, width, height, rotation } = effectiveT;
+          // Scale ratio for this artboard
+          const scaleRatio = Math.min(1, viewportWidth / ab.width);
+          const visualHeight = Math.round(ab.height * scaleRatio);
 
-                return (
+          // Resolve flex container for current breakpoint
+          const flexProps = getEffectiveFlexContainer(ab, breakpoint);
+          const flexCSS = computeFlexContainerCSS(flexProps);
+
+          return (
+            <section
+              key={ab.id}
+              aria-label={ab.name}
+              className={`ab-${ab.id}`}
+              style={{
+                width: "100%",
+                maxWidth: ab.width,
+                height: visualHeight,
+                margin: "0 auto",
+                overflowX: "hidden",
+                overflow: "hidden",
+              }}
+            >
+              {/* Inner: full desktop size, CSS-scaled by viewport */}
+              <div
+                style={{
+                  width: ab.width,
+                  height: ab.height,
+                  transform: `scale(${scaleRatio})`,
+                  transformOrigin: "top left",
+                  position: "relative",
+                  backgroundColor: ab.backgroundColor,
+                  backgroundImage: ab.backgroundImage ? `url(${ab.backgroundImage})` : undefined,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }}
+              >
+                {/* Flow elements — rendered in flex container */}
+                {hasFlow && (
                   <div
-                    key={el.id}
                     style={{
-                      position: "absolute",
-                      left: x,
-                      top: y,
-                      width,
-                      height,
-                      transform: rotation ? `rotate(${rotation}deg)` : undefined,
-                      zIndex: el.zIndex,
-                      opacity: el.opacity,
+                      ...flexCSS,
+                      position: "relative",
+                      width: "100%",
+                      maxWidth: "100%",
+                      minHeight: "100%",
+                      zIndex: 1,
                     }}
                   >
-                    <Component
-                      props={el.props}
-                      isEditing={false}
-                      width={width}
-                      height={height}
-                      onPropsChange={() => {}}
-                    />
+                    {flowElements
+                      .sort((a, b) => a.zIndex - b.zIndex)
+                      .map((el) => {
+                        const def = getElementDefinition(el.type);
+                        if (!def) return null;
+
+                        const Component = def.component;
+                        const effectiveLayout = getEffectiveLayout(el, breakpoint);
+                        if (effectiveLayout.hidden) return null;
+                        const layoutCSS = computeElementLayoutCSS(effectiveLayout);
+
+                        return (
+                          <div
+                            key={el.id}
+                            className={`el-${el.id}`}
+                            style={{
+                              ...layoutCSS,
+                              zIndex: el.zIndex,
+                              opacity: el.opacity,
+                              maxWidth: "100%",
+                            }}
+                          >
+                            <Component
+                              props={el.props}
+                              isEditing={false}
+                              width={effectiveLayout.widthValue}
+                              height={effectiveLayout.heightValue}
+                              onPropsChange={() => {}}
+                            />
+                          </div>
+                        );
+                      })}
                   </div>
-                );
-              })}
-          </section>
-        );
-      })}
-    </main>
+                )}
+
+                {/* Absolute elements — desktop coordinates, CSS-scaled */}
+                {absoluteElements
+                  .sort((a, b) => a.zIndex - b.zIndex)
+                  .map((el) => {
+                    const def = getElementDefinition(el.type);
+                    if (!def) return null;
+
+                    const Component = def.component;
+                    const { x, y, width, height, rotation } = el.transform;
+
+                    return (
+                      <div
+                        key={el.id}
+                        className={`el-${el.id}`}
+                        style={{
+                          position: "absolute",
+                          left: x,
+                          top: y,
+                          width,
+                          height,
+                          transform: rotation ? `rotate(${rotation}deg)` : undefined,
+                          zIndex: el.zIndex,
+                          opacity: el.opacity,
+                        }}
+                      >
+                        <Component
+                          props={el.props}
+                          isEditing={false}
+                          width={width}
+                          height={height}
+                          onPropsChange={() => {}}
+                        />
+                      </div>
+                    );
+                  })}
+              </div>
+            </section>
+          );
+        })}
+      </main>
+    </>
   );
 }

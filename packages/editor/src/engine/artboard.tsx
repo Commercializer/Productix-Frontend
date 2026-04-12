@@ -1,18 +1,34 @@
 /* ─────────────────────────────────────────────
  * Artboard — Canvas area with custom dimensions
  *
- * Renders element wrappers inside a sized area.
- * Supports background color/image and snap guides.
- * Responsive: renders at the active breakpoint width
- * with auto-scaled or overridden element transforms.
+ * RESPONSIVE APPROACH: CSS transform: scale()
+ *
+ * Elements are ALWAYS rendered at their desktop
+ * positions/sizes. When the breakpoint is not desktop,
+ * the entire artboard is wrapped in a CSS transform
+ * that scales the whole design uniformly — like
+ * zooming out on a website. This means:
+ *
+ * - Design once on desktop → auto-scales everywhere
+ * - All fonts, padding, images, positions scale together
+ * - No per-element recalculation needed
+ * - No per-breakpoint custom design needed
  * ──────────────────────────────────────────── */
 
 "use client";
 
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import { useCanvasStore } from "./canvas-store";
 import { ElementWrapper } from "./element-wrapper";
-import { getEffectiveTransform, getArtboardPreviewWidth, getArtboardPreviewHeight } from "../utils/responsive";
+import {
+  getArtboardPreviewWidth,
+  isElementInFlow,
+} from "../utils/responsive";
+import {
+  getEffectiveFlexContainer,
+  getEffectiveLayout,
+  computeFlexContainerCSS,
+} from "./layout-engine";
 import type { Artboard as ArtboardType } from "@productix/types";
 
 interface ArtboardProps {
@@ -37,9 +53,14 @@ export function Artboard({ artboard }: ArtboardProps) {
     [deselectAll, setEditingElement]
   );
 
-  // Compute preview dimensions for the active breakpoint
+  // Preview width for the active breakpoint
   const previewWidth = getArtboardPreviewWidth(artboard.width, activeBreakpoint);
-  const previewHeight = getArtboardPreviewHeight(artboard.width, artboard.height, activeBreakpoint);
+
+  // Scale ratio: entire artboard scales by this single value
+  const scaleRatio = previewWidth / artboard.width;
+
+  // Scaled visual dimensions (how big the artboard appears on screen)
+  const visualHeight = Math.round(artboard.height * scaleRatio);
 
   // Get elements belonging to this artboard, sorted by zIndex
   const artboardElements = artboard.elements
@@ -47,21 +68,34 @@ export function Artboard({ artboard }: ArtboardProps) {
     .filter((el): el is NonNullable<typeof el> => !!el)
     .sort((a, b) => a.zIndex - b.zIndex);
 
-  return (
+  // Separate flow and absolute elements
+  const flowElements = artboardElements.filter((el) => isElementInFlow(el));
+  const absoluteElements = artboardElements.filter((el) => !isElementInFlow(el));
+
+  // Resolve flex container props for current breakpoint
+  const flexContainerProps = useMemo(
+    () => getEffectiveFlexContainer(artboard, activeBreakpoint),
+    [artboard, activeBreakpoint]
+  );
+  const flexCSS = useMemo(
+    () => computeFlexContainerCSS(flexContainerProps),
+    [flexContainerProps]
+  );
+
+  const hasFlowElements = flowElements.length > 0;
+
+  // The inner artboard always renders at FULL desktop size
+  const innerArtboard = (
     <div
       style={{
         position: "relative",
-        width: previewWidth,
-        height: previewHeight,
+        width: artboard.width,
+        height: artboard.height,
         backgroundColor: artboard.backgroundColor,
         backgroundImage: artboard.backgroundImage ? `url(${artboard.backgroundImage})` : undefined,
         backgroundSize: "cover",
         backgroundPosition: "center",
-        boxShadow: "0 4px 40px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06)",
-        borderRadius: 2,
-        overflow: "visible", // Allow cross-section placement
-        flexShrink: 0,
-        transition: "width 0.3s ease, height 0.3s ease",
+        overflow: "visible",
       }}
       onClick={handleCanvasClick}
     >
@@ -75,17 +109,40 @@ export function Artboard({ artboard }: ArtboardProps) {
         }}
       />
 
-      {/* Elements */}
-      {artboardElements.map((el) => {
-        const effectiveTransform = getEffectiveTransform(el, activeBreakpoint, artboard.width);
-        return (
-          <ElementWrapper
-            key={el.id}
-            element={el}
-            effectiveTransform={effectiveTransform}
-          />
-        );
-      })}
+      {/* ── Flow Layout Container ── */}
+      {hasFlowElements && (
+        <div
+          data-artboard-bg="true"
+          style={{
+            ...flexCSS,
+            position: "relative",
+            width: "100%",
+            minHeight: "100%",
+            zIndex: 1,
+          }}
+        >
+          {flowElements.map((el) => {
+            const effectiveLayout = getEffectiveLayout(el, activeBreakpoint);
+            return (
+              <ElementWrapper
+                key={el.id}
+                element={el}
+                effectiveTransform={el.transform}
+                effectiveLayout={effectiveLayout}
+              />
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── Absolute Elements — always at desktop coordinates ── */}
+      {absoluteElements.map((el) => (
+        <ElementWrapper
+          key={el.id}
+          element={el}
+          effectiveTransform={el.transform}
+        />
+      ))}
 
       {/* Snap guides */}
       {snapGuides.map((guide, i) =>
@@ -119,26 +176,57 @@ export function Artboard({ artboard }: ArtboardProps) {
           />
         )
       )}
+    </div>
+  );
 
+  return (
+    <div style={{ flexShrink: 0, transition: "width 0.3s ease, height 0.3s ease" }}>
       {/* Artboard label */}
       <div
         style={{
-          position: "absolute",
-          top: -28,
-          left: 0,
           fontSize: 12,
           fontWeight: 500,
           color: "#6b7280",
           pointerEvents: "none",
           whiteSpace: "nowrap",
+          marginBottom: 8,
         }}
       >
-        {artboard.name} — {previewWidth}×{previewHeight}
+        {artboard.name} — {previewWidth}×{visualHeight}
         {activeBreakpoint !== "desktop" && (
           <span style={{ marginLeft: 6, fontSize: 10, color: "#3b82f6", fontWeight: 600 }}>
             {activeBreakpoint.charAt(0).toUpperCase() + activeBreakpoint.slice(1)}
+            {" "}({Math.round(scaleRatio * 100)}%)
           </span>
         )}
+        {hasFlowElements && (
+          <span style={{ marginLeft: 6, fontSize: 10, color: "#10b981", fontWeight: 600 }}>
+            Flow
+          </span>
+        )}
+      </div>
+
+      {/* Outer container: sized to the VISUAL (scaled) dimensions */}
+      <div
+        style={{
+          width: previewWidth,
+          height: visualHeight,
+          overflow: "hidden",
+          boxShadow: "0 4px 40px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06)",
+          borderRadius: 2,
+        }}
+      >
+        {/* Inner: full desktop size, CSS-scaled down */}
+        <div
+          style={{
+            width: artboard.width,
+            height: artboard.height,
+            transform: `scale(${scaleRatio})`,
+            transformOrigin: "top left",
+          }}
+        >
+          {innerArtboard}
+        </div>
       </div>
     </div>
   );

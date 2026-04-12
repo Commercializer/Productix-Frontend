@@ -32,6 +32,14 @@ export interface ElementRenderProps {
   width: number;
   height: number;
   onPropsChange: (changes: Record<string, unknown>) => void;
+  /**
+   * Scale factor (0–1) for responsive sizing.
+   * Represents the ratio of the current breakpoint width to the desktop design width.
+   * Components should multiply font sizes, padding, gaps, etc. by this value.
+   * Desktop = 1.0, Mobile ≈ 0.26 (375/1440).
+   * Clamped so text never gets smaller than ~60% of original.
+   */
+  scaleFactor?: number;
 }
 
 export interface PropertyPanelProps {

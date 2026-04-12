@@ -7,23 +7,24 @@
 import React from "react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
 
-function DividerElementComponent({ props }: ElementRenderProps) {
+function DividerElementComponent({ props, scaleFactor = 1 }: ElementRenderProps) {
   const color = (props.color as string) || "#e5e7eb";
   const thickness = (props.thickness as number) || 2;
   const style = (props.lineStyle as string) || "solid";
   const orientation = (props.orientation as string) || "horizontal";
+  const scaledThickness = Math.max(1, Math.round(thickness * scaleFactor));
 
   if (orientation === "vertical") {
     return (
       <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "stretch", justifyContent: "center" }}>
-        <div style={{ width: thickness, height: "100%", borderLeft: `${thickness}px ${style} ${color}` }} />
+        <div style={{ width: scaledThickness, height: "100%", borderLeft: `${scaledThickness}px ${style} ${color}` }} />
       </div>
     );
   }
 
   return (
     <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center" }}>
-      <div style={{ width: "100%", height: 0, borderTop: `${thickness}px ${style} ${color}` }} />
+      <div style={{ width: "100%", height: 0, borderTop: `${scaledThickness}px ${style} ${color}` }} />
     </div>
   );
 }

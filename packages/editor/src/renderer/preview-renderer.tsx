@@ -1,21 +1,22 @@
 /* ─────────────────────────────────────────────
- * Preview Renderer — Clean preview with viewport controls
+ * Preview Renderer — Responsive preview with viewport controls
  *
  * Features:
  * - Device viewport presets (Desktop, Laptop, Tablet, Mobile)
  * - Zoom/fit controls
- * - Auto-scaling to fit viewport frame
+ * - True responsive rendering using flex layout for flow elements
  * - Clean, no-editor-UI render of all artboards
- * - Responsive element positioning via getEffectiveTransform
+ * - Supports both absolute and flow layout modes
  * ──────────────────────────────────────────── */
 
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import type { CanvasDocument, Breakpoint } from "@productix/types";
-import { BREAKPOINT_WIDTHS } from "@productix/types";
+import { BREAKPOINT_WIDTHS, DEFAULT_FLEX_CONTAINER } from "@productix/types";
 import { getElementDefinition } from "../elements/registry";
-import { getEffectiveTransform, getArtboardPreviewWidth, getArtboardPreviewHeight } from "../utils/responsive";
+import { getArtboardPreviewWidth, isElementInFlow } from "../utils/responsive";
+import { getEffectiveFlexContainer, getEffectiveLayout, computeFlexContainerCSS, computeElementLayoutCSS } from "../engine/layout-engine";
 
 // Import elements to trigger registration
 import "../elements";
@@ -53,10 +54,12 @@ function PreviewContent({
   doc,
   zoom,
   breakpoint,
+  frameWidth,
 }: {
   doc: CanvasDocument;
   zoom: number;
   breakpoint: Breakpoint;
+  frameWidth?: number;
 }) {
   return (
     <div
@@ -65,64 +68,123 @@ function PreviewContent({
         transformOrigin: "top center",
         display: "inline-flex",
         flexDirection: "column",
+        width: frameWidth ? frameWidth / zoom : undefined,
       }}
     >
       {doc.artboards.map((ab) => {
         const previewWidth = getArtboardPreviewWidth(ab.width, breakpoint);
-        const previewHeight = getArtboardPreviewHeight(ab.width, ab.height, breakpoint);
+        const scaleRatio = previewWidth / ab.width;
+        const visualHeight = Math.round(ab.height * scaleRatio);
+
+        // Separate flow vs absolute elements
+        const abElements = ab.elements
+          .map((id) => doc.elements[id])
+          .filter((el): el is NonNullable<typeof el> => !!el)
+          .filter((el) => el.visible);
+
+        const flowElements = abElements.filter((el) => isElementInFlow(el));
+        const absoluteElements = abElements.filter((el) => !isElementInFlow(el));
+
+        // Resolve flex container for this breakpoint
+        const flexProps = getEffectiveFlexContainer(ab, breakpoint);
+        const flexCSS = computeFlexContainerCSS(flexProps);
+        const hasFlow = flowElements.length > 0;
 
         return (
           <div
             key={ab.id}
             style={{
-              position: "relative",
               width: previewWidth,
-              height: previewHeight,
-              backgroundColor: ab.backgroundColor,
-              backgroundImage: ab.backgroundImage ? `url(${ab.backgroundImage})` : undefined,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
+              height: visualHeight,
               overflow: "hidden",
               flexShrink: 0,
             }}
           >
-            {ab.elements
-              .map((id) => doc.elements[id])
-              .filter((el): el is NonNullable<typeof el> => !!el)
-              .filter((el) => el.visible)
-              .sort((a, b) => a.zIndex - b.zIndex)
-              .map((el) => {
-                const def = getElementDefinition(el.type);
-                if (!def) return null;
+            {/* Inner: full desktop size, CSS-scaled down */}
+            <div
+              style={{
+                width: ab.width,
+                height: ab.height,
+                transform: `scale(${scaleRatio})`,
+                transformOrigin: "top left",
+                position: "relative",
+                backgroundColor: ab.backgroundColor,
+                backgroundImage: ab.backgroundImage ? `url(${ab.backgroundImage})` : undefined,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}
+            >
+              {/* Flow layout container */}
+              {hasFlow && (
+                <div style={{ ...flexCSS, position: "relative", width: "100%", minHeight: "100%", zIndex: 1 }}>
+                  {flowElements
+                    .sort((a, b) => a.zIndex - b.zIndex)
+                    .map((el) => {
+                      const def = getElementDefinition(el.type);
+                      if (!def) return null;
 
-                const Component = def.component;
-                const effectiveT = getEffectiveTransform(el, breakpoint, ab.width);
-                const { x, y, width, height, rotation } = effectiveT;
+                      const Component = def.component;
+                      const effectiveLayout = getEffectiveLayout(el, breakpoint);
+                      if (effectiveLayout.hidden) return null;
+                      const layoutCSS = computeElementLayoutCSS(effectiveLayout);
 
-                return (
-                  <div
-                    key={el.id}
-                    style={{
-                      position: "absolute",
-                      left: x,
-                      top: y,
-                      width,
-                      height,
-                      transform: rotation ? `rotate(${rotation}deg)` : undefined,
-                      zIndex: el.zIndex,
-                      opacity: el.opacity,
-                    }}
-                  >
-                    <Component
-                      props={el.props}
-                      isEditing={false}
-                      width={width}
-                      height={height}
-                      onPropsChange={() => {}}
-                    />
-                  </div>
-                );
-              })}
+                      return (
+                        <div
+                          key={el.id}
+                          style={{
+                            ...layoutCSS,
+                            zIndex: el.zIndex,
+                            opacity: el.opacity,
+                          }}
+                        >
+                          <Component
+                            props={el.props}
+                            isEditing={false}
+                            width={effectiveLayout.widthValue}
+                            height={effectiveLayout.heightValue}
+                            onPropsChange={() => {}}
+                          />
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+
+              {/* Absolute elements — always at desktop coordinates */}
+              {absoluteElements
+                .sort((a, b) => a.zIndex - b.zIndex)
+                .map((el) => {
+                  const def = getElementDefinition(el.type);
+                  if (!def) return null;
+
+                  const Component = def.component;
+                  const { x, y, width, height, rotation } = el.transform;
+
+                  return (
+                    <div
+                      key={el.id}
+                      style={{
+                        position: "absolute",
+                        left: x,
+                        top: y,
+                        width,
+                        height,
+                        transform: rotation ? `rotate(${rotation}deg)` : undefined,
+                        zIndex: el.zIndex,
+                        opacity: el.opacity,
+                      }}
+                    >
+                      <Component
+                        props={el.props}
+                        isEditing={false}
+                        width={width}
+                        height={height}
+                        onPropsChange={() => {}}
+                      />
+                    </div>
+                  );
+                })}
+            </div>
           </div>
         );
       })}
@@ -167,9 +229,11 @@ export function PreviewRenderer({
     const maxArtboardW = Math.max(1, ...doc.artboards.map((a) =>
       getArtboardPreviewWidth(a.width, activeBreakpoint)
     ));
-    const totalH = doc.artboards.reduce((sum, a) =>
-      sum + getArtboardPreviewHeight(a.width, a.height, activeBreakpoint), 0
-    );
+    const totalH = doc.artboards.reduce((sum, a) => {
+      const previewW = getArtboardPreviewWidth(a.width, activeBreakpoint);
+      const ratio = previewW / a.width;
+      return sum + Math.round(a.height * ratio);
+    }, 0);
 
     const fitW = frameW / maxArtboardW;
     const fitH = frameH / totalH;
@@ -260,7 +324,12 @@ export function PreviewRenderer({
             alignItems: "center",
           }}
         >
-          <PreviewContent doc={doc} zoom={previewZoom} breakpoint={activeBreakpoint} />
+          <PreviewContent
+            doc={doc}
+            zoom={previewZoom}
+            breakpoint={activeBreakpoint}
+            frameWidth={activePreset.width > 0 ? activePreset.width * previewZoom : undefined}
+          />
         </div>
       </div>
     </div>

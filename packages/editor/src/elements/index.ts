@@ -17,6 +17,8 @@ import "./stat-card";
 import "./promo-card";
 import "./divider-element";
 import "./container-element";
+import "./row-element";
+import "./column-element";
 
 // Re-export registry API for consumers
 export {

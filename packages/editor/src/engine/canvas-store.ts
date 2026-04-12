@@ -8,7 +8,8 @@
 
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
-import type { CanvasDocument, ElementNode, Transform, Artboard, Breakpoint } from "@productix/types";
+import type { CanvasDocument, ElementNode, Transform, Artboard, Breakpoint, LayoutProps, FlexContainerProps } from "@productix/types";
+import { DEFAULT_LAYOUT_PROPS, DEFAULT_FLEX_CONTAINER } from "@productix/types";
 import { createEmptyDocument, createDefaultArtboard } from "../utils/defaults";
 import { generateElementId, generateArtboardId } from "../utils/id";
 import type { SnapGuide } from "../interactions/snap-engine";
@@ -87,6 +88,14 @@ export interface CanvasState {
   setActiveBreakpoint: (bp: Breakpoint) => void;
   updateElementResponsiveOverride: (id: string, bp: Breakpoint, transform: Partial<Transform>) => void;
   clearElementResponsiveOverride: (id: string, bp: Breakpoint) => void;
+
+  // ── Layout system ──
+  updateElementLayout: (id: string, changes: Partial<LayoutProps>) => void;
+  updateElementResponsiveLayout: (id: string, bp: Breakpoint, changes: Partial<LayoutProps>) => void;
+  toggleElementLayoutMode: (id: string) => void;
+  updateArtboardFlexContainer: (id: string, changes: Partial<FlexContainerProps>) => void;
+  updateArtboardResponsiveFlexContainer: (id: string, bp: Breakpoint, changes: Partial<FlexContainerProps>) => void;
+  reorderElementInFlow: (artboardId: string, elementId: string, targetIndex: number) => void;
 
   // ── Snap guides ──
   setSnapGuides: (guides: SnapGuide[]) => void;
@@ -437,6 +446,96 @@ export const useCanvasStore = create<CanvasState>()(
           delete el.responsiveOverrides;
         }
       }),
+
+    // ── Layout system ──
+    updateElementLayout: (id, changes) =>
+      set((s) => {
+        const el = s.document.elements[id];
+        if (!el) return;
+        if (!el.layout) {
+          el.layout = { ...DEFAULT_LAYOUT_PROPS };
+        }
+        Object.assign(el.layout, changes);
+        // Deep-copy arrays
+        if (changes.margin) el.layout.margin = [...changes.margin] as [number, number, number, number];
+        if (changes.padding) el.layout.padding = [...changes.padding] as [number, number, number, number];
+      }),
+
+    updateElementResponsiveLayout: (id, bp, changes) =>
+      set((s) => {
+        const el = s.document.elements[id];
+        if (!el) return;
+        if (!el.responsiveLayout) {
+          el.responsiveLayout = {};
+        }
+        el.responsiveLayout[bp] = {
+          ...(el.responsiveLayout[bp] || {}),
+          ...changes,
+        };
+      }),
+
+    toggleElementLayoutMode: (id) => {
+      get().pushHistory();
+      set((s) => {
+        const el = s.document.elements[id];
+        if (!el) return;
+        if (el.layout?.layoutMode === "flow") {
+          // Switch to absolute: remove layout, keep transform as-is
+          delete el.layout;
+          delete el.responsiveLayout;
+        } else {
+          // Switch to flow: create default layout props from current transform
+          const ab = s.document.artboards.find((a) => a.elements.includes(id));
+          const abWidth = ab?.width ?? 1440;
+          el.layout = {
+            ...DEFAULT_LAYOUT_PROPS,
+            widthValue: Math.round((el.transform.width / abWidth) * 100),
+            widthUnit: "%",
+            heightValue: el.transform.height,
+            heightUnit: "px",
+          };
+        }
+      });
+    },
+
+    updateArtboardFlexContainer: (id, changes) =>
+      set((s) => {
+        const ab = s.document.artboards.find((a) => a.id === id);
+        if (!ab) return;
+        if (!ab.flexContainer) {
+          ab.flexContainer = { ...DEFAULT_FLEX_CONTAINER };
+        }
+        Object.assign(ab.flexContainer, changes);
+        if (changes.padding) ab.flexContainer.padding = [...changes.padding] as [number, number, number, number];
+      }),
+
+    updateArtboardResponsiveFlexContainer: (id, bp, changes) =>
+      set((s) => {
+        const ab = s.document.artboards.find((a) => a.id === id);
+        if (!ab) return;
+        if (!ab.responsiveFlexContainer) {
+          ab.responsiveFlexContainer = {};
+        }
+        ab.responsiveFlexContainer[bp] = {
+          ...(ab.responsiveFlexContainer[bp] || {}),
+          ...changes,
+        };
+      }),
+
+    reorderElementInFlow: (artboardId, elementId, targetIndex) => {
+      get().pushHistory();
+      set((s) => {
+        const ab = s.document.artboards.find((a) => a.id === artboardId);
+        if (!ab) return;
+        const currentIndex = ab.elements.indexOf(elementId);
+        if (currentIndex === -1) return;
+        // Remove from current position
+        ab.elements.splice(currentIndex, 1);
+        // Insert at target position
+        const clampedTarget = Math.max(0, Math.min(targetIndex, ab.elements.length));
+        ab.elements.splice(clampedTarget, 0, elementId);
+      });
+    },
 
     // ── Snap ──
     setSnapGuides: (guides) =>

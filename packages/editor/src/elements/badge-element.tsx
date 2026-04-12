@@ -7,7 +7,7 @@
 import React from "react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
 
-function BadgeElementComponent({ props }: ElementRenderProps) {
+function BadgeElementComponent({ props, scaleFactor = 1 }: ElementRenderProps) {
   const text = (props.text as string) || "Badge";
   const bgColor = (props.bgColor as string) || "#dbeafe";
   const textColor = (props.textColor as string) || "#1d4ed8";
@@ -15,6 +15,10 @@ function BadgeElementComponent({ props }: ElementRenderProps) {
   const fontSize = (props.fontSize as number) || 13;
   const fontWeight = (props.fontWeight as string) || "600";
   const icon = (props.icon as string) || "";
+
+  const scaledFontSize = Math.round(fontSize * scaleFactor);
+  const scaledGap = Math.round(6 * scaleFactor);
+  const scaledPadH = Math.round(12 * scaleFactor);
 
   return (
     <div
@@ -24,13 +28,13 @@ function BadgeElementComponent({ props }: ElementRenderProps) {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        gap: 6,
+        gap: scaledGap,
         backgroundColor: bgColor,
         color: textColor,
         borderRadius,
-        fontSize,
+        fontSize: scaledFontSize,
         fontWeight,
-        padding: "0 12px",
+        padding: `0 ${scaledPadH}px`,
         letterSpacing: "0.02em",
         whiteSpace: "nowrap",
       }}

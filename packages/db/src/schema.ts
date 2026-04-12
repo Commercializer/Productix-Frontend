@@ -1,13 +1,17 @@
 /**
- * Database schema definitions — scaffolded for future Prisma integration.
+ * Database schema definitions — legacy TypeScript interfaces.
  *
- * These TypeScript interfaces mirror the planned database tables.
- * When Prisma is set up, this file will be replaced by generated types.
+ * @deprecated These interfaces are superseded by Prisma-generated types.
+ * Import from `@prisma/client` instead:
+ *
+ *   import type { User, Tenant, Product } from "@prisma/client";
+ *
+ * Kept for backward compatibility during migration.
  */
 
 import type { PageStatus } from "@productix/types";
 
-/** Database Page row */
+/** @deprecated Use Prisma-generated types instead. */
 export interface DbPage {
   id: string;
   slug: string;
@@ -27,7 +31,7 @@ export interface DbPage {
   publishedAt: Date | null;
 }
 
-/** Database User row */
+/** @deprecated Use Prisma `User` type instead. */
 export interface DbUser {
   id: string;
   email: string;
@@ -39,7 +43,7 @@ export interface DbUser {
   updatedAt: Date;
 }
 
-/** Database Tenant row */
+/** @deprecated Use Prisma `Tenant` type instead. */
 export interface DbTenant {
   id: string;
   name: string;
@@ -49,7 +53,7 @@ export interface DbTenant {
   updatedAt: Date;
 }
 
-/** Database Template row (for marketplace) */
+/** @deprecated Use Prisma-generated types instead. */
 export interface DbTemplate {
   id: string;
   name: string;
