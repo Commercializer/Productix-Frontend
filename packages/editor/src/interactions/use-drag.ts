@@ -5,12 +5,17 @@
  * capture so drags work reliably even when the
  * pointer leaves the element bounds.
  *
- * Coordinates are divided by zoom to keep
- * canvas-space positioning accurate at any scale.
+ * The artboard renders elements at NATIVE size
+ * (e.g. 1440px) then CSS-scales them down for
+ * the active breakpoint preview. Therefore:
  *
- * Responsive: when activeBreakpoint !== "desktop",
- * writes to responsiveOverrides instead of the
- * base transform.
+ *  - We always read from el.transform (native)
+ *  - We divide pointer deltas by zoom × scaleRatio
+ *    to convert screen px → native artboard px
+ *  - We always write to el.transform (native)
+ *
+ * This ensures dragging works at any zoom level
+ * and any breakpoint preview.
  * ──────────────────────────────────────────── */
 
 "use client";
@@ -18,16 +23,18 @@
 import { useCallback, useRef } from "react";
 import { useCanvasStore } from "../engine/canvas-store";
 import { computeSnap } from "./snap-engine";
-import { getEffectiveTransform } from "../utils/responsive";
-import { BREAKPOINT_WIDTHS } from "@productix/types";
+import { getEffectiveTransform, getArtboardPreviewWidth } from "../utils/responsive";
 import type { Transform } from "@productix/types";
 
 interface DragState {
   startX: number;
   startY: number;
+  /** Native artboard-space coordinates at drag start */
   startTransformX: number;
   startTransformY: number;
   elementId: string;
+  /** Combined scale factor: zoom × artboard scaleRatio */
+  combinedScale: number;
 }
 
 export function useDrag() {
@@ -45,23 +52,26 @@ export function useDrag() {
       // Push history at drag start
       state.pushHistory();
 
-      // Resolve the effective transform for the active breakpoint
+      // Find the artboard to compute the scale ratio
       const ab = state.document.artboards.find((a) =>
         a.elements.includes(elementId)
       );
-      const effectiveT = getEffectiveTransform(
-        el,
-        state.activeBreakpoint,
-        ab?.width ?? 1440,
-        ab?.height ?? 900,
-      );
+      const abW = ab?.width ?? 1440;
 
+      // The artboard is rendered at native size and CSS-scaled.
+      // Compute the combined scale: canvas zoom × artboard scaleRatio.
+      const previewW = getArtboardPreviewWidth(abW, state.activeBreakpoint);
+      const scaleRatio = previewW / abW;
+      const combinedScale = state.zoom * scaleRatio;
+
+      // Always use the native transform — that's what the artboard renders
       dragRef.current = {
         startX: e.clientX,
         startY: e.clientY,
-        startTransformX: effectiveT.x,
-        startTransformY: effectiveT.y,
+        startTransformX: el.transform.x,
+        startTransformY: el.transform.y,
         elementId,
+        combinedScale,
       };
 
       pointerRef.current = { x: e.clientX, y: e.clientY };
@@ -85,54 +95,40 @@ export function useDrag() {
 
       const { x: clientX, y: clientY } = pointerRef.current;
       const state = useCanvasStore.getState();
-      const zoom = state.zoom;
-      const dx = (clientX - drag.startX) / zoom;
-      const dy = (clientY - drag.startY) / zoom;
-
-      const newX = drag.startTransformX + dx;
-      const newY = drag.startTransformY + dy;
 
       const el = state.document.elements[drag.elementId];
       if (!el) return;
 
-      // Resolve effective transform for snapping
+      // Convert screen-pixel deltas → native artboard-space deltas
+      const dx = (clientX - drag.startX) / drag.combinedScale;
+      const dy = (clientY - drag.startY) / drag.combinedScale;
+
+      const newX = drag.startTransformX + dx;
+      const newY = drag.startTransformY + dy;
+
+      // Find artboard dimensions for snapping
       const ab = state.document.artboards.find((a) =>
         a.elements.includes(drag.elementId)
       );
       const abW = ab?.width ?? 1440;
       const abH = ab?.height ?? 900;
-      const effectiveT = getEffectiveTransform(el, state.activeBreakpoint, abW, abH);
 
       const movingTransform: Transform = {
-        ...effectiveT,
+        ...el.transform,
         x: newX,
         y: newY,
       };
 
-      // Get other elements transforms for snapping (using effective transforms)
+      // Get other elements' native transforms for snapping
       const otherTransforms = Object.values(state.document.elements)
         .filter((e) => e.id !== drag.elementId && e.visible)
-        .map((e) => getEffectiveTransform(e, state.activeBreakpoint, abW, abH));
+        .map((e) => e.transform);
 
-      // Use breakpoint-appropriate artboard dimensions for snap
-      const previewW = state.activeBreakpoint === "desktop"
-        ? abW
-        : BREAKPOINT_WIDTHS[state.activeBreakpoint];
-      const previewH = state.activeBreakpoint === "desktop"
-        ? abH
-        : Math.round(abH * (previewW / abW));
+      const snap = computeSnap(movingTransform, otherTransforms, abW, abH);
 
-      const snap = computeSnap(movingTransform, otherTransforms, previewW, previewH);
-
-      // Write to the correct target based on active breakpoint
-      if (state.activeBreakpoint === "desktop") {
-        state.updateElementTransform(drag.elementId, { x: snap.x, y: snap.y });
-      } else {
-        state.updateElementResponsiveOverride(drag.elementId, state.activeBreakpoint, {
-          x: snap.x,
-          y: snap.y,
-        });
-      }
+      // Always write to the base transform — the artboard renders
+      // from el.transform regardless of breakpoint.
+      state.updateElementTransform(drag.elementId, { x: snap.x, y: snap.y });
       state.setSnapGuides(snap.guides);
     });
   }, []);

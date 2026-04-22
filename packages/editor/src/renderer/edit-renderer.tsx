@@ -1,72 +1,64 @@
 /* ─────────────────────────────────────────────
- * Edit Renderer — Full canvas editor layout
+ * Edit Renderer — Product Experience Builder
  *
- * Canvas interaction model:
- * ─────────────────────────────────────────────
- *  Action                     | Behavior
- * ─────────────────────────────────────────────
- *  Click element              | Select element
- *  Drag element               | Move element
- *  Drag resize handle         | Resize element
- *  Spacebar + drag            | Pan canvas
- *  Middle mouse + drag        | Pan canvas
- *  Drag on empty background   | Pan canvas
- *  Ctrl/⌘ + scroll           | Zoom
- *  Two-finger trackpad scroll | Native scroll (pan)
- * ─────────────────────────────────────────────
- *
- * Canvas scaling uses CSS `transform: scale(zoom)`
- * inside a wrapper whose `minWidth`/`minHeight` are
- * set to the scaled content size, so the native scroll
- * container always has correct scrollbar sizing.
- *
- * Responsive: includes device-preview toolbar for
- * switching breakpoints, and centers the canvas on
- * load and on breakpoint switch.
+ * Mobile-first editor with centered iPhone preview,
+ * floating Story Blocks drawer, and contextual
+ * Block Settings panel. Light, modern, clean UI.
  * ──────────────────────────────────────────── */
 
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Package,
+  Undo2,
+  Redo2,
+  ZoomOut,
+  Palette,
+  ZoomIn,
+  Smartphone,
+  Eye,
+  Save,
+  QrCode,
+  Loader2,
+  Puzzle,
+  Layers,
+  Settings,
+  Hand,
+  HelpCircle,
+  ChevronDown,
+} from "lucide-react";
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
 import { useCanvasStore } from "../engine/canvas-store";
 import { Artboard } from "../engine/artboard";
 import { FloatingToolbar } from "../panels/floating-toolbar";
 import { ElementPanel } from "../panels/element-panel";
 import { LayerPanel } from "../panels/layer-panel";
 import { PropertiesPanel } from "../panels/properties-panel";
+import { ThemePanel } from "../panels/theme-panel";
 import { ArtboardSettings } from "../panels/artboard-settings";
+import { ContentLocaleTabs } from "../panels/content-locale-tabs";
 import { ZOOM_STEP, MIN_ZOOM, MAX_ZOOM, NUDGE_DISTANCE, NUDGE_DISTANCE_LARGE } from "../interactions/constants";
 import { useCanvasPan } from "../interactions/use-canvas-pan";
 import { MediaProvider } from "../media/media-context";
 import { getArtboardPreviewWidth, getArtboardPreviewHeight } from "../utils/responsive";
 import { useTranslation } from "../i18n";
-import { LanguageSwitcher } from "../panels/language-switcher";
 import type { CanvasDocument } from "@productix/types";
 import type { Breakpoint } from "@productix/types";
 
-// Import elements to trigger registration
 import "../elements";
 
 interface EditRendererProps {
   initialDocument?: CanvasDocument;
   onSave?: (document: CanvasDocument) => Promise<void> | void;
   onPublish?: (document: CanvasDocument) => Promise<void> | void;
+  previewSlug?: string;
 }
 
-/* ─── Device Presets for the toolbar ───────── */
-
-const DEVICE_PRESETS: { bp: Breakpoint; labelKey: "device.desktop" | "device.laptop" | "device.tablet" | "device.mobile"; icon: string; width: number }[] = [
-  { bp: "desktop", labelKey: "device.desktop", icon: "🖥", width: 1440 },
-  { bp: "laptop", labelKey: "device.laptop", icon: "💻", width: 1280 },
-  { bp: "tablet", labelKey: "device.tablet", icon: "📱", width: 768 },
-  { bp: "mobile", labelKey: "device.mobile", icon: "📲", width: 375 },
-];
-
-/* ─── Fit-to-view calculation ───────────────── */
-
-const CANVAS_H_PADDING = 120; // left + right padding inside the content area
-const CANVAS_V_PADDING = 80;  // top + bottom padding
-const ARTBOARD_GAP = 60;      // vertical gap between artboards
+const CANVAS_H_PADDING = 120;
+const CANVAS_V_PADDING = 80;
+const ARTBOARD_GAP = 60;
 
 function computeFitZoom(
   artboards: { width: number; height: number }[],
@@ -75,26 +67,15 @@ function computeFitZoom(
   activeBreakpoint: Breakpoint,
 ): number {
   if (artboards.length === 0 || viewportWidth <= 0 || viewportHeight <= 0) return 1;
-
-  // Use breakpoint-preview dimensions
   const previewWidths = artboards.map((a) => getArtboardPreviewWidth(a.width, activeBreakpoint));
   const previewHeights = artboards.map((a, i) => getArtboardPreviewHeight(artboards[i]!.width, a.height, activeBreakpoint));
-
-  const maxArtboardWidth = Math.max(...previewWidths);
-  const totalContentWidth = maxArtboardWidth + CANVAS_H_PADDING * 2;
-  const totalContentHeight = previewHeights.reduce((sum, h) => sum + h, 0)
-    + (artboards.length - 1) * ARTBOARD_GAP
-    + CANVAS_V_PADDING * 2;
-
-  // The viewport already excludes sidebar widths (getBoundingClientRect)
-  // Add a small margin so the artboard doesn't touch the edges
-  const fitW = viewportWidth / totalContentWidth;
-  const fitH = viewportHeight / totalContentHeight;
-
-  return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, Math.min(fitW, fitH, 1)));
+  const maxW = Math.max(...previewWidths) + 24;
+  const totalW = maxW + CANVAS_H_PADDING * 2;
+  const totalH = previewHeights.reduce((s, h) => s + h, 0) + 84 + (artboards.length - 1) * ARTBOARD_GAP + CANVAS_V_PADDING * 2;
+  return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, Math.min(viewportWidth / totalW, viewportHeight / totalH, 1)));
 }
 
-export function EditRenderer({ initialDocument, onSave, onPublish }: EditRendererProps) {
+export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug }: EditRendererProps) {
   const loadDocument = useCanvasStore((s) => s.loadDocument);
   const document = useCanvasStore((s) => s.document);
   const zoom = useCanvasStore((s) => s.zoom);
@@ -113,26 +94,21 @@ export function EditRenderer({ initialDocument, onSave, onPublish }: EditRendere
   const activeBreakpoint = useCanvasStore((s) => s.activeBreakpoint);
   const setActiveBreakpoint = useCanvasStore((s) => s.setActiveBreakpoint);
 
-  const [leftTab, setLeftTab] = useState<"elements" | "layers" | "artboard">("elements");
+  const [leftDrawer, setLeftDrawer] = useState<"blocks" | "order" | "experience" | "themes" | null>(null);
   const [lastSavedJSON, setLastSavedJSON] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
   const hasAutoFit = useRef(false);
-
-  // ── i18n ──
+  const hasAutoStartedTour = useRef(false);
   const { t } = useTranslation();
 
-  // ── Canvas pan hook ──
   const {
-    isSpaceHeld,
-    isPanning,
-    panCursor,
-    onPanPointerDown,
-    onPanPointerMove,
-    onPanPointerUp,
+    isSpaceHeld, isPanning, panCursor,
+    onPanPointerDown, onPanPointerMove, onPanPointerUp,
   } = useCanvasPan(canvasRef);
 
-  // Load initial document
+  useEffect(() => { setActiveBreakpoint("mobile"); }, [setActiveBreakpoint]);
+
   useEffect(() => {
     if (initialDocument) {
       loadDocument(initialDocument);
@@ -141,7 +117,6 @@ export function EditRenderer({ initialDocument, onSave, onPublish }: EditRendere
     }
   }, [initialDocument, loadDocument]);
 
-  // Center canvas helper
   const centerCanvas = useCallback(() => {
     requestAnimationFrame(() => {
       const c = canvasRef.current;
@@ -151,513 +126,317 @@ export function EditRenderer({ initialDocument, onSave, onPublish }: EditRendere
     });
   }, []);
 
-  // Auto-fit on first render / document load
   useEffect(() => {
-    if (hasAutoFit.current) return;
-    if (document.artboards.length === 0) return;
-    if (!canvasRef.current) return;
-
+    if (hasAutoFit.current || document.artboards.length === 0 || !canvasRef.current) return;
     const rect = canvasRef.current.getBoundingClientRect();
-    const fitZoom = computeFitZoom(document.artboards, rect.width, rect.height, activeBreakpoint);
-    setZoom(fitZoom);
+    setZoom(computeFitZoom(document.artboards, rect.width, rect.height, activeBreakpoint));
     hasAutoFit.current = true;
-
-    // Center after zoom takes effect
     setTimeout(centerCanvas, 50);
   }, [document.artboards, setZoom, activeBreakpoint, centerCanvas]);
 
-  // ── Keyboard shortcuts ──
-  // NOTE: Spacebar pan is handled by useCanvasPan, not here
+  const startTour = useCallback(() => {
+    const driverObj = driver({
+      showProgress: true,
+      animate: true,
+      steps: [
+        { popover: { title: t("tour.welcome.title"), description: t("tour.welcome.desc"), side: "left", align: "start" } },
+        { element: '#tour-top-bar', popover: { title: t("tour.topbar.title"), description: t("tour.topbar.desc"), side: "bottom", align: "start" } },
+        { element: '#tour-left-rail', popover: { title: t("tour.leftrail.title"), description: t("tour.leftrail.desc"), side: "right", align: "start" } },
+        
+        { element: '#tour-btn-themes', popover: { title: t("tour.themes.title"), description: t("tour.btn.themes.desc"), side: "right", align: "start" },
+          onHighlightStarted: () => setLeftDrawer(null)
+        },
+        { element: '#tour-drawer-container', popover: { title: t("tour.themes.title"), description: t("tour.themes.desc"), side: "right", align: "start" },
+          onHighlightStarted: () => setLeftDrawer("themes")
+        },
+
+        { element: '#tour-btn-blocks', popover: { title: t("tour.blocks.title"), description: t("tour.btn.blocks.desc"), side: "right", align: "start" },
+          onHighlightStarted: () => setLeftDrawer(null)
+        },
+        { element: '#tour-drawer-container', popover: { title: t("tour.blocks.title"), description: t("tour.blocks.desc"), side: "right", align: "start" },
+          onHighlightStarted: () => setLeftDrawer("blocks")
+        },
+
+        { element: '#tour-btn-order', popover: { title: t("tour.order.title"), description: t("tour.btn.order.desc"), side: "right", align: "start" },
+          onHighlightStarted: () => setLeftDrawer(null)
+        },
+        { element: '#tour-drawer-container', popover: { title: t("tour.order.title"), description: t("tour.order.desc"), side: "right", align: "start" },
+          onHighlightStarted: () => setLeftDrawer("order")
+        },
+
+        { element: '#tour-btn-canvas', popover: { title: t("tour.canvas_settings.title"), description: t("tour.btn.canvas.desc"), side: "right", align: "start" },
+          onHighlightStarted: () => setLeftDrawer(null)
+        },
+        { element: '#tour-drawer-container', popover: { title: t("tour.canvas_settings.title"), description: t("tour.canvas_settings.desc"), side: "right", align: "start" },
+          onHighlightStarted: () => setLeftDrawer("experience")
+        },
+
+        { element: '#tour-canvas', popover: { title: t("tour.canvas.title"), description: t("tour.canvas.desc"), side: "top", align: "start" },
+          onHighlightStarted: () => setLeftDrawer(null)
+        },
+        { element: '#tour-publish', popover: { title: t("tour.publish.title"), description: t("tour.publish.desc"), side: "bottom", align: "end" } },
+      ],
+      onDestroyStarted: () => {
+        setLeftDrawer(null);
+        localStorage.setItem("editor_tour_seen", "true");
+        driverObj.destroy();
+      },
+    });
+    driverObj.drive();
+  }, [t]);
+
+  useEffect(() => {
+    const hasSeenTour = localStorage.getItem("editor_tour_seen");
+    if (!hasSeenTour && !hasAutoStartedTour.current) {
+      hasAutoStartedTour.current = true;
+      setTimeout(startTour, 500);
+    }
+  }, [startTour]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
       if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.contentEditable === "true") return;
-
       const isMeta = e.metaKey || e.ctrlKey;
-
-      // Space is handled by useCanvasPan — skip it here
       if (e.code === "Space") return;
-
-      if (e.key === "Delete" || e.key === "Backspace") {
-        e.preventDefault();
-        selectedIds.forEach((id) => removeElement(id));
-      } else if (isMeta && e.key === "z" && !e.shiftKey) {
-        e.preventDefault();
-        undo();
-      } else if (isMeta && (e.key === "y" || (e.key === "z" && e.shiftKey))) {
-        e.preventDefault();
-        redo();
-      } else if (isMeta && e.key === "d") {
-        e.preventDefault();
-        selectedIds.forEach((id) => duplicateElement(id));
-      } else if (isMeta && e.key === "a") {
-        e.preventDefault();
-        useCanvasStore.getState().selectAll();
-      } else if (e.key === "Escape") {
-        deselectAll();
-      } else if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+      if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); selectedIds.forEach((id) => removeElement(id)); }
+      else if (isMeta && e.key === "z" && !e.shiftKey) { e.preventDefault(); undo(); }
+      else if (isMeta && (e.key === "y" || (e.key === "z" && e.shiftKey))) { e.preventDefault(); redo(); }
+      else if (isMeta && e.key === "d") { e.preventDefault(); selectedIds.forEach((id) => duplicateElement(id)); }
+      else if (isMeta && e.key === "a") { e.preventDefault(); useCanvasStore.getState().selectAll(); }
+      else if (e.key === "Escape") { deselectAll(); setLeftDrawer(null); }
+      else if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)) {
         e.preventDefault();
         const dist = e.shiftKey ? NUDGE_DISTANCE_LARGE : NUDGE_DISTANCE;
         selectedIds.forEach((id) => {
-          const el = elements[id];
-          if (!el || el.locked) return;
-          const delta = {
-            ArrowUp: { y: el.transform.y - dist },
-            ArrowDown: { y: el.transform.y + dist },
-            ArrowLeft: { x: el.transform.x - dist },
-            ArrowRight: { x: el.transform.x + dist },
-          }[e.key]!;
+          const el = elements[id]; if (!el || el.locked) return;
+          const delta = { ArrowUp:{y:el.transform.y-dist}, ArrowDown:{y:el.transform.y+dist}, ArrowLeft:{x:el.transform.x-dist}, ArrowRight:{x:el.transform.x+dist} }[e.key]!;
           updateElementTransform(id, delta);
         });
-      } else if (isMeta && e.key === "0") {
-        e.preventDefault();
-        handleFitToView();
-      } else if (isMeta && e.key === "1") {
-        e.preventDefault();
-        setZoom(1);
-      }
+      } else if (isMeta && e.key === "0") { e.preventDefault(); handleFitToView(); }
     };
-
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [selectedIds, removeElement, duplicateElement, undo, redo, deselectAll, elements, updateElementTransform, setZoom]);
 
-  // ── Mouse wheel zoom ──
-  const handleWheel = useCallback(
-    (e: React.WheelEvent) => {
-      if (e.ctrlKey || e.metaKey) {
-        e.preventDefault();
-        const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
-        setZoom(zoom + delta);
-      }
-      // Without modifier: native scroll handles panning (overflow:auto)
-    },
-    [zoom, setZoom]
-  );
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    if (e.ctrlKey || e.metaKey) { e.preventDefault(); setZoom(zoom + (e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP)); }
+  }, [zoom, setZoom]);
 
-  // ── Fit to view ──
   const handleFitToView = useCallback(() => {
     if (!canvasRef.current) return;
     const rect = canvasRef.current.getBoundingClientRect();
-    const fitZoom = computeFitZoom(document.artboards, rect.width, rect.height, activeBreakpoint);
-    setZoom(fitZoom);
+    setZoom(computeFitZoom(document.artboards, rect.width, rect.height, activeBreakpoint));
     setTimeout(centerCanvas, 50);
   }, [document.artboards, setZoom, activeBreakpoint, centerCanvas]);
 
-  // ── Center canvas only (no zoom change) ──
-  const handleCenterCanvas = useCallback(() => {
-    centerCanvas();
-  }, [centerCanvas]);
+  const handleCanvasPointerDown = useCallback((e: React.PointerEvent) => onPanPointerDown(e), [onPanPointerDown]);
+  const handleCanvasPointerMove = useCallback((e: React.PointerEvent) => onPanPointerMove(e), [onPanPointerMove]);
+  const handleCanvasPointerUp = useCallback((e: React.PointerEvent) => onPanPointerUp(e), [onPanPointerUp]);
+  const handleCanvasClick = useCallback((e: React.MouseEvent) => {
+    if (isPanning) return;
+    const target = e.target as HTMLElement;
+    if (target === canvasRef.current || target.dataset.canvasBg === "true") deselectAll();
+  }, [isPanning, deselectAll]);
 
-  // ── Breakpoint switch ──
-  const handleBreakpointSwitch = useCallback((bp: Breakpoint) => {
-    setActiveBreakpoint(bp);
-    // Refit and center after breakpoint change
-    requestAnimationFrame(() => {
-      if (!canvasRef.current) return;
-      const rect = canvasRef.current.getBoundingClientRect();
-      const fitZoom = computeFitZoom(document.artboards, rect.width, rect.height, bp);
-      setZoom(fitZoom);
-      setTimeout(centerCanvas, 50);
-    });
-  }, [setActiveBreakpoint, document.artboards, setZoom, centerCanvas]);
-
-  // ── Document State ──
   const documentJSON = JSON.stringify(document);
   const isDirty = documentJSON !== lastSavedJSON;
 
-  // ── Save / Publish ──
   const handleAction = useCallback(async () => {
-    const state = useCanvasStore.getState();
-    const doc = state.document;
-    
+    const doc = useCanvasStore.getState().document;
     setIsSaving(true);
     try {
-      if (isDirty) {
-        await onSave?.(doc);
-        setLastSavedJSON(JSON.stringify(doc));
-      } else {
-        await onPublish?.(doc);
-      }
-    } finally {
-      setIsSaving(false);
-    }
+      if (isDirty) { await onSave?.(doc); setLastSavedJSON(JSON.stringify(doc)); }
+      else { await onPublish?.(doc); }
+    } finally { setIsSaving(false); }
   }, [isDirty, onSave, onPublish]);
 
-  // ── Canvas pointer handlers ──
-  // Combined: pan events + deselect on background click
-  const handleCanvasPointerDown = useCallback(
-    (e: React.PointerEvent) => {
-      // Pan takes priority
-      onPanPointerDown(e);
-    },
-    [onPanPointerDown]
-  );
-
-  const handleCanvasPointerMove = useCallback(
-    (e: React.PointerEvent) => {
-      onPanPointerMove(e);
-    },
-    [onPanPointerMove]
-  );
-
-  const handleCanvasPointerUp = useCallback(
-    (e: React.PointerEvent) => {
-      onPanPointerUp(e);
-    },
-    [onPanPointerUp]
-  );
-
-  const handleCanvasClick = useCallback(
-    (e: React.MouseEvent) => {
-      // Only deselect if this was a plain click on background (not end of pan)
-      if (isPanning) return;
-      const target = e.target as HTMLElement;
-      if (target === canvasRef.current || target.dataset.canvasBg === "true") {
-        deselectAll();
-      }
-    },
-    [isPanning, deselectAll]
-  );
-
-  // Zoom presets
-  const ZOOM_PRESETS = [
-    { label: "50%", value: 0.5 },
-    { label: "75%", value: 0.75 },
-    { label: "100%", value: 1 },
-    { label: "150%", value: 1.5 },
-    { label: "200%", value: 2 },
-  ];
-
-  // Computed content sizing for scroll wrapper — uses breakpoint-aware dimensions
   const previewWidths = document.artboards.map((a) => getArtboardPreviewWidth(a.width, activeBreakpoint));
   const previewHeights = document.artboards.map((a) => getArtboardPreviewHeight(a.width, a.height, activeBreakpoint));
-  const maxArtboardW = Math.max(0, ...previewWidths);
+  const maxArtboardW = Math.max(0, ...previewWidths) + 24;
   const contentW = maxArtboardW + CANVAS_H_PADDING * 2;
-  const totalContentH = previewHeights.reduce((sum, h) => sum + h, 0)
-    + (document.artboards.length - 1) * ARTBOARD_GAP
-    + CANVAS_V_PADDING * 2;
-
-  // Find the active breakpoint preset for display
-  const activeDevicePreset = DEVICE_PRESETS.find((p) => p.bp === activeBreakpoint) ?? DEVICE_PRESETS[0]!;
+  const totalContentH = previewHeights.reduce((s, h) => s + h, 0) + 84 + (document.artboards.length - 1) * ARTBOARD_GAP + CANVAS_V_PADDING * 2;
+  const showRightPanel = selectedIds.length > 0;
 
   return (
     <MediaProvider>
-    <div className="flex flex-col h-screen bg-gray-100 overflow-hidden select-none">
-      {/* ── Top Toolbar ── */}
-      <header className="flex items-center justify-between h-12 px-4 bg-white border-b border-gray-200 flex-shrink-0 z-50">
-        <div className="flex items-center gap-3">
-          {/* Logo */}
-          <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-blue-600 text-xs font-bold text-white">
-              P
-            </div>
-            <input
-              type="text"
-              className="text-sm font-semibold text-gray-800 bg-transparent border-none outline-none focus:ring-0 w-40 hover:bg-gray-50 focus:bg-gray-50 px-1 py-0.5 rounded"
-              value={document.pageTitle}
-              onChange={(e) => setPageTitle(e.target.value)}
-            />
-          </div>
+    <div style={{ display:"flex", flexDirection:"column", height:"100vh", background:"#f5f5f7", overflow:"hidden", userSelect:"none", fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
 
-          <div className="w-px h-5 bg-gray-200" />
-
-          {/* Undo/Redo */}
-          <div className="flex items-center gap-0.5">
-            <button
-              type="button"
-              onClick={undo}
-              disabled={past.length === 0}
-              className="flex items-center justify-center w-8 h-8 rounded-md text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm"
-              title={`${t("toolbar.undo")} (Ctrl+Z)`}
-            >
-              ↶
-            </button>
-            <button
-              type="button"
-              onClick={redo}
-              disabled={future.length === 0}
-              className="flex items-center justify-center w-8 h-8 rounded-md text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm"
-              title={`${t("toolbar.redo")} (Ctrl+Y)`}
-            >
-              ↷
-            </button>
+      {/* ── Top Bar ── */}
+      <header id="tour-top-bar" style={{ display:"flex", alignItems:"center", justifyContent:"space-between", height:56, padding:"0 16px", background:"#fff", borderBottom:"1px solid #e5e7eb", flexShrink:0, zIndex:50 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+          <div style={{ width:32,height:32,borderRadius:10,background:"linear-gradient(135deg,#0ea5e9,#38bdf8)",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff" }}><Package size={16} /></div>
+          <input type="text" style={{ fontSize:14,fontWeight:600,color:"#1e1e2e",background:"transparent",border:"none",outline:"none",width:180,padding:"4px 8px",borderRadius:8 }} value={document.pageTitle} onChange={(e) => setPageTitle(e.target.value)} />
+          <div style={{ width:1,height:24,background:"#e5e7eb" }} />
+          <div style={{ display:"flex",gap:2 }}>
+            <TopBtn onClick={undo} disabled={past.length===0} title="Undo"><Undo2 size={16} /></TopBtn>
+            <TopBtn onClick={redo} disabled={future.length===0} title="Redo"><Redo2 size={16} /></TopBtn>
+            <div style={{ width:1,height:24,background:"#e5e7eb",margin:"0 8px",alignSelf:"center" }} />
+            <TopBtn onClick={startTour} title="Show Tour"><HelpCircle size={16} /></TopBtn>
           </div>
         </div>
 
-        {/* ── Center: Device Preview Toolbar ── */}
-        <div className="flex items-center gap-0.5 bg-gray-50 rounded-lg px-1 py-0.5 border border-gray-200">
-          {DEVICE_PRESETS.map((preset) => (
-            <button
-              key={preset.bp}
-              type="button"
-              onClick={() => handleBreakpointSwitch(preset.bp)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium transition-all duration-200 ${
-                activeBreakpoint === preset.bp
-                  ? "bg-white text-blue-600 shadow-sm border border-blue-200"
-                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-100 border border-transparent"
-              }`}
-              title={`${t(preset.labelKey)} (${preset.width}px)`}
+        {/* Content Language Tabs */}
+        <ContentLocaleTabs />
+
+        <div style={{ display:"flex",alignItems:"center",gap:4 }}>
+          <TopBtn onClick={() => setZoom(zoom-ZOOM_STEP*2)} title="Zoom out"><ZoomOut size={16} /></TopBtn>
+          <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+            <select
+              value={Math.round(zoom * 100)}
+              onChange={(e) => {
+                if (e.target.value === "fit") handleFitToView();
+                else setZoom(parseInt(e.target.value, 10) / 100);
+              }}
+              style={{
+                appearance: "none",
+                background: "transparent",
+                border: "none",
+                fontSize: 11,
+                fontWeight: 600,
+                color: "#9ca3af",
+                minWidth: 44,
+                textAlign: "center",
+                outline: "none",
+                cursor: "pointer",
+                padding: "0 12px 0 4px",
+              }}
+              title="Zoom size"
             >
-              <span className="text-sm">{preset.icon}</span>
-              <span className="hidden md:inline">{t(preset.labelKey)}</span>
-              {activeBreakpoint === preset.bp && (
-                <span className="text-[9px] font-mono text-gray-400 hidden lg:inline">{preset.width}px</span>
+              <option value="fit">Fit</option>
+              <option value="25">25%</option>
+              <option value="50">50%</option>
+              <option value="75">75%</option>
+              <option value="100">100%</option>
+              <option value="125">125%</option>
+              <option value="150">150%</option>
+              <option value="200">200%</option>
+              {![25, 50, 75, 100, 125, 150, 200].includes(Math.round(zoom * 100)) && (
+                <option value={Math.round(zoom * 100)} hidden>
+                  {Math.round(zoom * 100)}%
+                </option>
               )}
-            </button>
-          ))}
+            </select>
+            <ChevronDown size={10} style={{ color: "#9ca3af", position: "absolute", right: 2, pointerEvents: "none" }} />
+          </div>
+          <TopBtn onClick={() => setZoom(zoom+ZOOM_STEP*2)} title="Zoom in"><ZoomIn size={16} /></TopBtn>
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Zoom Controls */}
-          <div className="flex items-center gap-1 bg-gray-50 rounded-md px-1.5 py-0.5">
-            <button
-              type="button"
-              onClick={() => setZoom(zoom - ZOOM_STEP * 2)}
-              className="text-gray-500 hover:text-gray-700 text-sm px-1 h-7 flex items-center"
-            >
-              −
-            </button>
-
-            <div className="relative group">
-              <button
-                type="button"
-                className="text-xs font-medium text-gray-600 w-12 text-center h-7 flex items-center justify-center hover:bg-gray-100 rounded"
-              >
-                {Math.round(zoom * 100)}%
-              </button>
-              <div className="absolute top-full right-0 mt-1 bg-white rounded-md shadow-lg border border-gray-200 py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[9999] min-w-[100px]">
-                {ZOOM_PRESETS.map((p) => (
-                  <button
-                    key={p.label}
-                    type="button"
-                    onClick={() => setZoom(p.value)}
-                    className={`w-full text-left px-3 py-1 text-xs transition-colors ${
-                      Math.round(zoom * 100) === Math.round(p.value * 100)
-                        ? "bg-blue-50 text-blue-600 font-semibold"
-                        : "text-gray-600 hover:bg-gray-50"
-                    }`}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-                <div className="border-t border-gray-100 my-1" />
-                <button
-                  type="button"
-                  onClick={handleFitToView}
-                  className="w-full text-left px-3 py-1 text-xs text-gray-600 hover:bg-gray-50"
-                >
-                  {t("toolbar.fitToView")}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCenterCanvas}
-                  className="w-full text-left px-3 py-1 text-xs text-gray-600 hover:bg-gray-50"
-                >
-                  {t("toolbar.centerCanvas")}
-                </button>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setZoom(zoom + ZOOM_STEP * 2)}
-              className="text-gray-500 hover:text-gray-700 text-sm px-1 h-7 flex items-center"
-            >
-              +
-            </button>
+        <div id="tour-publish" style={{ display:"flex",alignItems:"center",gap:8 }}>
+          <div style={{ display:"flex",alignItems:"center",gap:4,padding:"4px 10px",borderRadius:8,background:"#f0f9ff",border:"1px solid #e0f2fe" }}>
+            <QrCode size={14} style={{ color:"#0ea5e9" }} />
+            <span style={{ fontSize:10,fontWeight:600,color:"#0ea5e9" }}>{t("toolbar.scanPreview")}</span>
           </div>
-
-          {/* Fit to view */}
-          <button
-            type="button"
-            onClick={handleFitToView}
-            className="flex items-center h-8 px-2.5 rounded-md text-xs font-medium text-gray-500 hover:bg-gray-100 transition-colors"
-            title={`${t("toolbar.fitToView")} (Ctrl+0)`}
-          >
-            ⊞
-          </button>
-
-          {/* Center canvas */}
-          <button
-            type="button"
-            onClick={handleCenterCanvas}
-            className="flex items-center h-8 px-2.5 rounded-md text-xs font-medium text-gray-500 hover:bg-gray-100 transition-colors"
-            title={t("toolbar.centerCanvas")}
-          >
-            ◎
-          </button>
-
-          <div className="w-px h-5 bg-gray-200" />
-
-          {/* Language Switcher */}
-          <LanguageSwitcher />
-
-          <div className="w-px h-5 bg-gray-200" />
-
-          <a
-            href="/preview"
-            target="_blank"
-            className="flex items-center h-8 px-3 rounded-md text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors"
-          >
-            👁 {t("toolbar.preview")}
+          <a href={previewSlug?`/preview/${previewSlug}`:"#"} target={previewSlug?"_blank":undefined}
+            onClick={(e) => { if (!previewSlug) { e.preventDefault(); alert("Please save first."); } }}
+            style={{ display:"flex",alignItems:"center",gap:4,height:36,padding:"0 14px",borderRadius:10,fontSize:12,fontWeight:600,color:"#6b7280",background:"#f9fafb",border:"1px solid #e5e7eb",textDecoration:"none",cursor:"pointer",transition:"all 0.15s" }}>
+            <Eye size={14} /> {t("toolbar.preview")}
           </a>
-
-          <button
-            type="button"
-            onClick={handleAction}
-            disabled={isSaving}
-            className="flex items-center justify-center min-w-[84px] h-8 px-4 rounded-md bg-[#bae6fd] text-black hover:bg-[#7dd3fc] text-xs font-medium transition-colors shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
-          >
-            {isSaving && (
-              <svg className="animate-spin -ml-1 mr-2 h-3 w-3 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-            )}
-            {isSaving ? (isDirty ? "Saving..." : "Publishing...") : (isDirty ? t("toolbar.save") : "Publish")}
+          <button type="button" onClick={handleAction} disabled={isSaving}
+            style={{ display:"flex",alignItems:"center",justifyContent:"center",gap:6,minWidth:isDirty?100:180,height:36,padding:"0 18px",borderRadius:10,background:isDirty?"linear-gradient(135deg,#0ea5e9,#38bdf8)":"linear-gradient(135deg,#10b981,#059669)",color:"#fff",fontSize:12,fontWeight:700,border:"none",cursor:"pointer",opacity:isSaving?0.7:1,transition:"all 0.2s",boxShadow:isDirty?"0 2px 12px rgba(14,165,233,0.25)":"0 2px 12px rgba(16,185,129,0.25)" }}>
+            {isSaving && <Loader2 size={14} style={{ animation:"spin 0.6s linear infinite" }} />}
+            {!isSaving && (isDirty ? <Save size={14} /> : <QrCode size={14} />)}
+            {isSaving?(isDirty?"Saving...":"Generating..."):(isDirty?t("toolbar.saveDraft"):t("toolbar.generateQR"))}
           </button>
         </div>
       </header>
 
       {/* ── Main Area ── */}
-      <div className="flex flex-1 min-h-0">
-        {/* ── Left Panel ── */}
-        <div className="w-56 flex-shrink-0 flex flex-col bg-white border-r border-gray-200 overflow-hidden">
-          <div className="flex border-b border-gray-100">
-            {(["elements", "layers", "artboard"] as const).map((tab) => (
-              <button
-                key={tab}
-                type="button"
-                onClick={() => setLeftTab(tab)}
-                className={`flex-1 py-2 text-[10px] font-semibold uppercase tracking-wider transition-colors ${
-                  leftTab === tab
-                    ? "text-blue-600 border-b-2 border-blue-600"
-                    : "text-gray-400 hover:text-gray-600"
-                }`}
-              >
-                {tab === "elements" ? t("tab.add") : tab === "layers" ? t("tab.layers") : t("tab.canvas")}
-              </button>
-            ))}
+      <div style={{ display:"flex", flex:1, minHeight:0 }}>
+
+        {/* ── Left Tools Container ── */}
+        <div id="tour-drawer-container" style={{ display: "flex", height: "100%", zIndex: 40, flexShrink: 0 }}>
+          {/* ── Left Tool Rail ── */}
+          <div id="tour-left-rail" style={{ width:56,flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",paddingTop:12,gap:4,background:"#fff",borderRight:"1px solid #e5e7eb" }}>
+            <RailBtn id="tour-btn-themes" icon={<Palette size={18} />} label="Themes" active={leftDrawer==="themes"} onClick={() => setLeftDrawer(leftDrawer==="themes"?null:"themes")} />
+            <RailBtn id="tour-btn-blocks" icon={<Puzzle size={18} />} label="Blocks" active={leftDrawer==="blocks"} onClick={() => setLeftDrawer(leftDrawer==="blocks"?null:"blocks")} />
+            <RailBtn id="tour-btn-order" icon={<Layers size={18} />} label="Order" active={leftDrawer==="order"} onClick={() => setLeftDrawer(leftDrawer==="order"?null:"order")} />
+            <RailBtn id="tour-btn-canvas" icon={<Settings size={18} />} label="Canvas" active={leftDrawer==="experience"} onClick={() => setLeftDrawer(leftDrawer==="experience"?null:"experience")} />
           </div>
-          <div className="flex-1 overflow-y-auto">
-            {leftTab === "elements" && <ElementPanel />}
-            {leftTab === "layers" && <LayerPanel />}
-            {leftTab === "artboard" && <ArtboardSettings />}
-          </div>
+
+          {/* ── Left Drawer ── */}
+          {leftDrawer && (
+            <div id="tour-left-drawer" style={{ width:260,flexShrink:0,background:"#fff",borderRight:"1px solid #e5e7eb",overflowY:"auto",animation:"slideInLeft 0.2s ease" }}>
+              {leftDrawer==="themes" && <ThemePanel />}
+              {leftDrawer==="blocks" && <ElementPanel />}
+              {leftDrawer==="order" && <LayerPanel />}
+              {leftDrawer==="experience" && <ArtboardSettings />}
+            </div>
+          )}
         </div>
 
-        {/* ── Canvas Area ── */}
-        <div
-          ref={canvasRef}
-          className="flex-1 overflow-auto relative"
-          style={{
-            cursor: panCursor || "default",
-          }}
-          onWheel={handleWheel}
-          onPointerDown={handleCanvasPointerDown}
-          onPointerMove={handleCanvasPointerMove}
-          onPointerUp={handleCanvasPointerUp}
-          onClick={handleCanvasClick}
-        >
-          {/* Pan mode overlay indicator */}
+        {/* ── Canvas ── */}
+        <div id="tour-canvas" ref={canvasRef} style={{ flex:1,overflow:"auto",position:"relative",cursor:panCursor||"default",background:"#f0f0f3" }}
+          onWheel={handleWheel} onPointerDown={handleCanvasPointerDown} onPointerMove={handleCanvasPointerMove} onPointerUp={handleCanvasPointerUp} onClick={handleCanvasClick}>
+
           {isSpaceHeld && (
-            <div
-              style={{
-                position: "sticky",
-                top: 8,
-                left: "50%",
-                transform: "translateX(-50%)",
-                zIndex: 99999,
-                pointerEvents: "none",
-                display: "flex",
-                justifyContent: "center",
-              }}
-            >
-              <div className="bg-gray-900/80 text-white text-[10px] font-medium px-3 py-1 rounded-full backdrop-blur-sm">
-                ✋ {t("toolbar.panMode")}
-              </div>
+            <div style={{ position:"sticky",top:8,left:"50%",transform:"translateX(-50%)",zIndex:99999,pointerEvents:"none",display:"flex",justifyContent:"center" }}>
+              <div style={{ background:"#0ea5e9",color:"#fff",fontSize:10,fontWeight:600,padding:"4px 12px",borderRadius:20,display:"flex",alignItems:"center",gap:4 }}><Hand size={12} /> Pan mode</div>
             </div>
           )}
 
-          {/* Background dot pattern — covers the full scrollable content area.
-              Uses pointer-events: auto so clicks on it trigger background deselect and pan. */}
-          <div
-            data-canvas-bg="true"
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              /* Span at least 100% of the viewport AND the full content size */
-              width: contentW * zoom,
-              height: totalContentH * zoom,
-              minWidth: "100%",
-              minHeight: "100%",
-              backgroundImage: "radial-gradient(circle, #d1d5db 1px, transparent 1px)",
-              backgroundSize: "20px 20px",
-              zIndex: 0,
-            }}
-          />
+          <div data-canvas-bg="true" style={{ position:"absolute",top:0,left:0,width:contentW*zoom,height:totalContentH*zoom,minWidth:"100%",minHeight:"100%",background:"radial-gradient(circle at 50% 30%,#e8e8ee 0%,#f0f0f3 70%)",zIndex:0 }} />
 
-          {/* Artboard wrapper — sized to the scaled content so scrollbars are correct.
-              Uses margin: 0 auto so horizontal centering adapts to the viewport width. */}
-          <div
-            style={{
-              width: contentW * zoom,
-              minWidth: contentW * zoom,
-              minHeight: totalContentH * zoom,
-              position: "relative",
-              margin: "0 auto",
-            }}
-          >
-            {/* Scaled artboard content */}
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: ARTBOARD_GAP,
-                padding: `${CANVAS_V_PADDING}px ${CANVAS_H_PADDING}px`,
-                transform: `scale(${zoom})`,
-                transformOrigin: "top left",
-                width: contentW,
-              }}
-            >
+          <div style={{ width:contentW*zoom,minWidth:contentW*zoom,minHeight:totalContentH*zoom,position:"relative",margin:"0 auto" }}>
+            <div style={{ display:"flex",flexDirection:"column",alignItems:"center",gap:ARTBOARD_GAP,padding:`${CANVAS_V_PADDING}px ${CANVAS_H_PADDING}px`,transform:`scale(${zoom})`,transformOrigin:"top left",width:contentW }}>
               {document.artboards.map((ab) => (
-                <div key={ab.id} style={{ position: "relative" }}>
-                  <Artboard artboard={ab} />
-                </div>
+                <div key={ab.id} style={{ position:"relative" }}><Artboard artboard={ab} /></div>
               ))}
             </div>
           </div>
 
-          {/* Floating toolbar — outside scaled container, 1:1 screen pixels */}
           <FloatingToolbar canvasRef={canvasRef} zoom={zoom} />
         </div>
 
-        {/* ── Right Panel ── */}
-        <div className="w-64 flex-shrink-0 overflow-y-auto bg-white border-l border-gray-200">
-          <PropertiesPanel />
-        </div>
+        {/* ── Right Panel (Block Settings) ── */}
+        {showRightPanel && (
+          <div style={{ width:280,flexShrink:0,overflowY:"auto",background:"#fff",borderLeft:"1px solid #e5e7eb",animation:"slideInRight 0.2s ease" }}>
+            <PropertiesPanel />
+          </div>
+        )}
       </div>
 
       {/* ── Status Bar ── */}
-      <footer className="flex items-center justify-between h-7 px-4 bg-white border-t border-gray-200 flex-shrink-0">
-        <div className="flex items-center gap-4 text-[10px] text-gray-400">
-          <span>{Object.keys(document.elements).length} {t("status.elements")}</span>
-          <span>{document.artboards.length} {document.artboards.length !== 1 ? t("status.artboards") : t("status.artboard")}</span>
-          {selectedIds.length > 0 && (
-            <span className="text-blue-500 font-medium">{selectedIds.length} {t("status.selected")}</span>
-          )}
+      <footer style={{ display:"flex",alignItems:"center",justifyContent:"space-between",height:28,padding:"0 16px",background:"#fff",borderTop:"1px solid #e5e7eb",flexShrink:0 }}>
+        <div style={{ display:"flex",alignItems:"center",gap:12,fontSize:10,color:"#9ca3af" }}>
+          <span>{Object.keys(document.elements).length} {t("status.blocks")}</span>
+          {selectedIds.length>0 && <span style={{ color:"#0ea5e9",fontWeight:600 }}>{selectedIds.length} {t("status.selected")}</span>}
         </div>
-        <div className="flex items-center gap-3 text-[10px] text-gray-400">
-          <span className="font-medium text-blue-500">
-            {activeDevicePreset.icon} {t(activeDevicePreset.labelKey)} ({activeDevicePreset.width}px)
-          </span>
-          <span>{Math.round(zoom * 100)}% · {t("status.panHint")}</span>
+        <div style={{ display:"flex",alignItems:"center",gap:8,fontSize:10,color:"#9ca3af" }}>
+          <span style={{ color:"#0ea5e9",fontWeight:600,display:"flex",alignItems:"center",gap:3 }}><Smartphone size={11} /> {t("status.mobilePreview")}</span>
+          <span>{Math.round(zoom*100)}%</span>
         </div>
       </footer>
+
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes slideInLeft { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideInRight { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+      `}</style>
     </div>
     </MediaProvider>
+  );
+}
+
+function TopBtn({ children, onClick, disabled, title }: { children: React.ReactNode; onClick: () => void; disabled?: boolean; title?: string; }) {
+  return (
+    <button type="button" onClick={onClick} disabled={disabled} title={title}
+      style={{ width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center",borderRadius:8,border:"none",background:"transparent",color:disabled?"#d1d5db":"#6b7280",cursor:disabled?"not-allowed":"pointer",fontSize:14,transition:"all 0.15s" }}
+      onMouseEnter={(e) => { if (!disabled) e.currentTarget.style.background="#f3f4f6"; }}
+      onMouseLeave={(e) => { e.currentTarget.style.background="transparent"; }}>
+      {children}
+    </button>
+  );
+}
+
+function RailBtn({ id, icon, label, active, onClick }: { id?: string; icon: React.ReactNode; label: string; active: boolean; onClick: () => void; }) {
+  return (
+    <button id={id} type="button" onClick={onClick} title={label}
+      style={{ width:44,height:44,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:2,borderRadius:12,border:active?"1px solid #bae6fd":"1px solid transparent",background:active?"#e0f2fe":"transparent",cursor:"pointer",transition:"all 0.15s",color:active?"#0ea5e9":"#9ca3af" }}
+      onMouseEnter={(e) => { if (!active) e.currentTarget.style.background="#f9fafb"; }}
+      onMouseLeave={(e) => { if (!active) e.currentTarget.style.background=active?"#e0f2fe":"transparent"; }}>
+      {icon}
+      <span style={{ fontSize:8,fontWeight:700,color:active?"#0ea5e9":"#9ca3af",textTransform:"uppercase",letterSpacing:"0.05em" }}>{label}</span>
+    </button>
   );
 }

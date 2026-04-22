@@ -132,7 +132,7 @@ export function getArtboardPreviewWidth(
  * is maintained at every breakpoint. This ensures elements
  * stay in the same relative positions — no vertical stretching.
  *
- * Desktop 1440×900 → Mobile 375×? → 375/1440 × 900 = 234px
+ * Desktop 1440×900 → Mobile 428×? → 428/1440 × 900 = 267px
  * The content is a scaled-down version of the desktop design.
  */
 export function getArtboardPreviewHeight(

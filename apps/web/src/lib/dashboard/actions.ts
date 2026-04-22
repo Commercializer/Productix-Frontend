@@ -310,6 +310,70 @@ export async function getPublicPageBySlugAction(slug: string) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// PREVIEW PAGE — Authenticated access for previewing pages
+// ═══════════════════════════════════════════════════════════════
+
+export async function getPreviewPageBySlugAction(slug: string) {
+  const session = await auth();
+  if (!session?.user?.id) return null;
+
+  const profile = await prisma.productProfile.findUnique({
+    where: { slug },
+    include: {
+      product: {
+        include: {
+          company: {
+            select: {
+              name: true,
+              logoUrl: true,
+              businessUsername: true,
+              customDomain: true,
+            },
+          },
+          brandProfile: {
+            select: {
+              brandName: true,
+              brandLogoUrl: true,
+              themeColor: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!profile) {
+    return null;
+  }
+
+  return {
+    id: profile.id,
+    slug: profile.slug,
+    productName: profile.productName,
+    tagline: profile.tagline,
+    description: profile.description,
+    logoUrl: profile.logoUrl,
+    themeColor: profile.themeColor,
+    content: profile.content,
+    metaDescription: profile.metaDescription,
+    ogImageUrl: profile.ogImageUrl,
+    publishedAt: profile.publishedAt?.toISOString() ?? null,
+    company: {
+      name: profile.product.company.name,
+      logoUrl: profile.product.company.logoUrl,
+      businessUsername: profile.product.company.businessUsername,
+    },
+    brand: profile.product.brandProfile
+      ? {
+          name: profile.product.brandProfile.brandName,
+          logoUrl: profile.product.brandProfile.brandLogoUrl,
+          themeColor: profile.product.brandProfile.themeColor,
+        }
+      : null,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════
 // UPDATE PAGE METADATA (SEO fields)
 // ═══════════════════════════════════════════════════════════════
 

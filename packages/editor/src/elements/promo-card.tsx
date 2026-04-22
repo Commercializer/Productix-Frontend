@@ -6,6 +6,7 @@
 "use client";
 
 import React from "react";
+import { Megaphone } from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
 import { ImageUploadWidget } from "../media/image-upload-widget";
 
@@ -129,7 +130,7 @@ function PromoCardPropertyPanel({ props, onChange }: PropertyPanelProps) {
 registerElement({
   type: "promo-card",
   label: "Promo Card",
-  icon: "🎯",
+  icon: <Megaphone size={16} />,
   category: "promotional",
   defaultProps: {
     title: "Special Offer",

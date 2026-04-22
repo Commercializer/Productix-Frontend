@@ -5,6 +5,7 @@
 "use client";
 
 import React from "react";
+import { Sparkles } from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
 
 const COMMON_ICONS = [
@@ -104,7 +105,7 @@ function IconPropertyPanel({ props, onChange }: PropertyPanelProps) {
 registerElement({
   type: "icon",
   label: "Icon",
-  icon: "⭐",
+  icon: <Sparkles size={16} />,
   category: "content",
   defaultProps: { icon: "⭐", color: "#3b82f6", fontSize: 48, bgColor: "transparent", borderRadius: 12 },
   defaultTransform: { width: 64, height: 64 },

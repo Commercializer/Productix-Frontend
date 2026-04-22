@@ -5,6 +5,7 @@
 "use client";
 
 import React from "react";
+import { MousePointerClick } from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
 
 /* ─── Component ─────────────────────────────── */
@@ -148,7 +149,7 @@ function ButtonPropertyPanel({ props, onChange }: PropertyPanelProps) {
 registerElement({
   type: "button",
   label: "Button",
-  icon: "🔘",
+  icon: <MousePointerClick size={16} />,
   category: "interactive",
   defaultProps: {
     text: "Get Started",

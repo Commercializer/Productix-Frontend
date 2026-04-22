@@ -1,7 +1,9 @@
 "use client";
 
-import React from "react";
-import type { CanvasDocument } from "@productix/types";
+import React, { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import type { CanvasDocument, ContentLocale } from "@productix/types";
+import { CONTENT_LOCALE_META } from "@productix/types";
 import { PublicRenderer } from "@productix/editor";
 
 interface PublicPageData {
@@ -33,7 +35,17 @@ interface PublicPageClientProps {
 }
 
 export function PublicPageClient({ page }: PublicPageClientProps) {
+  const searchParams = useSearchParams();
   const doc = page.content as unknown as CanvasDocument;
+
+  // Read ?lang= from URL
+  const langParam = searchParams.get("lang");
+  const initialLocale: ContentLocale = (langParam === "si" || langParam === "ta") ? langParam : "en";
+  const [contentLocale, setContentLocale] = useState<ContentLocale>(initialLocale);
+
+  // Available locales from the document
+  const availableLocales = doc?.availableLocales || ["en"];
+  const showLanguageSwitcher = availableLocales.length > 1;
 
   // Check if we have valid canvas content
   const hasCanvasContent = doc && doc.version && doc.artboards && doc.artboards.length > 0;
@@ -44,8 +56,54 @@ export function PublicPageClient({ page }: PublicPageClientProps) {
 
   return (
     <div style={{ minHeight: "100vh", background: "#fff" }}>
+      {/* Language switcher bar for multilingual pages */}
+      {showLanguageSwitcher && (
+        <div style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 9999,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 8,
+          padding: "8px 16px",
+          background: "rgba(255,255,255,0.95)",
+          backdropFilter: "blur(12px)",
+          borderBottom: "1px solid #e5e7eb",
+        }}>
+          {(availableLocales as ContentLocale[]).map((loc) => {
+            const meta = CONTENT_LOCALE_META[loc];
+            const isActive = loc === contentLocale;
+            return (
+              <button
+                key={loc}
+                type="button"
+                onClick={() => setContentLocale(loc)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 5,
+                  padding: "5px 14px",
+                  borderRadius: 20,
+                  border: isActive ? "1px solid #0ea5e9" : "1px solid #e5e7eb",
+                  fontSize: 12,
+                  fontWeight: isActive ? 700 : 500,
+                  cursor: "pointer",
+                  background: isActive ? "#e0f2fe" : "#fff",
+                  color: isActive ? "#0284c7" : "#6b7280",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                <span>{meta.flag}</span>
+                <span>{meta.nativeLabel}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* Rendered page content */}
-      <PublicRenderer document={doc} />
+      <PublicRenderer document={doc} contentLocale={contentLocale} />
 
       {/* Powered-by footer badge */}
       <footer

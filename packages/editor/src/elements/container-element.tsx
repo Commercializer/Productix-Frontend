@@ -9,6 +9,7 @@
 "use client";
 
 import React from "react";
+import { Box } from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
 import { ImageUploadWidget } from "../media/image-upload-widget";
 
@@ -180,7 +181,7 @@ function ContainerPropertyPanel({ props, onChange }: PropertyPanelProps) {
 registerElement({
   type: "container",
   label: "Container",
-  icon: "📦",
+  icon: <Box size={16} />,
   category: "layout",
   defaultProps: {
     bgColor: "transparent",
@@ -196,7 +197,7 @@ registerElement({
     overlayColor: "",
     overlayOpacity: 0.5,
   },
-  defaultTransform: { width: 500, height: 400 },
+  defaultTransform: { width: 343, height: 400 },
   component: ContainerElementComponent,
   propertyPanel: ContainerPropertyPanel,
 });

@@ -1,14 +1,13 @@
 /* ─────────────────────────────────────────────
  * useResize — Pointer-based resize interaction hook
  *
- * Same fix as useDrag: stores latest pointer position
- * in a ref to avoid stale event objects inside rAF.
+ * Same architecture as useDrag: stores latest pointer
+ * position in a ref to avoid stale event objects
+ * inside rAF.
  *
- * Coordinates divided by zoom for canvas-space accuracy.
- *
- * Responsive: when activeBreakpoint !== "desktop",
- * writes to responsiveOverrides instead of the
- * base transform.
+ * The artboard renders at NATIVE size and CSS-scales,
+ * so we always read/write el.transform (native coords)
+ * and divide pointer deltas by zoom × scaleRatio.
  * ──────────────────────────────────────────── */
 
 "use client";
@@ -16,7 +15,7 @@
 import { useCallback, useRef } from "react";
 import { useCanvasStore } from "../engine/canvas-store";
 import { MIN_ELEMENT_SIZE } from "./constants";
-import { getEffectiveTransform } from "../utils/responsive";
+import { getArtboardPreviewWidth } from "../utils/responsive";
 
 export type ResizeHandle =
   | "top-left"
@@ -31,11 +30,14 @@ export type ResizeHandle =
 interface ResizeState {
   startX: number;
   startY: number;
+  /** Native artboard-space transform at resize start */
   startTransform: { x: number; y: number; width: number; height: number };
   handle: ResizeHandle;
   elementId: string;
   aspectRatio: number;
   shiftKey: boolean;
+  /** Combined scale factor: zoom × artboard scaleRatio */
+  combinedScale: number;
 }
 
 export function useResize() {
@@ -53,25 +55,26 @@ export function useResize() {
 
       state.pushHistory();
 
-      // Resolve the effective transform for the active breakpoint
+      // Find the artboard to compute the scale ratio
       const ab = state.document.artboards.find((a) =>
         a.elements.includes(elementId)
       );
-      const effectiveT = getEffectiveTransform(
-        el,
-        state.activeBreakpoint,
-        ab?.width ?? 1440,
-        ab?.height ?? 900,
-      );
+      const abW = ab?.width ?? 1440;
 
+      const previewW = getArtboardPreviewWidth(abW, state.activeBreakpoint);
+      const scaleRatio = previewW / abW;
+      const combinedScale = state.zoom * scaleRatio;
+
+      // Always use native transform — that's what the artboard renders
       resizeRef.current = {
         startX: e.clientX,
         startY: e.clientY,
-        startTransform: { ...effectiveT },
+        startTransform: { ...el.transform },
         handle,
         elementId,
-        aspectRatio: effectiveT.width / effectiveT.height,
+        aspectRatio: el.transform.width / el.transform.height,
         shiftKey: e.shiftKey,
+        combinedScale,
       };
 
       pointerRef.current = { x: e.clientX, y: e.clientY, shiftKey: e.shiftKey };
@@ -96,9 +99,10 @@ export function useResize() {
       rs.shiftKey = shiftKey;
 
       const state = useCanvasStore.getState();
-      const zoom = state.zoom;
-      const dx = (clientX - rs.startX) / zoom;
-      const dy = (clientY - rs.startY) / zoom;
+
+      // Convert screen-pixel deltas → native artboard-space deltas
+      const dx = (clientX - rs.startX) / rs.combinedScale;
+      const dy = (clientY - rs.startY) / rs.combinedScale;
       const { x, y, width, height } = rs.startTransform;
 
       let newX = x;
@@ -160,14 +164,14 @@ export function useResize() {
         }
       }
 
-      const newTransform = { x: newX, y: newY, width: newW, height: newH };
-
-      // Write to the correct target based on active breakpoint
-      if (state.activeBreakpoint === "desktop") {
-        state.updateElementTransform(rs.elementId, newTransform);
-      } else {
-        state.updateElementResponsiveOverride(rs.elementId, state.activeBreakpoint, newTransform);
-      }
+      // Always write to the base transform — the artboard renders
+      // from el.transform regardless of breakpoint.
+      state.updateElementTransform(rs.elementId, {
+        x: newX,
+        y: newY,
+        width: newW,
+        height: newH,
+      });
     });
   }, []);
 

@@ -8,7 +8,7 @@
 
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
-import type { CanvasDocument, ElementNode, Transform, Artboard, Breakpoint, LayoutProps, FlexContainerProps } from "@productix/types";
+import type { CanvasDocument, ElementNode, Transform, Artboard, Breakpoint, LayoutProps, FlexContainerProps, ContentLocale } from "@productix/types";
 import { DEFAULT_LAYOUT_PROPS, DEFAULT_FLEX_CONTAINER } from "@productix/types";
 import { createEmptyDocument, createDefaultArtboard } from "../utils/defaults";
 import { generateElementId, generateArtboardId } from "../utils/id";
@@ -42,6 +42,9 @@ export interface CanvasState {
   activeBreakpoint: Breakpoint;
   editingElementId: string | null;
 
+  // ── Content Locale (multilingual content editing) ──
+  contentLocale: ContentLocale;
+
   // ── History ──
   past: HistoryEntry[];
   future: HistoryEntry[];
@@ -62,6 +65,9 @@ export interface CanvasState {
   updateElementProps: (id: string, props: Record<string, unknown>) => void;
   removeElement: (id: string) => void;
   duplicateElement: (id: string) => string | null;
+
+  // ── Content Locale ──
+  setContentLocale: (locale: ContentLocale) => void;
 
   // ── Selection ──
   select: (id: string, additive?: boolean) => void;
@@ -140,6 +146,7 @@ export const useCanvasStore = create<CanvasState>()(
     activeArtboardId: null,
     activeBreakpoint: "desktop" as Breakpoint,
     editingElementId: null,
+    contentLocale: "en" as ContentLocale,
     past: [],
     future: [],
 
@@ -249,7 +256,27 @@ export const useCanvasStore = create<CanvasState>()(
     updateElementProps: (id, props) =>
       set((s) => {
         const el = s.document.elements[id];
-        if (el) Object.assign(el.props, props);
+        if (!el) return;
+        if (s.contentLocale === "en") {
+          // English edits go directly to base props
+          Object.assign(el.props, props);
+        } else {
+          // Non-English edits go to i18nProps[locale]
+          if (!el.i18nProps) {
+            el.i18nProps = {};
+          }
+          if (!el.i18nProps[s.contentLocale]) {
+            el.i18nProps[s.contentLocale] = {};
+          }
+          Object.assign(el.i18nProps[s.contentLocale]!, props);
+          // Track available locales on the document
+          if (!s.document.availableLocales) {
+            s.document.availableLocales = ["en"];
+          }
+          if (!s.document.availableLocales.includes(s.contentLocale)) {
+            s.document.availableLocales.push(s.contentLocale);
+          }
+        }
       }),
 
     removeElement: (id) => {
@@ -327,6 +354,12 @@ export const useCanvasStore = create<CanvasState>()(
       set((s) => {
         s.editingElementId = id;
         if (id) s.selectedIds = [id];
+      }),
+
+    // ── Content Locale ──
+    setContentLocale: (locale) =>
+      set((s) => {
+        s.contentLocale = locale;
       }),
 
     // ── Layer ordering ──

@@ -13,9 +13,9 @@ export interface ElementDefinition {
   /** Display label */
   label: string;
   /** Icon component or emoji */
-  icon: string;
+  icon: React.ReactNode;
   /** Category for sidebar grouping */
-  category: "content" | "media" | "interactive" | "layout" | "social" | "promotional";
+  category: "content" | "media" | "interactive" | "layout" | "social" | "promotional" | "gaming";
   /** Default element-specific props */
   defaultProps: Record<string, unknown>;
   /** Default transform overrides */
@@ -36,7 +36,7 @@ export interface ElementRenderProps {
    * Scale factor (0–1) for responsive sizing.
    * Represents the ratio of the current breakpoint width to the desktop design width.
    * Components should multiply font sizes, padding, gaps, etc. by this value.
-   * Desktop = 1.0, Mobile ≈ 0.26 (375/1440).
+   * Desktop = 1.0, Mobile ≈ 0.30 (428/1440).
    * Clamped so text never gets smaller than ~60% of original.
    */
   scaleFactor?: number;

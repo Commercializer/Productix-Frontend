@@ -12,11 +12,13 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import type { CanvasDocument, Breakpoint } from "@productix/types";
-import { BREAKPOINT_WIDTHS, DEFAULT_FLEX_CONTAINER } from "@productix/types";
+import type { CanvasDocument, Breakpoint, ContentLocale } from "@productix/types";
+import { BREAKPOINT_WIDTHS, CONTENT_LOCALES, CONTENT_LOCALE_META } from "@productix/types";
 import { getElementDefinition } from "../elements/registry";
 import { getArtboardPreviewWidth, isElementInFlow } from "../utils/responsive";
 import { getEffectiveFlexContainer, getEffectiveLayout, computeFlexContainerCSS, computeElementLayoutCSS } from "../engine/layout-engine";
+import { getLocalizedProps } from "../utils/localize-props";
+import { CanvasEffects } from "../engine/canvas-effects";
 
 // Import elements to trigger registration
 import "../elements";
@@ -28,7 +30,7 @@ const VIEWPORT_PRESETS: { label: string; icon: string; bp: Breakpoint; width: nu
   { label: "Desktop", icon: "🖥", bp: "desktop", width: 1440, height: 900 },
   { label: "Laptop", icon: "💻", bp: "laptop", width: 1280, height: 800 },
   { label: "Tablet", icon: "📱", bp: "tablet", width: 768, height: 1024 },
-  { label: "Mobile", icon: "📲", bp: "mobile", width: 375, height: 812 },
+  { label: "Mobile", icon: "📲", bp: "mobile", width: 428, height: 926 },
   { label: "Mobile L", icon: "📲", bp: "mobile", width: 428, height: 926 },
 ];
 
@@ -46,6 +48,8 @@ export interface PreviewRendererProps {
   className?: string;
   /** If true, render with built-in viewport controls toolbar */
   showControls?: boolean;
+  /** Content locale — defaults to "en" */
+  contentLocale?: ContentLocale;
 }
 
 /* ─── Preview Content (renders artboards) ──── */
@@ -55,11 +59,13 @@ function PreviewContent({
   zoom,
   breakpoint,
   frameWidth,
+  contentLocale = "en",
 }: {
   doc: CanvasDocument;
   zoom: number;
   breakpoint: Breakpoint;
   frameWidth?: number;
+  contentLocale?: ContentLocale;
 }) {
   return (
     <div
@@ -138,7 +144,7 @@ function PreviewContent({
                           }}
                         >
                           <Component
-                            props={el.props}
+                            props={getLocalizedProps(el, contentLocale)}
                             isEditing={false}
                             width={effectiveLayout.widthValue}
                             height={effectiveLayout.heightValue}
@@ -175,7 +181,7 @@ function PreviewContent({
                       }}
                     >
                       <Component
-                        props={el.props}
+                        props={getLocalizedProps(el, contentLocale)}
                         isEditing={false}
                         width={width}
                         height={height}
@@ -184,6 +190,10 @@ function PreviewContent({
                     </div>
                   );
                 })}
+              {/* Canvas Effects overlay */}
+              {ab.effect && ab.effect !== "none" && (
+                <CanvasEffects effect={ab.effect} width={ab.width} height={ab.height} />
+              )}
             </div>
           </div>
         );
@@ -198,10 +208,15 @@ export function PreviewRenderer({
   document: doc,
   className,
   showControls = false,
+  contentLocale: initialLocale,
 }: PreviewRendererProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [viewportIdx, setViewportIdx] = useState(0);
   const [previewZoom, setPreviewZoom] = useState(1);
+  const [contentLocale, setContentLocale] = useState<ContentLocale>(initialLocale || "en");
+
+  // If no specific locale was provided, derive from document.availableLocales
+  const availableLocales = doc.availableLocales || ["en"];
 
   const activePreset = VIEWPORT_PRESETS[viewportIdx] ?? VIEWPORT_PRESETS[0]!;
   const activeBreakpoint: Breakpoint = activePreset.width === 0
@@ -258,7 +273,7 @@ export function PreviewRenderer({
     // Simple mode — no controls, just render centered
     return (
       <div className={className} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-        <PreviewContent doc={doc} zoom={1} breakpoint="desktop" />
+        <PreviewContent doc={doc} zoom={1} breakpoint="desktop" contentLocale={contentLocale} />
       </div>
     );
   }
@@ -286,8 +301,42 @@ export function PreviewRenderer({
           ))}
         </div>
 
-        {/* Size indicator + zoom */}
+        {/* Language switcher for preview + Size indicator + zoom */}
         <div className="flex items-center gap-3 text-xs text-gray-400">
+          {/* Content language selector — only if more than 1 locale */}
+          {availableLocales.length > 1 && (
+            <div style={{ display: "flex", gap: 2, background: "#f3f4f6", borderRadius: 6, padding: 2 }}>
+              {availableLocales.map((loc) => {
+                const meta = CONTENT_LOCALE_META[loc];
+                const isActive = loc === contentLocale;
+                return (
+                  <button
+                    key={loc}
+                    type="button"
+                    onClick={() => setContentLocale(loc)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 3,
+                      padding: "3px 8px",
+                      borderRadius: 4,
+                      border: "none",
+                      fontSize: 10,
+                      fontWeight: isActive ? 700 : 500,
+                      cursor: "pointer",
+                      background: isActive ? "#fff" : "transparent",
+                      color: isActive ? "#1e1e2e" : "#9ca3af",
+                      boxShadow: isActive ? "0 1px 2px rgba(0,0,0,0.06)" : "none",
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    <span>{meta.flag}</span>
+                    <span>{loc.toUpperCase()}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
           {activePreset.width > 0 && (
             <span className="font-mono">
               {activePreset.width}×{activePreset.height}
@@ -329,6 +378,7 @@ export function PreviewRenderer({
             zoom={previewZoom}
             breakpoint={activeBreakpoint}
             frameWidth={activePreset.width > 0 ? activePreset.width * previewZoom : undefined}
+            contentLocale={contentLocale}
           />
         </div>
       </div>

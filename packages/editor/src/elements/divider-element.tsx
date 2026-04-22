@@ -5,6 +5,7 @@
 "use client";
 
 import React from "react";
+import { Minus } from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
 
 function DividerElementComponent({ props, scaleFactor = 1 }: ElementRenderProps) {
@@ -64,10 +65,10 @@ function DividerPropertyPanel({ props, onChange }: PropertyPanelProps) {
 registerElement({
   type: "divider",
   label: "Divider",
-  icon: "➖",
+  icon: <Minus size={16} />,
   category: "layout",
   defaultProps: { color: "#e5e7eb", thickness: 2, lineStyle: "solid", orientation: "horizontal" },
-  defaultTransform: { width: 400, height: 20 },
+  defaultTransform: { width: 327, height: 20 },
   component: DividerElementComponent,
   propertyPanel: DividerPropertyPanel,
 });

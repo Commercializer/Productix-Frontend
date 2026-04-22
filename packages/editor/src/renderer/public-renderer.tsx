@@ -18,7 +18,7 @@
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
-import type { CanvasDocument, Breakpoint } from "@productix/types";
+import type { CanvasDocument, Breakpoint, ContentLocale } from "@productix/types";
 import { BREAKPOINT_WIDTHS } from "@productix/types";
 import { getElementDefinition } from "../elements/registry";
 import { isElementInFlow } from "../utils/responsive";
@@ -29,6 +29,8 @@ import {
   computeElementLayoutCSS,
   generateResponsiveStylesheet,
 } from "../engine/layout-engine";
+import { getLocalizedProps } from "../utils/localize-props";
+import { CanvasEffects } from "../engine/canvas-effects";
 
 // Import elements to trigger registration
 import "../elements";
@@ -36,6 +38,8 @@ import "../elements";
 export interface PublicRendererProps {
   document: CanvasDocument;
   className?: string;
+  /** Content locale — defaults to "en" */
+  contentLocale?: ContentLocale;
 }
 
 /** Detect the breakpoint from a pixel width */
@@ -46,7 +50,7 @@ function detectBreakpoint(width: number): Breakpoint {
   return "desktop";
 }
 
-export function PublicRenderer({ document: doc, className }: PublicRendererProps) {
+export function PublicRenderer({ document: doc, className, contentLocale = "en" }: PublicRendererProps) {
   const [viewportWidth, setViewportWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 1440
   );
@@ -160,7 +164,7 @@ export function PublicRenderer({ document: doc, className }: PublicRendererProps
                             }}
                           >
                             <Component
-                              props={el.props}
+                              props={getLocalizedProps(el, contentLocale)}
                               isEditing={false}
                               width={effectiveLayout.widthValue}
                               height={effectiveLayout.heightValue}
@@ -198,7 +202,7 @@ export function PublicRenderer({ document: doc, className }: PublicRendererProps
                         }}
                       >
                         <Component
-                          props={el.props}
+                          props={getLocalizedProps(el, contentLocale)}
                           isEditing={false}
                           width={width}
                           height={height}
@@ -207,6 +211,11 @@ export function PublicRenderer({ document: doc, className }: PublicRendererProps
                       </div>
                     );
                   })}
+
+              {/* Canvas Effects overlay */}
+              {ab.effect && ab.effect !== "none" && (
+                <CanvasEffects effect={ab.effect} width={ab.width} height={ab.height} />
+              )}
               </div>
             </section>
           );

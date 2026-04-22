@@ -5,6 +5,7 @@
 "use client";
 
 import React, { useRef, useCallback } from "react";
+import { Type, Heading as HeadingIcon } from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
 
 /* ─── Component ─────────────────────────────── */
@@ -172,7 +173,7 @@ function TextPropertyPanel({ props, onChange }: PropertyPanelProps) {
 registerElement({
   type: "text",
   label: "Text",
-  icon: "📝",
+  icon: <Type size={16} />,
   category: "content",
   defaultProps: {
     text: "Type something...",
@@ -192,7 +193,7 @@ registerElement({
 registerElement({
   type: "heading",
   label: "Heading",
-  icon: "🔤",
+  icon: <HeadingIcon size={16} />,
   category: "content",
   defaultProps: {
     text: "Heading",
@@ -204,7 +205,7 @@ registerElement({
     lineHeight: 1.2,
     fontFamily: "inherit",
   },
-  defaultTransform: { width: 400, height: 60 },
+  defaultTransform: { width: 327, height: 60 },
   component: TextElementComponent,
   propertyPanel: TextPropertyPanel,
 });

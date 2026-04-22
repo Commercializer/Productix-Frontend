@@ -2,31 +2,61 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useParams, useSearchParams } from "next/navigation";
 import type { CanvasDocument } from "@productix/types";
+import type { ContentLocale } from "@productix/types";
 import { PreviewRenderer, productPromoTemplate } from "@productix/editor";
+import { getPreviewPageBySlugAction } from "@/lib/dashboard/actions";
 
 const STORAGE_KEY = "productix-canvas-data";
 
 export default function PreviewPage() {
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const path = params.path as string[] | undefined;
+  const slug = path?.[0];
+
+  // Read ?lang=si or ?lang=ta from URL, default to "en"
+  const langParam = searchParams.get("lang");
+  const contentLocale: ContentLocale = (langParam === "si" || langParam === "ta") ? langParam : "en";
+
   const [doc, setDoc] = useState<CanvasDocument | null>(null);
 
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved) as CanvasDocument;
-        if (parsed.version && parsed.artboards) {
-          setDoc(parsed);
-          return;
+    async function loadData() {
+      // 1. If we have a slug from the URL (/preview/[slug]), fetch from DB
+      if (slug) {
+        try {
+          const page = await getPreviewPageBySlugAction(slug);
+          if (page && page.content && (page.content as any).version) {
+            setDoc(page.content as unknown as CanvasDocument);
+            return;
+          }
+        } catch (error) {
+          console.error("Failed to load preview from DB:", error);
         }
-      } catch {
-        // Fall through to demo
       }
+
+      // 2. Fallback to localStorage (used by the Editor's immediate preview)
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved) as CanvasDocument;
+          if (parsed.version && parsed.artboards) {
+            setDoc(parsed);
+            return;
+          }
+        } catch {
+          // Fall through to demo
+        }
+      }
+
+      // 3. No saved data — use demo template
+      setDoc(productPromoTemplate.data);
     }
 
-    // No saved data — use demo template
-    setDoc(productPromoTemplate.data);
-  }, []);
+    loadData();
+  }, [slug]);
 
   if (!doc) {
     return (
@@ -67,7 +97,7 @@ export default function PreviewPage() {
 
       {/* Preview with viewport controls */}
       <div className="flex-1 min-h-0">
-        <PreviewRenderer document={doc} showControls className="h-full" />
+        <PreviewRenderer document={doc} showControls className="h-full" contentLocale={contentLocale} />
       </div>
     </div>
   );

@@ -22,6 +22,7 @@ import { useDrag } from "../interactions/use-drag";
 import { useResize, type ResizeHandle } from "../interactions/use-resize";
 import { HANDLE_SIZE } from "../interactions/constants";
 import { computeElementLayoutCSS } from "./layout-engine";
+import { getLocalizedProps } from "../utils/localize-props";
 import type { ElementNode, Transform, LayoutProps } from "@productix/types";
 
 interface ElementWrapperProps {
@@ -56,6 +57,7 @@ export const ElementWrapper = memo(function ElementWrapper({
   const setEditingElement = useCanvasStore((s) => s.setEditingElement);
   const updateElementProps = useCanvasStore((s) => s.updateElementProps);
   const activeBreakpoint = useCanvasStore((s) => s.activeBreakpoint);
+  const contentLocale = useCanvasStore((s) => s.contentLocale);
 
   const { onDragStart, onDragMove, onDragEnd } = useDrag();
   const { onResizeStart, onResizeMove, onResizeEnd } = useResize();
@@ -129,7 +131,7 @@ export const ElementWrapper = memo(function ElementWrapper({
         opacity: element.opacity,
         cursor: element.locked ? "not-allowed" : isEditing ? "text" : "default",
         outline: isSelected
-          ? `2px solid ${showOverrideIndicator ? "#8b5cf6" : "#10b981"}`
+          ? `2px solid ${showOverrideIndicator ? "#38bdf8" : "#10b981"}`
           : isHovered
             ? "1.5px solid rgba(16,185,129,0.4)"
             : "none",
@@ -150,7 +152,7 @@ export const ElementWrapper = memo(function ElementWrapper({
         opacity: element.opacity,
         cursor: element.locked ? "not-allowed" : isEditing ? "text" : "move",
         outline: isSelected
-          ? `2px solid ${showOverrideIndicator ? "#8b5cf6" : "#3b82f6"}`
+          ? `2px solid ${showOverrideIndicator ? "#38bdf8" : "#3b82f6"}`
           : isHovered
             ? "1.5px solid rgba(59,130,246,0.4)"
             : "none",
@@ -181,7 +183,7 @@ export const ElementWrapper = memo(function ElementWrapper({
     >
       {/* Element content */}
       <Component
-        props={element.props}
+        props={getLocalizedProps(element, contentLocale)}
         isEditing={isEditing}
         width={renderedWidth}
         height={renderedHeight ?? 0}
@@ -202,7 +204,7 @@ export const ElementWrapper = memo(function ElementWrapper({
                 width: HANDLE_SIZE,
                 height: HANDLE_SIZE,
                 backgroundColor: "#ffffff",
-                border: `2px solid ${showOverrideIndicator ? "#8b5cf6" : "#3b82f6"}`,
+                border: `2px solid ${showOverrideIndicator ? "#38bdf8" : "#3b82f6"}`,
                 borderRadius: 2,
                 zIndex: 9999,
                 ...style,
@@ -262,7 +264,7 @@ export const ElementWrapper = memo(function ElementWrapper({
             top: -20,
             left: 0,
             fontSize: 9,
-            background: "#8b5cf6",
+            background: "#38bdf8",
             color: "#fff",
             borderRadius: 4,
             padding: "1px 6px",

@@ -29,7 +29,8 @@ export default function EditorPage() {
       try {
         const result = await getPageContentAction(profileId!);
         if (result && "content" in result && result.content) {
-          const content = result.content as unknown as CanvasDocument;
+          const contentObj = typeof result.content === "string" ? JSON.parse(result.content as string) : result.content;
+          const content = contentObj as CanvasDocument;
           if (content.version && content.artboards) {
             setInitialDoc(content);
             setPageInfo({ slug: result.slug!, productName: result.productName! });
@@ -48,7 +49,8 @@ export default function EditorPage() {
       if (templateId) {
         const template = getTemplateById(templateId);
         if (template) {
-          setInitialDoc(template.data);
+          // Deep copy the template document so we don't accidentally mutate the static definition using Immer
+          setInitialDoc(JSON.parse(JSON.stringify(template.data)));
           return;
         }
       }
@@ -83,10 +85,16 @@ export default function EditorPage() {
   );
 
   const handlePublish = useCallback(
-    async () => {
+    async (doc: CanvasDocument) => {
       if (!profileId) return;
 
       try {
+        // ALWAYS save the latest page content before publishing
+        await savePageContentAction(
+          profileId,
+          doc as unknown as Record<string, unknown>
+        );
+
         const result = await publishPageAction(profileId);
         showNotification(
           result.success
@@ -116,6 +124,7 @@ export default function EditorPage() {
       initialDocument={initialDoc}
       onSave={handleSave}
       onPublish={handlePublish}
+      previewSlug={pageInfo?.slug}
     />
   );
 }

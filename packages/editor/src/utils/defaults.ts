@@ -25,9 +25,9 @@ export function createDefaultArtboard(
 ): Artboard {
   return {
     id: generateArtboardId(),
-    name: "Artboard 1",
-    width: 1440,
-    height: 900,
+    name: "Canvas",
+    width: 428,
+    height: 926,
     backgroundColor: "#ffffff",
     elements: [],
     position: 0,

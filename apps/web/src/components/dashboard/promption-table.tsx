@@ -387,7 +387,7 @@ export function PromptionTable({
                                   </Link>
 
                                   <a
-                                    href={publicUrl}
+                                    href={`/preview/${p.slug}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="w-full px-3 py-2 text-left text-[13px] hover:bg-[#f8fafc] dark:hover:bg-[#334155] flex items-center gap-2 transition-colors text-[var(--ds-text-primary)]"

@@ -8,6 +8,7 @@
 "use client";
 
 import React from "react";
+import { LayoutDashboard } from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
 import { ImageUploadWidget } from "../media/image-upload-widget";
 
@@ -242,7 +243,7 @@ function CardPropertyPanel({ props, onChange }: PropertyPanelProps) {
 registerElement({
   type: "card",
   label: "Card",
-  icon: "🃏",
+  icon: <LayoutDashboard size={16} />,
   category: "layout",
   defaultProps: {
     bgColor: "#ffffff",

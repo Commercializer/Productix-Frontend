@@ -5,6 +5,7 @@
 "use client";
 
 import React, { useCallback, useRef, useState } from "react";
+import { ImageIcon } from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
 import { ImageUploadWidget } from "../media/image-upload-widget";
 
@@ -63,7 +64,7 @@ function ImageElementComponent({ props, isEditing, onPropsChange }: ElementRende
           gap: 8,
         }}
       >
-        <span style={{ fontSize: 28, opacity: 0.5 }}>🖼️</span>
+        <ImageIcon size={28} style={{ opacity: 0.5, color: "#9ca3af" }} />
         <span style={{ fontSize: 12, color: "#9ca3af", fontWeight: 500 }}>
           {isEditing ? "Click or drag to upload" : "No image"}
         </span>
@@ -180,7 +181,7 @@ function ImagePropertyPanel({ props, onChange }: PropertyPanelProps) {
 registerElement({
   type: "image",
   label: "Image",
-  icon: "🖼️",
+  icon: <ImageIcon size={16} />,
   category: "media",
   defaultProps: {
     src: "",
@@ -188,7 +189,7 @@ registerElement({
     objectFit: "cover",
     borderRadius: 8,
   },
-  defaultTransform: { width: 400, height: 300 },
+  defaultTransform: { width: 343, height: 260 },
   component: ImageElementComponent,
   propertyPanel: ImagePropertyPanel,
 });

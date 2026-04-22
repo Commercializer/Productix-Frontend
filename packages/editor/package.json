@@ -8,6 +8,7 @@
     ".": "./src/index.ts",
     "./renderer": "./src/renderer/preview-renderer.tsx",
     "./templates": "./src/templates/index.ts",
+    "./templates/showcase": "./src/templates/showcase/index.ts",
     "./media": "./src/media/media-context.tsx"
   },
   "scripts": {
@@ -15,9 +16,10 @@
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
+    "@productix/types": "workspace:*",
     "@productix/ui": "workspace:*",
     "@productix/utils": "workspace:*",
-    "@productix/types": "workspace:*",
+    "driver.js": "^1.4.0",
     "immer": "^11.1.4",
     "lucide-react": "^0.468.0",
     "zustand": "^5.0.12"

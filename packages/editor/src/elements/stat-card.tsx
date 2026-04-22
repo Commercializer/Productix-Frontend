@@ -5,6 +5,7 @@
 "use client";
 
 import React from "react";
+import { BarChart3 } from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
 
 function StatCardComponent({ props, scaleFactor = 1 }: ElementRenderProps) {
@@ -110,7 +111,7 @@ function StatCardPropertyPanel({ props, onChange }: PropertyPanelProps) {
 registerElement({
   type: "stat-card",
   label: "Stat Card",
-  icon: "📊",
+  icon: <BarChart3 size={16} />,
   category: "promotional",
   defaultProps: { value: "10K+", label: "Users", trend: "+24%", icon: "📊", bgColor: "#ffffff", valueColor: "#1a1a2e", labelColor: "#6b7280", borderRadius: 16, shadow: "md" },
   defaultTransform: { width: 160, height: 160 },

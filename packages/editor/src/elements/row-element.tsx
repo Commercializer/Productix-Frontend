@@ -11,6 +11,7 @@
 "use client";
 
 import React from "react";
+import { Rows3 } from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
 
 /* ─── Component ─────────────────────────────── */
@@ -182,7 +183,7 @@ function RowPropertyPanel({ props, onChange }: PropertyPanelProps) {
 registerElement({
   type: "row",
   label: "Row",
-  icon: "⬜",
+  icon: <Rows3 size={16} />,
   category: "layout",
   defaultProps: {
     gap: 16,
@@ -194,7 +195,7 @@ registerElement({
     minHeight: 80,
     borderRadius: 0,
   },
-  defaultTransform: { width: 800, height: 120 },
+  defaultTransform: { width: 343, height: 120 },
   component: RowElementComponent,
   propertyPanel: RowPropertyPanel,
 });

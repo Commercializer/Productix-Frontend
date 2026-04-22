@@ -2,6 +2,21 @@
  * Editor Types — Responsive Canvas Data Model
  * ──────────────────────────────────────────── */
 
+// ─── Content Locale System ─────────────────────
+
+/** Supported content languages */
+export type ContentLocale = "en" | "si" | "ta";
+
+/** All content locales in display order */
+export const CONTENT_LOCALES: ContentLocale[] = ["en", "si", "ta"];
+
+/** Display metadata for content locales */
+export const CONTENT_LOCALE_META: Record<ContentLocale, { label: string; nativeLabel: string; flag: string }> = {
+  en: { label: "English", nativeLabel: "English", flag: "🇬🇧" },
+  si: { label: "Sinhala", nativeLabel: "සිංහල", flag: "🇱🇰" },
+  ta: { label: "Tamil", nativeLabel: "தமிழ்", flag: "🇱🇰" },
+};
+
 // ─── Breakpoint System ─────────────────────────
 
 /** Supported responsive breakpoints */
@@ -18,7 +33,7 @@ export const BREAKPOINT_WIDTHS: Record<Breakpoint, number> = {
   desktop: 1440,
   laptop: 1280,
   tablet: 768,
-  mobile: 375,
+  mobile: 428,
 };
 
 /** Canonical viewport heights for each breakpoint (portrait for mobile/tablet) */
@@ -26,7 +41,7 @@ export const BREAKPOINT_HEIGHTS: Record<Breakpoint, number> = {
   desktop: 900,
   laptop: 800,
   tablet: 1024,
-  mobile: 812,
+  mobile: 926,
 };
 
 /**
@@ -144,8 +159,15 @@ export interface ElementNode {
   locked: boolean;
   visible: boolean;
   opacity: number;
-  /** Element-type-specific props (text content, image src, colors, etc.) */
+  /** Element-type-specific props (text content, image src, colors, etc.) — always English / default */
   props: Record<string, unknown>;
+  /**
+   * Per-locale content overrides.
+   * Only non-"en" locales need entries here.
+   * Missing locales fall back to the base `props` (English).
+   * Only text-like properties should be overridden (text, title, subtitle, ctaText, label, value).
+   */
+  i18nProps?: Partial<Record<ContentLocale, Record<string, unknown>>>;
   /** Child element IDs — used by group/container/row/column elements */
   children?: string[];
   /** Parent group ID (if element belongs to a group) */
@@ -169,6 +191,33 @@ export interface ElementNode {
   responsiveLayout?: Partial<Record<Breakpoint, Partial<LayoutProps>>>;
 }
 
+// ─── Canvas Effects ────────────────────────────
+
+/** Supported canvas visual overlay effects */
+export type CanvasEffect =
+  | "none"
+  | "snowfall"
+  | "confetti"
+  | "halloween"
+  | "avurudu"
+  | "wesak"
+  | "fireworks"
+  | "hearts"
+  | "sparkle";
+
+/** All canvas effects with display metadata */
+export const CANVAS_EFFECTS: { value: CanvasEffect; label: string; emoji: string; description: string }[] = [
+  { value: "none",      label: "None",           emoji: "🚫", description: "No effect" },
+  { value: "snowfall",  label: "Snowfall",       emoji: "❄️", description: "Gentle falling snow" },
+  { value: "confetti",  label: "Win / Confetti",  emoji: "🎊", description: "Celebration confetti burst" },
+  { value: "halloween", label: "Halloween",      emoji: "🎃", description: "Spooky bats & pumpkins" },
+  { value: "avurudu",   label: "Avurudu",        emoji: "🪷", description: "Sinhala & Tamil New Year" },
+  { value: "wesak",     label: "Wesak",          emoji: "🪷", description: "Vesak lanterns & light" },
+  { value: "fireworks", label: "Fireworks",      emoji: "🎆", description: "Festive fireworks burst" },
+  { value: "hearts",    label: "Hearts",         emoji: "💕", description: "Floating hearts" },
+  { value: "sparkle",   label: "Sparkle",        emoji: "✨", description: "Twinkling sparkles" },
+];
+
 // ─── Artboard ──────────────────────────────────
 
 /** An artboard / section with custom dimensions */
@@ -187,6 +236,8 @@ export interface Artboard {
   flexContainer?: FlexContainerProps;
   /** Per-breakpoint flex container overrides */
   responsiveFlexContainer?: Partial<Record<Breakpoint, Partial<FlexContainerProps>>>;
+  /** Visual overlay effect for the artboard canvas */
+  effect?: CanvasEffect;
 }
 
 // ─── Canvas Document ───────────────────────────
@@ -202,6 +253,12 @@ export interface CanvasDocument {
   elements: Record<string, ElementNode>;
   /** Global style overrides */
   globalStyles?: Record<string, string>;
+  /**
+   * Which content locales have been authored.
+   * Always includes "en". Presence of "si" or "ta" means
+   * those translations are available for this page.
+   */
+  availableLocales?: ContentLocale[];
 }
 
 // ─── Template Types ────────────────────────────

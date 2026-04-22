@@ -5,6 +5,7 @@
 "use client";
 
 import React from "react";
+import { BadgeCheck } from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
 
 function BadgeElementComponent({ props, scaleFactor = 1 }: ElementRenderProps) {
@@ -81,7 +82,7 @@ function BadgePropertyPanel({ props, onChange }: PropertyPanelProps) {
 registerElement({
   type: "badge",
   label: "Badge",
-  icon: "🏷️",
+  icon: <BadgeCheck size={16} />,
   category: "content",
   defaultProps: { text: "New", icon: "✨", bgColor: "#dbeafe", textColor: "#1d4ed8", borderRadius: 999, fontSize: 13, fontWeight: "600" },
   defaultTransform: { width: 100, height: 32 },

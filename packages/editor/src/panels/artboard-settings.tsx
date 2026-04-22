@@ -1,145 +1,148 @@
 /* ─────────────────────────────────────────────
- * Artboard Settings — Dimension & background controls
- * with image upload support via ImageUploadWidget
+ * Experience Canvas Settings — Light theme
  * ──────────────────────────────────────────── */
 
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
+import { Smartphone, Monitor, TabletSmartphone, Minimize2, Sparkles } from "lucide-react";
 import { useCanvasStore } from "../engine/canvas-store";
 import { ImageUploadWidget } from "../media/image-upload-widget";
 import { useTranslation } from "../i18n";
+import type { CanvasEffect } from "@productix/types";
+import { CANVAS_EFFECTS } from "@productix/types";
 
-const PRESETS = [
-  { label: "Desktop HD", width: 1440, height: 900 },
-  { label: "Desktop", width: 1280, height: 800 },
-  { label: "Tablet", width: 768, height: 1024 },
-  { label: "Mobile", width: 375, height: 812 },
-  { label: "Social Square", width: 1080, height: 1080 },
-  { label: "Social Story", width: 1080, height: 1920 },
-  { label: "Banner Wide", width: 1200, height: 628 },
+const MOBILE_PRESETS = [
+  { label: "iPhone", width: 375, height: 812, icon: <Smartphone size={14} /> },
+  { label: "iPhone Pro Max", width: 428, height: 926, icon: <Monitor size={14} /> },
+  { label: "Android", width: 360, height: 800, icon: <TabletSmartphone size={14} /> },
+  { label: "Compact", width: 320, height: 568, icon: <Minimize2 size={14} /> },
 ];
 
 export function ArtboardSettings() {
   const document = useCanvasStore((s) => s.document);
   const activeArtboardId = useCanvasStore((s) => s.activeArtboardId);
   const updateArtboard = useCanvasStore((s) => s.updateArtboard);
-  const addArtboard = useCanvasStore((s) => s.addArtboard);
-  const removeArtboard = useCanvasStore((s) => s.removeArtboard);
-
-  const ab = document.artboards.find((a) => a.id === activeArtboardId)
-    || document.artboards[0];
-
+  const { t } = useTranslation();
+  const ab = document.artboards.find((a) => a.id === activeArtboardId) || document.artboards[0];
   if (!ab) return null;
 
-  const { t } = useTranslation();
-
   return (
-    <div className="space-y-3">
-      <div className="px-4 py-2 border-b border-gray-100">
-        <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t("artboard.title")}</h2>
+    <div style={{ display:"flex",flexDirection:"column",gap:16 }}>
+      <div style={{ padding:"16px 20px 12px",borderBottom:"1px solid #f0f0f0" }}>
+        <h2 style={{ fontSize:14,fontWeight:700,color:"#1e1e2e",margin:0 }}>{t("experience.title")}</h2>
       </div>
-
-      <div className="px-4 space-y-3">
-        {/* Name */}
-        <label className="block">
-          <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">{t("artboard.name")}</span>
-          <input
-            type="text"
-            className="mt-0.5 w-full rounded-md border border-gray-200 bg-white px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none"
-            value={ab.name}
-            onChange={(e) => updateArtboard(ab.id, { name: e.target.value })}
-          />
+      <div style={{ padding:"0 16px",display:"flex",flexDirection:"column",gap:16 }}>
+        <label style={{ display:"block" }}>
+          <span style={{ fontSize:10,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:"0.08em" }}>{t("experience.name")}</span>
+          <input type="text" style={{ marginTop:4,width:"100%",borderRadius:10,border:"1px solid #e5e7eb",background:"#fff",padding:"8px 12px",fontSize:13,color:"#1e1e2e",outline:"none" }} value={ab.name} onChange={(e) => updateArtboard(ab.id, { name: e.target.value })} />
         </label>
-
-        {/* Dimensions */}
-        <div className="grid grid-cols-2 gap-2">
-          <label className="block">
-            <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">{t("artboard.width")}</span>
-            <input
-              type="number"
-              className="mt-0.5 w-full rounded-md border border-gray-200 bg-white px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none"
-              value={ab.width}
-              onChange={(e) => updateArtboard(ab.id, { width: Math.max(200, Number(e.target.value)) })}
-            />
-          </label>
-          <label className="block">
-            <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">{t("artboard.height")}</span>
-            <input
-              type="number"
-              className="mt-0.5 w-full rounded-md border border-gray-200 bg-white px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none"
-              value={ab.height}
-              onChange={(e) => updateArtboard(ab.id, { height: Math.max(200, Number(e.target.value)) })}
-            />
-          </label>
-        </div>
-
-        {/* Presets */}
         <div>
-          <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">{t("artboard.presets")}</span>
-          <div className="mt-1 flex flex-wrap gap-1">
-            {PRESETS.map((p) => (
-              <button
-                key={p.label}
-                type="button"
-                onClick={() => updateArtboard(ab.id, { width: p.width, height: p.height })}
-                className={`rounded-full px-2.5 py-1 text-[10px] font-medium transition-colors ${
-                  ab.width === p.width && ab.height === p.height
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
+          <span style={{ fontSize:10,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:"0.08em" }}>{t("experience.screenSize")}</span>
+          <div style={{ marginTop:8,display:"flex",flexWrap:"wrap",gap:6 }}>
+            {MOBILE_PRESETS.map((p) => {
+              const isActive = ab.width===p.width && ab.height===p.height;
+              return (
+                <button key={p.label} type="button" onClick={() => updateArtboard(ab.id, { width:p.width, height:p.height })}
+                  style={{ borderRadius:10,padding:"8px 14px",fontSize:11,fontWeight:600,border:isActive?"1px solid #bae6fd":"1px solid #e5e7eb",background:isActive?"#e0f2fe":"#fafafa",color:isActive?"#0ea5e9":"#6b7280",cursor:"pointer",transition:"all 0.2s",display:"flex",alignItems:"center",gap:6 }}>
+                  <span style={{ display:"flex",alignItems:"center" }}>{p.icon}</span>{p.label}
+                </button>
+              );
+            })}
           </div>
         </div>
-
-        {/* Background Color */}
-        <label className="block">
-          <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">{t("artboard.bgColor")}</span>
-          <div className="mt-1 flex gap-2 items-center">
-            <input
-              type="color"
-              className="h-7 w-7 cursor-pointer rounded border border-gray-200"
-              value={ab.backgroundColor}
-              onChange={(e) => updateArtboard(ab.id, { backgroundColor: e.target.value })}
-            />
-            <input
-              type="text"
-              className="flex-1 rounded-md border border-gray-200 bg-white px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none"
-              value={ab.backgroundColor}
-              onChange={(e) => updateArtboard(ab.id, { backgroundColor: e.target.value })}
-            />
+        <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:8 }}>
+          <label style={{ display:"block" }}>
+            <span style={{ fontSize:10,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:"0.08em" }}>Width</span>
+            <input type="number" style={{ marginTop:4,width:"100%",borderRadius:10,border:"1px solid #e5e7eb",background:"#fff",padding:"8px 12px",fontSize:13,color:"#1e1e2e",outline:"none" }} value={ab.width} onChange={(e) => updateArtboard(ab.id, { width:Math.max(200,Number(e.target.value)) })} />
+          </label>
+          <label style={{ display:"block" }}>
+            <span style={{ fontSize:10,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:"0.08em" }}>Height</span>
+            <input type="number" style={{ marginTop:4,width:"100%",borderRadius:10,border:"1px solid #e5e7eb",background:"#fff",padding:"8px 12px",fontSize:13,color:"#1e1e2e",outline:"none" }} value={ab.height} onChange={(e) => updateArtboard(ab.id, { height:Math.max(200,Number(e.target.value)) })} />
+          </label>
+        </div>
+        <label style={{ display:"block" }}>
+          <span style={{ fontSize:10,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:"0.08em" }}>{t("experience.background")}</span>
+          <div style={{ marginTop:4,display:"flex",gap:8,alignItems:"center" }}>
+            <input type="color" style={{ height:32,width:32,cursor:"pointer",borderRadius:8,border:"1px solid #e5e7eb" }} value={ab.backgroundColor} onChange={(e) => updateArtboard(ab.id, { backgroundColor:e.target.value })} />
+            <input type="text" style={{ flex:1,borderRadius:10,border:"1px solid #e5e7eb",background:"#fff",padding:"8px 12px",fontSize:12,color:"#1e1e2e",outline:"none" }} value={ab.backgroundColor} onChange={(e) => updateArtboard(ab.id, { backgroundColor:e.target.value })} />
           </div>
         </label>
+        <ImageUploadWidget value={ab.backgroundImage||""} onChange={(url) => updateArtboard(ab.id, { backgroundImage:url||undefined })} label={t("experience.coverImage")} compact />
 
-        {/* ── Background Image Upload ── */}
-        <ImageUploadWidget
-          value={ab.backgroundImage || ""}
-          onChange={(url) => updateArtboard(ab.id, { backgroundImage: url || undefined })}
-          label="Background Image"
-          compact
-        />
-
-        {/* Actions */}
-        <div className="flex gap-2 pt-2">
-          <button
-            type="button"
-            onClick={() => addArtboard()}
-            className="flex-1 rounded-md bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-200 transition-colors"
-          >
-            {t("artboard.add")}
-          </button>
-          {document.artboards.length > 1 && (
-            <button
-              type="button"
-              onClick={() => removeArtboard(ab.id)}
-              className="rounded-md bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-100 transition-colors"
-            >
-              {t("artboard.remove")}
-            </button>
-          )}
+        {/* ── Canvas Effects ── */}
+        <div>
+          <div style={{ display:"flex",alignItems:"center",gap:8,marginBottom:10 }}>
+            <div style={{
+              width:24,height:24,borderRadius:7,
+              background:"linear-gradient(135deg,#f59e0b,#fbbf24)",
+              display:"flex",alignItems:"center",justifyContent:"center",
+              boxShadow:"0 2px 8px rgba(245,158,11,0.25)",
+            }}>
+              <Sparkles size={12} color="#fff" />
+            </div>
+            <span style={{ fontSize:10,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:"0.08em" }}>
+              Canvas Effects
+            </span>
+          </div>
+          <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:6 }}>
+            {CANVAS_EFFECTS.map((fx) => {
+              const isActive = (ab.effect || "none") === fx.value;
+              return (
+                <button
+                  key={fx.value}
+                  type="button"
+                  onClick={() => updateArtboard(ab.id, { effect: fx.value })}
+                  style={{
+                    display:"flex",flexDirection:"column",alignItems:"center",gap:4,
+                    padding:"12px 6px 10px",borderRadius:12,cursor:"pointer",
+                    border: isActive ? "1.5px solid #0ea5e9" : "1px solid #e5e7eb",
+                    background: isActive ? "linear-gradient(135deg,#e0f2fe,#f0f9ff)" : "#fafafa",
+                    boxShadow: isActive ? "0 2px 12px rgba(14,165,233,0.15)" : "none",
+                    transition:"all 0.2s cubic-bezier(0.4,0,0.2,1)",
+                    transform: isActive ? "scale(1.02)" : "scale(1)",
+                    position:"relative",overflow:"hidden",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.background = "#f0f9ff";
+                      e.currentTarget.style.borderColor = "#bae6fd";
+                      e.currentTarget.style.transform = "translateY(-1px)";
+                      e.currentTarget.style.boxShadow = "0 2px 8px rgba(14,165,233,0.1)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.background = "#fafafa";
+                      e.currentTarget.style.borderColor = "#e5e7eb";
+                      e.currentTarget.style.transform = "scale(1)";
+                      e.currentTarget.style.boxShadow = "none";
+                    }
+                  }}
+                >
+                  {/* Active indicator dot */}
+                  {isActive && (
+                    <div style={{
+                      position:"absolute",top:6,right:6,
+                      width:6,height:6,borderRadius:"50%",
+                      background:"#0ea5e9",
+                      boxShadow:"0 0 6px rgba(14,165,233,0.5)",
+                    }} />
+                  )}
+                  <span style={{ fontSize:20,lineHeight:1 }}>{fx.emoji}</span>
+                  <span style={{
+                    fontSize:10,fontWeight:isActive?700:600,
+                    color:isActive?"#0369a1":"#4b5563",
+                    lineHeight:1.2,
+                  }}>{fx.label}</span>
+                  <span style={{
+                    fontSize:8,color:"#9ca3af",lineHeight:1.2,
+                    fontWeight:500,
+                  }}>{fx.description}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>

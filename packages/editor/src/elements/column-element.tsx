@@ -11,6 +11,7 @@
 "use client";
 
 import React from "react";
+import { Columns3 } from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
 
 /* ─── Component ─────────────────────────────── */
@@ -173,11 +174,11 @@ function ColumnPropertyPanel({ props, onChange }: PropertyPanelProps) {
 registerElement({
   type: "column",
   label: "Column",
-  icon: "▬",
+  icon: <Columns3 size={16} />,
   category: "layout",
   defaultProps: {
     widthPercent: 50,
-    minWidth: 200,
+    minWidth: 140,
     bgColor: "transparent",
     padding: 16,
     minHeight: 60,
@@ -185,7 +186,7 @@ registerElement({
     borderColor: "transparent",
     borderWidth: 0,
   },
-  defaultTransform: { width: 400, height: 200 },
+  defaultTransform: { width: 343, height: 200 },
   component: ColumnElementComponent,
   propertyPanel: ColumnPropertyPanel,
 });

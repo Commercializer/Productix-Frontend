@@ -2,9 +2,10 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Package, ArrowRight, Sparkles, CheckCircle2, XCircle, Loader2, Image as ImageIcon, Link as LinkIcon } from "lucide-react";
+import { Package, ArrowRight, Sparkles, CheckCircle2, XCircle, Loader2, Image as ImageIcon, Link as LinkIcon, LayoutTemplate, Check } from "lucide-react";
 import { createPromptionAction, checkSlugAction, uploadImageAction } from "@/lib/dashboard/actions";
 import { SocialPreview } from "@/components/dashboard/social-preview";
+import { templates } from "@productix/editor";
 
 function slugify(text: string): string {
   return text
@@ -25,6 +26,7 @@ export default function NewPromptionPage() {
   const [ogImageUrl, setOgImageUrl] = useState("");
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imageUploadError, setImageUploadError] = useState("");
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   
   // UI State
   const [error, setError] = useState("");
@@ -125,7 +127,10 @@ export default function NewPromptionPage() {
       }
 
       if ("profileId" in result && result.profileId) {
-        router.push(`/editor?profileId=${result.profileId}`);
+        const editorUrl = selectedTemplate
+          ? `/editor?profileId=${result.profileId}&template=${selectedTemplate}`
+          : `/editor?profileId=${result.profileId}`;
+        router.push(editorUrl);
       }
     });
   };
@@ -155,6 +160,62 @@ export default function NewPromptionPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
           {/* Form Column */}
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Template Selector */}
+            <div className="bg-[var(--ds-surface)] border border-[var(--ds-border)] rounded-2xl p-6 space-y-4 shadow-sm">
+              <div className="flex items-center gap-2 mb-1">
+                <LayoutTemplate size={16} className="text-[var(--ds-text-secondary)]" />
+                <h3 className="text-[13px] font-semibold text-[var(--ds-text-primary)]">Choose a Template</h3>
+                <span className="text-[11px] text-[var(--ds-text-muted)] font-normal">(optional)</span>
+              </div>
+              <p className="text-[12px] text-[var(--ds-text-muted)] -mt-2">Start with a pre-designed template or create from scratch.</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {/* Blank option */}
+                <button
+                  type="button"
+                  onClick={() => setSelectedTemplate(null)}
+                  className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all text-center hover:shadow-md ${
+                    selectedTemplate === null
+                      ? 'border-[#0284c7] bg-sky-50/50 dark:bg-sky-950/20 shadow-md'
+                      : 'border-[var(--ds-border)] hover:border-gray-300'
+                  }`}
+                >
+                  {selectedTemplate === null && (
+                    <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[#0284c7] flex items-center justify-center">
+                      <Check size={12} className="text-white" />
+                    </div>
+                  )}
+                  <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-lg">📄</div>
+                  <span className="text-[12px] font-semibold text-[var(--ds-text-primary)]">Blank</span>
+                  <span className="text-[10px] text-[var(--ds-text-muted)]">Start fresh</span>
+                </button>
+
+                {/* Template options */}
+                {templates.map((t) => (
+                  <button
+                    key={t.meta.id}
+                    type="button"
+                    onClick={() => setSelectedTemplate(t.meta.id)}
+                    className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all text-center hover:shadow-md ${
+                      selectedTemplate === t.meta.id
+                        ? 'border-[#0284c7] bg-sky-50/50 dark:bg-sky-950/20 shadow-md'
+                        : 'border-[var(--ds-border)] hover:border-gray-300'
+                    }`}
+                  >
+                    {selectedTemplate === t.meta.id && (
+                      <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[#0284c7] flex items-center justify-center">
+                        <Check size={12} className="text-white" />
+                      </div>
+                    )}
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-sky-100 to-blue-100 dark:from-sky-900 dark:to-blue-900 flex items-center justify-center text-lg">
+                      {t.meta.category === 'marketing' ? '🥤' : t.meta.category === 'social' ? '📱' : t.meta.category === 'event' ? '🎉' : '✨'}
+                    </div>
+                    <span className="text-[12px] font-semibold text-[var(--ds-text-primary)] leading-tight">{t.meta.name}</span>
+                    <span className="text-[10px] text-[var(--ds-text-muted)] line-clamp-2 leading-tight">{t.meta.category}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="bg-[var(--ds-surface)] border border-[var(--ds-border)] rounded-2xl p-8 space-y-6 flex flex-col shadow-sm">
               
               {/* Product Name */}

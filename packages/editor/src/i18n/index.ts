@@ -7,6 +7,7 @@
 
 "use client";
 
+import { useCallback } from "react";
 import { create } from "zustand";
 import { translations, type Locale, type TranslationStrings, LOCALES } from "./translations";
 
@@ -46,9 +47,9 @@ export function useTranslation() {
   const locale = useI18nStore((s) => s.locale);
   const setLocale = useI18nStore((s) => s.setLocale);
 
-  const t = (key: keyof TranslationStrings): string => {
+  const t = useCallback((key: keyof TranslationStrings): string => {
     return translations[locale]?.[key] ?? translations.en[key] ?? key;
-  };
+  }, [locale]);
 
   return { t, locale, setLocale, locales: LOCALES };
 }
