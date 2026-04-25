@@ -289,7 +289,7 @@ export function MediaUploadField({
                 )}
               </div>
               <span style={{ fontSize: 11, color: "#9ca3af" }}>
-                JPG, PNG, GIF, WebP, SVG · Max 10MB
+                JPG, PNG, GIF, WebP, SVG · MP3, WAV, OGG · Max 10–25MB
               </span>
             </div>
           )}

@@ -94,4 +94,5 @@ export { getLocalizedProps, hasLocaleContent, TRANSLATABLE_KEYS } from "./utils/
 export { MediaProvider, useMediaLibrary } from "./media/media-context";
 export { MediaLibraryPanel } from "./media/media-library-panel";
 export { ImageUploadWidget } from "./media/image-upload-widget";
-export type { MediaItem, MediaItemMeta } from "./media/media-store";
+export { createMediaUrl } from "./media/media-store";
+export type { MediaItem, MediaItemMeta, MediaType } from "./media/media-store";

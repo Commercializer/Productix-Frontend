@@ -2,8 +2,6 @@
 
 import { prisma } from "@productix/db";
 import { auth } from "@/auth";
-import { promises as fs } from 'fs';
-import path from 'path';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 function isUUID(val: string): boolean {
@@ -400,7 +398,7 @@ export async function updatePageMetaAction(
 }
 
 // ═══════════════════════════════════════════════════════════════
-// UPLOAD IMAGE (Local Storage)
+// UPLOAD IMAGE (Cloudflare R2)
 // ═══════════════════════════════════════════════════════════════
 
 export async function uploadImageAction(formData: FormData) {
@@ -413,20 +411,13 @@ export async function uploadImageAction(formData: FormData) {
   if (!file.type.startsWith("image/")) return { error: "File must be an image" };
 
   try {
+    const { uploadToR2 } = await import("@/lib/r2");
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    const ext = path.extname(file.name);
-    const basename = path.basename(file.name, ext).replace(/[^a-zA-Z0-9]/g, "-");
-    const filename = `${basename}-${Date.now()}${ext}`;
+    const result = await uploadToR2(buffer, file.name, file.type, "uploads");
 
-    const uploadDir = path.join(process.cwd(), "public/uploads");
-    await fs.mkdir(uploadDir, { recursive: true });
-
-    const filepath = path.join(uploadDir, filename);
-    await fs.writeFile(filepath, buffer);
-
-    return { url: `/uploads/${filename}` };
+    return { url: result.url };
   } catch (error: any) {
     return { error: error.message };
   }

@@ -12,17 +12,21 @@ import {
  * MediaLibraryPanel — Browseable uploaded media
  *
  * Opens as a modal overlay. Shows all uploaded
- * images in a grid, allows selection and deletion.
+ * images and audio in a grid, allows selection
+ * and deletion. Media is stored in Cloudflare R2.
  * ──────────────────────────────────────────── */
 
 interface MediaLibraryPanelProps {
   onSelect: (url: string) => void;
   onClose: () => void;
+  /** Filter to only show certain media types */
+  filterType?: "image" | "audio" | "all";
 }
 
 export function MediaLibraryPanel({
   onSelect,
   onClose,
+  filterType = "all",
 }: MediaLibraryPanelProps) {
   const { items, remove, refresh } = useMediaLibrary();
   const [thumbnails, setThumbnails] = useState<
@@ -30,7 +34,13 @@ export function MediaLibraryPanel({
   >(new Map());
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
-  // Load thumbnails
+  // Filter items by type
+  const filteredItems = items.filter((item) => {
+    if (filterType === "all") return true;
+    return (item.mediaType || "image") === filterType;
+  });
+
+  // Load thumbnails for images
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -38,10 +48,15 @@ export function MediaLibraryPanel({
       if (cancelled) return;
       const map = new Map<string, string>();
       for (const item of allItems) {
-        if (item.thumbnailBlob) {
-          map.set(item.id, createMediaObjectUrl(item.thumbnailBlob));
-        } else {
-          map.set(item.id, createMediaObjectUrl(item.blob));
+        if ((item.mediaType || "image") === "image") {
+          if (item.url) {
+            // R2 URL — use directly as thumbnail
+            map.set(item.id, item.url);
+          } else if (item.thumbnailBlob) {
+            map.set(item.id, createMediaObjectUrl(item.thumbnailBlob));
+          } else if (item.blob) {
+            map.set(item.id, createMediaObjectUrl(item.blob));
+          }
         }
       }
       setThumbnails(map);
@@ -51,22 +66,22 @@ export function MediaLibraryPanel({
     };
   }, [items]);
 
-  // Cleanup thumbnail URLs on unmount
+  // Cleanup local blob URLs on unmount (but not R2 URLs)
   useEffect(() => {
     return () => {
       thumbnails.forEach((url) => {
-        try { URL.revokeObjectURL(url); } catch { /* noop */ }
+        if (url.startsWith("blob:")) {
+          try { URL.revokeObjectURL(url); } catch { /* noop */ }
+        }
       });
     };
   }, [thumbnails]);
 
   const handleSelect = useCallback(
-    async (id: string) => {
-      const { getMedia } = await import("./media-store");
-      const item = await getMedia(id);
-      if (item) {
-        const url = createMediaObjectUrl(item.blob);
-        onSelect(url);
+    (item: typeof filteredItems[0]) => {
+      // Use the R2 URL directly
+      if (item.url) {
+        onSelect(item.url);
       }
     },
     [onSelect]
@@ -84,6 +99,11 @@ export function MediaLibraryPanel({
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const getMediaTypeLabel = (type: string): string => {
+    if (type.startsWith("audio/")) return "🎵";
+    return "🖼";
   };
 
   return (
@@ -143,7 +163,10 @@ export function MediaLibraryPanel({
                 color: "#6b7280",
               }}
             >
-              {items.length} image{items.length !== 1 ? "s" : ""} uploaded
+              {filteredItems.length} file{filteredItems.length !== 1 ? "s" : ""} uploaded
+              {filterType !== "all" && ` (${filterType})`}
+              {" · "}
+              <span style={{ color: "#3b82f6" }}>☁️ Cloudflare R2</span>
             </p>
           </div>
           <button
@@ -178,7 +201,7 @@ export function MediaLibraryPanel({
             padding: 16,
           }}
         >
-          {items.length === 0 ? (
+          {filteredItems.length === 0 ? (
             /* Empty State */
             <div
               style={{
@@ -192,14 +215,14 @@ export function MediaLibraryPanel({
             >
               <div style={{ fontSize: 40, marginBottom: 12 }}>📁</div>
               <p style={{ fontSize: 14, fontWeight: 500, margin: 0 }}>
-                No images uploaded yet
+                No {filterType === "all" ? "files" : filterType === "image" ? "images" : "audio files"} uploaded yet
               </p>
               <p style={{ fontSize: 12, margin: "4px 0 0" }}>
-                Upload images using the upload field in the editor
+                Upload files using the upload field in the editor
               </p>
             </div>
           ) : (
-            /* Image Grid */
+            /* Media Grid */
             <div
               style={{
                 display: "grid",
@@ -207,7 +230,7 @@ export function MediaLibraryPanel({
                 gap: 12,
               }}
             >
-              {items.map((item) => (
+              {filteredItems.map((item) => (
                 <div
                   key={item.id}
                   style={{
@@ -228,9 +251,9 @@ export function MediaLibraryPanel({
                     e.currentTarget.style.boxShadow = "none";
                   }}
                 >
-                  {/* Thumbnail */}
+                  {/* Thumbnail / Audio Icon */}
                   <div
-                    onClick={() => handleSelect(item.id)}
+                    onClick={() => handleSelect(item)}
                     style={{
                       aspectRatio: "1",
                       display: "flex",
@@ -239,18 +262,46 @@ export function MediaLibraryPanel({
                       overflow: "hidden",
                     }}
                   >
-                    {thumbnails.has(item.id) ? (
-                      <img
-                        src={thumbnails.get(item.id)!}
-                        alt={item.name}
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                        }}
-                      />
+                    {(item.mediaType || "image") === "image" ? (
+                      thumbnails.has(item.id) ? (
+                        <img
+                          src={thumbnails.get(item.id)!}
+                          alt={item.name}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
+                        />
+                      ) : item.url ? (
+                        <img
+                          src={item.url}
+                          alt={item.name}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
+                        />
+                      ) : (
+                        <div style={{ fontSize: 24, color: "#d1d5db" }}>🖼</div>
+                      )
                     ) : (
-                      <div style={{ fontSize: 24, color: "#d1d5db" }}>🖼</div>
+                      /* Audio item */
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          gap: 4,
+                          padding: 8,
+                        }}
+                      >
+                        <div style={{ fontSize: 32 }}>🎵</div>
+                        <span style={{ fontSize: 10, color: "#6b7280", textAlign: "center" }}>
+                          {item.type.replace("audio/", "").toUpperCase()}
+                        </span>
+                      </div>
                     )}
                   </div>
 
@@ -271,7 +322,7 @@ export function MediaLibraryPanel({
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {item.name}
+                      {getMediaTypeLabel(item.type)} {item.name}
                     </div>
                     <div
                       style={{

@@ -20,13 +20,21 @@ function ImageElementComponent({ props, isEditing, onPropsChange }: ElementRende
   const [dragOver, setDragOver] = useState(false);
 
   const handleFile = useCallback(
-    (file: File) => {
+    async (file: File) => {
       if (!file.type.startsWith("image/")) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        onPropsChange({ src: reader.result as string });
-      };
-      reader.readAsDataURL(file);
+      try {
+        // Upload to R2 cloud storage — returns a permanent public URL
+        const { addMedia } = await import("../media/media-store");
+        const item = await addMedia(file);
+        onPropsChange({ src: item.url });
+      } catch {
+        // Fallback: read as data URL if R2 upload fails
+        const reader = new FileReader();
+        reader.onload = () => {
+          onPropsChange({ src: reader.result as string });
+        };
+        reader.readAsDataURL(file);
+      }
     },
     [onPropsChange]
   );

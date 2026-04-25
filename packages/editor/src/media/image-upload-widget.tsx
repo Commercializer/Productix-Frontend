@@ -77,14 +77,14 @@ export function ImageUploadWidget({
       setError(null);
 
       try {
-        // Try to use the MediaProvider if available, else fall back to data URL
+        // Upload to R2 via media-store — returns a permanent cloud URL
         let url: string;
         try {
-          const { addMedia, createMediaObjectUrl } = await import("./media-store");
+          const { addMedia } = await import("./media-store");
           const item = await addMedia(file);
-          url = createMediaObjectUrl(item.blob);
+          url = item.url; // R2 public URL
         } catch {
-          // Fallback: read as data URL
+          // Fallback: read as data URL (offline / dev mode)
           url = await new Promise<string>((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = () => resolve(reader.result as string);
