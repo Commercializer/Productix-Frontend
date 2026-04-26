@@ -81,21 +81,15 @@ export const redbullConfig: BrandConfig = {
   otherProducts: [
     {
       name: "Red Bull Zero",
-      subtitle: "Zero calories",
+      subtitle: "Red Bull Zero",
       image: "https://images.unsplash.com/photo-1622543925917-763c34d1a86e?w=200&q=80",
       bgColor: "#e8f0fe",
     },
     {
-      name: "Sugar-free",
+      name: "Sugarfree Energy Drink",
       subtitle: "Sugar-free energy drink",
       image: "https://images.unsplash.com/photo-1622543925917-763c34d1a86e?w=200&q=80",
       bgColor: "#dbeafe",
-    },
-    {
-      name: "Red Edition",
-      subtitle: "Watermelon flavor",
-      image: "https://images.unsplash.com/photo-1622543925917-763c34d1a86e?w=200&q=80",
-      bgColor: "#fee2e2",
     },
   ],
 

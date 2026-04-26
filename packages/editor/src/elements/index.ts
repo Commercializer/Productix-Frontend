@@ -20,8 +20,8 @@ import "./divider-element";
 import "./container-element";
 import "./row-element";
 import "./column-element";
-import "./raffle-element";
-import "./slot-machine-element";
+import "./video-element";
+import "./audio-element";
 
 // Re-export registry API for consumers
 export {

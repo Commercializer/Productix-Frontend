@@ -40,6 +40,7 @@ import {
   Phone,
   Gamepad2,
   Ticket,
+  Video,
 } from "lucide-react";
 import { getAllElements, type ElementDefinition } from "../elements/registry";
 import { useCanvasStore } from "../engine/canvas-store";
@@ -53,7 +54,6 @@ const CATEGORY_KEYS: Record<string, keyof TranslationStrings> = {
   layout: "storyBlocks.category.structure",
   social: "storyBlocks.category.socialProof",
   promotional: "storyBlocks.category.conversion",
-  gaming: "elements.category.gaming",
 };
 
 /* ─── Category Visual Config ─────────────────── */
@@ -102,15 +102,9 @@ const CATEGORY_META: Record<string, CategoryMeta> = {
     glow: "rgba(239, 68, 68, 0.15)",
     iconBg: "rgba(239, 68, 68, 0.08)",
   },
-  gaming: {
-    icon: <Gamepad2 size={15} />,
-    gradient: "linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%)",
-    glow: "rgba(139, 92, 246, 0.15)",
-    iconBg: "rgba(139, 92, 246, 0.08)",
-  },
 };
 
-const CATEGORY_ORDER = ["content", "media", "interactive", "layout", "promotional", "social", "gaming"];
+const CATEGORY_ORDER = ["content", "media", "interactive", "layout", "promotional", "social"];
 
 /* ─── Block visual icons (Lucide) ────────────── */
 
@@ -141,8 +135,8 @@ const BLOCK_CONFIG: Record<string, { label: string; icon: React.ReactNode }> = {
   container:     { label: "Section Block",   icon: <Box size={16} />               },
   row:           { label: "Content Row",     icon: <Rows3 size={16} />             },
   column:        { label: "Column",          icon: <Columns3 size={16} />          },
-  raffle:        { label: "Raffle Draw",     icon: <Ticket size={16} />            },
-  "slot-machine":{ label: "Slot Machine",    icon: <Gamepad2 size={16} />          },
+  video:         { label: "Video",           icon: <Video size={16} />            },
+  audio:         { label: "Audio",           icon: <Music2 size={16} />            },
 };
 
 /* ─── Component ──────────────────────────────── */

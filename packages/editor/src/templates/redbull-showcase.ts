@@ -1,7 +1,3 @@
-/* ─────────────────────────────────────────────
- * Red Bull Showcase Template — Mobile-first canvas
- * ──────────────────────────────────────────── */
-
 import type { CanvasDocument, Template } from "@productix/types";
 
 const doc: CanvasDocument = {
@@ -12,959 +8,1257 @@ const doc: CanvasDocument = {
       "id": "rb-hero-merged",
       "name": "Canvas",
       "width": 428,
-      "height": 1167,
-      "backgroundColor": "#0a1628",
-      "backgroundImage": "https://images.unsplash.com/photo-1504893524553-b855bce32c67?w=1600&q=80",
+      "height": 1700,
+      "backgroundColor": "#b2bcd1",
+      "backgroundImage": "",
       "position": 0,
       "elements": [
-        "rb-hero-overlay",
-        "rb-hero-lang",
-        "rb-hero-img",
-        "rb-logo-icon",
-        "rb-logo-text",
-        "rb-product-name",
-        "rb-var-1",
-        "rb-var-2",
-        "rb-var-3",
-        "rb-tagline",
-        "rb-cta",
-        "rb-social-group",
-        "rb-about-card",
-        "rb-about-title",
-        "rb-about-text",
-        "rb-about-more",
-        "rb-feat-title",
-        "rb-feat-card-1",
-        "rb-feat-icon-1",
-        "rb-feat-text-1",
-        "rb-feat-card-2",
-        "rb-feat-icon-2",
-        "rb-feat-text-2",
-        "rb-feat-card-3",
-        "rb-feat-icon-3",
-        "rb-feat-text-3",
-        "rb-dl-card",
-        "rb-dl-title",
-        "rb-dl-desc",
-        "rb-life-overlay",
-        "rb-life-text",
-        "rb-oth-title",
-        "rb-oth-card-1",
-        "rb-oth-img-1",
-        "rb-oth-name-1",
-        "rb-oth-sub-1",
-        "rb-oth-card-2",
-        "rb-oth-img-2",
-        "rb-oth-name-2",
-        "rb-oth-sub-2",
-        "rb-oth-card-3",
-        "rb-oth-img-3",
-        "rb-oth-name-3",
-        "rb-oth-sub-3",
-        "rb-view-all",
-        "rb-foot-overlay",
-        "rb-foot-msg",
-        "rb-foot-sub",
-        "rb-foot-logo",
-        "rb-foot-link"
+        "bg-splash",
+        "top-lang",
+        "hero-can",
+        "main-card",
+        "logo-img",
+        "main-title",
+        "var-250",
+        "var-473",
+        "var-355",
+        "var-4cans",
+        "desc",
+        "btn-feedback",
+        "soc-1",
+        "soc-2",
+        "soc-3",
+        "soc-4",
+        "separator",
+        "about-title",
+        "about-desc",
+        "btn-readmore",
+        "ben-card",
+        "ben-title",
+        "ben-ic-1",
+        "ben-tx-1",
+        "ben-ic-2",
+        "ben-tx-2",
+        "ben-ic-3",
+        "ben-tx-3",
+        "rec-card",
+        "rec-ic",
+        "rec-title",
+        "rec-desc",
+        "rdy-card",
+        "rdy-title",
+        "rdy-img",
+        "oth-card",
+        "oth-title",
+        "oth-bg-1",
+        "oth-img-1",
+        "oth-tx-1",
+        "oth-sub-1",
+        "oth-bg-2",
+        "oth-img-2",
+        "oth-tx-2",
+        "oth-sub-2",
+        "btn-viewall",
+        "bot-banner",
+        "bot-title",
+        "bot-btn",
+        "footer-bar",
+        "footer-lock",
+        "footer-link",
+        "footer-share"
       ]
     }
   ],
   "elements": {
-    "rb-hero-overlay": {
-      "id": "rb-hero-overlay",
-      "type": "container",
+    "bg-splash": {
+      "id": "bg-splash",
+      "type": "image",
       "zIndex": 1,
-      "locked": true,
+      "locked": false,
       "visible": true,
-      "opacity": 0.7,
-      "transform": { "x": 0, "y": 0, "width": 488, "height": 244,
-        "rotation": 0 },
+      "opacity": 1,
+      "transform": {
+        "x": 0,
+        "y": 0,
+        "width": 428,
+        "height": 380,
+        "rotation": 0
+      },
       "props": {
-        "bgGradientFrom": "#0a1628",
-        "bgGradientTo": "#1a3a5c"
+        "src": "",
+        "alt": "Splash",
+        "objectFit": "cover",
+        "borderRadius": 0
       }
     },
-    "rb-hero-lang": {
-      "id": "rb-hero-lang",
-      "type": "badge",
+    "top-lang": {
+      "id": "top-lang",
+      "type": "button",
       "zIndex": 10,
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 339, "y": 11, "width": 65, "height": 18,
-        "rotation": 0 },
+      "transform": {
+        "x": 320,
+        "y": 55,
+        "width": 84,
+        "height": 32,
+        "rotation": 0
+      },
       "props": {
         "text": "English ▾",
-        "bgColor": "rgba(255,255,255,0.15)",
-        "textColor": "#ffffff",
-        "borderRadius": 260,
-        "fontSize": 6,
+        "variant": "filled",
+        "bgColor": "#ffffff",
+        "textColor": "#374151",
+        "borderRadius": 8,
+        "fontSize": 13,
         "fontWeight": "500"
       }
     },
-    "rb-hero-img": {
-      "id": "rb-hero-img",
+    "hero-can": {
+      "id": "hero-can",
       "type": "image",
-      "zIndex": 10,
+      "zIndex": 5,
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 80, "y": 30, "width": 267, "height": 196,
-        "rotation": 0 },
+      "transform": {
+        "x": 144,
+        "y": 30,
+        "width": 140,
+        "height": 300,
+        "rotation": 0
+      },
       "props": {
-        "src": "https://images.unsplash.com/photo-1622543925917-763c34d1a86e?w=800&q=90",
+        "src": "",
         "alt": "Red Bull Can",
         "objectFit": "contain",
         "borderRadius": 0
       }
     },
-    "rb-logo-icon": {
-      "id": "rb-logo-icon",
-      "type": "icon",
+    "main-card": {
+      "id": "main-card",
+      "type": "card",
+      "zIndex": 2,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 18,
+        "y": 160,
+        "width": 392,
+        "height": 570,
+        "rotation": 0
+      },
+      "props": {
+        "bgColor": "#ffffff",
+        "borderRadius": 16,
+        "shadow": "lg",
+        "borderWidth": 0,
+        "padding": 0
+      }
+    },
+    "logo-img": {
+      "id": "logo-img",
+      "type": "image",
       "zIndex": 5,
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 24, "y": 261, "width": 30, "height": 30,
-        "rotation": 0 },
+      "transform": {
+        "x": 34,
+        "y": 180,
+        "width": 100,
+        "height": 24,
+        "rotation": 0
+      },
       "props": {
-        "icon": "🐂",
-        "fontSize": 16,
-        "bgColor": "transparent",
+        "src": "",
+        "alt": "Red Bull Logo",
+        "objectFit": "contain",
         "borderRadius": 0
       }
     },
-    "rb-logo-text": {
-      "id": "rb-logo-text",
+    "main-title": {
+      "id": "main-title",
       "type": "heading",
       "zIndex": 5,
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 56, "y": 266, "width": 119, "height": 21,
-        "rotation": 0 },
-      "props": {
-        "text": "Red Bull",
-        "variant": "heading",
-        "fontSize": 9,
-        "fontWeight": "800",
-        "color": "#1e40af",
-        "textAlign": "left",
-        "lineHeight": 1.2
-      }
-    },
-    "rb-product-name": {
-      "id": "rb-product-name",
-      "type": "heading",
-      "zIndex": 5,
-      "locked": false,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 24, "y": 297, "width": 380, "height": 24,
-        "rotation": 0 },
+      "transform": {
+        "x": 34,
+        "y": 215,
+        "width": 360,
+        "height": 30,
+        "rotation": 0
+      },
       "props": {
         "text": "Red Bull Energy Drink",
         "variant": "heading",
-        "fontSize": 14,
+        "fontSize": 22,
         "fontWeight": "800",
         "color": "#1a1a2e",
         "textAlign": "left",
         "lineHeight": 1.2
       }
     },
-    "rb-var-1": {
-      "id": "rb-var-1",
+    "var-250": {
+      "id": "var-250",
       "type": "button",
       "zIndex": 5,
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 24, "y": 333, "width": 78, "height": 24,
-        "rotation": 0 },
+      "transform": {
+        "x": 34,
+        "y": 260,
+        "width": 60,
+        "height": 28,
+        "rotation": 0
+      },
       "props": {
         "text": "250 ml",
         "variant": "filled",
-        "bgColor": "#1e40af",
-        "textColor": "#ffffff",
-        "borderRadius": 4,
-        "fontSize": 7,
+        "bgColor": "#e5e7eb",
+        "textColor": "#1f2937",
+        "borderRadius": 6,
+        "fontSize": 12,
         "fontWeight": "600"
       }
     },
-    "rb-var-2": {
-      "id": "rb-var-2",
+    "var-473": {
+      "id": "var-473",
       "type": "button",
       "zIndex": 5,
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 110, "y": 333, "width": 78, "height": 24,
-        "rotation": 0 },
+      "transform": {
+        "x": 104,
+        "y": 260,
+        "width": 60,
+        "height": 28,
+        "rotation": 0
+      },
       "props": {
         "text": "473 ml",
-        "variant": "outline",
-        "bgColor": "#f8fafc",
-        "textColor": "#6b7280",
-        "borderRadius": 4,
-        "fontSize": 7,
-        "fontWeight": "600"
+        "variant": "filled",
+        "bgColor": "#f3f4f6",
+        "textColor": "#4b5563",
+        "borderRadius": 6,
+        "fontSize": 12,
+        "fontWeight": "500"
       }
     },
-    "rb-var-3": {
-      "id": "rb-var-3",
+    "var-355": {
+      "id": "var-355",
       "type": "button",
       "zIndex": 5,
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 196, "y": 333, "width": 78, "height": 24,
-        "rotation": 0 },
+      "transform": {
+        "x": 174,
+        "y": 260,
+        "width": 60,
+        "height": 28,
+        "rotation": 0
+      },
       "props": {
         "text": "355 ml",
-        "variant": "outline",
-        "bgColor": "#f8fafc",
-        "textColor": "#6b7280",
-        "borderRadius": 4,
-        "fontSize": 7,
-        "fontWeight": "600"
+        "variant": "filled",
+        "bgColor": "#f3f4f6",
+        "textColor": "#4b5563",
+        "borderRadius": 6,
+        "fontSize": 12,
+        "fontWeight": "500"
       }
     },
-    "rb-tagline": {
-      "id": "rb-tagline",
+    "var-4cans": {
+      "id": "var-4cans",
+      "type": "button",
+      "zIndex": 5,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 244,
+        "y": 260,
+        "width": 60,
+        "height": 28,
+        "rotation": 0
+      },
+      "props": {
+        "text": "4 cans",
+        "variant": "filled",
+        "bgColor": "#fafafa",
+        "textColor": "#d1d5db",
+        "borderRadius": 6,
+        "fontSize": 12,
+        "fontWeight": "500"
+      }
+    },
+    "desc": {
+      "id": "desc",
       "type": "text",
       "zIndex": 5,
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 24, "y": 368, "width": 357, "height": 35,
-        "rotation": 0 },
+      "transform": {
+        "x": 34,
+        "y": 305,
+        "width": 360,
+        "height": 40,
+        "rotation": 0
+      },
       "props": {
         "text": "The original Red Bull Energy Drink. Giving wiiings to people and ideas since 1987.",
         "variant": "paragraph",
-        "fontSize": 8,
-        "color": "#6b7280",
+        "fontSize": 14,
+        "color": "#4b5563",
         "textAlign": "left",
-        "lineHeight": 1.6
-      }
-    },
-    "rb-cta": {
-      "id": "rb-cta",
-      "type": "button",
-      "zIndex": 5,
-      "locked": false,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 24, "y": 416, "width": 380, "height": 30,
-        "rotation": 0 },
-      "props": {
-        "text": "💬  Feedback / Inquiry",
-        "variant": "filled",
-        "bgColor": "#1e3a5f",
-        "textColor": "#ffffff",
-        "borderRadius": 6,
-        "fontSize": 8,
-        "fontWeight": "600"
-      }
-    },
-    "rb-social-group": {
-      "id": "rb-social-group",
-      "type": "social-group",
-      "zIndex": 5,
-      "locked": false,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 107, "y": 469, "width": 215, "height": 35,
-        "rotation": 0 },
-      "props": {
-        "platforms": [
-          "twitter",
-          "facebook",
-          "instagram",
-          "linkedin"
-        ],
-        "iconSize": 21,
-        "gap": 10,
-        "iconColor": "#1e40af",
-        "iconBg": "#f0f4f8",
-        "borderRadius": 260
-      }
-    },
-    "rb-about-card": {
-      "id": "rb-about-card",
-      "type": "card",
-      "zIndex": 2,
-      "locked": true,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 18, "y": 529, "width": 393, "height": 124,
-        "rotation": 0 },
-      "props": {
-        "bgColor": "#f8fafc",
-        "borderRadius": 8,
-        "shadow": "md",
-        "borderWidth": 1,
-        "borderColor": "#e2e8f0",
-        "padding": 0
-      }
-    },
-    "rb-about-title": {
-      "id": "rb-about-title",
-      "type": "heading",
-      "zIndex": 5,
-      "locked": false,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 35, "y": 541, "width": 357, "height": 18,
-        "rotation": 0 },
-      "props": {
-        "text": "About Red Bull Energy Drink",
-        "variant": "heading",
-        "fontSize": 8,
-        "fontWeight": "700",
-        "color": "#1a1a2e",
-        "textAlign": "left",
-        "lineHeight": 1.3
-      }
-    },
-    "rb-about-text": {
-      "id": "rb-about-text",
-      "type": "text",
-      "zIndex": 5,
-      "locked": false,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 35, "y": 564, "width": 357, "height": 59,
-        "rotation": 0 },
-      "props": {
-        "text": "Red Bull Energy Drink is appreciated worldwide by top athletes, busy professionals, college students and travelers on long journeys. It vitalizes body and mind. Red Bull gives you wiiings whenever you need them — whether at work, during sports, while studying, playing video games, or during leisure activities.",
-        "variant": "paragraph",
-        "fontSize": 7,
-        "color": "#6b7280",
-        "textAlign": "left",
-        "lineHeight": 1.7
-      }
-    },
-    "rb-about-more": {
-      "id": "rb-about-more",
-      "type": "button",
-      "zIndex": 5,
-      "locked": false,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 35, "y": 629, "width": 357, "height": 18,
-        "rotation": 0 },
-      "props": {
-        "text": "Read more ▾",
-        "variant": "outline",
-        "bgColor": "transparent",
-        "textColor": "#6b7280",
-        "borderRadius": 0,
-        "fontSize": 7,
-        "fontWeight": "600"
-      }
-    },
-    "rb-feat-title": {
-      "id": "rb-feat-title",
-      "type": "heading",
-      "zIndex": 5,
-      "locked": false,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 24, "y": 683, "width": 178, "height": 15,
-        "rotation": 0 },
-      "props": {
-        "text": "Benefits",
-        "variant": "heading",
-        "fontSize": 7,
-        "fontWeight": "700",
-        "color": "#1a1a2e",
-        "textAlign": "left",
-        "lineHeight": 1.2
-      }
-    },
-    "rb-feat-card-1": {
-      "id": "rb-feat-card-1",
-      "type": "card",
-      "zIndex": 2,
-      "locked": true,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 18, "y": 704, "width": 250, "height": 30,
-        "rotation": 0 },
-      "props": {
-        "bgColor": "#ffffff",
-        "borderRadius": 5,
-        "shadow": "sm",
-        "borderWidth": 1,
-        "borderColor": "#e2e8f0",
-        "padding": 0
-      }
-    },
-    "rb-feat-icon-1": {
-      "id": "rb-feat-icon-1",
-      "type": "icon",
-      "zIndex": 5,
-      "locked": false,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 30, "y": 709, "width": 18, "height": 18,
-        "rotation": 0 },
-      "props": {
-        "icon": "⚡",
-        "fontSize": 8,
-        "bgColor": "transparent",
-        "borderRadius": 0
-      }
-    },
-    "rb-feat-text-1": {
-      "id": "rb-feat-text-1",
-      "type": "text",
-      "zIndex": 5,
-      "locked": false,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 54, "y": 712, "width": 178, "height": 15,
-        "rotation": 0 },
-      "props": {
-        "text": "Stay alert",
-        "variant": "paragraph",
-        "fontSize": 7,
-        "fontWeight": "600",
-        "color": "#1a1a2e",
-        "textAlign": "left",
-        "lineHeight": 1.4
-      }
-    },
-    "rb-feat-card-2": {
-      "id": "rb-feat-card-2",
-      "type": "card",
-      "zIndex": 2,
-      "locked": true,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 18, "y": 739, "width": 250, "height": 30,
-        "rotation": 0 },
-      "props": {
-        "bgColor": "#ffffff",
-        "borderRadius": 5,
-        "shadow": "sm",
-        "borderWidth": 1,
-        "borderColor": "#e2e8f0",
-        "padding": 0
-      }
-    },
-    "rb-feat-icon-2": {
-      "id": "rb-feat-icon-2",
-      "type": "icon",
-      "zIndex": 5,
-      "locked": false,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 30, "y": 746, "width": 18, "height": 18,
-        "rotation": 0 },
-      "props": {
-        "icon": "🔋",
-        "fontSize": 8,
-        "bgColor": "transparent",
-        "borderRadius": 0
-      }
-    },
-    "rb-feat-text-2": {
-      "id": "rb-feat-text-2",
-      "type": "text",
-      "zIndex": 5,
-      "locked": false,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 54, "y": 747, "width": 178, "height": 15,
-        "rotation": 0 },
-      "props": {
-        "text": "Reduce fatigue",
-        "variant": "paragraph",
-        "fontSize": 7,
-        "fontWeight": "600",
-        "color": "#1a1a2e",
-        "textAlign": "left",
-        "lineHeight": 1.4
-      }
-    },
-    "rb-feat-card-3": {
-      "id": "rb-feat-card-3",
-      "type": "card",
-      "zIndex": 2,
-      "locked": true,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 18, "y": 775, "width": 250, "height": 30,
-        "rotation": 0 },
-      "props": {
-        "bgColor": "#ffffff",
-        "borderRadius": 5,
-        "shadow": "sm",
-        "borderWidth": 1,
-        "borderColor": "#e2e8f0",
-        "padding": 0
-      }
-    },
-    "rb-feat-icon-3": {
-      "id": "rb-feat-icon-3",
-      "type": "icon",
-      "zIndex": 5,
-      "locked": false,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 30, "y": 781, "width": 18, "height": 18,
-        "rotation": 0 },
-      "props": {
-        "icon": "🚀",
-        "fontSize": 8,
-        "bgColor": "transparent",
-        "borderRadius": 0
-      }
-    },
-    "rb-feat-text-3": {
-      "id": "rb-feat-text-3",
-      "type": "text",
-      "zIndex": 5,
-      "locked": false,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 54, "y": 782, "width": 178, "height": 15,
-        "rotation": 0 },
-      "props": {
-        "text": "Kickstart your day",
-        "variant": "paragraph",
-        "fontSize": 7,
-        "fontWeight": "600",
-        "color": "#1a1a2e",
-        "textAlign": "left",
-        "lineHeight": 1.4
-      }
-    },
-    "rb-dl-card": {
-      "id": "rb-dl-card",
-      "type": "card",
-      "zIndex": 2,
-      "locked": true,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 280, "y": 704, "width": 131, "height": 101,
-        "rotation": 0 },
-      "props": {
-        "bgColor": "#ffffff",
-        "borderRadius": 6,
-        "shadow": "md",
-        "borderWidth": 1,
-        "borderColor": "#e2e8f0",
-        "padding": 0
-      }
-    },
-    "rb-dl-title": {
-      "id": "rb-dl-title",
-      "type": "heading",
-      "zIndex": 5,
-      "locked": false,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 297, "y": 731, "width": 95, "height": 15,
-        "rotation": 0 },
-      "props": {
-        "text": "📖 Recipe book",
-        "variant": "heading",
-        "fontSize": 7,
-        "fontWeight": "700",
-        "color": "#1a1a2e",
-        "textAlign": "center",
-        "lineHeight": 1.3
-      }
-    },
-    "rb-dl-desc": {
-      "id": "rb-dl-desc",
-      "type": "text",
-      "zIndex": 5,
-      "locked": false,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 297, "y": 752, "width": 95, "height": 24,
-        "rotation": 0 },
-      "props": {
-        "text": "20 pages\n1.4 MB",
-        "variant": "paragraph",
-        "fontSize": 6,
-        "color": "#9ca3af",
-        "textAlign": "center",
         "lineHeight": 1.5
       }
     },
-    "rb-life-overlay": {
-      "id": "rb-life-overlay",
-      "type": "container",
-      "zIndex": 1,
-      "locked": true,
-      "visible": true,
-      "opacity": 0.5,
-      "transform": { "x": 0, "y": 826, "width": 488, "height": 148,
-        "rotation": 0 },
-      "props": {
-        "bgGradientFrom": "transparent",
-        "bgGradientTo": "#0a1628"
-      }
-    },
-    "rb-life-text": {
-      "id": "rb-life-text",
-      "type": "heading",
-      "zIndex": 10,
-      "locked": false,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 24, "y": 939, "width": 237, "height": 24,
-        "rotation": 0 },
-      "props": {
-        "text": "Ready to take off?",
-        "variant": "heading",
-        "fontSize": 9,
-        "fontWeight": "700",
-        "color": "#ffffff",
-        "textAlign": "left",
-        "lineHeight": 1.3
-      }
-    },
-    "rb-oth-title": {
-      "id": "rb-oth-title",
-      "type": "heading",
-      "zIndex": 5,
-      "locked": false,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 24, "y": 986, "width": 237, "height": 18,
-        "rotation": 0 },
-      "props": {
-        "text": "Other Red Bull Drinks",
-        "variant": "heading",
-        "fontSize": 8,
-        "fontWeight": "700",
-        "color": "#1a1a2e",
-        "textAlign": "left",
-        "lineHeight": 1.2
-      }
-    },
-    "rb-oth-card-1": {
-      "id": "rb-oth-card-1",
-      "type": "card",
-      "zIndex": 2,
-      "locked": true,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 18, "y": 1013, "width": 124, "height": 124,
-        "rotation": 0 },
-      "props": {
-        "bgColor": "#e8f0fe",
-        "borderRadius": 7,
-        "shadow": "md",
-        "borderWidth": 0,
-        "borderColor": "transparent",
-        "padding": 0
-      }
-    },
-    "rb-oth-img-1": {
-      "id": "rb-oth-img-1",
-      "type": "image",
-      "zIndex": 5,
-      "locked": false,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 35, "y": 1018, "width": 89, "height": 72,
-        "rotation": 0 },
-      "props": {
-        "src": "https://images.unsplash.com/photo-1622543925917-763c34d1a86e?w=400&q=80",
-        "alt": "Red Bull Zero",
-        "objectFit": "contain",
-        "borderRadius": 3
-      }
-    },
-    "rb-oth-name-1": {
-      "id": "rb-oth-name-1",
-      "type": "heading",
-      "zIndex": 5,
-      "locked": false,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 30, "y": 1096, "width": 102, "height": 11,
-        "rotation": 0 },
-      "props": {
-        "text": "Red Bull Zero",
-        "variant": "heading",
-        "fontSize": 7,
-        "fontWeight": "700",
-        "color": "#1a1a2e",
-        "textAlign": "center",
-        "lineHeight": 1.2
-      }
-    },
-    "rb-oth-sub-1": {
-      "id": "rb-oth-sub-1",
-      "type": "text",
-      "zIndex": 5,
-      "locked": false,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 30, "y": 1111, "width": 102, "height": 11,
-        "rotation": 0 },
-      "props": {
-        "text": "Zero calories",
-        "variant": "paragraph",
-        "fontSize": 6,
-        "color": "#6b7280",
-        "textAlign": "center",
-        "lineHeight": 1.3
-      }
-    },
-    "rb-oth-card-2": {
-      "id": "rb-oth-card-2",
-      "type": "card",
-      "zIndex": 2,
-      "locked": true,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 152, "y": 1013, "width": 124, "height": 124,
-        "rotation": 0 },
-      "props": {
-        "bgColor": "#dbeafe",
-        "borderRadius": 7,
-        "shadow": "md",
-        "borderWidth": 0,
-        "borderColor": "transparent",
-        "padding": 0
-      }
-    },
-    "rb-oth-img-2": {
-      "id": "rb-oth-img-2",
-      "type": "image",
-      "zIndex": 5,
-      "locked": false,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 169, "y": 1018, "width": 89, "height": 72,
-        "rotation": 0 },
-      "props": {
-        "src": "https://images.unsplash.com/photo-1622543925917-763c34d1a86e?w=400&q=80",
-        "alt": "Sugar-free",
-        "objectFit": "contain",
-        "borderRadius": 3
-      }
-    },
-    "rb-oth-name-2": {
-      "id": "rb-oth-name-2",
-      "type": "heading",
-      "zIndex": 5,
-      "locked": false,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 163, "y": 1096, "width": 102, "height": 11,
-        "rotation": 0 },
-      "props": {
-        "text": "Sugar-free",
-        "variant": "heading",
-        "fontSize": 7,
-        "fontWeight": "700",
-        "color": "#1a1a2e",
-        "textAlign": "center",
-        "lineHeight": 1.2
-      }
-    },
-    "rb-oth-sub-2": {
-      "id": "rb-oth-sub-2",
-      "type": "text",
-      "zIndex": 5,
-      "locked": false,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 163, "y": 1111, "width": 102, "height": 11,
-        "rotation": 0 },
-      "props": {
-        "text": "Sugar-free energy drink",
-        "variant": "paragraph",
-        "fontSize": 6,
-        "color": "#6b7280",
-        "textAlign": "center",
-        "lineHeight": 1.3
-      }
-    },
-    "rb-oth-card-3": {
-      "id": "rb-oth-card-3",
-      "type": "card",
-      "zIndex": 2,
-      "locked": true,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 285, "y": 1013, "width": 124, "height": 124,
-        "rotation": 0 },
-      "props": {
-        "bgColor": "#fee2e2",
-        "borderRadius": 7,
-        "shadow": "md",
-        "borderWidth": 0,
-        "borderColor": "transparent",
-        "padding": 0
-      }
-    },
-    "rb-oth-img-3": {
-      "id": "rb-oth-img-3",
-      "type": "image",
-      "zIndex": 5,
-      "locked": false,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 304, "y": 1018, "width": 89, "height": 72,
-        "rotation": 0 },
-      "props": {
-        "src": "https://images.unsplash.com/photo-1622543925917-763c34d1a86e?w=400&q=80",
-        "alt": "Red Edition",
-        "objectFit": "contain",
-        "borderRadius": 3
-      }
-    },
-    "rb-oth-name-3": {
-      "id": "rb-oth-name-3",
-      "type": "heading",
-      "zIndex": 5,
-      "locked": false,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 297, "y": 1096, "width": 102, "height": 11,
-        "rotation": 0 },
-      "props": {
-        "text": "Red Edition",
-        "variant": "heading",
-        "fontSize": 7,
-        "fontWeight": "700",
-        "color": "#1a1a2e",
-        "textAlign": "center",
-        "lineHeight": 1.2
-      }
-    },
-    "rb-oth-sub-3": {
-      "id": "rb-oth-sub-3",
-      "type": "text",
-      "zIndex": 5,
-      "locked": false,
-      "visible": true,
-      "opacity": 1,
-      "transform": { "x": 297, "y": 1111, "width": 102, "height": 11,
-        "rotation": 0 },
-      "props": {
-        "text": "Watermelon flavor",
-        "variant": "paragraph",
-        "fontSize": 6,
-        "color": "#6b7280",
-        "textAlign": "center",
-        "lineHeight": 1.3
-      }
-    },
-    "rb-view-all": {
-      "id": "rb-view-all",
+    "btn-feedback": {
+      "id": "btn-feedback",
       "type": "button",
       "zIndex": 5,
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 18, "y": 1150, "width": 393, "height": 24,
-        "rotation": 0 },
+      "transform": {
+        "x": 34,
+        "y": 360,
+        "width": 360,
+        "height": 44,
+        "rotation": 0
+      },
       "props": {
-        "text": "View all",
-        "variant": "outline",
-        "bgColor": "#f8fafc",
-        "textColor": "#6b7280",
-        "borderRadius": 5,
-        "fontSize": 7,
+        "text": "Feedback / Inquiry",
+        "variant": "filled",
+        "bgColor": "#3b5998",
+        "textColor": "#ffffff",
+        "borderRadius": 10,
+        "fontSize": 14,
         "fontWeight": "600"
       }
     },
-    "rb-foot-overlay": {
-      "id": "rb-foot-overlay",
-      "type": "container",
-      "zIndex": 1,
-      "locked": true,
-      "visible": true,
-      "opacity": 0.85,
-      "transform": { "x": 0, "y": 1181, "width": 488, "height": 148,
-        "rotation": 0 },
-      "props": {
-        "bgGradientFrom": "#1e40af",
-        "bgGradientTo": "#1d4ed8"
-      }
-    },
-    "rb-foot-msg": {
-      "id": "rb-foot-msg",
-      "type": "heading",
-      "zIndex": 10,
+    "soc-1": {
+      "id": "soc-1",
+      "type": "image",
+      "zIndex": 5,
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 35, "y": 1212, "width": 357, "height": 41,
-        "rotation": 0 },
+      "transform": {
+        "x": 34,
+        "y": 420,
+        "width": 80,
+        "height": 44,
+        "rotation": 0
+      },
       "props": {
-        "text": "Giving wiiings to people & ideas since 1987",
+        "src": "",
+        "alt": "Globe",
+        "objectFit": "contain",
+        "borderRadius": 8
+      }
+    },
+    "soc-2": {
+      "id": "soc-2",
+      "type": "image",
+      "zIndex": 5,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 128,
+        "y": 420,
+        "width": 80,
+        "height": 44,
+        "rotation": 0
+      },
+      "props": {
+        "src": "",
+        "alt": "Facebook",
+        "objectFit": "contain",
+        "borderRadius": 8
+      }
+    },
+    "soc-3": {
+      "id": "soc-3",
+      "type": "image",
+      "zIndex": 5,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 222,
+        "y": 420,
+        "width": 80,
+        "height": 44,
+        "rotation": 0
+      },
+      "props": {
+        "src": "",
+        "alt": "Instagram",
+        "objectFit": "contain",
+        "borderRadius": 8
+      }
+    },
+    "soc-4": {
+      "id": "soc-4",
+      "type": "image",
+      "zIndex": 5,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 316,
+        "y": 420,
+        "width": 78,
+        "height": 44,
+        "rotation": 0
+      },
+      "props": {
+        "src": "",
+        "alt": "LinkedIn",
+        "objectFit": "contain",
+        "borderRadius": 8
+      }
+    },
+    "separator": {
+      "id": "separator",
+      "type": "container",
+      "zIndex": 5,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 34,
+        "y": 480,
+        "width": 360,
+        "height": 1,
+        "rotation": 0
+      },
+      "props": {
+        "bgGradientFrom": "#e5e7eb",
+        "bgGradientTo": "#e5e7eb"
+      }
+    },
+    "about-title": {
+      "id": "about-title",
+      "type": "heading",
+      "zIndex": 5,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 34,
+        "y": 500,
+        "width": 360,
+        "height": 20,
+        "rotation": 0
+      },
+      "props": {
+        "text": "About Red Bull Energy Drink",
+        "variant": "heading",
+        "fontSize": 15,
+        "fontWeight": "700",
+        "color": "#1a1a2e",
+        "textAlign": "left",
+        "lineHeight": 1.2
+      }
+    },
+    "about-desc": {
+      "id": "about-desc",
+      "type": "text",
+      "zIndex": 5,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 34,
+        "y": 525,
+        "width": 360,
+        "height": 60,
+        "rotation": 0
+      },
+      "props": {
+        "text": "Red Bull Energy Drink is appreciated worldwide by top athletes, busy professionals, college students and travelers on long journeys.",
+        "variant": "paragraph",
+        "fontSize": 14,
+        "color": "#4b5563",
+        "textAlign": "left",
+        "lineHeight": 1.5
+      }
+    },
+    "btn-readmore": {
+      "id": "btn-readmore",
+      "type": "button",
+      "zIndex": 5,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 34,
+        "y": 600,
+        "width": 360,
+        "height": 40,
+        "rotation": 0
+      },
+      "props": {
+        "text": "Read more",
+        "variant": "outline",
+        "bgColor": "#ffffff",
+        "textColor": "#111827",
+        "borderRadius": 8,
+        "fontSize": 14,
+        "fontWeight": "600"
+      }
+    },
+    "ben-card": {
+      "id": "ben-card",
+      "type": "card",
+      "zIndex": 2,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 18,
+        "y": 745,
+        "width": 240,
+        "height": 140,
+        "rotation": 0
+      },
+      "props": {
+        "bgColor": "#ffffff",
+        "borderRadius": 12,
+        "shadow": "md",
+        "borderWidth": 0,
+        "padding": 0
+      }
+    },
+    "ben-title": {
+      "id": "ben-title",
+      "type": "text",
+      "zIndex": 5,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 34,
+        "y": 760,
+        "width": 200,
+        "height": 20,
+        "rotation": 0
+      },
+      "props": {
+        "text": "Benefits",
+        "variant": "paragraph",
+        "fontSize": 14,
+        "color": "#6b7280",
+        "textAlign": "left",
+        "lineHeight": 1.2
+      }
+    },
+    "ben-ic-1": {
+      "id": "ben-ic-1",
+      "type": "image",
+      "zIndex": 5,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 34,
+        "y": 790,
+        "width": 18,
+        "height": 18,
+        "rotation": 0
+      },
+      "props": {
+        "src": "",
+        "alt": "icon",
+        "objectFit": "contain",
+        "borderRadius": 0
+      }
+    },
+    "ben-tx-1": {
+      "id": "ben-tx-1",
+      "type": "text",
+      "zIndex": 5,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 62,
+        "y": 792,
+        "width": 180,
+        "height": 18,
+        "rotation": 0
+      },
+      "props": {
+        "text": "Stay alert",
+        "variant": "paragraph",
+        "fontSize": 14,
+        "color": "#111827",
+        "textAlign": "left",
+        "lineHeight": 1.2,
+        "fontWeight": "600"
+      }
+    },
+    "ben-ic-2": {
+      "id": "ben-ic-2",
+      "type": "image",
+      "zIndex": 5,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 34,
+        "y": 820,
+        "width": 18,
+        "height": 18,
+        "rotation": 0
+      },
+      "props": {
+        "src": "",
+        "alt": "icon",
+        "objectFit": "contain",
+        "borderRadius": 0
+      }
+    },
+    "ben-tx-2": {
+      "id": "ben-tx-2",
+      "type": "text",
+      "zIndex": 5,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 62,
+        "y": 822,
+        "width": 180,
+        "height": 18,
+        "rotation": 0
+      },
+      "props": {
+        "text": "Reduce fatigue",
+        "variant": "paragraph",
+        "fontSize": 14,
+        "color": "#111827",
+        "textAlign": "left",
+        "lineHeight": 1.2,
+        "fontWeight": "600"
+      }
+    },
+    "ben-ic-3": {
+      "id": "ben-ic-3",
+      "type": "image",
+      "zIndex": 5,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 34,
+        "y": 850,
+        "width": 18,
+        "height": 18,
+        "rotation": 0
+      },
+      "props": {
+        "src": "",
+        "alt": "icon",
+        "objectFit": "contain",
+        "borderRadius": 0
+      }
+    },
+    "ben-tx-3": {
+      "id": "ben-tx-3",
+      "type": "text",
+      "zIndex": 5,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 62,
+        "y": 852,
+        "width": 180,
+        "height": 18,
+        "rotation": 0
+      },
+      "props": {
+        "text": "Kickstart your day",
+        "variant": "paragraph",
+        "fontSize": 14,
+        "color": "#111827",
+        "textAlign": "left",
+        "lineHeight": 1.2,
+        "fontWeight": "600"
+      }
+    },
+    "rec-card": {
+      "id": "rec-card",
+      "type": "card",
+      "zIndex": 2,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 270,
+        "y": 745,
+        "width": 140,
+        "height": 140,
+        "rotation": 0
+      },
+      "props": {
+        "bgColor": "#ffffff",
+        "borderRadius": 12,
+        "shadow": "md",
+        "borderWidth": 0,
+        "padding": 0
+      }
+    },
+    "rec-ic": {
+      "id": "rec-ic",
+      "type": "image",
+      "zIndex": 5,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 286,
+        "y": 765,
+        "width": 20,
+        "height": 20,
+        "rotation": 0
+      },
+      "props": {
+        "src": "",
+        "alt": "icon",
+        "objectFit": "contain",
+        "borderRadius": 0
+      }
+    },
+    "rec-title": {
+      "id": "rec-title",
+      "type": "heading",
+      "zIndex": 5,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 286,
+        "y": 800,
+        "width": 110,
+        "height": 20,
+        "rotation": 0
+      },
+      "props": {
+        "text": "Recipe book",
+        "variant": "heading",
+        "fontSize": 14,
+        "fontWeight": "700",
+        "color": "#111827",
+        "textAlign": "left",
+        "lineHeight": 1.2
+      }
+    },
+    "rec-desc": {
+      "id": "rec-desc",
+      "type": "text",
+      "zIndex": 5,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 286,
+        "y": 825,
+        "width": 110,
+        "height": 30,
+        "rotation": 0
+      },
+      "props": {
+        "text": "20 pages\n1.4 MB",
+        "variant": "paragraph",
+        "fontSize": 12,
+        "color": "#6b7280",
+        "textAlign": "left",
+        "lineHeight": 1.4
+      }
+    },
+    "rdy-card": {
+      "id": "rdy-card",
+      "type": "card",
+      "zIndex": 2,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 18,
+        "y": 900,
+        "width": 392,
+        "height": 240,
+        "rotation": 0
+      },
+      "props": {
+        "bgColor": "#ffffff",
+        "borderRadius": 12,
+        "shadow": "md",
+        "borderWidth": 0,
+        "padding": 0
+      }
+    },
+    "rdy-title": {
+      "id": "rdy-title",
+      "type": "text",
+      "zIndex": 5,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 34,
+        "y": 915,
+        "width": 360,
+        "height": 20,
+        "rotation": 0
+      },
+      "props": {
+        "text": "Ready to take off?",
+        "variant": "paragraph",
+        "fontSize": 14,
+        "color": "#6b7280",
+        "textAlign": "left",
+        "lineHeight": 1.2
+      }
+    },
+    "rdy-img": {
+      "id": "rdy-img",
+      "type": "image",
+      "zIndex": 5,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 34,
+        "y": 945,
+        "width": 360,
+        "height": 180,
+        "rotation": 0
+      },
+      "props": {
+        "src": "",
+        "alt": "Illustration",
+        "objectFit": "cover",
+        "borderRadius": 8
+      }
+    },
+    "oth-card": {
+      "id": "oth-card",
+      "type": "card",
+      "zIndex": 2,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 18,
+        "y": 1155,
+        "width": 392,
+        "height": 260,
+        "rotation": 0
+      },
+      "props": {
+        "bgColor": "#ffffff",
+        "borderRadius": 12,
+        "shadow": "md",
+        "borderWidth": 0,
+        "padding": 0
+      }
+    },
+    "oth-title": {
+      "id": "oth-title",
+      "type": "text",
+      "zIndex": 5,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 34,
+        "y": 1170,
+        "width": 360,
+        "height": 20,
+        "rotation": 0
+      },
+      "props": {
+        "text": "Other Red Bull Drinks",
+        "variant": "paragraph",
+        "fontSize": 14,
+        "color": "#6b7280",
+        "textAlign": "left",
+        "lineHeight": 1.2
+      }
+    },
+    "oth-bg-1": {
+      "id": "oth-bg-1",
+      "type": "card",
+      "zIndex": 3,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 34,
+        "y": 1205,
+        "width": 172,
+        "height": 120,
+        "rotation": 0
+      },
+      "props": {
+        "bgColor": "#eaf2fb",
+        "borderRadius": 8,
+        "shadow": "none",
+        "borderWidth": 0,
+        "padding": 0
+      }
+    },
+    "oth-img-1": {
+      "id": "oth-img-1",
+      "type": "image",
+      "zIndex": 5,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 70,
+        "y": 1215,
+        "width": 100,
+        "height": 110,
+        "rotation": 0
+      },
+      "props": {
+        "src": "",
+        "alt": "Can 1",
+        "objectFit": "contain",
+        "borderRadius": 0
+      }
+    },
+    "oth-tx-1": {
+      "id": "oth-tx-1",
+      "type": "heading",
+      "zIndex": 5,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 34,
+        "y": 1340,
+        "width": 172,
+        "height": 18,
+        "rotation": 0
+      },
+      "props": {
+        "text": "Red Bull Zero",
+        "variant": "heading",
+        "fontSize": 14,
+        "fontWeight": "600",
+        "color": "#111827",
+        "textAlign": "center",
+        "lineHeight": 1.2
+      }
+    },
+    "oth-sub-1": {
+      "id": "oth-sub-1",
+      "type": "text",
+      "zIndex": 5,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 34,
+        "y": 1360,
+        "width": 172,
+        "height": 16,
+        "rotation": 0
+      },
+      "props": {
+        "text": "Red Bull Zero",
+        "variant": "paragraph",
+        "fontSize": 12,
+        "color": "#6b7280",
+        "textAlign": "center",
+        "lineHeight": 1.2
+      }
+    },
+    "oth-bg-2": {
+      "id": "oth-bg-2",
+      "type": "card",
+      "zIndex": 3,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 222,
+        "y": 1205,
+        "width": 172,
+        "height": 120,
+        "rotation": 0
+      },
+      "props": {
+        "bgColor": "#0099e5",
+        "borderRadius": 8,
+        "shadow": "none",
+        "borderWidth": 0,
+        "padding": 0
+      }
+    },
+    "oth-img-2": {
+      "id": "oth-img-2",
+      "type": "image",
+      "zIndex": 5,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 258,
+        "y": 1215,
+        "width": 100,
+        "height": 110,
+        "rotation": 0
+      },
+      "props": {
+        "src": "",
+        "alt": "Can 2",
+        "objectFit": "contain",
+        "borderRadius": 0
+      }
+    },
+    "oth-tx-2": {
+      "id": "oth-tx-2",
+      "type": "heading",
+      "zIndex": 5,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 222,
+        "y": 1340,
+        "width": 172,
+        "height": 18,
+        "rotation": 0
+      },
+      "props": {
+        "text": "Sugar-free energy drink",
         "variant": "heading",
         "fontSize": 13,
+        "fontWeight": "600",
+        "color": "#111827",
+        "textAlign": "center",
+        "lineHeight": 1.2
+      }
+    },
+    "oth-sub-2": {
+      "id": "oth-sub-2",
+      "type": "text",
+      "zIndex": 5,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 222,
+        "y": 1360,
+        "width": 172,
+        "height": 16,
+        "rotation": 0
+      },
+      "props": {
+        "text": "Sugar-free energy drink",
+        "variant": "paragraph",
+        "fontSize": 12,
+        "color": "#6b7280",
+        "textAlign": "center",
+        "lineHeight": 1.2
+      }
+    },
+    "btn-viewall": {
+      "id": "btn-viewall",
+      "type": "button",
+      "zIndex": 5,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 34,
+        "y": 1390,
+        "width": 360,
+        "height": 40,
+        "rotation": 0
+      },
+      "props": {
+        "text": "View all",
+        "variant": "outline",
+        "bgColor": "#ffffff",
+        "textColor": "#111827",
+        "borderRadius": 8,
+        "fontSize": 14,
+        "fontWeight": "600"
+      }
+    },
+    "bot-banner": {
+      "id": "bot-banner",
+      "type": "image",
+      "zIndex": 2,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 18,
+        "y": 1430,
+        "width": 392,
+        "height": 160,
+        "rotation": 0
+      },
+      "props": {
+        "src": "",
+        "alt": "Banner",
+        "objectFit": "cover",
+        "borderRadius": 12
+      }
+    },
+    "bot-title": {
+      "id": "bot-title",
+      "type": "heading",
+      "zIndex": 5,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 50,
+        "y": 1465,
+        "width": 328,
+        "height": 60,
+        "rotation": 0
+      },
+      "props": {
+        "text": "Giving wiiings to\npeople & ideas\nsince 1987",
+        "variant": "heading",
+        "fontSize": 22,
         "fontWeight": "800",
         "color": "#ffffff",
         "textAlign": "center",
         "lineHeight": 1.2
       }
     },
-    "rb-foot-sub": {
-      "id": "rb-foot-sub",
-      "type": "text",
-      "zIndex": 10,
+    "bot-btn": {
+      "id": "bot-btn",
+      "type": "button",
+      "zIndex": 5,
       "locked": false,
       "visible": true,
-      "opacity": 0.7,
-      "transform": { "x": 119, "y": 1262, "width": 191, "height": 11,
-        "rotation": 0 },
+      "opacity": 1,
+      "transform": {
+        "x": 164,
+        "y": 1540,
+        "width": 100,
+        "height": 26,
+        "rotation": 0
+      },
       "props": {
         "text": "Red Bull GmbH",
-        "variant": "paragraph",
-        "fontSize": 6,
-        "color": "#ffffff",
-        "textAlign": "center",
-        "lineHeight": 1.3
+        "variant": "filled",
+        "bgColor": "#e30022",
+        "textColor": "#ffffff",
+        "borderRadius": 13,
+        "fontSize": 10,
+        "fontWeight": "600"
       }
     },
-    "rb-foot-logo": {
-      "id": "rb-foot-logo",
-      "type": "icon",
-      "zIndex": 10,
+    "footer-bar": {
+      "id": "footer-bar",
+      "type": "card",
+      "zIndex": 2,
       "locked": false,
       "visible": true,
-      "opacity": 0.8,
-      "transform": { "x": 193, "y": 1280, "width": 24, "height": 24,
-        "rotation": 0 },
+      "opacity": 1,
+      "transform": {
+        "x": 0,
+        "y": 1610,
+        "width": 428,
+        "height": 60,
+        "rotation": 0
+      },
       "props": {
-        "icon": "🐂",
-        "fontSize": 13,
-        "bgColor": "transparent",
+        "bgColor": "#405282",
+        "borderRadius": 0,
+        "shadow": "none",
+        "borderWidth": 0,
+        "padding": 0
+      }
+    },
+    "footer-lock": {
+      "id": "footer-lock",
+      "type": "image",
+      "zIndex": 5,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 130,
+        "y": 1630,
+        "width": 12,
+        "height": 16,
+        "rotation": 0
+      },
+      "props": {
+        "src": "",
+        "alt": "Lock",
+        "objectFit": "contain",
         "borderRadius": 0
       }
     },
-    "rb-foot-link": {
-      "id": "rb-foot-link",
+    "footer-link": {
+      "id": "footer-link",
       "type": "text",
-      "zIndex": 10,
+      "zIndex": 5,
       "locked": false,
       "visible": true,
-      "opacity": 0.6,
-      "transform": { "x": 143, "y": 1309, "width": 143, "height": 11,
-        "rotation": 0 },
+      "opacity": 1,
+      "transform": {
+        "x": 150,
+        "y": 1630,
+        "width": 140,
+        "height": 20,
+        "rotation": 0
+      },
       "props": {
-        "text": "🔗 store.redbull.com",
+        "text": "store.redbull.com",
         "variant": "paragraph",
-        "fontSize": 6,
-        "fontWeight": "600",
-        "color": "#ffffff",
-        "textAlign": "center",
-        "lineHeight": 1.3
+        "fontSize": 15,
+        "color": "#d1d5db",
+        "textAlign": "left",
+        "lineHeight": 1.2
+      }
+    },
+    "footer-share": {
+      "id": "footer-share",
+      "type": "image",
+      "zIndex": 5,
+      "locked": false,
+      "visible": true,
+      "opacity": 1,
+      "transform": {
+        "x": 380,
+        "y": 1625,
+        "width": 20,
+        "height": 24,
+        "rotation": 0
+      },
+      "props": {
+        "src": "",
+        "alt": "Share",
+        "objectFit": "contain",
+        "borderRadius": 0
       }
     }
   }
@@ -974,9 +1268,9 @@ export const redbullShowcaseTemplate: Template = {
   meta: {
     id: "redbull-showcase",
     name: "Red Bull Showcase",
-    description: "Dynamic energy drink product showcase with sporty dark navy/blue theme. Hero splash, variant selector, benefits, lifestyle banner, and product carousel.",
+    description: "Exact 1:1 match of the Red Bull product showcase template.",
     category: "marketing",
-    tags: ["beverage", "energy", "redbull", "product", "showcase"],
+    tags: ["beverage", "energy", "redbull"],
   },
   data: doc,
 };

@@ -1,7 +1,12 @@
+"use client";
+
+import React, { useState } from "react";
 import Link from "next/link";
-import { templates } from "@productix/editor";
+import { templates, PublicRenderer, PreviewRenderer } from "@productix/editor";
+import type { Template } from "@productix/types";
 
 export default function DashboardPage() {
+  const [previewTemplate, setPreviewTemplate] = useState<Template | null>(null);
   const categoryEmoji: Record<string, string> = {
     marketing: "🚀",
     event: "🎉",
@@ -98,16 +103,16 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           {templates.map((template) => (
-            <Link
+            <button
               key={template.meta.id}
-              href={`/editor?template=${template.meta.id}`}
-              className="group rounded-2xl border border-gray-200 bg-white p-5 transition-all duration-200 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-600/5"
+              onClick={() => setPreviewTemplate(template)}
+              className="group text-left rounded-2xl border border-gray-200 bg-white p-5 transition-all duration-200 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-600/5 cursor-pointer"
             >
               {/* Template Preview */}
-              <div className="mb-4 flex h-32 items-center justify-center rounded-xl bg-gradient-to-br from-gray-50 to-gray-100">
-                <span className="text-4xl transition-transform duration-200 group-hover:scale-110">
-                  {categoryEmoji[template.meta.category] || "✨"}
-                </span>
+              <div className="mb-4 relative h-48 w-full overflow-hidden rounded-xl bg-gray-100 flex justify-center border border-gray-200/50 transition-colors group-hover:border-blue-200">
+                <div className="absolute top-0 w-[428px] origin-top transform scale-[0.45] pointer-events-none transition-transform duration-500 group-hover:scale-[0.48] shadow-sm bg-white">
+                  <PublicRenderer document={template.data} contentLocale="en" />
+                </div>
               </div>
 
               <div>
@@ -129,7 +134,7 @@ export default function DashboardPage() {
                   </span>
                 ))}
               </div>
-            </Link>
+            </button>
           ))}
 
           {/* Blank Page Card */}
@@ -156,6 +161,48 @@ export default function DashboardPage() {
           </p>
         </div>
       </footer>
+
+      {/* Template Preview Modal */}
+      {previewTemplate && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/40 backdrop-blur-sm p-4 md:p-8">
+          <div className="bg-white rounded-2xl w-full max-w-5xl h-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-white">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">{previewTemplate.meta.name}</h3>
+                <p className="text-sm text-gray-500 mt-1">{previewTemplate.meta.description}</p>
+              </div>
+              <button 
+                onClick={() => setPreviewTemplate(null)}
+                className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-full hover:bg-gray-100 bg-gray-50"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+            </div>
+            
+            {/* Body */}
+            <div className="flex-1 bg-gray-100 min-h-0 overflow-hidden relative">
+              <PreviewRenderer document={previewTemplate.data} showControls={true} contentLocale="en" className="h-full w-full" />
+            </div>
+
+            {/* Footer */}
+            <div className="p-5 border-t border-gray-100 bg-white flex justify-end gap-3">
+              <button 
+                onClick={() => setPreviewTemplate(null)}
+                className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
+              >
+                Close Preview
+              </button>
+              <Link
+                href={`/editor?template=${previewTemplate.meta.id}`}
+                className="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-sm shadow-blue-600/20 transition-all active:scale-[0.98]"
+              >
+                Use this Template
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

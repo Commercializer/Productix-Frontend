@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Package, ArrowRight, Sparkles, CheckCircle2, XCircle, Loader2, Image as ImageIcon, Link as LinkIcon, LayoutTemplate, Check } from "lucide-react";
+import { Package, ArrowRight, Sparkles, CheckCircle2, XCircle, Loader2, Image as ImageIcon, Link as LinkIcon, LayoutTemplate, Check, Eye, X } from "lucide-react";
 import { createPromptionAction, checkSlugAction, uploadImageAction } from "@/lib/dashboard/actions";
 import { SocialPreview } from "@/components/dashboard/social-preview";
-import { templates } from "@productix/editor";
+import { templates, PreviewRenderer } from "@productix/editor";
+import type { Template } from "@productix/types";
 
 function slugify(text: string): string {
   return text
@@ -27,6 +28,7 @@ export default function NewPromptionPage() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imageUploadError, setImageUploadError] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const [previewTemplate, setPreviewTemplate] = useState<Template | null>(null);
   
   // UI State
   const [error, setError] = useState("");
@@ -191,30 +193,137 @@ export default function NewPromptionPage() {
 
                 {/* Template options */}
                 {templates.map((t) => (
-                  <button
-                    key={t.meta.id}
-                    type="button"
-                    onClick={() => setSelectedTemplate(t.meta.id)}
-                    className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all text-center hover:shadow-md ${
-                      selectedTemplate === t.meta.id
-                        ? 'border-[#0284c7] bg-sky-50/50 dark:bg-sky-950/20 shadow-md'
-                        : 'border-[var(--ds-border)] hover:border-gray-300'
-                    }`}
-                  >
-                    {selectedTemplate === t.meta.id && (
-                      <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[#0284c7] flex items-center justify-center">
-                        <Check size={12} className="text-white" />
+                  <div key={t.meta.id} className="relative group">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTemplate(t.meta.id)}
+                      className={`relative w-full flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all text-center hover:shadow-md ${
+                        selectedTemplate === t.meta.id
+                          ? 'border-[#0284c7] bg-sky-50/50 dark:bg-sky-950/20 shadow-md'
+                          : 'border-[var(--ds-border)] hover:border-gray-300'
+                      }`}
+                    >
+                      {selectedTemplate === t.meta.id && (
+                        <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[#0284c7] flex items-center justify-center">
+                          <Check size={12} className="text-white" />
+                        </div>
+                      )}
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-sky-100 to-blue-100 dark:from-sky-900 dark:to-blue-900 flex items-center justify-center text-lg">
+                        {t.meta.category === 'marketing' ? '🥤' : t.meta.category === 'social' ? '📱' : t.meta.category === 'event' ? '🎉' : '✨'}
                       </div>
-                    )}
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-sky-100 to-blue-100 dark:from-sky-900 dark:to-blue-900 flex items-center justify-center text-lg">
-                      {t.meta.category === 'marketing' ? '🥤' : t.meta.category === 'social' ? '📱' : t.meta.category === 'event' ? '🎉' : '✨'}
-                    </div>
-                    <span className="text-[12px] font-semibold text-[var(--ds-text-primary)] leading-tight">{t.meta.name}</span>
-                    <span className="text-[10px] text-[var(--ds-text-muted)] line-clamp-2 leading-tight">{t.meta.category}</span>
-                  </button>
+                      <span className="text-[12px] font-semibold text-[var(--ds-text-primary)] leading-tight">{t.meta.name}</span>
+                      <span className="text-[10px] text-[var(--ds-text-muted)] line-clamp-2 leading-tight">{t.meta.category}</span>
+                    </button>
+                    {/* Preview eye button */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPreviewTemplate(t);
+                      }}
+                      className="absolute top-2 left-2 w-7 h-7 rounded-lg bg-black/60 dark:bg-white/15 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-black/80 dark:hover:bg-white/25 hover:scale-110 z-10"
+                      title={`Preview ${t.meta.name}`}
+                    >
+                      <Eye size={13} />
+                    </button>
+                  </div>
                 ))}
               </div>
             </div>
+
+            {/* ═══ Template Preview Modal ═══ */}
+            {previewTemplate && (
+              <div
+                className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6"
+                onClick={() => setPreviewTemplate(null)}
+              >
+                {/* Backdrop */}
+                <div className="absolute inset-0 bg-black/80 backdrop-blur-md" style={{ animation: 'fadeIn 0.2s ease' }} />
+
+                {/* Modal content */}
+                <div
+                  className="relative z-10 flex flex-col items-center gap-5 max-h-[95vh] w-full max-w-[520px]"
+                  onClick={(e) => e.stopPropagation()}
+                  style={{ animation: 'slideUp 0.25s ease' }}
+                >
+                  {/* Header bar */}
+                  <div className="w-full flex items-center justify-between px-1">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center text-white text-sm">
+                        {previewTemplate.meta.category === 'marketing' ? '🥤' : previewTemplate.meta.category === 'social' ? '📱' : '✨'}
+                      </div>
+                      <div>
+                        <h3 className="text-white text-sm font-bold">{previewTemplate.meta.name}</h3>
+                        <p className="text-gray-400 text-[11px]">{previewTemplate.meta.description}</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setPreviewTemplate(null)}
+                      className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+
+                  {/* Phone frame with preview */}
+                  <div className="flex-1 overflow-y-auto w-full rounded-[2rem] no-scrollbar" style={{ maxHeight: 'calc(95vh - 140px)' }}>
+                    <div
+                      className="rounded-[2rem] overflow-hidden mx-auto"
+                      style={{
+                        maxWidth: 428,
+                        boxShadow: '0 0 0 2px rgba(255,255,255,0.08), 0 25px 100px rgba(0,0,0,0.5)',
+                      }}
+                    >
+                      {/* Status bar */}
+                      <div className="bg-black flex items-center justify-between px-6 py-2 text-white text-[10px] font-semibold">
+                        <span>9:41</span>
+                        <div className="flex items-center gap-1">
+                          <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 3C7.8 3 4.1 5 2 8l2.2 2.2C5.8 8.2 8.7 7 12 7s6.2 1.2 7.8 3.2L22 8c-2.1-3-5.8-5-10-5zm0 4c-3 0-5.7 1.3-7.5 3.5L6.7 12.7C7.9 11.4 9.8 10.5 12 10.5s4.1.9 5.3 2.2l2.2-2.2C17.7 8.3 15 7 12 7zm0 4c-1.9 0-3.6.8-4.8 2.1l2.2 2.2c.7-.7 1.6-1.1 2.6-1.1s1.9.4 2.6 1.1l2.2-2.2C15.6 11.8 13.9 11 12 11zm0 4c-.8 0-1.5.3-2 .9L12 18l2-2.1c-.5-.6-1.2-.9-2-.9z" />
+                          </svg>
+                          <svg className="w-5 h-3" fill="currentColor" viewBox="0 0 28 14">
+                            <rect x="0.5" y="0.5" width="23" height="13" rx="2" stroke="currentColor" fill="none" strokeOpacity="0.35" />
+                            <rect x="24.5" y="4" width="2.5" height="6" rx="1" fillOpacity="0.4" />
+                            <rect x="2" y="2" width="19" height="10" rx="1" />
+                          </svg>
+                        </div>
+                      </div>
+
+                      {/* Rendered template */}
+                      <PreviewRenderer document={previewTemplate.data} contentLocale="en" />
+
+                      {/* Home indicator */}
+                      <div className="bg-black flex justify-center py-2">
+                        <div className="w-32 h-1 bg-white/30 rounded-full" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action buttons */}
+                  <div className="w-full flex gap-3 px-1">
+                    <button
+                      type="button"
+                      onClick={() => setPreviewTemplate(null)}
+                      className="flex-1 h-11 rounded-xl border border-white/15 text-gray-300 text-sm font-medium hover:bg-white/5 transition-colors"
+                    >
+                      Close
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedTemplate(previewTemplate.meta.id);
+                        setPreviewTemplate(null);
+                      }}
+                      className="flex-[2] h-11 rounded-xl bg-[#0284c7] hover:bg-[#0369a1] text-white text-sm font-semibold flex items-center justify-center gap-2 transition-colors shadow-lg shadow-sky-500/25"
+                    >
+                      <Check size={16} />
+                      Use This Template
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="bg-[var(--ds-surface)] border border-[var(--ds-border)] rounded-2xl p-8 space-y-6 flex flex-col shadow-sm">
               
