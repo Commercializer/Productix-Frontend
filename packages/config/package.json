@@ -2,8 +2,12 @@
   "name": "@productix/config",
   "version": "0.0.0",
   "private": true,
-  "files": ["eslint", "typescript", "tailwind"],
+  "files": [
+    "eslint",
+    "typescript",
+    "tailwind"
+  ],
   "devDependencies": {
-    "tailwindcss": "^3.4.17"
+    "tailwindcss": "^4.2.4"
   }
 }

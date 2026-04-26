@@ -127,7 +127,7 @@ export function ProductShowcase({ config, className = "" }: ProductShowcaseProps
       {/* ── Scoped Styles ── */}
       <style>{`
         .showcase-root {
-          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          font-family: var(--font-sans);
           max-width: 480px;
           margin: 0 auto;
           background: var(--brand-bg-primary);

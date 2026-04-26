@@ -132,7 +132,7 @@ export default function EditorPage() {
 function showNotification(message: string) {
   const isError = message.startsWith("✗");
   const notification = document.createElement("div");
-  notification.className = `fixed bottom-6 right-6 z-[9999] rounded-lg px-5 py-3 text-sm font-medium text-white shadow-lg ${
+  notification.className = `fixed bottom-6 right-6 z-9999 rounded-lg px-5 py-3 text-sm font-medium text-white shadow-lg ${
     isError ? "bg-red-600" : "bg-emerald-600"
   }`;
   notification.style.animation = "fadeIn 0.2s ease";

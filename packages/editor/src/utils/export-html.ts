@@ -232,7 +232,7 @@ export function exportToHtml(doc: CanvasDocument): string {
     /* ── Reset ── */
     *, *::before, *::after { box-sizing: border-box; }
     html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
-    body { margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; overflow-x: hidden; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    body { margin: 0; padding: 0; font-family: var(--font-sans); overflow-x: hidden; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
     img { max-width: 100%; height: auto; display: block; }
     a { text-decoration: none; }
 

@@ -36,11 +36,11 @@ export function AnalyticsCharts({ stats }: { stats: AnalyticsStats | null }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
       {/* Main Area Chart */}
-      <div className="lg:col-span-2 bg-white dark:bg-[#111] border border-[var(--ds-border)] rounded-xl p-6 shadow-sm">
+      <div className="lg:col-span-2 bg-white dark:bg-[#111] border border-(--ds-border) rounded-xl p-6 shadow-xs">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-lg font-bold text-[var(--ds-text-primary)] tracking-tight mb-1">Engagement Overview</h3>
-            <p className="text-[13px] text-[var(--ds-text-secondary)]">Traffic & Scans over the last 7 days</p>
+            <h3 className="text-lg font-bold text-(--ds-text-primary) tracking-tight mb-1">Engagement Overview</h3>
+            <p className="text-[13px] text-(--ds-text-secondary)">Traffic & Scans over the last 7 days</p>
           </div>
         </div>
         <div className="h-[320px] w-full">
@@ -72,10 +72,10 @@ export function AnalyticsCharts({ stats }: { stats: AnalyticsStats | null }) {
       </div>
 
       {/* Side Bar Chart */}
-      <div className="bg-white dark:bg-[#111] border border-[var(--ds-border)] rounded-xl p-6 shadow-sm">
+      <div className="bg-white dark:bg-[#111] border border-(--ds-border) rounded-xl p-6 shadow-xs">
         <div className="mb-6">
-          <h3 className="text-lg font-bold text-[var(--ds-text-primary)] tracking-tight mb-1">Acquisition Sources</h3>
-          <p className="text-[13px] text-[var(--ds-text-secondary)]">Traffic origin breakdown</p>
+          <h3 className="text-lg font-bold text-(--ds-text-primary) tracking-tight mb-1">Acquisition Sources</h3>
+          <p className="text-[13px] text-(--ds-text-secondary)">Traffic origin breakdown</p>
         </div>
         <div className="h-[320px] w-full">
           <ResponsiveContainer width="100%" height="100%">

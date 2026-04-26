@@ -50,14 +50,14 @@ export function QrModal({ isOpen, onClose, productName, slug }: QrModalProps) {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-[9998] bg-black/40 backdrop-blur-sm"
+        className="fixed inset-0 z-9998 bg-black/40 backdrop-blur-xs"
         onClick={onClose}
         style={{ animation: "fadeIn 0.2s ease" }}
       />
 
       {/* Modal */}
       <div
-        className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+        className="fixed inset-0 z-9999 flex items-center justify-center p-4"
         onClick={onClose}
       >
         <div
@@ -85,7 +85,7 @@ export function QrModal({ isOpen, onClose, productName, slug }: QrModalProps) {
 
           {/* QR Canvas */}
           <div className="px-6 py-6 flex flex-col items-center">
-            <div className="p-4 rounded-xl bg-white border border-[#e2e8f0] shadow-sm">
+            <div className="p-4 rounded-xl bg-white border border-[#e2e8f0] shadow-xs">
               <canvas ref={canvasRef} />
             </div>
 
@@ -96,7 +96,7 @@ export function QrModal({ isOpen, onClose, productName, slug }: QrModalProps) {
               </span>
               <button
                 onClick={handleCopy}
-                className="flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-white hover:bg-white dark:hover:bg-[#1e293b] transition-colors"
+                className="shrink-0 w-7 h-7 rounded-md flex items-center justify-center text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-white hover:bg-white dark:hover:bg-[#1e293b] transition-colors"
                 title="Copy URL"
               >
                 {copied ? (

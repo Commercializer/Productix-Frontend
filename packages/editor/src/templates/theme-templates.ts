@@ -44,13 +44,13 @@ const DEFAULT_THEME: ThemeTemplate = {
     // Heading
     {
       type: "heading",
-      props: { text: "Your Product Title", variant: "heading", fontSize: 28, fontWeight: "800", color: "#1a1a2e", textAlign: "left", lineHeight: 1.15, fontFamily: "inherit" },
+      props: { text: "Your Product Title", variant: "heading", fontSize: 28, fontWeight: "800", color: "#1a1a2e", textAlign: "left", lineHeight: 1.15, fontFamily: "var(--font-sans)" },
       transform: { x: 27, y: 431, width: 373, height: 82 },
     },
     // Description
     {
       type: "text",
-      props: { text: "Add a compelling description of your product that highlights its key benefits and features.", variant: "paragraph", fontSize: 14, fontWeight: "400", color: "#6b7280", textAlign: "left", lineHeight: 1.6, fontFamily: "inherit" },
+      props: { text: "Add a compelling description of your product that highlights its key benefits and features.", variant: "paragraph", fontSize: 14, fontWeight: "400", color: "#6b7280", textAlign: "left", lineHeight: 1.6, fontFamily: "var(--font-sans)" },
       transform: { x: 27, y: 525, width: 373, height: 91 },
     },
     // Divider
@@ -62,7 +62,7 @@ const DEFAULT_THEME: ThemeTemplate = {
     // Price text
     {
       type: "text",
-      props: { text: "$49.99", variant: "heading", fontSize: 32, fontWeight: "800", color: "#1a1a2e", textAlign: "left", lineHeight: 1.2, fontFamily: "inherit" },
+      props: { text: "$49.99", variant: "heading", fontSize: 32, fontWeight: "800", color: "#1a1a2e", textAlign: "left", lineHeight: 1.2, fontFamily: "var(--font-sans)" },
       transform: { x: 27, y: 661, width: 205, height: 55 },
     },
     // CTA Button
@@ -105,19 +105,19 @@ const MINIMAL_THEME: ThemeTemplate = {
     // Heading
     {
       type: "heading",
-      props: { text: "Product Name", variant: "heading", fontSize: 24, fontWeight: "700", color: "#1a1a2e", textAlign: "center", lineHeight: 1.2, fontFamily: "inherit" },
+      props: { text: "Product Name", variant: "heading", fontSize: 24, fontWeight: "700", color: "#1a1a2e", textAlign: "center", lineHeight: 1.2, fontFamily: "var(--font-sans)" },
       transform: { x: 27, y: 429, width: 373, height: 50 },
     },
     // Body text
     {
       type: "text",
-      props: { text: "Minimalist design meets maximum functionality. Discover what sets this product apart.", variant: "paragraph", fontSize: 13, fontWeight: "400", color: "#9ca3af", textAlign: "center", lineHeight: 1.7, fontFamily: "inherit" },
+      props: { text: "Minimalist design meets maximum functionality. Discover what sets this product apart.", variant: "paragraph", fontSize: 13, fontWeight: "400", color: "#9ca3af", textAlign: "center", lineHeight: 1.7, fontFamily: "var(--font-sans)" },
       transform: { x: 46, y: 488, width: 337, height: 80 },
     },
     // Price
     {
       type: "text",
-      props: { text: "$79", variant: "heading", fontSize: 28, fontWeight: "700", color: "#1a1a2e", textAlign: "center", lineHeight: 1.2, fontFamily: "inherit" },
+      props: { text: "$79", variant: "heading", fontSize: 28, fontWeight: "700", color: "#1a1a2e", textAlign: "center", lineHeight: 1.2, fontFamily: "var(--font-sans)" },
       transform: { x: 156, y: 593, width: 114, height: 46 },
     },
     // CTA — outline style
@@ -160,13 +160,13 @@ const COMPACT_THEME: ThemeTemplate = {
     // Heading
     {
       type: "heading",
-      props: { text: "Product Title", variant: "heading", fontSize: 22, fontWeight: "700", color: "#1a1a2e", textAlign: "left", lineHeight: 1.2, fontFamily: "inherit" },
+      props: { text: "Product Title", variant: "heading", fontSize: 22, fontWeight: "700", color: "#1a1a2e", textAlign: "left", lineHeight: 1.2, fontFamily: "var(--font-sans)" },
       transform: { x: 18, y: 62, width: 391, height: 41 },
     },
     // Subtitle
     {
       type: "text",
-      props: { text: "Brief one-liner about your product goes here.", variant: "paragraph", fontSize: 13, fontWeight: "400", color: "#6b7280", textAlign: "left", lineHeight: 1.5, fontFamily: "inherit" },
+      props: { text: "Brief one-liner about your product goes here.", variant: "paragraph", fontSize: 13, fontWeight: "400", color: "#6b7280", textAlign: "left", lineHeight: 1.5, fontFamily: "var(--font-sans)" },
       transform: { x: 18, y: 109, width: 391, height: 32 },
     },
     // Product image
@@ -178,19 +178,19 @@ const COMPACT_THEME: ThemeTemplate = {
     // Feature row 1
     {
       type: "text",
-      props: { text: "✓  Premium quality materials", variant: "paragraph", fontSize: 13, fontWeight: "500", color: "#374151", textAlign: "left", lineHeight: 1.5, fontFamily: "inherit" },
+      props: { text: "✓  Premium quality materials", variant: "paragraph", fontSize: 13, fontWeight: "500", color: "#374151", textAlign: "left", lineHeight: 1.5, fontFamily: "var(--font-sans)" },
       transform: { x: 18, y: 433, width: 391, height: 27 },
     },
     // Feature row 2
     {
       type: "text",
-      props: { text: "✓  Fast & free shipping", variant: "paragraph", fontSize: 13, fontWeight: "500", color: "#374151", textAlign: "left", lineHeight: 1.5, fontFamily: "inherit" },
+      props: { text: "✓  Fast & free shipping", variant: "paragraph", fontSize: 13, fontWeight: "500", color: "#374151", textAlign: "left", lineHeight: 1.5, fontFamily: "var(--font-sans)" },
       transform: { x: 18, y: 468, width: 391, height: 27 },
     },
     // Feature row 3
     {
       type: "text",
-      props: { text: "✓  30-day money-back guarantee", variant: "paragraph", fontSize: 13, fontWeight: "500", color: "#374151", textAlign: "left", lineHeight: 1.5, fontFamily: "inherit" },
+      props: { text: "✓  30-day money-back guarantee", variant: "paragraph", fontSize: 13, fontWeight: "500", color: "#374151", textAlign: "left", lineHeight: 1.5, fontFamily: "var(--font-sans)" },
       transform: { x: 18, y: 502, width: 391, height: 27 },
     },
     // Divider
@@ -202,13 +202,13 @@ const COMPACT_THEME: ThemeTemplate = {
     // Price
     {
       type: "text",
-      props: { text: "$29.99", variant: "heading", fontSize: 26, fontWeight: "800", color: "#1a1a2e", textAlign: "left", lineHeight: 1.2, fontFamily: "inherit" },
+      props: { text: "$29.99", variant: "heading", fontSize: 26, fontWeight: "800", color: "#1a1a2e", textAlign: "left", lineHeight: 1.2, fontFamily: "var(--font-sans)" },
       transform: { x: 18, y: 570, width: 160, height: 41 },
     },
     // Old price
     {
       type: "text",
-      props: { text: "$59.99", variant: "paragraph", fontSize: 14, fontWeight: "500", color: "#d1d5db", textAlign: "left", lineHeight: 1.2, fontFamily: "inherit" },
+      props: { text: "$59.99", variant: "paragraph", fontSize: 14, fontWeight: "500", color: "#d1d5db", textAlign: "left", lineHeight: 1.2, fontFamily: "var(--font-sans)" },
       transform: { x: 183, y: 579, width: 91, height: 25 },
     },
     // CTA
@@ -257,19 +257,19 @@ const VIVID_THEME: ThemeTemplate = {
     // Heading
     {
       type: "heading",
-      props: { text: "Bold Product Name", variant: "heading", fontSize: 28, fontWeight: "800", color: "#ffffff", textAlign: "left", lineHeight: 1.15, fontFamily: "inherit" },
+      props: { text: "Bold Product Name", variant: "heading", fontSize: 28, fontWeight: "800", color: "#ffffff", textAlign: "left", lineHeight: 1.15, fontFamily: "var(--font-sans)" },
       transform: { x: 27, y: 461, width: 373, height: 82 },
     },
     // Description
     {
       type: "text",
-      props: { text: "Make a statement with this standout product. Designed for those who dare to be different.", variant: "paragraph", fontSize: 14, fontWeight: "400", color: "#94a3b8", textAlign: "left", lineHeight: 1.6, fontFamily: "inherit" },
+      props: { text: "Make a statement with this standout product. Designed for those who dare to be different.", variant: "paragraph", fontSize: 14, fontWeight: "400", color: "#94a3b8", textAlign: "left", lineHeight: 1.6, fontFamily: "var(--font-sans)" },
       transform: { x: 27, y: 552, width: 373, height: 80 },
     },
     // Price
     {
       type: "text",
-      props: { text: "$99", variant: "heading", fontSize: 36, fontWeight: "800", color: "#a78bfa", textAlign: "left", lineHeight: 1.2, fontFamily: "inherit" },
+      props: { text: "$99", variant: "heading", fontSize: 36, fontWeight: "800", color: "#a78bfa", textAlign: "left", lineHeight: 1.2, fontFamily: "var(--font-sans)" },
       transform: { x: 27, y: 652, width: 137, height: 55 },
     },
     // CTA — gradient-feel
@@ -306,7 +306,7 @@ const ELEGANT_THEME: ThemeTemplate = {
     // Brand tag
     {
       type: "text",
-      props: { text: "BRAND NAME", variant: "paragraph", fontSize: 10, fontWeight: "700", color: "#a08c6f", textAlign: "center", lineHeight: 1.5, fontFamily: "inherit" },
+      props: { text: "BRAND NAME", variant: "paragraph", fontSize: 10, fontWeight: "700", color: "#a08c6f", textAlign: "center", lineHeight: 1.5, fontFamily: "var(--font-sans)" },
       transform: { x: 137, y: 32, width: 154, height: 21 },
     },
     // Divider under brand
@@ -324,19 +324,19 @@ const ELEGANT_THEME: ThemeTemplate = {
     // Heading
     {
       type: "heading",
-      props: { text: "Timeless Elegance", variant: "heading", fontSize: 26, fontWeight: "300", color: "#2c2416", textAlign: "center", lineHeight: 1.25, fontFamily: "Georgia, serif" },
+      props: { text: "Timeless Elegance", variant: "heading", fontSize: 26, fontWeight: "300", color: "#2c2416", textAlign: "center", lineHeight: 1.25, fontFamily: "var(--font-sans)" },
       transform: { x: 27, y: 470, width: 373, height: 55 },
     },
     // Subtitle
     {
       type: "text",
-      props: { text: "Crafted with care, designed to last. Experience the art of refined simplicity.", variant: "paragraph", fontSize: 13, fontWeight: "400", color: "#8a7a64", textAlign: "center", lineHeight: 1.7, fontFamily: "inherit" },
+      props: { text: "Crafted with care, designed to last. Experience the art of refined simplicity.", variant: "paragraph", fontSize: 13, fontWeight: "400", color: "#8a7a64", textAlign: "center", lineHeight: 1.7, fontFamily: "var(--font-sans)" },
       transform: { x: 46, y: 538, width: 337, height: 68 },
     },
     // Price
     {
       type: "text",
-      props: { text: "$189", variant: "heading", fontSize: 30, fontWeight: "300", color: "#2c2416", textAlign: "center", lineHeight: 1.2, fontFamily: "Georgia, serif" },
+      props: { text: "$189", variant: "heading", fontSize: 30, fontWeight: "300", color: "#2c2416", textAlign: "center", lineHeight: 1.2, fontFamily: "var(--font-sans)" },
       transform: { x: 148, y: 634, width: 131, height: 46 },
     },
     // CTA
@@ -379,13 +379,13 @@ const GRADIENT_THEME: ThemeTemplate = {
     // Heading
     {
       type: "heading",
-      props: { text: "Next-Gen\nExperience", variant: "heading", fontSize: 32, fontWeight: "800", color: "#ffffff", textAlign: "left", lineHeight: 1.1, fontFamily: "inherit" },
+      props: { text: "Next-Gen\nExperience", variant: "heading", fontSize: 32, fontWeight: "800", color: "#ffffff", textAlign: "left", lineHeight: 1.1, fontFamily: "var(--font-sans)" },
       transform: { x: 27, y: 82, width: 373, height: 91 },
     },
     // Subtitle
     {
       type: "text",
-      props: { text: "Redefining what's possible. Built for the future.", variant: "paragraph", fontSize: 14, fontWeight: "400", color: "#94a3b8", textAlign: "left", lineHeight: 1.6, fontFamily: "inherit" },
+      props: { text: "Redefining what's possible. Built for the future.", variant: "paragraph", fontSize: 14, fontWeight: "400", color: "#94a3b8", textAlign: "left", lineHeight: 1.6, fontFamily: "var(--font-sans)" },
       transform: { x: 27, y: 187, width: 320, height: 55 },
     },
     // Product image (rounded)
@@ -409,7 +409,7 @@ const GRADIENT_THEME: ThemeTemplate = {
     // Price
     {
       type: "text",
-      props: { text: "$149", variant: "heading", fontSize: 36, fontWeight: "800", color: "#f472b6", textAlign: "left", lineHeight: 1.2, fontFamily: "inherit" },
+      props: { text: "$149", variant: "heading", fontSize: 36, fontWeight: "800", color: "#f472b6", textAlign: "left", lineHeight: 1.2, fontFamily: "var(--font-sans)" },
       transform: { x: 27, y: 675, width: 171, height: 55 },
     },
     // CTA

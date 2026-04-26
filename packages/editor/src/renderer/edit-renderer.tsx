@@ -304,7 +304,7 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug }
 
   return (
     <MediaProvider>
-    <div style={{ display:"flex", flexDirection:"column", height:"100vh", background:"#f5f5f7", overflow:"hidden", userSelect:"none", fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
+    <div style={{ display:"flex", flexDirection:"column", height:"100vh", background:"#f5f5f7", overflow:"hidden", userSelect:"none", fontFamily:"var(--font-sans)" }}>
 
       {/* ── Top Bar ── */}
       <header id="tour-top-bar" style={{ display:"flex", alignItems:"center", justifyContent:"space-between", height:56, padding:"0 16px", background:"#fff", borderBottom:"1px solid #e5e7eb", flexShrink:0, zIndex:50 }}>

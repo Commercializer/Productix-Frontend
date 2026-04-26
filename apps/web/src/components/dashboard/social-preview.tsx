@@ -21,16 +21,16 @@ export function SocialPreview({ title, description, image, url, domain }: Social
   const displayImage = image || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop";
 
   return (
-    <div className="bg-[var(--ds-surface)] border border-[var(--ds-border)] rounded-2xl overflow-hidden flex flex-col">
+    <div className="bg-(--ds-surface) border border-(--ds-border) rounded-2xl overflow-hidden flex flex-col">
       {/* Header Tabs */}
-      <div className="flex items-center gap-1 p-2 border-b border-[var(--ds-border)] bg-[var(--ds-bg)]">
+      <div className="flex items-center gap-1 p-2 border-b border-(--ds-border) bg-(--ds-bg)">
         <button
           type="button"
           onClick={() => setPlatform("facebook")}
           className={`px-3 py-2 text-xs font-semibold rounded-lg flex items-center gap-2 transition-colors ${
             platform === "facebook"
               ? "bg-[#1877F2]/10 text-[#1877F2]"
-              : "text-[var(--ds-text-secondary)] hover:bg-[var(--ds-bg-hover)]"
+              : "text-(--ds-text-secondary) hover:bg-(--ds-bg-hover)"
           }`}
         >
           <Facebook size={14} />
@@ -42,7 +42,7 @@ export function SocialPreview({ title, description, image, url, domain }: Social
           className={`px-3 py-2 text-xs font-semibold rounded-lg flex items-center gap-2 transition-colors ${
             platform === "linkedin"
               ? "bg-[#0A66C2]/10 text-[#0A66C2]"
-              : "text-[var(--ds-text-secondary)] hover:bg-[var(--ds-bg-hover)]"
+              : "text-(--ds-text-secondary) hover:bg-(--ds-bg-hover)"
           }`}
         >
           <Linkedin size={14} />
@@ -54,7 +54,7 @@ export function SocialPreview({ title, description, image, url, domain }: Social
           className={`px-3 py-2 text-xs font-semibold rounded-lg flex items-center gap-2 transition-colors ${
             platform === "whatsapp"
               ? "bg-[#25D366]/10 text-[#25D366]"
-              : "text-[var(--ds-text-secondary)] hover:bg-[var(--ds-bg-hover)]"
+              : "text-(--ds-text-secondary) hover:bg-(--ds-bg-hover)"
           }`}
         >
           <MessageCircle size={14} />
@@ -65,8 +65,8 @@ export function SocialPreview({ title, description, image, url, domain }: Social
           onClick={() => setPlatform("instagram")}
           className={`px-3 py-2 text-xs font-semibold rounded-lg flex items-center gap-2 transition-colors ${
             platform === "instagram"
-              ? "bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] text-white"
-              : "text-[var(--ds-text-secondary)] hover:bg-[var(--ds-bg-hover)]"
+              ? "bg-linear-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] text-white"
+              : "text-(--ds-text-secondary) hover:bg-(--ds-bg-hover)"
           }`}
         >
           <Instagram size={14} />
@@ -79,7 +79,7 @@ export function SocialPreview({ title, description, image, url, domain }: Social
         
         {/* Facebook Preview */}
         {platform === "facebook" && (
-          <div className="w-full max-w-[500px] border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-[#242526] shadow-sm">
+          <div className="w-full max-w-[500px] border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-[#242526] shadow-xs">
             <div className="relative aspect-[1.91/1] w-full bg-gray-200 dark:bg-gray-800">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={displayImage} alt="Preview" className="w-full h-full object-cover" />
@@ -100,7 +100,7 @@ export function SocialPreview({ title, description, image, url, domain }: Social
 
         {/* LinkedIn Preview */}
         {platform === "linkedin" && (
-          <div className="w-full max-w-[520px] bg-white dark:bg-[#1d2226] border border-gray-200 dark:border-gray-700 shadow-sm rounded-sm overflow-hidden">
+          <div className="w-full max-w-[520px] bg-white dark:bg-[#1d2226] border border-gray-200 dark:border-gray-700 shadow-xs rounded-sm overflow-hidden">
             <div className="relative aspect-[1.91/1] w-full bg-gray-200 dark:bg-gray-800">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={displayImage} alt="Preview" className="w-full h-full object-cover" />
@@ -119,8 +119,8 @@ export function SocialPreview({ title, description, image, url, domain }: Social
         {/* WhatsApp Preview */}
         {platform === "whatsapp" && (
           <div className="w-full max-w-[400px]">
-             <div className="bg-[#E1F6CB] dark:bg-[#005C4B] p-1.5 rounded-lg rounded-tr-none shadow-sm relative ml-auto w-fit max-w-full">
-               <div className="absolute top-0 right-[-8px] w-0 h-0 border-t-[8px] border-t-[#E1F6CB] dark:border-t-[#005C4B] border-r-[8px] border-r-transparent"></div>
+             <div className="bg-[#E1F6CB] dark:bg-[#005C4B] p-1.5 rounded-lg rounded-tr-none shadow-xs relative ml-auto w-fit max-w-full">
+               <div className="absolute top-0 right-[-8px] w-0 h-0 border-t-8 border-t-[#E1F6CB] dark:border-t-[#005C4B] border-r-8 border-r-transparent"></div>
                <div className="bg-[#cfecd6] dark:bg-[#025143] rounded overflow-hidden flex flex-col max-w-[300px]">
                  <div className="relative aspect-[1.91/1] w-full">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -148,7 +148,7 @@ export function SocialPreview({ title, description, image, url, domain }: Social
         {/* Instagram DM Preview */}
         {platform === "instagram" && (
           <div className="w-full max-w-[300px]">
-            <div className="bg-white dark:bg-[#262626] border border-gray-200 dark:border-gray-800 rounded-3xl overflow-hidden shadow-sm">
+            <div className="bg-white dark:bg-[#262626] border border-gray-200 dark:border-gray-800 rounded-3xl overflow-hidden shadow-xs">
                 <div className="relative aspect-square w-full bg-gray-200 dark:bg-gray-800">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={displayImage} alt="Preview" className="w-full h-full object-cover" />

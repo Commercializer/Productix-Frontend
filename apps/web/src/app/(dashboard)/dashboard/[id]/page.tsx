@@ -29,11 +29,11 @@ export default function EditPromptionPage({ params }: PageProps) {
 
   if (!isValidUUID) {
     return (
-      <div className="page-content bg-[var(--ds-bg)] flex items-center justify-center min-h-[60vh]">
+      <div className="page-content bg-(--ds-bg) flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <h2 className="text-xl font-bold text-[var(--ds-text-primary)] mb-2">Page Not Found</h2>
-          <p className="text-[var(--ds-text-secondary)] text-sm">
-            The page <code className="px-1.5 py-0.5 rounded bg-[var(--ds-surface)] border border-[var(--ds-border)] text-[12px]">/dashboard/{id}</code> does not exist.
+          <h2 className="text-xl font-bold text-(--ds-text-primary) mb-2">Page Not Found</h2>
+          <p className="text-(--ds-text-secondary) text-sm">
+            The page <code className="px-1.5 py-0.5 rounded bg-(--ds-surface) border border-(--ds-border) text-[12px]">/dashboard/{id}</code> does not exist.
           </p>
         </div>
       </div>

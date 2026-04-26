@@ -99,7 +99,7 @@ export function PublicPageClient({ page }: PublicPageClientProps) {
               color: "#374151",
               fontSize: 15,
               fontWeight: 500,
-              fontFamily: "'Inter', -apple-system, sans-serif",
+              fontFamily: "var(--font-sans)",
               cursor: "pointer",
               boxShadow: "0 2px 12px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.04)",
               transition: "all 0.2s ease",
@@ -163,7 +163,7 @@ export function PublicPageClient({ page }: PublicPageClientProps) {
                       cursor: "pointer",
                       transition: "background 0.15s ease",
                       fontSize: 14,
-                      fontFamily: "'Inter', -apple-system, sans-serif",
+                      fontFamily: "var(--font-sans)",
                       textAlign: "left",
                     }}
                     onMouseEnter={(e) => {
@@ -243,7 +243,7 @@ export function PublicPageClient({ page }: PublicPageClientProps) {
             fontSize: 11,
             color: "#94a3b8",
             textDecoration: "none",
-            fontFamily: "'Inter', -apple-system, sans-serif",
+            fontFamily: "var(--font-sans)",
             letterSpacing: "0.01em",
           }}
         >
@@ -284,7 +284,7 @@ function FallbackView({ page }: { page: PublicPageData }) {
         alignItems: "center",
         justifyContent: "center",
         background: `linear-gradient(180deg, ${page.themeColor}08 0%, ${page.themeColor}03 100%)`,
-        fontFamily: "'Inter', -apple-system, sans-serif",
+        fontFamily: "var(--font-sans)",
         padding: "2rem",
       }}
     >

@@ -58,7 +58,7 @@ export default function DashboardPage() {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/5 via-transparent to-purple-600/5" />
+        <div className="absolute inset-0 bg-linear-to-br from-blue-600/5 via-transparent to-purple-600/5" />
         <div className="relative mx-auto max-w-7xl px-6 py-20">
           <div className="max-w-2xl">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-1.5 text-xs font-semibold text-blue-700">
@@ -110,7 +110,7 @@ export default function DashboardPage() {
             >
               {/* Template Preview */}
               <div className="mb-4 relative h-48 w-full overflow-hidden rounded-xl bg-gray-100 flex justify-center border border-gray-200/50 transition-colors group-hover:border-blue-200">
-                <div className="absolute top-0 w-[428px] origin-top transform scale-[0.45] pointer-events-none transition-transform duration-500 group-hover:scale-[0.48] shadow-sm bg-white">
+                <div className="absolute top-0 w-[428px] origin-top transform scale-[0.45] pointer-events-none transition-transform duration-500 group-hover:scale-[0.48] shadow-xs bg-white">
                   <PublicRenderer document={template.data} contentLocale="en" />
                 </div>
               </div>
@@ -164,7 +164,7 @@ export default function DashboardPage() {
 
       {/* Template Preview Modal */}
       {previewTemplate && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/40 backdrop-blur-sm p-4 md:p-8">
+        <div className="fixed inset-0 z-100 flex items-center justify-center bg-gray-900/40 backdrop-blur-xs p-4 md:p-8">
           <div className="bg-white rounded-2xl w-full max-w-5xl h-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-white">
@@ -195,7 +195,7 @@ export default function DashboardPage() {
               </button>
               <Link
                 href={`/editor?template=${previewTemplate.meta.id}`}
-                className="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-sm shadow-blue-600/20 transition-all active:scale-[0.98]"
+                className="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-xs shadow-blue-600/20 transition-all active:scale-[0.98]"
               >
                 Use this Template
               </Link>

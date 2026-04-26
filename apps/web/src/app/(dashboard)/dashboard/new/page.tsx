@@ -142,19 +142,19 @@ export default function NewPromptionPage() {
   const previewUrl = `https://${domain}/p/${finalSlug || 'your-slug'}`;
 
   return (
-    <div className="page-content bg-[var(--ds-bg)] min-h-screen">
+    <div className="page-content bg-(--ds-bg) min-h-screen">
       <div className="max-w-6xl mx-auto pt-8 px-4 pb-20">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#7dd3fc] to-[#0284c7] flex items-center justify-center text-white">
+            <div className="w-10 h-10 rounded-xl bg-linear-to-br from-[#7dd3fc] to-[#0284c7] flex items-center justify-center text-white">
               <Sparkles size={20} />
             </div>
-            <h1 className="text-2xl font-bold text-[var(--ds-text-primary)]">
+            <h1 className="text-2xl font-bold text-(--ds-text-primary)">
               Create New Product
             </h1>
           </div>
-          <p className="text-[14px] text-[var(--ds-text-secondary)] ml-[52px]">
+          <p className="text-[14px] text-(--ds-text-secondary) ml-[52px]">
             Set up your product details, branding, and link preview before designing the page.
           </p>
         </div>
@@ -163,13 +163,13 @@ export default function NewPromptionPage() {
           {/* Form Column */}
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Template Selector */}
-            <div className="bg-[var(--ds-surface)] border border-[var(--ds-border)] rounded-2xl p-6 space-y-4 shadow-sm">
+            <div className="bg-(--ds-surface) border border-(--ds-border) rounded-2xl p-6 space-y-4 shadow-xs">
               <div className="flex items-center gap-2 mb-1">
-                <LayoutTemplate size={16} className="text-[var(--ds-text-secondary)]" />
-                <h3 className="text-[13px] font-semibold text-[var(--ds-text-primary)]">Choose a Template</h3>
-                <span className="text-[11px] text-[var(--ds-text-muted)] font-normal">(optional)</span>
+                <LayoutTemplate size={16} className="text-(--ds-text-secondary)" />
+                <h3 className="text-[13px] font-semibold text-(--ds-text-primary)">Choose a Template</h3>
+                <span className="text-[11px] text-(--ds-text-muted) font-normal">(optional)</span>
               </div>
-              <p className="text-[12px] text-[var(--ds-text-muted)] -mt-2">Start with a pre-designed template or create from scratch.</p>
+              <p className="text-[12px] text-(--ds-text-muted) -mt-2">Start with a pre-designed template or create from scratch.</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {/* Blank option */}
                 <button
@@ -178,7 +178,7 @@ export default function NewPromptionPage() {
                   className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all text-center hover:shadow-md ${
                     selectedTemplate === null
                       ? 'border-[#0284c7] bg-sky-50/50 dark:bg-sky-950/20 shadow-md'
-                      : 'border-[var(--ds-border)] hover:border-gray-300'
+                      : 'border-(--ds-border) hover:border-gray-300'
                   }`}
                 >
                   {selectedTemplate === null && (
@@ -187,8 +187,8 @@ export default function NewPromptionPage() {
                     </div>
                   )}
                   <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-lg">📄</div>
-                  <span className="text-[12px] font-semibold text-[var(--ds-text-primary)]">Blank</span>
-                  <span className="text-[10px] text-[var(--ds-text-muted)]">Start fresh</span>
+                  <span className="text-[12px] font-semibold text-(--ds-text-primary)">Blank</span>
+                  <span className="text-[10px] text-(--ds-text-muted)">Start fresh</span>
                 </button>
 
                 {/* Template options */}
@@ -200,7 +200,7 @@ export default function NewPromptionPage() {
                       className={`relative w-full flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all text-center hover:shadow-md ${
                         selectedTemplate === t.meta.id
                           ? 'border-[#0284c7] bg-sky-50/50 dark:bg-sky-950/20 shadow-md'
-                          : 'border-[var(--ds-border)] hover:border-gray-300'
+                          : 'border-(--ds-border) hover:border-gray-300'
                       }`}
                     >
                       {selectedTemplate === t.meta.id && (
@@ -208,11 +208,11 @@ export default function NewPromptionPage() {
                           <Check size={12} className="text-white" />
                         </div>
                       )}
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-sky-100 to-blue-100 dark:from-sky-900 dark:to-blue-900 flex items-center justify-center text-lg">
+                      <div className="w-10 h-10 rounded-lg bg-linear-to-br from-sky-100 to-blue-100 dark:from-sky-900 dark:to-blue-900 flex items-center justify-center text-lg">
                         {t.meta.category === 'marketing' ? '🥤' : t.meta.category === 'social' ? '📱' : t.meta.category === 'event' ? '🎉' : '✨'}
                       </div>
-                      <span className="text-[12px] font-semibold text-[var(--ds-text-primary)] leading-tight">{t.meta.name}</span>
-                      <span className="text-[10px] text-[var(--ds-text-muted)] line-clamp-2 leading-tight">{t.meta.category}</span>
+                      <span className="text-[12px] font-semibold text-(--ds-text-primary) leading-tight">{t.meta.name}</span>
+                      <span className="text-[10px] text-(--ds-text-muted) line-clamp-2 leading-tight">{t.meta.category}</span>
                     </button>
                     {/* Preview eye button */}
                     <button
@@ -221,7 +221,7 @@ export default function NewPromptionPage() {
                         e.stopPropagation();
                         setPreviewTemplate(t);
                       }}
-                      className="absolute top-2 left-2 w-7 h-7 rounded-lg bg-black/60 dark:bg-white/15 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-black/80 dark:hover:bg-white/25 hover:scale-110 z-10"
+                      className="absolute top-2 left-2 w-7 h-7 rounded-lg bg-black/60 dark:bg-white/15 backdrop-blur-xs text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-black/80 dark:hover:bg-white/25 hover:scale-110 z-10"
                       title={`Preview ${t.meta.name}`}
                     >
                       <Eye size={13} />
@@ -234,7 +234,7 @@ export default function NewPromptionPage() {
             {/* ═══ Template Preview Modal ═══ */}
             {previewTemplate && (
               <div
-                className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6"
+                className="fixed inset-0 z-200 flex items-center justify-center p-4 sm:p-6"
                 onClick={() => setPreviewTemplate(null)}
               >
                 {/* Backdrop */}
@@ -249,7 +249,7 @@ export default function NewPromptionPage() {
                   {/* Header bar */}
                   <div className="w-full flex items-center justify-between px-1">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center text-white text-sm">
+                      <div className="w-8 h-8 rounded-lg bg-linear-to-br from-sky-400 to-blue-600 flex items-center justify-center text-white text-sm">
                         {previewTemplate.meta.category === 'marketing' ? '🥤' : previewTemplate.meta.category === 'social' ? '📱' : '✨'}
                       </div>
                       <div>
@@ -267,9 +267,9 @@ export default function NewPromptionPage() {
                   </div>
 
                   {/* Phone frame with preview */}
-                  <div className="flex-1 overflow-y-auto w-full rounded-[2rem] no-scrollbar" style={{ maxHeight: 'calc(95vh - 140px)' }}>
+                  <div className="flex-1 overflow-y-auto w-full rounded-4xl no-scrollbar" style={{ maxHeight: 'calc(95vh - 140px)' }}>
                     <div
-                      className="rounded-[2rem] overflow-hidden mx-auto"
+                      className="rounded-4xl overflow-hidden mx-auto"
                       style={{
                         maxWidth: 428,
                         boxShadow: '0 0 0 2px rgba(255,255,255,0.08), 0 25px 100px rgba(0,0,0,0.5)',
@@ -315,7 +315,7 @@ export default function NewPromptionPage() {
                         setSelectedTemplate(previewTemplate.meta.id);
                         setPreviewTemplate(null);
                       }}
-                      className="flex-[2] h-11 rounded-xl bg-[#0284c7] hover:bg-[#0369a1] text-white text-sm font-semibold flex items-center justify-center gap-2 transition-colors shadow-lg shadow-sky-500/25"
+                      className="flex-2 h-11 rounded-xl bg-[#0284c7] hover:bg-[#0369a1] text-white text-sm font-semibold flex items-center justify-center gap-2 transition-colors shadow-lg shadow-sky-500/25"
                     >
                       <Check size={16} />
                       Use This Template
@@ -325,24 +325,24 @@ export default function NewPromptionPage() {
               </div>
             )}
 
-            <div className="bg-[var(--ds-surface)] border border-[var(--ds-border)] rounded-2xl p-8 space-y-6 flex flex-col shadow-sm">
+            <div className="bg-(--ds-surface) border border-(--ds-border) rounded-2xl p-8 space-y-6 flex flex-col shadow-xs">
               
               {/* Product Name */}
               <div>
-                <label className="block text-[13px] font-semibold text-[var(--ds-text-primary)] mb-2">
+                <label className="block text-[13px] font-semibold text-(--ds-text-primary) mb-2">
                   Product Name <span className="text-red-400">*</span>
                 </label>
                 <div className="relative">
                   <Package
                     size={16}
-                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--ds-text-muted)]"
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-(--ds-text-muted)"
                   />
                   <input
                     type="text"
                     value={productName}
                     onChange={(e) => handleNameChange(e.target.value)}
                     placeholder="e.g. Super Widget Pro"
-                    className="w-full h-[44px] pl-10 pr-4 rounded-xl border border-[var(--ds-border)] bg-[var(--ds-bg)] text-[14px] text-[var(--ds-text-primary)] placeholder-[var(--ds-text-muted)] focus:outline-none focus:ring-2 focus:ring-[#0284c7]/20 focus:border-[#0284c7] transition-all"
+                    className="w-full h-[44px] pl-10 pr-4 rounded-xl border border-(--ds-border) bg-(--ds-bg) text-[14px] text-(--ds-text-primary) placeholder-(--ds-text-muted) focus:outline-hidden focus:ring-2 focus:ring-[#0284c7]/20 focus:border-[#0284c7] transition-all"
                     autoFocus
                   />
                 </div>
@@ -351,7 +351,7 @@ export default function NewPromptionPage() {
               {/* URL Slug with Availability Check */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-[13px] font-semibold text-[var(--ds-text-primary)]">
+                  <label className="block text-[13px] font-semibold text-(--ds-text-primary)">
                     URL Slug <span className="text-red-400">*</span>
                   </label>
                   {finalSlug && (
@@ -375,14 +375,14 @@ export default function NewPromptionPage() {
                     </div>
                   )}
                 </div>
-                <div className={`flex items-center gap-0 rounded-xl border overflow-hidden bg-[var(--ds-bg)] transition-all ${
+                <div className={`flex items-center gap-0 rounded-xl border overflow-hidden bg-(--ds-bg) transition-all ${
                   slugAvailable === false 
                     ? 'border-red-400 focus-within:ring-2 focus-within:ring-red-400/20' 
                     : slugAvailable === true 
                       ? 'border-green-400 focus-within:ring-2 focus-within:ring-green-400/20'
-                      : 'border-[var(--ds-border)] focus-within:ring-2 focus-within:ring-[#0284c7]/20 focus-within:border-[#0284c7]'
+                      : 'border-(--ds-border) focus-within:ring-2 focus-within:ring-[#0284c7]/20 focus-within:border-[#0284c7]'
                 }`}>
-                  <span className="px-3.5 h-[44px] flex items-center text-[13px] text-[var(--ds-text-muted)] bg-[var(--ds-surface)] border-r border-inherit whitespace-nowrap font-mono">
+                  <span className="px-3.5 h-[44px] flex items-center text-[13px] text-(--ds-text-muted) bg-(--ds-surface) border-r border-inherit whitespace-nowrap font-mono">
                     /p/
                   </span>
                   <input
@@ -390,55 +390,55 @@ export default function NewPromptionPage() {
                     value={slug}
                     onChange={(e) => handleSlugChange(e.target.value)}
                     placeholder="super-widget-pro"
-                    className="flex-1 h-[44px] px-3 text-[14px] text-[var(--ds-text-primary)] placeholder-[var(--ds-text-muted)] focus:outline-none font-mono bg-transparent"
+                    className="flex-1 h-[44px] px-3 text-[14px] text-(--ds-text-primary) placeholder-(--ds-text-muted) focus:outline-hidden font-mono bg-transparent"
                   />
                 </div>
-                <p className="mt-1.5 text-[11px] text-[var(--ds-text-muted)]">
+                <p className="mt-1.5 text-[11px] text-(--ds-text-muted)">
                   Must be unique. Allowed characters: letters, numbers, and hyphens.
                 </p>
               </div>
 
-              <div className="w-full h-[1px] bg-[var(--ds-border)] my-2" />
+              <div className="w-full h-px bg-(--ds-border) my-2" />
 
               {/* internal Description */}
               <div>
-                <label className="block text-[13px] font-semibold text-[var(--ds-text-primary)] mb-2">
-                  Internal Description <span className="text-[var(--ds-text-muted)] font-normal">(optional)</span>
+                <label className="block text-[13px] font-semibold text-(--ds-text-primary) mb-2">
+                  Internal Description <span className="text-(--ds-text-muted) font-normal">(optional)</span>
                 </label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Notes for your team..."
                   rows={2}
-                  className="w-full px-4 py-3 rounded-xl border border-[var(--ds-border)] bg-[var(--ds-bg)] text-[14px] text-[var(--ds-text-primary)] placeholder-[var(--ds-text-muted)] focus:outline-none focus:ring-2 focus:ring-[#0284c7]/20 focus:border-[#0284c7] transition-all resize-none"
+                  className="w-full px-4 py-3 rounded-xl border border-(--ds-border) bg-(--ds-bg) text-[14px] text-(--ds-text-primary) placeholder-(--ds-text-muted) focus:outline-hidden focus:ring-2 focus:ring-[#0284c7]/20 focus:border-[#0284c7] transition-all resize-none"
                 />
               </div>
 
               {/* OG Meta Description */}
               <div>
-                <label className="block text-[13px] font-semibold text-[var(--ds-text-primary)] mb-2">
-                  Social Sharing Description <span className="text-[var(--ds-text-muted)] font-normal">(optional)</span>
+                <label className="block text-[13px] font-semibold text-(--ds-text-primary) mb-2">
+                  Social Sharing Description <span className="text-(--ds-text-muted) font-normal">(optional)</span>
                 </label>
                 <textarea
                   value={metaDescription}
                   onChange={(e) => setMetaDescription(e.target.value)}
                   placeholder="This appears when your link is shared on Facebook, WhatsApp, etc."
                   rows={3}
-                  className="w-full px-4 py-3 rounded-xl border border-[var(--ds-border)] bg-[var(--ds-bg)] text-[14px] text-[var(--ds-text-primary)] placeholder-[var(--ds-text-muted)] focus:outline-none focus:ring-2 focus:ring-[#0284c7]/20 focus:border-[#0284c7] transition-all resize-none"
+                  className="w-full px-4 py-3 rounded-xl border border-(--ds-border) bg-(--ds-bg) text-[14px] text-(--ds-text-primary) placeholder-(--ds-text-muted) focus:outline-hidden focus:ring-2 focus:ring-[#0284c7]/20 focus:border-[#0284c7] transition-all resize-none"
                 />
               </div>
 
               {/* OG Image URL */}
               <div>
-                <label className="block text-[13px] font-semibold text-[var(--ds-text-primary)] mb-2">
-                  Social Sharing Image <span className="text-[var(--ds-text-muted)] font-normal">(optional)</span>
+                <label className="block text-[13px] font-semibold text-(--ds-text-primary) mb-2">
+                  Social Sharing Image <span className="text-(--ds-text-muted) font-normal">(optional)</span>
                 </label>
                 
                 <div className="flex gap-3 flex-wrap sm:flex-nowrap">
                   {/* File Upload Button */}
-                  <label className="flex-shrink-0 cursor-pointer h-[44px] px-4 rounded-xl border border-[var(--ds-border)] hover:bg-[var(--ds-bg-hover)] flex items-center justify-center transition-all bg-[var(--ds-bg)] text-[14px] text-[var(--ds-text-primary)] font-medium">
+                  <label className="shrink-0 cursor-pointer h-[44px] px-4 rounded-xl border border-(--ds-border) hover:bg-(--ds-bg-hover) flex items-center justify-center transition-all bg-(--ds-bg) text-[14px] text-(--ds-text-primary) font-medium">
                     {uploadingImage ? (
-                      <Loader2 size={16} className="text-[var(--ds-text-secondary)] animate-spin" />
+                      <Loader2 size={16} className="text-(--ds-text-secondary) animate-spin" />
                     ) : (
                       "Upload Local"
                     )}
@@ -451,26 +451,26 @@ export default function NewPromptionPage() {
                     />
                   </label>
 
-                  <div className="hidden sm:flex items-center text-[var(--ds-text-muted)] text-[13px]">or</div>
+                  <div className="hidden sm:flex items-center text-(--ds-text-muted) text-[13px]">or</div>
 
                   <div className="relative flex-1 min-w-[200px]">
                     <ImageIcon
                       size={16}
-                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--ds-text-muted)]"
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-(--ds-text-muted)"
                     />
                     <input
                       type="text"
                       value={ogImageUrl}
                       onChange={(e) => setOgImageUrl(e.target.value)}
                       placeholder="Paste image URL..."
-                      className="w-full h-[44px] pl-10 pr-4 rounded-xl border border-[var(--ds-border)] bg-[var(--ds-bg)] text-[14px] text-[var(--ds-text-primary)] placeholder-[var(--ds-text-muted)] focus:outline-none focus:ring-2 focus:ring-[#0284c7]/20 focus:border-[#0284c7] transition-all"
+                      className="w-full h-[44px] pl-10 pr-4 rounded-xl border border-(--ds-border) bg-(--ds-bg) text-[14px] text-(--ds-text-primary) placeholder-(--ds-text-muted) focus:outline-hidden focus:ring-2 focus:ring-[#0284c7]/20 focus:border-[#0284c7] transition-all"
                     />
                   </div>
                 </div>
                 {imageUploadError && (
                   <p className="mt-1.5 text-[12px] text-red-500">{imageUploadError}</p>
                 )}
-                <p className="mt-1.5 text-[11px] text-[var(--ds-text-muted)]">
+                <p className="mt-1.5 text-[11px] text-(--ds-text-muted)">
                   For best results, upload or link an image that is 1200x630 pixels.
                 </p>
               </div>
@@ -507,8 +507,8 @@ export default function NewPromptionPage() {
           {/* Preview Column */}
           <div className="sticky top-8 flex flex-col gap-4 hidden lg:flex">
              <div className="flex items-center gap-2 px-1">
-               <LinkIcon size={16} className="text-[var(--ds-text-secondary)]" />
-               <h2 className="text-[14px] font-semibold text-[var(--ds-text-secondary)] uppercase tracking-wider">
+               <LinkIcon size={16} className="text-(--ds-text-secondary)" />
+               <h2 className="text-[14px] font-semibold text-(--ds-text-secondary) uppercase tracking-wider">
                  Live Link Preview
                </h2>
              </div>

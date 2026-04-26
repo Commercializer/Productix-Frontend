@@ -1,6 +1,113 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@source "../../packages/ui/src";
+@source "../../packages/editor/src";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --animate-fade-in: fade-in 0.3s ease-out;
+  --animate-fade-out: fade-out 0.3s ease-in;
+  --animate-slide-in-right: slide-in-right 0.3s ease-out;
+  --animate-scale-in: scale-in 0.2s ease-out;
+
+  @keyframes fade-in {
+    0% { opacity: 0; transform: translateY(8px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fade-out {
+    0% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(8px); }
+  }
+  @keyframes slide-in-right {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(0); }
+  }
+  @keyframes scale-in {
+    0% { opacity: 0; transform: scale(0.95); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+}
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+/* ─────────────────────────────────────────────
+ * Utility Classes
+ * ──────────────────────────────────────────── */
+
+@utility text-balance {
+  text-wrap: balance;
+}
+
+@utility text-pretty {
+  text-wrap: pretty;
+}
+
+@utility glass {
+  /* Glassmorphism */
+  @apply bg-white/10 backdrop-blur-lg;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+@utility text-gradient {
+  /* Gradient text */
+  @apply bg-linear-to-r from-primary to-blue-400 bg-clip-text text-transparent;
+}
+
+@utility no-scrollbar {
+  /* Hide scrollbar */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
 
 /* ─────────────────────────────────────────────
  * Design Token System — Light & Dark
@@ -9,61 +116,61 @@
 @layer base {
   :root {
     /* Surface */
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --background: hsl(0 0% 100%);
+    --foreground: hsl(222.2 84% 4.9%);
+    --card: hsl(0 0% 100%);
+    --card-foreground: hsl(222.2 84% 4.9%);
+    --popover: hsl(0 0% 100%);
+    --popover-foreground: hsl(222.2 84% 4.9%);
 
     /* Brand */
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --primary: hsl(221.2 83.2% 53.3%);
+    --primary-foreground: hsl(210 40% 98%);
+    --secondary: hsl(210 40% 96.1%);
+    --secondary-foreground: hsl(222.2 47.4% 11.2%);
 
     /* Semantic */
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --muted: hsl(210 40% 96.1%);
+    --muted-foreground: hsl(215.4 16.3% 46.9%);
+    --accent: hsl(210 40% 96.1%);
+    --accent-foreground: hsl(222.2 47.4% 11.2%);
+    --destructive: hsl(0 84.2% 60.2%);
+    --destructive-foreground: hsl(210 40% 98%);
 
     /* Chrome */
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+    --border: hsl(214.3 31.8% 91.4%);
+    --input: hsl(214.3 31.8% 91.4%);
+    --ring: hsl(221.2 83.2% 53.3%);
     --radius: 0.625rem;
   }
 
   .dark {
     /* Surface */
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 6.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 6.9%;
-    --popover-foreground: 210 40% 98%;
+    --background: hsl(222.2 84% 4.9%);
+    --foreground: hsl(210 40% 98%);
+    --card: hsl(222.2 84% 6.9%);
+    --card-foreground: hsl(210 40% 98%);
+    --popover: hsl(222.2 84% 6.9%);
+    --popover-foreground: hsl(210 40% 98%);
 
     /* Brand */
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --primary: hsl(217.2 91.2% 59.8%);
+    --primary-foreground: hsl(222.2 47.4% 11.2%);
+    --secondary: hsl(217.2 32.6% 17.5%);
+    --secondary-foreground: hsl(210 40% 98%);
 
     /* Semantic */
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --muted: hsl(217.2 32.6% 17.5%);
+    --muted-foreground: hsl(215 20.2% 65.1%);
+    --accent: hsl(217.2 32.6% 17.5%);
+    --accent-foreground: hsl(210 40% 98%);
+    --destructive: hsl(0 62.8% 30.6%);
+    --destructive-foreground: hsl(210 40% 98%);
 
     /* Chrome */
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    --border: hsl(217.2 32.6% 17.5%);
+    --input: hsl(217.2 32.6% 17.5%);
+    --ring: hsl(224.3 76.3% 48%);
     --radius: 0.625rem;
   }
 }
@@ -94,40 +201,6 @@
 }
 
 /* ─────────────────────────────────────────────
- * Utility Classes
- * ──────────────────────────────────────────── */
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-
-  .text-pretty {
-    text-wrap: pretty;
-  }
-
-  /* Glassmorphism */
-  .glass {
-    @apply bg-white/10 backdrop-blur-lg;
-    border: 1px solid rgba(255, 255, 255, 0.18);
-  }
-
-  /* Gradient text */
-  .text-gradient {
-    @apply bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent;
-  }
-
-  /* Hide scrollbar */
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-}
-
-/* ─────────────────────────────────────────────
  * Design System — Dashboard & Admin Panel
  * Dark mode, Inter font, reference-matched
  * ──────────────────────────────────────────── */
@@ -150,6 +223,10 @@
   --ds-orange: #f97316;
   --ds-sidebar-w: 64px;
   --ds-sidebar-bg: #eaf1fa;
+
+  --ds-alpha-20: rgba(0, 0, 0, 0.02);
+  --ds-alpha-50: rgba(0, 0, 0, 0.05);
+  --ds-alpha-100: rgba(0, 0, 0, 0.1);
 }
 
 .dark {
@@ -170,6 +247,10 @@
   --ds-orange: #fb923c;
   --ds-sidebar-w: 64px;
   --ds-sidebar-bg: #0a0a0a;
+
+  --ds-alpha-20: rgba(255, 255, 255, 0.02);
+  --ds-alpha-50: rgba(255, 255, 255, 0.05);
+  --ds-alpha-100: rgba(255, 255, 255, 0.1);
 }
 
 /* ── App Shell Layout ─────────────────────── */
@@ -178,7 +259,7 @@
   min-height: 100vh;
   background: var(--ds-bg);
   color: var(--ds-text-primary);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans);
 }
 
 .app-main {
@@ -341,7 +422,7 @@
   background: none;
   width: 100%;
   transition: all 0.15s;
-  font-family: inherit;
+  font-family: var(--font-sans);
 }
 
 .sidebar-signout:hover {
@@ -373,7 +454,7 @@
   padding: 28px 32px;
   max-width: 1200px;
   margin: 0 auto;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-sans);
 }
 
 .page-header {
@@ -442,10 +523,10 @@
   flex-shrink: 0;
 }
 
-.stats-card--blue .stats-card-icon   { background: rgba(255,255,255,0.05);  color: var(--ds-text-secondary); }
-.stats-card--green .stats-card-icon  { background: rgba(255,255,255,0.05);  color: var(--ds-text-secondary); }
-.stats-card--purple .stats-card-icon { background: rgba(255,255,255,0.05);  color: var(--ds-text-secondary); }
-.stats-card--orange .stats-card-icon { background: rgba(255,255,255,0.05);  color: var(--ds-text-secondary); }
+.stats-card--blue .stats-card-icon   { background: var(--ds-alpha-50);  color: var(--ds-text-secondary); }
+.stats-card--green .stats-card-icon  { background: var(--ds-alpha-50);  color: var(--ds-text-secondary); }
+.stats-card--purple .stats-card-icon { background: var(--ds-alpha-50);  color: var(--ds-text-secondary); }
+.stats-card--orange .stats-card-icon { background: var(--ds-alpha-50);  color: var(--ds-text-secondary); }
 
 .stats-card-body { flex: 1; }
 
@@ -513,7 +594,7 @@
   color: var(--ds-text-primary);
   outline: none;
   transition: border-color 0.15s;
-  font-family: inherit;
+  font-family: var(--font-sans);
 }
 
 .table-search::placeholder { color: var(--ds-text-muted); }
@@ -547,7 +628,7 @@
 
 .tr { border-bottom: 1px solid var(--ds-border); transition: background 0.1s; }
 .tr:last-child { border-bottom: none; }
-.tr:hover { background: rgba(255,255,255,0.02); }
+.tr:hover { background: var(--ds-alpha-20); }
 
 .td { padding: 13px 20px; color: var(--ds-text-primary); vertical-align: middle; }
 .td-muted { color: var(--ds-text-secondary); }
@@ -570,7 +651,7 @@
 
 .td-title { font-weight: 400; color: var(--ds-text-primary); margin: 0; }
 .td-sub { font-size: 11.5px; color: var(--ds-text-muted); margin: 2px 0 0; }
-.td-link { font-size: 12px; color: var(--ds-text-muted); font-family: monospace; }
+.td-link { font-size: 12px; color: var(--ds-text-muted); font-family: var(--font-sans); }
 .td-actions { display: flex; align-items: center; gap: 6px; }
 
 .table-empty {
@@ -598,11 +679,11 @@
 .action-btn--edit    { background: transparent; color: var(--ds-text-secondary); }
 .action-btn--share   { background: transparent; color: var(--ds-text-secondary); }
 .action-btn--delete  { background: transparent; color: var(--ds-text-secondary); }
-.action-btn--confirm { background: rgba(255,255,255,0.1); color: var(--ds-text-primary); }
+.action-btn--confirm { background: var(--ds-alpha-100); color: var(--ds-text-primary); }
 .action-btn--disable { background: transparent; color: var(--ds-text-secondary); }
 .action-btn--enable  { background: transparent; color: var(--ds-text-secondary); }
 
-.action-btn:hover    { background: rgba(255,255,255,0.05); color: var(--ds-text-primary); }
+.action-btn:hover    { background: var(--ds-alpha-50); color: var(--ds-text-primary); }
 .action-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
 /* ── Buttons ──────────────────────────────── */
@@ -621,7 +702,7 @@
   text-decoration: none;
   white-space: nowrap;
   transition: all 0.15s;
-  font-family: inherit;
+  font-family: var(--font-sans);
 }
 
 .btn-primary:hover   { background: var(--ds-accent-hover); }
@@ -640,7 +721,7 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s;
-  font-family: inherit;
+  font-family: var(--font-sans);
 }
 
 .btn-secondary:hover { background: var(--ds-border); color: var(--ds-text-primary); }
@@ -660,7 +741,7 @@
 .badge--blue    { background: rgba(79,110,247,0.12);  color: #7090f8; }
 .badge--green   { background: rgba(34,197,94,0.12);   color: #4ade80; }
 .badge--purple  { background: rgba(167,139,250,0.12); color: #c4b5fd; }
-.badge--gray    { background: rgba(255,255,255,0.06); color: var(--ds-text-secondary); }
+.badge--gray    { background: var(--ds-alpha-100); color: var(--ds-text-secondary); }
 .badge--success { background: rgba(34,197,94,0.12);   color: #4ade80; }
 .badge--danger  { background: rgba(239,68,68,0.12);   color: #f87171; }
 .badge--warning { background: rgba(245,158,11,0.12);  color: #fbbf24; }
@@ -687,7 +768,7 @@
   width: 100%;
   max-width: 420px;
   animation: slideUp 0.2s ease;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-sans);
 }
 
 .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
@@ -719,7 +800,7 @@
   color: var(--ds-text-primary);
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
-  font-family: inherit;
+  font-family: var(--font-sans);
   box-sizing: border-box;
 }
 
@@ -762,7 +843,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s;
-  font-family: inherit;
+  font-family: var(--font-sans);
   margin-top: 4px;
 }
 
@@ -810,7 +891,7 @@
   width: 100%;
   max-width: 400px;
   animation: slideUp 0.25s ease;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-sans);
 }
 
 .login-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
@@ -942,7 +1023,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-sans);
 }
 
 .admin-hamburger {
@@ -1049,7 +1130,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   flex-shrink: 0;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-sans);
   z-index: 80;
   transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
               padding 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1227,7 +1308,7 @@
   background: none;
   width: 100%;
   transition: all 0.15s ease, gap 0.25s ease;
-  font-family: inherit;
+  font-family: var(--font-sans);
   justify-content: center;
 }
 
@@ -1307,7 +1388,7 @@
   min-height: 100vh;
   background: var(--ds-bg);
   color: var(--ds-text-primary);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans);
 }
 
 /* ── Responsive (mobile ≤ 768px) ─────────────── */
