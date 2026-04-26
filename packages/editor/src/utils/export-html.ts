@@ -69,7 +69,17 @@ function elementToHtml(el: ElementNode, isFlowMode: boolean): string {
       const fontWeight = (p.fontWeight as string) || "600";
       const url = (p.url as string) || "#";
       const variant = (p.variant as string) || "filled";
-      const baseStyle = `display:inline-flex;align-items:center;justify-content:center;padding:12px 24px;border-radius:${borderRadius}px;font-size:${fontSize}px;font-weight:${fontWeight};text-decoration:none;cursor:pointer;transition:opacity 0.15s;width:100%;box-sizing:border-box;`;
+      // Shadow
+      const shadowEnabled = !!p.shadowEnabled;
+      const shadowColor = (p.shadowColor as string) || "rgba(0,0,0,0.25)";
+      const shadowX = (p.shadowX as number) ?? 0;
+      const shadowY = (p.shadowY as number) ?? 4;
+      const shadowBlur = (p.shadowBlur as number) ?? 12;
+      const shadowSpread = (p.shadowSpread as number) ?? 0;
+      const shadowStyle = shadowEnabled
+        ? `box-shadow:${shadowX}px ${shadowY}px ${shadowBlur}px ${shadowSpread}px ${shadowColor};`
+        : "";
+      const baseStyle = `display:inline-flex;align-items:center;justify-content:center;padding:12px 24px;border-radius:${borderRadius}px;font-size:${fontSize}px;font-weight:${fontWeight};text-decoration:none;cursor:pointer;transition:opacity 0.15s;width:100%;box-sizing:border-box;${shadowStyle}`;
       const variantStyle = variant === "filled"
         ? `background:${bgColor};color:${textColor};border:none;`
         : variant === "outline"
@@ -122,10 +132,19 @@ function elementToHtml(el: ElementNode, isFlowMode: boolean): string {
     }
 
     case "icon": {
-      const icon = (p.icon as string) || "⭐";
-      const iconSize = (p.size as number) || 32;
-      const color = (p.color as string) || "#6b7280";
-      return `<span style="font-size:${iconSize}px;color:${color};display:flex;align-items:center;justify-content:center;width:100%;height:100%;">${icon}</span>`;
+      const iconName = (p.icon as string) || "Star";
+      const iconSize = (p.fontSize as number) || (p.size as number) || 48;
+      const color = (p.color as string) || "#3b82f6";
+      const bgColor = (p.bgColor as string) || "transparent";
+      const borderRadius = (p.borderRadius as number) || 12;
+      const isEmojiIcon = /^[\p{Emoji}\u200d\ufe0f]/u.test(iconName);
+      const grayscale = !!p.grayscale;
+      const gsFilter = grayscale && isEmojiIcon ? "filter:grayscale(1);" : "";
+      if (isEmojiIcon) {
+        return `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:${bgColor};border-radius:${borderRadius}px;${gsFilter}"><span style="font-size:${iconSize}px;line-height:1;">${iconName}</span></div>`;
+      }
+      const svgUrl = `https://unpkg.com/lucide-static@latest/icons/${iconName.replace(/([A-Z])/g, (m: string, c: string, i: number) => (i ? "-" : "") + c.toLowerCase())}.svg`;
+      return `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:${bgColor};border-radius:${borderRadius}px;"><img src="${svgUrl}" alt="${escapeHtml(iconName)}" width="${iconSize}" height="${iconSize}" style="filter:brightness(0) saturate(100%);color:${color};" /></div>`;
     }
 
     case "badge": {

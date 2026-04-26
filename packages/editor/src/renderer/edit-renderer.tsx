@@ -25,6 +25,7 @@ import {
   Layers,
   Settings,
   Hand,
+  MousePointer2,
   HelpCircle,
   ChevronDown,
 } from "lucide-react";
@@ -41,6 +42,7 @@ import { ArtboardSettings } from "../panels/artboard-settings";
 import { ContentLocaleTabs } from "../panels/content-locale-tabs";
 import { ZOOM_STEP, MIN_ZOOM, MAX_ZOOM, NUDGE_DISTANCE, NUDGE_DISTANCE_LARGE } from "../interactions/constants";
 import { useCanvasPan } from "../interactions/use-canvas-pan";
+import { useMarqueeSelection } from "../interactions/use-marquee-selection";
 import { MediaProvider } from "../media/media-context";
 import { getArtboardPreviewWidth, getArtboardPreviewHeight } from "../utils/responsive";
 import { useTranslation } from "../i18n";
@@ -102,12 +104,27 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug }
   const hasAutoStartedTour = useRef(false);
   const { t } = useTranslation();
 
+  const [activeTool, setActiveTool] = useState<"pointer" | "hand">("pointer");
+
   const {
     isSpaceHeld, isPanning, panCursor,
     onPanPointerDown, onPanPointerMove, onPanPointerUp,
-  } = useCanvasPan(canvasRef);
+  } = useCanvasPan(canvasRef, activeTool);
+
+  const {
+    marquee,
+    onMarqueePointerDown, onMarqueePointerMove, onMarqueePointerUp,
+  } = useMarqueeSelection(canvasRef, activeTool);
 
   useEffect(() => { setActiveBreakpoint("mobile"); }, [setActiveBreakpoint]);
+
+  // Mark window as being in editor context so element components
+  // (e.g. audio) can add pointer-event overlays to prevent native
+  // controls from stealing selection / drag events.
+  useEffect(() => {
+    (window as unknown as Record<string, unknown>).__productixEditor = true;
+    return () => { delete (window as unknown as Record<string, unknown>).__productixEditor; };
+  }, []);
 
   useEffect(() => {
     if (initialDocument) {
@@ -204,16 +221,43 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug }
       else if (isMeta && (e.key === "y" || (e.key === "z" && e.shiftKey))) { e.preventDefault(); redo(); }
       else if (isMeta && e.key === "d") { e.preventDefault(); selectedIds.forEach((id) => duplicateElement(id)); }
       else if (isMeta && e.key === "a") { e.preventDefault(); useCanvasStore.getState().selectAll(); }
+      else if (isMeta && e.key === "g" && !e.shiftKey) {
+        // Group selected blocks
+        e.preventDefault();
+        if (selectedIds.length >= 2) {
+          useCanvasStore.getState().groupElements(selectedIds);
+        }
+      }
+      else if (isMeta && e.key === "g" && e.shiftKey) {
+        // Ungroup selected blocks
+        e.preventDefault();
+        const state = useCanvasStore.getState();
+        const groupIds = new Set<string>();
+        for (const id of selectedIds) {
+          const el = state.document.elements[id];
+          if (el?.groupId) groupIds.add(el.groupId);
+        }
+        groupIds.forEach((gid) => state.ungroupElements(gid));
+      }
       else if (e.key === "Escape") { deselectAll(); setLeftDrawer(null); }
       else if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)) {
         e.preventDefault();
         const dist = e.shiftKey ? NUDGE_DISTANCE_LARGE : NUDGE_DISTANCE;
+        // Collect all unique IDs to nudge (including group members)
+        const state = useCanvasStore.getState();
+        const idsToNudge = new Set<string>();
         selectedIds.forEach((id) => {
-          const el = elements[id]; if (!el || el.locked) return;
+          const memberIds = state.getGroupMemberIds(id);
+          memberIds.forEach((mid) => idsToNudge.add(mid));
+        });
+        idsToNudge.forEach((id) => {
+          const el = elements[id] || state.document.elements[id]; if (!el || el.locked) return;
           const delta = { ArrowUp:{y:el.transform.y-dist}, ArrowDown:{y:el.transform.y+dist}, ArrowLeft:{x:el.transform.x-dist}, ArrowRight:{x:el.transform.x+dist} }[e.key]!;
           updateElementTransform(id, delta);
         });
       } else if (isMeta && e.key === "0") { e.preventDefault(); handleFitToView(); }
+      else if (!isMeta && e.key.toLowerCase() === "v") { setActiveTool("pointer"); }
+      else if (!isMeta && e.key.toLowerCase() === "h") { setActiveTool("hand"); }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
@@ -230,9 +274,9 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug }
     setTimeout(centerCanvas, 50);
   }, [document.artboards, setZoom, activeBreakpoint, centerCanvas]);
 
-  const handleCanvasPointerDown = useCallback((e: React.PointerEvent) => onPanPointerDown(e), [onPanPointerDown]);
-  const handleCanvasPointerMove = useCallback((e: React.PointerEvent) => onPanPointerMove(e), [onPanPointerMove]);
-  const handleCanvasPointerUp = useCallback((e: React.PointerEvent) => onPanPointerUp(e), [onPanPointerUp]);
+  const handleCanvasPointerDown = useCallback((e: React.PointerEvent) => { onPanPointerDown(e); onMarqueePointerDown(e); }, [onPanPointerDown, onMarqueePointerDown]);
+  const handleCanvasPointerMove = useCallback((e: React.PointerEvent) => { onPanPointerMove(e); onMarqueePointerMove(e); }, [onPanPointerMove, onMarqueePointerMove]);
+  const handleCanvasPointerUp = useCallback((e: React.PointerEvent) => { onPanPointerUp(e); onMarqueePointerUp(e); }, [onPanPointerUp, onMarqueePointerUp]);
   const handleCanvasClick = useCallback((e: React.MouseEvent) => {
     if (isPanning) return;
     const target = e.target as HTMLElement;
@@ -271,6 +315,20 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug }
           <div style={{ display:"flex",gap:2 }}>
             <TopBtn onClick={undo} disabled={past.length===0} title="Undo"><Undo2 size={16} /></TopBtn>
             <TopBtn onClick={redo} disabled={future.length===0} title="Redo"><Redo2 size={16} /></TopBtn>
+            
+            <div style={{ width:1,height:24,background:"#e5e7eb",margin:"0 8px",alignSelf:"center" }} />
+            
+            <TopBtn 
+              onClick={() => setActiveTool("pointer")} 
+              title="Select Tool (V)"
+              active={activeTool === "pointer"}
+            ><MousePointer2 size={16} /></TopBtn>
+            <TopBtn 
+              onClick={() => setActiveTool("hand")} 
+              title="Hand Tool (H)"
+              active={activeTool === "hand"}
+            ><Hand size={16} /></TopBtn>
+            
             <div style={{ width:1,height:24,background:"#e5e7eb",margin:"0 8px",alignSelf:"center" }} />
             <TopBtn onClick={startTour} title="Show Tour"><HelpCircle size={16} /></TopBtn>
           </div>
@@ -367,7 +425,23 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug }
 
         {/* ── Canvas ── */}
         <div id="tour-canvas" ref={canvasRef} style={{ flex:1,overflow:"auto",position:"relative",cursor:panCursor||"default",background:"#f0f0f3" }}
-          onWheel={handleWheel} onPointerDown={handleCanvasPointerDown} onPointerMove={handleCanvasPointerMove} onPointerUp={handleCanvasPointerUp} onClick={handleCanvasClick}>
+          onWheel={handleWheel} onPointerDown={handleCanvasPointerDown} onPointerMove={handleCanvasPointerMove} onPointerUp={handleCanvasPointerUp} onPointerCancel={handleCanvasPointerUp} onClick={handleCanvasClick}>
+
+          {marquee && (
+            <div
+              style={{
+                position: "absolute",
+                left: marquee.left,
+                top: marquee.top,
+                width: marquee.width,
+                height: marquee.height,
+                background: "rgba(139, 92, 246, 0.15)",
+                border: "1px solid rgba(139, 92, 246, 0.5)",
+                pointerEvents: "none",
+                zIndex: 99999, // Ensure it draws above elements
+              }}
+            />
+          )}
 
           {isSpaceHeld && (
             <div style={{ position:"sticky",top:8,left:"50%",transform:"translateX(-50%)",zIndex:99999,pointerEvents:"none",display:"flex",justifyContent:"center" }}>
@@ -418,12 +492,12 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug }
   );
 }
 
-function TopBtn({ children, onClick, disabled, title }: { children: React.ReactNode; onClick: () => void; disabled?: boolean; title?: string; }) {
+function TopBtn({ children, onClick, disabled, title, active }: { children: React.ReactNode; onClick: () => void; disabled?: boolean; title?: string; active?: boolean; }) {
   return (
     <button type="button" onClick={onClick} disabled={disabled} title={title}
-      style={{ width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center",borderRadius:8,border:"none",background:"transparent",color:disabled?"#d1d5db":"#6b7280",cursor:disabled?"not-allowed":"pointer",fontSize:14,transition:"all 0.15s" }}
-      onMouseEnter={(e) => { if (!disabled) e.currentTarget.style.background="#f3f4f6"; }}
-      onMouseLeave={(e) => { e.currentTarget.style.background="transparent"; }}>
+      style={{ width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center",borderRadius:8,border:"none",background:active?"#e0f2fe":"transparent",color:disabled?"#d1d5db":active?"#0284c7":"#6b7280",cursor:disabled?"not-allowed":"pointer",fontSize:14,transition:"all 0.15s" }}
+      onMouseEnter={(e) => { if (!disabled && !active) e.currentTarget.style.background="#f3f4f6"; }}
+      onMouseLeave={(e) => { if (!active) e.currentTarget.style.background="transparent"; }}>
       {children}
     </button>
   );

@@ -58,6 +58,8 @@ export const ElementWrapper = memo(function ElementWrapper({
   const updateElementProps = useCanvasStore((s) => s.updateElementProps);
   const activeBreakpoint = useCanvasStore((s) => s.activeBreakpoint);
   const contentLocale = useCanvasStore((s) => s.contentLocale);
+  const groups = useCanvasStore((s) => s.document.groups);
+  const getGroupMemberIds = useCanvasStore((s) => s.getGroupMemberIds);
 
   const { onDragStart, onDragMove, onDragEnd } = useDrag();
   const { onResizeStart, onResizeMove, onResizeEnd } = useResize();
@@ -67,6 +69,8 @@ export const ElementWrapper = memo(function ElementWrapper({
   const isEditing = editingElementId === element.id;
   const isNonDesktop = activeBreakpoint !== "desktop";
   const isFlow = !!effectiveLayout && effectiveLayout.layoutMode === "flow";
+  const isGrouped = !!element.groupId;
+  const groupInfo = isGrouped && groups ? groups[element.groupId!] : null;
 
   const def = getElementDefinition(element.type);
 
@@ -77,13 +81,25 @@ export const ElementWrapper = memo(function ElementWrapper({
       // Don't start element drag during pan mode (spacebar held or middle click)
       if ((window as unknown as Record<string, unknown>).__editorPanMode || e.button === 1) return;
       e.stopPropagation();
-      select(element.id, e.shiftKey);
+
+      // If grouped and not shift-clicking, select all group members
+      if (isGrouped && !e.shiftKey) {
+        const memberIds = getGroupMemberIds(element.id);
+        if (memberIds.length > 1) {
+          useCanvasStore.setState({ selectedIds: [...memberIds], editingElementId: null });
+        } else {
+          select(element.id, false);
+        }
+      } else {
+        select(element.id, e.shiftKey);
+      }
+
       // Only allow pixel dragging in absolute mode
       if (!isFlow) {
         onDragStart(e, element.id);
       }
     },
-    [element.id, element.locked, isEditing, isFlow, select, onDragStart]
+    [element.id, element.locked, isEditing, isFlow, isGrouped, select, onDragStart, getGroupMemberIds]
   );
 
   const handleDoubleClick = useCallback(
@@ -122,6 +138,17 @@ export const ElementWrapper = memo(function ElementWrapper({
     [isFlow, effectiveLayout]
   );
 
+  // Group color — derive from groupId hash for visual distinction
+  const groupColor = useMemo(() => {
+    if (!element.groupId) return null;
+    const GROUP_COLORS = ["#8b5cf6", "#ec4899", "#f59e0b", "#06b6d4", "#84cc16", "#f97316"];
+    let hash = 0;
+    for (let i = 0; i < element.groupId.length; i++) {
+      hash = ((hash << 5) - hash + element.groupId.charCodeAt(i)) | 0;
+    }
+    return GROUP_COLORS[Math.abs(hash) % GROUP_COLORS.length];
+  }, [element.groupId]);
+
   // Build element style
   const elementStyle: React.CSSProperties = isFlow && flowCSS
     ? {
@@ -131,9 +158,9 @@ export const ElementWrapper = memo(function ElementWrapper({
         opacity: element.opacity,
         cursor: element.locked ? "not-allowed" : isEditing ? "text" : "default",
         outline: isSelected
-          ? `2px solid ${showOverrideIndicator ? "#38bdf8" : "#10b981"}`
+          ? `2px solid ${isGrouped && groupColor ? groupColor : showOverrideIndicator ? "#38bdf8" : "#10b981"}`
           : isHovered
-            ? "1.5px solid rgba(16,185,129,0.4)"
+            ? `1.5px solid ${isGrouped && groupColor ? groupColor + "66" : "rgba(16,185,129,0.4)"}`
             : "none",
         outlineOffset: 0,
         borderRadius: 1,
@@ -152,9 +179,9 @@ export const ElementWrapper = memo(function ElementWrapper({
         opacity: element.opacity,
         cursor: element.locked ? "not-allowed" : isEditing ? "text" : "move",
         outline: isSelected
-          ? `2px solid ${showOverrideIndicator ? "#38bdf8" : "#3b82f6"}`
+          ? `2px solid ${isGrouped && groupColor ? groupColor : showOverrideIndicator ? "#38bdf8" : "#3b82f6"}`
           : isHovered
-            ? "1.5px solid rgba(59,130,246,0.4)"
+            ? `1.5px solid ${isGrouped && groupColor ? groupColor + "66" : "rgba(59,130,246,0.4)"}`
             : "none",
         outlineOffset: 0,
         borderRadius: 1,
@@ -253,6 +280,31 @@ export const ElementWrapper = memo(function ElementWrapper({
           }}
         >
           flow
+        </div>
+      )}
+
+      {/* Group badge */}
+      {isSelected && isGrouped && groupInfo && (
+        <div
+          style={{
+            position: "absolute",
+            top: -20,
+            right: element.locked ? 30 : 0,
+            fontSize: 9,
+            background: groupColor || "#8b5cf6",
+            color: "#fff",
+            borderRadius: 4,
+            padding: "1px 6px",
+            fontWeight: 600,
+            pointerEvents: "none",
+            textTransform: "uppercase",
+            letterSpacing: "0.05em",
+            display: "flex",
+            alignItems: "center",
+            gap: 3,
+          }}
+        >
+          ⊞ {groupInfo.name}
         </div>
       )}
 

@@ -59,13 +59,56 @@ export function PropertiesPanel() {
 
   const selId = selectedIds[0];
   if (selectedIds.length > 1 || !selId) {
+    // Check if all selected elements share the same group
+    const selectedEls = selectedIds.map((id) => elements[id]).filter(Boolean);
+    const commonGroupId = selectedEls[0]?.groupId;
+    const allSameGroup = commonGroupId && selectedEls.every((el) => el?.groupId === commonGroupId);
+    const groupInfo = allSameGroup ? useCanvasStore.getState().document.groups?.[commonGroupId] : null;
+
     return (
       <div style={{ display:"flex",flexDirection:"column",height:"100%" }}>
         <div style={{ padding:"16px 20px 12px",borderBottom:"1px solid #f0f0f0" }}>
           <h2 style={{ fontSize:14,fontWeight:700,color:"#1e1e2e",margin:0 }}>{t("blockSettings.title")}</h2>
         </div>
-        <div style={{ flex:1,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 24px" }}>
-          <p style={{ fontSize:13,color:"#9ca3af" }}>{selectedIds.length} blocks selected</p>
+        <div style={{ flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"0 24px",gap:12 }}>
+          <div style={{ width:48,height:48,borderRadius:14,background:"linear-gradient(135deg,#8b5cf620,#ec489920)",display:"flex",alignItems:"center",justifyContent:"center" }}>
+            <span style={{ fontSize:18,fontWeight:700,color:"#8b5cf6" }}>{selectedIds.length}</span>
+          </div>
+          <p style={{ fontSize:13,color:"#4b5563",fontWeight:600,textAlign:"center" }}>
+            {selectedIds.length} blocks selected
+          </p>
+          {allSameGroup && groupInfo ? (
+            <>
+              <div style={{ display:"flex",alignItems:"center",gap:6,padding:"6px 12px",borderRadius:10,background:"#f5f3ff",border:"1px solid #ddd6fe" }}>
+                <span style={{ fontSize:11,fontWeight:600,color:"#8b5cf6" }}>⊞ {groupInfo.name}</span>
+              </div>
+              <button type="button" onClick={() => useCanvasStore.getState().ungroupElements(commonGroupId)}
+                style={{ display:"flex",alignItems:"center",gap:6,width:"100%",padding:"12px 16px",borderRadius:12,border:"1px solid #fecaca",background:"#fef2f2",color:"#ef4444",fontSize:12,fontWeight:600,cursor:"pointer",transition:"all 0.15s",justifyContent:"center" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background="#fee2e2"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background="#fef2f2"; }}
+              >
+                Ungroup Blocks
+              </button>
+            </>
+          ) : (
+            <>
+              <p style={{ fontSize:10,color:"#9ca3af",textAlign:"center" }}>
+                Select 2+ blocks to group them together
+              </p>
+              {selectedIds.length >= 2 && (
+                <button type="button" onClick={() => useCanvasStore.getState().groupElements(selectedIds)}
+                  style={{ display:"flex",alignItems:"center",gap:6,width:"100%",padding:"12px 16px",borderRadius:12,border:"1px solid #ddd6fe",background:"#f5f3ff",color:"#8b5cf6",fontSize:12,fontWeight:600,cursor:"pointer",transition:"all 0.15s",justifyContent:"center" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background="#ede9fe"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background="#f5f3ff"; }}
+                >
+                  ⊞ Group Selected Blocks
+                </button>
+              )}
+            </>
+          )}
+          <p style={{ fontSize:9,color:"#d1d5db",textAlign:"center",marginTop:4 }}>
+            ⌘G to group · ⌘⇧G to ungroup
+          </p>
         </div>
       </div>
     );

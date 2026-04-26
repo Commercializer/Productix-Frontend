@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import type { CanvasDocument, ContentLocale } from "@productix/types";
-import { CONTENT_LOCALE_META } from "@productix/types";
+import { CONTENT_LOCALE_META, CONTENT_LOCALES } from "@productix/types";
 import { PublicRenderer } from "@productix/editor";
 
 interface PublicPageData {
@@ -45,9 +45,8 @@ export function PublicPageClient({ page }: PublicPageClientProps) {
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const langDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Available locales from the document
-  const availableLocales = doc?.availableLocales || ["en"];
-  const showLanguageSwitcher = availableLocales.length > 1;
+  // Always show the language switcher with all supported locales
+  const showLanguageSwitcher = true;
 
   // Check if we have valid canvas content
   const hasCanvasContent = doc && doc.version && doc.artboards && doc.artboards.length > 0;
@@ -142,7 +141,7 @@ export function PublicPageClient({ page }: PublicPageClientProps) {
                 animation: "langDropdownIn 0.15s ease-out",
               }}
             >
-              {(availableLocales as ContentLocale[]).map((loc) => {
+              {CONTENT_LOCALES.map((loc) => {
                 const meta = CONTENT_LOCALE_META[loc];
                 const isActive = loc === contentLocale;
                 return (

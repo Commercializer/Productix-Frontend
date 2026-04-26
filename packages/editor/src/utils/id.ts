@@ -15,3 +15,9 @@ export function generateArtboardId(): string {
   counter += 1;
   return `ab_${Date.now().toString(36)}_${counter.toString(36)}`;
 }
+
+/** Generate a unique block group ID */
+export function generateGroupId(): string {
+  counter += 1;
+  return `grp_${Date.now().toString(36)}_${counter.toString(36)}`;
+}

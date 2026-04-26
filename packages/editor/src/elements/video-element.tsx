@@ -1,5 +1,11 @@
 /* ─────────────────────────────────────────────
  * Video Element — Add video from link option
+ *
+ * Same pointer-event overlay pattern as the audio element:
+ * in the editor, a transparent div covers the native <video>
+ * controls so the ElementWrapper can handle selection /
+ * dragging. On the public page the overlay is removed and
+ * video controls work normally.
  * ──────────────────────────────────────────── */
 
 "use client";
@@ -8,14 +14,25 @@ import React from "react";
 import { Video } from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
 
+/** Returns true when running inside the editor canvas */
+function isInsideEditor(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return !!(window as unknown as Record<string, unknown>).__productixEditor;
+  } catch {
+    return false;
+  }
+}
+
 /* ─── Component ─────────────────────────────── */
 
-function VideoElementComponent({ props, isEditing }: ElementRenderProps) {
+function VideoElementComponent({ props }: ElementRenderProps) {
   const src = (props.src as string) || "";
   const borderRadius = (props.borderRadius as number) || 0;
   const autoPlay = (props.autoPlay as boolean) || false;
   const loop = (props.loop as boolean) || false;
   const muted = (props.muted as boolean) || false;
+  const inEditor = isInsideEditor();
 
   if (!src) {
     return (
@@ -35,7 +52,7 @@ function VideoElementComponent({ props, isEditing }: ElementRenderProps) {
       >
         <Video size={28} style={{ opacity: 0.5, color: "#9ca3af" }} />
         <span style={{ fontSize: 12, color: "#9ca3af", fontWeight: 500 }}>
-          {isEditing ? "Add video link in properties" : "No video"}
+          {inEditor ? "Add video link in properties" : "No video"}
         </span>
       </div>
     );
@@ -63,9 +80,19 @@ function VideoElementComponent({ props, isEditing }: ElementRenderProps) {
           height: "100%",
           objectFit: "cover",
           display: "block",
-          pointerEvents: isEditing ? "none" : "auto",
         }}
       />
+      {/* Editor overlay — blocks native controls from stealing pointer events */}
+      {inEditor && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 1,
+            cursor: "move",
+          }}
+        />
+      )}
     </div>
   );
 }

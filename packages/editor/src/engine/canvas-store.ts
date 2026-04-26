@@ -8,10 +8,10 @@
 
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
-import type { CanvasDocument, ElementNode, Transform, Artboard, Breakpoint, LayoutProps, FlexContainerProps, ContentLocale } from "@productix/types";
+import type { CanvasDocument, ElementNode, Transform, Artboard, Breakpoint, LayoutProps, FlexContainerProps, ContentLocale, BlockGroup } from "@productix/types";
 import { DEFAULT_LAYOUT_PROPS, DEFAULT_FLEX_CONTAINER } from "@productix/types";
 import { createEmptyDocument, createDefaultArtboard } from "../utils/defaults";
-import { generateElementId, generateArtboardId } from "../utils/id";
+import { generateElementId, generateArtboardId, generateGroupId } from "../utils/id";
 import type { SnapGuide } from "../interactions/snap-engine";
 
 /* ─── History ───────────────────────────────── */
@@ -19,6 +19,7 @@ import type { SnapGuide } from "../interactions/snap-engine";
 interface HistoryEntry {
   artboards: Artboard[];
   elements: Record<string, ElementNode>;
+  groups?: Record<string, BlockGroup>;
 }
 
 const MAX_HISTORY = 50;
@@ -107,6 +108,11 @@ export interface CanvasState {
   setSnapGuides: (guides: SnapGuide[]) => void;
   clearSnapGuides: () => void;
 
+  // ── Block Groups ──
+  groupElements: (ids: string[], name?: string) => string | null;
+  ungroupElements: (groupId: string) => void;
+  getGroupMemberIds: (elementId: string) => string[];
+
   // ── History ──
   undo: () => void;
   redo: () => void;
@@ -128,7 +134,31 @@ function getCurrentSnapshot(state: CanvasState): HistoryEntry {
   return {
     artboards: JSON.parse(JSON.stringify(state.document.artboards)),
     elements: JSON.parse(JSON.stringify(state.document.elements)),
+    groups: state.document.groups ? JSON.parse(JSON.stringify(state.document.groups)) : undefined,
   };
+}
+
+function getTopLevelEntityId(state: CanvasState, entityId: string): string {
+  let currentId = entityId;
+  while (true) {
+    const parentGroupId = state.document.elements[currentId]?.groupId || state.document.groups?.[currentId]?.groupId;
+    if (!parentGroupId || !state.document.groups?.[parentGroupId]) break;
+    currentId = parentGroupId;
+  }
+  return currentId;
+}
+
+function getLeafMemberIds(state: CanvasState, entityId: string): string[] {
+  const group = state.document.groups?.[entityId];
+  if (group) {
+    let leaves: string[] = [];
+    for (const childId of group.memberIds) {
+      leaves = leaves.concat(getLeafMemberIds(state, childId));
+    }
+    return leaves;
+  }
+  // It's an element (or an invalid group ID, in which case returning it does no harm since the caller verifies existence)
+  return [entityId];
 }
 
 /* ─── Store ─────────────────────────────────── */
@@ -581,6 +611,106 @@ export const useCanvasStore = create<CanvasState>()(
         s.snapGuides = [];
       }),
 
+    // ── Block Groups ──
+    groupElements: (ids, name) => {
+      const state = get();
+      // Verify all elements exist and resolve their top-level parent entity
+      const validIds = ids.filter((id) => !!state.document.elements[id]);
+      if (validIds.length < 2) return null;
+
+      const topLevelIds = new Set<string>();
+      for (const id of validIds) {
+        topLevelIds.add(getTopLevelEntityId(state, id));
+      }
+
+      const memberIdsToGroup = Array.from(topLevelIds);
+      if (memberIdsToGroup.length < 2) return null; // Can't group less than 2 distinct entities
+
+      const groupId = generateGroupId();
+      state.pushHistory();
+
+      set((s) => {
+        // Create the new group
+        if (!s.document.groups) {
+          s.document.groups = {};
+        }
+
+        const groupName = name || `Group ${Object.keys(s.document.groups).length + 1}`;
+        s.document.groups[groupId] = {
+          id: groupId,
+          name: groupName,
+          memberIds: [...memberIdsToGroup],
+          locked: false,
+        };
+
+        // Tag each top-level entity with the new parent groupId
+        for (const id of memberIdsToGroup) {
+          const el = s.document.elements[id];
+          if (el) el.groupId = groupId;
+          const grp = s.document.groups[id];
+          if (grp) grp.groupId = groupId;
+        }
+
+        // Selection remains the same (leaf node IDs)
+      });
+
+      return groupId;
+    },
+
+    ungroupElements: (groupId) => {
+      const state = get();
+      const group = state.document.groups?.[groupId];
+      if (!group) return;
+
+      state.pushHistory();
+      set((s) => {
+        const g = s.document.groups?.[groupId];
+        if (!g) return;
+
+        const parentGroupId = g.groupId;
+
+        // Reparent all children (elements and nested groups)
+        for (const childId of g.memberIds) {
+          const childEl = s.document.elements[childId];
+          if (childEl) childEl.groupId = parentGroupId;
+          const childGrp = s.document.groups?.[childId];
+          if (childGrp) childGrp.groupId = parentGroupId;
+        }
+
+        if (parentGroupId) {
+          // Replace this group with its children in the parent's memberIds
+          const parentGrp = s.document.groups![parentGroupId];
+          if (parentGrp) {
+            const idx = parentGrp.memberIds.indexOf(groupId);
+            if (idx !== -1) {
+              parentGrp.memberIds.splice(idx, 1, ...g.memberIds);
+            } else {
+              parentGrp.memberIds.push(...g.memberIds);
+            }
+          }
+        }
+
+        // Remove the group
+        delete s.document.groups![groupId];
+
+        // Clean up groups map if empty
+        if (s.document.groups && Object.keys(s.document.groups).length === 0) {
+          delete s.document.groups;
+        }
+      });
+    },
+
+    getGroupMemberIds: (elementId) => {
+      const state = get();
+      const el = state.document.elements[elementId];
+      if (!el?.groupId) return [elementId];
+      
+      const topLevelId = getTopLevelEntityId(state, elementId);
+      const leafIds = getLeafMemberIds(state, topLevelId);
+      
+      return leafIds.filter((id) => !!state.document.elements[id]);
+    },
+
     // ── History ──
     pushHistory: () =>
       set((s) => {
@@ -597,6 +727,7 @@ export const useCanvasStore = create<CanvasState>()(
         const prev = s.past.pop()!;
         s.document.artboards = prev.artboards;
         s.document.elements = prev.elements;
+        s.document.groups = prev.groups;
         s.selectedIds = [];
         s.editingElementId = null;
       }),
@@ -609,6 +740,7 @@ export const useCanvasStore = create<CanvasState>()(
         const next = s.future.pop()!;
         s.document.artboards = next.artboards;
         s.document.elements = next.elements;
+        s.document.groups = next.groups;
         s.selectedIds = [];
         s.editingElementId = null;
       }),

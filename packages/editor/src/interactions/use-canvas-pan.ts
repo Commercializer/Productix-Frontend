@@ -24,7 +24,7 @@ interface PanState {
   startScrollTop: number;
 }
 
-export function useCanvasPan(containerRef: React.RefObject<HTMLDivElement | null>) {
+export function useCanvasPan(containerRef: React.RefObject<HTMLDivElement | null>, activeTool: "pointer" | "hand" = "pointer") {
   const panRef = useRef<PanState | null>(null);
   const [isSpaceHeld, setIsSpaceHeld] = useState(false);
   const [isPanning, setIsPanning] = useState(false);
@@ -84,6 +84,7 @@ export function useCanvasPan(containerRef: React.RefObject<HTMLDivElement | null
       const isBackgroundDrag =
         e.button === 0 &&
         !isSpaceHeld &&
+        activeTool === "hand" &&
         ((e.target as HTMLElement).dataset.canvasBg === "true" ||
          e.target === container);
 
@@ -104,7 +105,7 @@ export function useCanvasPan(containerRef: React.RefObject<HTMLDivElement | null
       // Capture pointer so we get events even outside the container
       (e.target as HTMLElement).setPointerCapture(e.pointerId);
     },
-    [containerRef, isSpaceHeld]
+    [containerRef, isSpaceHeld, activeTool]
   );
 
   /* ── Pan move ── */

@@ -50,7 +50,7 @@ const PLATFORMS: Record<string, PlatformConfig> = {
 
 /* ─── Component ──────────────────────────────── */
 
-function SocialIconComponent({ props, scaleFactor = 1 }: ElementRenderProps) {
+function SocialIconComponent({ props, isEditing, scaleFactor = 1 }: ElementRenderProps) {
   const platform = (props.platform as string) || "instagram";
   const bgColor = (props.bgColor as string) || PLATFORMS[platform]?.defaultBg || "#1a1a2e";
   const iconColor = (props.iconColor as string) || PLATFORMS[platform]?.defaultColor || "#ffffff";
@@ -83,6 +83,18 @@ function SocialIconComponent({ props, scaleFactor = 1 }: ElementRenderProps) {
       boxShadow: `0 2px 8px ${bgColor}33`,
     }),
   };
+
+  if (!isEditing && url) {
+    return (
+      <a href={url} target="_blank" rel="noopener noreferrer" style={{ ...containerStyle, textDecoration: "none" }}>
+        <IconComp
+          size={Math.round(Math.min(100, 48) * iconScale * s * 2)}
+          color="currentColor"
+          strokeWidth={1.8}
+        />
+      </a>
+    );
+  }
 
   return (
     <div style={containerStyle}>

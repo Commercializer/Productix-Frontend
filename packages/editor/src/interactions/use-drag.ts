@@ -14,8 +14,8 @@
  *    to convert screen px → native artboard px
  *  - We always write to el.transform (native)
  *
- * This ensures dragging works at any zoom level
- * and any breakpoint preview.
+ * Group dragging: when an element belongs to a
+ * block group, all group members are moved together.
  * ──────────────────────────────────────────── */
 
 "use client";
@@ -35,6 +35,8 @@ interface DragState {
   elementId: string;
   /** Combined scale factor: zoom × artboard scaleRatio */
   combinedScale: number;
+  /** Group siblings to move together (includes the primary element) */
+  groupSiblings: { id: string; startX: number; startY: number }[];
 }
 
 export function useDrag() {
@@ -64,6 +66,23 @@ export function useDrag() {
       const scaleRatio = previewW / abW;
       const combinedScale = state.zoom * scaleRatio;
 
+      // Gather all group siblings (if element is in a group)
+      const groupMemberIds = state.getGroupMemberIds(elementId);
+      const groupSiblings = groupMemberIds.map((id) => {
+        const member = state.document.elements[id];
+        return {
+          id,
+          startX: member?.transform.x ?? 0,
+          startY: member?.transform.y ?? 0,
+        };
+      });
+
+      // Auto-select all group members
+      if (groupMemberIds.length > 1) {
+        const store = useCanvasStore.getState();
+        useCanvasStore.setState({ selectedIds: [...groupMemberIds] });
+      }
+
       // Always use the native transform — that's what the artboard renders
       dragRef.current = {
         startX: e.clientX,
@@ -72,6 +91,7 @@ export function useDrag() {
         startTransformY: el.transform.y,
         elementId,
         combinedScale,
+        groupSiblings,
       };
 
       pointerRef.current = { x: e.clientX, y: e.clientY };
@@ -119,16 +139,27 @@ export function useDrag() {
         y: newY,
       };
 
-      // Get other elements' native transforms for snapping
+      // Get other elements' native transforms for snapping (exclude group members)
+      const groupIds = new Set(drag.groupSiblings.map((s) => s.id));
       const otherTransforms = Object.values(state.document.elements)
-        .filter((e) => e.id !== drag.elementId && e.visible)
+        .filter((e) => !groupIds.has(e.id) && e.visible)
         .map((e) => e.transform);
 
       const snap = computeSnap(movingTransform, otherTransforms, abW, abH);
 
+      // Compute the snapped delta (how much snap adjusted from raw position)
+      const snapDx = snap.x - newX;
+      const snapDy = snap.y - newY;
+
       // Always write to the base transform — the artboard renders
       // from el.transform regardless of breakpoint.
-      state.updateElementTransform(drag.elementId, { x: snap.x, y: snap.y });
+      // Move all group siblings by the same delta
+      for (const sibling of drag.groupSiblings) {
+        const siblingX = sibling.startX + dx + snapDx;
+        const siblingY = sibling.startY + dy + snapDy;
+        state.updateElementTransform(sibling.id, { x: siblingX, y: siblingY });
+      }
+
       state.setSnapGuides(snap.guides);
     });
   }, []);
@@ -141,3 +172,4 @@ export function useDrag() {
 
   return { onDragStart, onDragMove, onDragEnd };
 }
+

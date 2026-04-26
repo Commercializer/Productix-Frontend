@@ -1,62 +1,49 @@
 /* ─────────────────────────────────────────────
  * Audio Element — Upload audio or link option
+ *
+ * In the EDITOR, native <audio> controls consume pointer
+ * events, preventing the ElementWrapper from handling
+ * selection / dragging. We add a transparent overlay that
+ * blocks clicks from reaching the native controls, while
+ * still allowing pointer events to bubble up to the wrapper.
+ *
+ * `isEditing` is only `true` when inline-editing a text
+ * element, so it's always `false` for audio. However the
+ * public renderer also passes `false`, so we use a
+ * `__editorContext` flag set on the window by the editor
+ * shell to distinguish editor from public page.
  * ──────────────────────────────────────────── */
 
 "use client";
 
-import React, { useCallback, useRef, useState } from "react";
+import React, { useRef } from "react";
 import { Music2 } from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
 
+/** Returns true when running inside the editor canvas */
+function isInsideEditor(): boolean {
+  if (typeof window === "undefined") return false;
+  // The canvas-store exists only in the editor — check for it
+  try {
+    return !!(window as unknown as Record<string, unknown>).__productixEditor;
+  } catch {
+    return false;
+  }
+}
+
 /* ─── Component ─────────────────────────────── */
 
-function AudioElementComponent({ props, isEditing, onPropsChange }: ElementRenderProps) {
+function AudioElementComponent({ props }: ElementRenderProps) {
   const src = (props.src as string) || "";
   const borderRadius = (props.borderRadius as number) || 8;
   const autoPlay = (props.autoPlay as boolean) || false;
   const loop = (props.loop as boolean) || false;
   const muted = (props.muted as boolean) || false;
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [dragOver, setDragOver] = useState(false);
-
-  const handleFile = useCallback(
-    async (file: File) => {
-      if (!file.type.startsWith("audio/")) return;
-      try {
-        // Upload to R2 cloud storage
-        const { addMedia } = await import("../media/media-store");
-        const item = await addMedia(file);
-        onPropsChange({ src: item.url });
-      } catch {
-        // Fallback: read as data URL
-        const reader = new FileReader();
-        reader.onload = () => {
-          onPropsChange({ src: reader.result as string });
-        };
-        reader.readAsDataURL(file);
-      }
-    },
-    [onPropsChange]
-  );
-
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setDragOver(false);
-      const file = e.dataTransfer.files[0];
-      if (file) handleFile(file);
-    },
-    [handleFile]
-  );
+  const inEditor = isInsideEditor();
 
   if (!src) {
     return (
       <div
-        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-        onDragLeave={() => setDragOver(false)}
-        onDrop={handleDrop}
-        onClick={() => isEditing && fileInputRef.current?.click()}
         style={{
           width: "100%",
           height: "100%",
@@ -65,36 +52,21 @@ function AudioElementComponent({ props, isEditing, onPropsChange }: ElementRende
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: dragOver ? "rgba(59,130,246,0.1)" : "rgba(0,0,0,0.04)",
-          border: `2px dashed ${dragOver ? "#3b82f6" : "#d1d5db"}`,
-          cursor: isEditing ? "pointer" : "default",
-          transition: "all 0.15s ease",
+          background: "rgba(0,0,0,0.04)",
+          border: "2px dashed #d1d5db",
           gap: 8,
         }}
       >
         <Music2 size={28} style={{ opacity: 0.5, color: "#9ca3af" }} />
         <span style={{ fontSize: 12, color: "#9ca3af", fontWeight: 500, textAlign: "center", padding: "0 8px" }}>
-          {isEditing ? "Click or drag to upload audio" : "No audio"}
+          {inEditor ? "Upload audio via properties panel →" : "No audio"}
         </span>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="audio/*"
-          style={{ display: "none" }}
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) handleFile(file);
-          }}
-        />
       </div>
     );
   }
 
   return (
     <div
-      onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-      onDragLeave={() => setDragOver(false)}
-      onDrop={handleDrop}
       style={{
         width: "100%",
         height: "100%",
@@ -116,26 +88,20 @@ function AudioElementComponent({ props, isEditing, onPropsChange }: ElementRende
           width: "100%",
           height: "100%",
           minHeight: 40,
-          pointerEvents: isEditing ? "none" : "auto",
         }}
       />
-      {dragOver && (
+      {/* Editor overlay — blocks native controls from stealing pointer events
+          so the ElementWrapper can handle selection / dragging.
+          On the public page this overlay is NOT rendered and the controls work normally. */}
+      {inEditor && (
         <div
           style={{
             position: "absolute",
             inset: 0,
-            background: "rgba(59,130,246,0.2)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 14,
-            fontWeight: 600,
-            color: "#1d4ed8",
-            borderRadius,
+            zIndex: 1,
+            cursor: "move",
           }}
-        >
-          Drop to replace
-        </div>
+        />
       )}
     </div>
   );

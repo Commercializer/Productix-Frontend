@@ -173,6 +173,11 @@ export interface ElementNode {
   /** Parent group ID (if element belongs to a group) */
   parentId?: string;
   /**
+   * Block group ID — when set, this element belongs to a named group.
+   * All elements sharing the same groupId move together when any member is dragged.
+   */
+  groupId?: string;
+  /**
    * Per-breakpoint transform overrides (absolute mode only).
    * Only non-desktop breakpoints need entries here.
    * Missing breakpoints fall back to auto-scaled from the base transform.
@@ -242,6 +247,18 @@ export interface Artboard {
 
 // ─── Canvas Document ───────────────────────────
 
+/** Metadata for a block group */
+export interface BlockGroup {
+  id: string;
+  name: string;
+  /** Element IDs or nested Group IDs belonging to this group */
+  memberIds: string[];
+  /** Parent group ID if this group is nested inside another group */
+  groupId?: string;
+  /** Whether the group is locked (prevents ungrouping / individual moves) */
+  locked: boolean;
+}
+
 /** Top-level canvas document — the full page data */
 export interface CanvasDocument {
   /** Schema version for future migrations */
@@ -259,6 +276,8 @@ export interface CanvasDocument {
    * those translations are available for this page.
    */
   availableLocales?: ContentLocale[];
+  /** Block groups — groups of elements that move/act together */
+  groups?: Record<string, BlockGroup>;
 }
 
 // ─── Template Types ────────────────────────────
