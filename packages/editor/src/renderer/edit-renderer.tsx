@@ -28,6 +28,7 @@ import {
   MousePointer2,
   HelpCircle,
   ChevronDown,
+  Sparkles,
 } from "lucide-react";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
@@ -40,6 +41,7 @@ import { PropertiesPanel } from "../panels/properties-panel";
 import { ThemePanel } from "../panels/theme-panel";
 import { ArtboardSettings } from "../panels/artboard-settings";
 import { ContentLocaleTabs } from "../panels/content-locale-tabs";
+import { ImportLayoutDialog } from "../panels/import-layout-dialog";
 import { ZOOM_STEP, MIN_ZOOM, MAX_ZOOM, NUDGE_DISTANCE, NUDGE_DISTANCE_LARGE } from "../interactions/constants";
 import { useCanvasPan } from "../interactions/use-canvas-pan";
 import { useMarqueeSelection } from "../interactions/use-marquee-selection";
@@ -97,6 +99,7 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug }
   const setActiveBreakpoint = useCanvasStore((s) => s.setActiveBreakpoint);
 
   const [leftDrawer, setLeftDrawer] = useState<"blocks" | "order" | "experience" | "themes" | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
   const [lastSavedJSON, setLastSavedJSON] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -410,6 +413,8 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug }
             <RailBtn id="tour-btn-blocks" icon={<Puzzle size={18} />} label="Blocks" active={leftDrawer==="blocks"} onClick={() => setLeftDrawer(leftDrawer==="blocks"?null:"blocks")} />
             <RailBtn id="tour-btn-order" icon={<Layers size={18} />} label="Order" active={leftDrawer==="order"} onClick={() => setLeftDrawer(leftDrawer==="order"?null:"order")} />
             <RailBtn id="tour-btn-canvas" icon={<Settings size={18} />} label="Canvas" active={leftDrawer==="experience"} onClick={() => setLeftDrawer(leftDrawer==="experience"?null:"experience")} />
+            <div style={{ width: 32, height: 1, background: "#e5e7eb", margin: "8px 0" }} />
+            <RailBtn id="tour-btn-import" icon={<Sparkles size={18} />} label="AI Import" active={importOpen} onClick={() => setImportOpen(true)} />
           </div>
 
           {/* ── Left Drawer ── */}
@@ -487,6 +492,8 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug }
         @keyframes slideInLeft { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes slideInRight { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
       `}</style>
+
+      <ImportLayoutDialog open={importOpen} onClose={() => setImportOpen(false)} />
     </div>
     </MediaProvider>
   );

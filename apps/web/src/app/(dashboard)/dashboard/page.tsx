@@ -48,7 +48,7 @@ export default function DashboardPage() {
 
       {/* Promptions Table */}
       <section className="section mt-0!">
-        <h2 className="text-xl font-bold text-(--ds-text-primary) mb-6">All Products</h2>
+        <h2 className="text-xl font-medium text-(--ds-text-primary) mb-6">All Products</h2>
         {loading ? (
           <div className="skeleton-table">
             {[...Array(4)].map((_, i) => (

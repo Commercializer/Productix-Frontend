@@ -7,6 +7,7 @@
 import React, { useRef, useCallback } from "react";
 import { Type, Heading as HeadingIcon } from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
+import { FontPicker } from "../panels/font-picker";
 
 /* ─── Component ─────────────────────────────── */
 
@@ -90,6 +91,13 @@ function TextPropertyPanel({ props, onChange }: PropertyPanelProps) {
           <option value="paragraph">Paragraph</option>
         </select>
       </label>
+      <div className="block">
+        <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Font Family</span>
+        <FontPicker
+          value={(props.fontFamily as string) || "inherit"}
+          onChange={(family) => onChange({ fontFamily: family })}
+        />
+      </div>
       <label className="block">
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Font Size</span>
         <input

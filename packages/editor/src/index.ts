@@ -42,6 +42,14 @@ export { FloatingToolbar } from "./panels/floating-toolbar";
 export { ArtboardSettings } from "./panels/artboard-settings";
 export { LanguageSwitcher } from "./panels/language-switcher";
 export { ContentLocaleTabs } from "./panels/content-locale-tabs";
+export { ImportLayoutDialog } from "./panels/import-layout-dialog";
+export {
+  buildAIPrompt,
+  importLayoutFromJson,
+  type ImportLayoutInput,
+  type ImportResult,
+  type ImportFailure,
+} from "./utils/import-layout";
 
 // ── i18n ──
 export { useTranslation, useI18nStore, LOCALES } from "./i18n";
@@ -89,6 +97,13 @@ export {
 } from "./utils/responsive";
 export { exportToHtml } from "./utils/export-html";
 export { getLocalizedProps, hasLocaleContent, TRANSLATABLE_KEYS } from "./utils/localize-props";
+export {
+  FONT_OPTIONS,
+  groupFontOptionsByCategory,
+  getGoogleFontsHref,
+  type FontOption,
+  type FontCategory,
+} from "./utils/fonts";
 
 // ── Media system ──
 export { MediaProvider, useMediaLibrary } from "./media/media-context";

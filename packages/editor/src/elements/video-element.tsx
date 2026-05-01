@@ -24,6 +24,59 @@ function isInsideEditor(): boolean {
   }
 }
 
+/* ─── URL Parsing ───────────────────────────── */
+
+type VideoEmbed =
+  | { kind: "youtube"; id: string }
+  | { kind: "vimeo"; id: string }
+  | { kind: "file"; src: string };
+
+function parseVideoUrl(raw: string): VideoEmbed | null {
+  const url = raw.trim();
+  if (!url) return null;
+
+  // YouTube: youtu.be/<id>, youtube.com/watch?v=<id>, youtube.com/shorts/<id>, youtube.com/embed/<id>
+  const yt = url.match(
+    /(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|v\/))([\w-]{11})/i,
+  );
+  if (yt?.[1]) return { kind: "youtube", id: yt[1] };
+
+  // Vimeo: vimeo.com/<id> or player.vimeo.com/video/<id>
+  const vm = url.match(/vimeo\.com\/(?:video\/)?(\d+)/i);
+  if (vm?.[1]) return { kind: "vimeo", id: vm[1] };
+
+  return { kind: "file", src: url };
+}
+
+function buildEmbedSrc(
+  embed: VideoEmbed,
+  opts: { autoPlay: boolean; loop: boolean; muted: boolean },
+): string {
+  if (embed.kind === "youtube") {
+    const params = new URLSearchParams({
+      rel: "0",
+      modestbranding: "1",
+      playsinline: "1",
+    });
+    if (opts.autoPlay) params.set("autoplay", "1");
+    if (opts.muted || opts.autoPlay) params.set("mute", "1");
+    if (opts.loop) {
+      params.set("loop", "1");
+      params.set("playlist", embed.id);
+    }
+    return `https://www.youtube.com/embed/${embed.id}?${params}`;
+  }
+  if (embed.kind === "vimeo") {
+    const params = new URLSearchParams();
+    if (opts.autoPlay) params.set("autoplay", "1");
+    if (opts.muted || opts.autoPlay) params.set("muted", "1");
+    if (opts.loop) params.set("loop", "1");
+    const qs = params.toString();
+    return `https://player.vimeo.com/video/${embed.id}${qs ? `?${qs}` : ""}`;
+  }
+  return embed.src;
+}
+
 /* ─── Component ─────────────────────────────── */
 
 function VideoElementComponent({ props }: ElementRenderProps) {
@@ -33,8 +86,9 @@ function VideoElementComponent({ props }: ElementRenderProps) {
   const loop = (props.loop as boolean) || false;
   const muted = (props.muted as boolean) || false;
   const inEditor = isInsideEditor();
+  const embed = parseVideoUrl(src);
 
-  if (!src) {
+  if (!embed) {
     return (
       <div
         style={{
@@ -68,20 +122,34 @@ function VideoElementComponent({ props }: ElementRenderProps) {
         position: "relative",
       }}
     >
-      <video
-        src={src}
-        controls={!autoPlay || true} // Keep controls visible or we can make it an option, let's just keep controls true
-        autoPlay={autoPlay}
-        loop={loop}
-        muted={muted}
-        playsInline={true}
-        style={{
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          display: "block",
-        }}
-      />
+      {embed.kind === "file" ? (
+        <video
+          src={embed.src}
+          controls
+          autoPlay={autoPlay}
+          loop={loop}
+          muted={muted || autoPlay}
+          playsInline
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            display: "block",
+          }}
+        />
+      ) : (
+        <iframe
+          src={buildEmbedSrc(embed, { autoPlay, loop, muted })}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+          allowFullScreen
+          style={{
+            width: "100%",
+            height: "100%",
+            border: 0,
+            display: "block",
+          }}
+        />
+      )}
       {/* Editor overlay — blocks native controls from stealing pointer events */}
       {inEditor && (
         <div
@@ -109,8 +177,11 @@ function VideoPropertyPanel({ props, onChange }: PropertyPanelProps) {
           className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
           value={(props.src as string) || ""}
           onChange={(e) => onChange({ src: e.target.value })}
-          placeholder="https://..."
+          placeholder="YouTube, Vimeo, or .mp4/.webm URL"
         />
+        <span className="mt-1 block text-[10px] text-gray-400">
+          YouTube and Vimeo links are embedded automatically.
+        </span>
       </label>
 
       <label className="block">
