@@ -13,7 +13,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import type { CanvasDocument, Breakpoint, ContentLocale } from "@productix/types";
-import { BREAKPOINT_WIDTHS, CONTENT_LOCALES, CONTENT_LOCALE_META } from "@productix/types";
+import { BREAKPOINT_WIDTHS, getContentLocaleMeta } from "@productix/types";
 import { getElementDefinition } from "../elements/registry";
 import { getArtboardPreviewWidth, isElementInFlow } from "../utils/responsive";
 import { getEffectiveFlexContainer, getEffectiveLayout, computeFlexContainerCSS, computeElementLayoutCSS } from "../engine/layout-engine";
@@ -307,7 +307,7 @@ export function PreviewRenderer({
           {availableLocales.length > 1 && (
             <div style={{ display: "flex", gap: 2, background: "#f3f4f6", borderRadius: 6, padding: 2 }}>
               {availableLocales.map((loc) => {
-                const meta = CONTENT_LOCALE_META[loc];
+                const meta = getContentLocaleMeta(loc);
                 const isActive = loc === contentLocale;
                 return (
                   <button

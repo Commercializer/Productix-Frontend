@@ -13,24 +13,22 @@ export default function ProductsPage() {
     <div className="page-content bg-(--ds-bg)">
       <DashboardHeader />
       <section className="section mt-0!">
-        <h2 className="text-xl font-bold text-(--ds-text-primary) mb-6">Products</h2>
-        <div className="bg-white dark:bg-[#111] border border-(--ds-border) rounded-xl p-6">
-          {loading ? (
-            <div className="skeleton-table">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="skeleton-row" />
-              ))}
-            </div>
-          ) : (
-            <PromptionTable
-              promptions={promptions}
-              onDelete={deletePromption}
-              onPublish={publishPromption}
-              onUnpublish={unpublishPromption}
-              readOnly={isCompanyUser}
-            />
-          )}
-        </div>
+        <h2 className="text-[22px] md:text-[24px] font-semibold text-(--ds-text-primary) mb-6 tracking-tight">Products</h2>
+        {loading ? (
+          <div className="skeleton-table">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="skeleton-row" />
+            ))}
+          </div>
+        ) : (
+          <PromptionTable
+            promptions={promptions}
+            onDelete={deletePromption}
+            onPublish={publishPromption}
+            onUnpublish={unpublishPromption}
+            readOnly={isCompanyUser}
+          />
+        )}
       </section>
     </div>
   );

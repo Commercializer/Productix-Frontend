@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import type { CanvasDocument, ContentLocale } from "@productix/types";
-import { CONTENT_LOCALE_META, CONTENT_LOCALES } from "@productix/types";
+import { getContentLocaleMeta } from "@productix/types";
 import { PublicRenderer } from "@productix/editor";
 
 interface PublicPageData {
@@ -38,15 +38,26 @@ export function PublicPageClient({ page }: PublicPageClientProps) {
   const searchParams = useSearchParams();
   const doc = page.content as unknown as CanvasDocument;
 
-  // Read ?lang= from URL
+  // Read ?lang= from URL — accepts any valid BCP-47 short tag
   const langParam = searchParams.get("lang");
-  const initialLocale: ContentLocale = (langParam === "si" || langParam === "ta") ? langParam : "en";
+  const initialLocale: ContentLocale =
+    langParam && /^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,4})?$/.test(langParam) ? langParam : "en";
   const [contentLocale, setContentLocale] = useState<ContentLocale>(initialLocale);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const langDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Always show the language switcher with all supported locales
-  const showLanguageSwitcher = true;
+  // Available locales for THIS page (English + anything the author actually translated)
+  const pageLocales: ContentLocale[] = (() => {
+    const base: ContentLocale[] = ["en"];
+    const extra = doc?.availableLocales ?? [];
+    for (const l of extra) {
+      if (l !== "en" && !base.includes(l)) base.push(l);
+    }
+    return base;
+  })();
+
+  // Show switcher only when there's more than one language
+  const showLanguageSwitcher = pageLocales.length > 1;
 
   // Check if we have valid canvas content
   const hasCanvasContent = doc && doc.version && doc.artboards && doc.artboards.length > 0;
@@ -65,7 +76,7 @@ export function PublicPageClient({ page }: PublicPageClientProps) {
     }
   }, [langDropdownOpen, handleOutsideClick]);
 
-  const currentMeta = CONTENT_LOCALE_META[contentLocale];
+  const currentMeta = getContentLocaleMeta(contentLocale);
 
   if (!hasCanvasContent) {
     return <FallbackView page={page} />;
@@ -141,8 +152,8 @@ export function PublicPageClient({ page }: PublicPageClientProps) {
                 animation: "langDropdownIn 0.15s ease-out",
               }}
             >
-              {CONTENT_LOCALES.map((loc) => {
-                const meta = CONTENT_LOCALE_META[loc];
+              {pageLocales.map((loc) => {
+                const meta = getContentLocaleMeta(loc);
                 const isActive = loc === contentLocale;
                 return (
                   <button

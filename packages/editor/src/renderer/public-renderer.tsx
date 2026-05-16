@@ -17,7 +17,7 @@
 
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import type { CanvasDocument, Breakpoint, ContentLocale } from "@productix/types";
 import { BREAKPOINT_WIDTHS } from "@productix/types";
 import { getElementDefinition } from "../elements/registry";
@@ -51,14 +51,26 @@ function detectBreakpoint(width: number): Breakpoint {
 }
 
 export function PublicRenderer({ document: doc, className, contentLocale = "en" }: PublicRendererProps) {
-  const [viewportWidth, setViewportWidth] = useState(
-    typeof window !== "undefined" ? window.innerWidth : 1440
-  );
+  const containerRef = useRef<HTMLElement>(null);
+  // Default to 1440 to match SSR output and avoid hydration mismatch.
+  // After mount, the ResizeObserver below switches to the real container width.
+  const [viewportWidth, setViewportWidth] = useState(1440);
 
   useEffect(() => {
-    const onResize = () => setViewportWidth(window.innerWidth);
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+    const el = containerRef.current;
+    if (!el) return;
+
+    const measure = () => {
+      // Use the container's actual rendered width (excludes scrollbars / parent padding).
+      // Falls back to window.innerWidth on the off chance clientWidth is 0.
+      const w = el.clientWidth || window.innerWidth;
+      setViewportWidth(w);
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
 
   const breakpoint = detectBreakpoint(viewportWidth);
@@ -72,6 +84,7 @@ export function PublicRenderer({ document: doc, className, contentLocale = "en" 
       <style dangerouslySetInnerHTML={{ __html: responsiveCSS }} />
 
       <main
+        ref={containerRef}
         className={className}
         data-page-title={doc.pageTitle}
         style={{

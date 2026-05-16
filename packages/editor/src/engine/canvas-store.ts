@@ -69,6 +69,8 @@ export interface CanvasState {
 
   // ── Content Locale ──
   setContentLocale: (locale: ContentLocale) => void;
+  addAvailableLocale: (locale: ContentLocale) => void;
+  removeAvailableLocale: (locale: ContentLocale) => void;
 
   // ── Selection ──
   select: (id: string, additive?: boolean) => void;
@@ -390,6 +392,36 @@ export const useCanvasStore = create<CanvasState>()(
     setContentLocale: (locale) =>
       set((s) => {
         s.contentLocale = locale;
+        if (locale !== "en") {
+          if (!s.document.availableLocales) s.document.availableLocales = ["en"];
+          if (!s.document.availableLocales.includes(locale)) {
+            s.document.availableLocales.push(locale);
+          }
+        }
+      }),
+
+    addAvailableLocale: (locale) =>
+      set((s) => {
+        if (!s.document.availableLocales) s.document.availableLocales = ["en"];
+        if (!s.document.availableLocales.includes(locale)) {
+          s.document.availableLocales.push(locale);
+        }
+        s.contentLocale = locale;
+      }),
+
+    removeAvailableLocale: (locale) =>
+      set((s) => {
+        if (locale === "en") return;
+        if (s.document.availableLocales) {
+          s.document.availableLocales = s.document.availableLocales.filter((l) => l !== locale);
+        }
+        for (const el of Object.values(s.document.elements)) {
+          if (el.i18nProps && el.i18nProps[locale]) {
+            delete el.i18nProps[locale];
+            if (Object.keys(el.i18nProps).length === 0) delete el.i18nProps;
+          }
+        }
+        if (s.contentLocale === locale) s.contentLocale = "en";
       }),
 
     // ── Layer ordering ──

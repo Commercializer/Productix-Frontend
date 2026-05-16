@@ -10,7 +10,6 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Package,
   Undo2,
   Redo2,
   ZoomOut,
@@ -19,7 +18,6 @@ import {
   Smartphone,
   Eye,
   Save,
-  QrCode,
   Loader2,
   Puzzle,
   Layers,
@@ -289,14 +287,15 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug }
   const documentJSON = JSON.stringify(document);
   const isDirty = documentJSON !== lastSavedJSON;
 
-  const handleAction = useCallback(async () => {
+  const handleSave = useCallback(async () => {
     const doc = useCanvasStore.getState().document;
     setIsSaving(true);
     try {
-      if (isDirty) { await onSave?.(doc); setLastSavedJSON(JSON.stringify(doc)); }
-      else { await onPublish?.(doc); }
+      await onSave?.(doc);
+      await onPublish?.(doc);
+      setLastSavedJSON(JSON.stringify(doc));
     } finally { setIsSaving(false); }
-  }, [isDirty, onSave, onPublish]);
+  }, [onSave, onPublish]);
 
   const previewWidths = document.artboards.map((a) => getArtboardPreviewWidth(a.width, activeBreakpoint));
   const previewHeights = document.artboards.map((a) => getArtboardPreviewHeight(a.width, a.height, activeBreakpoint));
@@ -307,19 +306,26 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug }
 
   return (
     <MediaProvider>
-    <div style={{ display:"flex", flexDirection:"column", height:"100vh", background:"#f5f5f7", overflow:"hidden", userSelect:"none", fontFamily:"var(--font-sans)" }}>
+    <div style={{ display:"flex", flexDirection:"column", height:"100vh", background:"linear-gradient(180deg,#f8fafc 0%,#eef3f9 100%)", overflow:"hidden", userSelect:"none", fontFamily:"var(--font-sans)" }}>
 
       {/* ── Top Bar ── */}
-      <header id="tour-top-bar" style={{ display:"flex", alignItems:"center", justifyContent:"space-between", height:56, padding:"0 16px", background:"#fff", borderBottom:"1px solid #e5e7eb", flexShrink:0, zIndex:50 }}>
-        <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-          <div style={{ width:32,height:32,borderRadius:10,background:"linear-gradient(135deg,#0ea5e9,#38bdf8)",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff" }}><Package size={16} /></div>
-          <input type="text" style={{ fontSize:14,fontWeight:600,color:"#1e1e2e",background:"transparent",border:"none",outline:"none",width:180,padding:"4px 8px",borderRadius:8 }} value={document.pageTitle} onChange={(e) => setPageTitle(e.target.value)} />
-          <div style={{ width:1,height:24,background:"#e5e7eb" }} />
+      <header id="tour-top-bar" style={{ display:"flex", alignItems:"center", justifyContent:"space-between", height:62, padding:"0 18px", background:"#ffffff", borderBottom:"1px solid rgba(15,23,42,0.06)", boxShadow:"0 1px 0 rgba(15,23,42,0.02)", flexShrink:0, zIndex:50 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:14 }}>
+          <a href="/dashboard" title="Back to dashboard" style={{ display:"flex",alignItems:"center",justifyContent:"center",width:36,height:36,borderRadius:12,background:"linear-gradient(135deg,#f0f9ff,#e0f2fe)",border:"1px solid rgba(2,132,199,0.12)",boxShadow:"0 1px 2px rgba(2,132,199,0.08)",transition:"transform 0.15s ease" }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform="scale(1.05)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform="scale(1)"; }}>
+            <img src="/productix-logo.png" alt="Productix" width={20} height={19} style={{ display:"block" }} />
+          </a>
+          <input type="text" style={{ fontSize:14,fontWeight:600,color:"#0f172a",background:"transparent",border:"1px solid transparent",outline:"none",width:200,height:36,padding:"0 12px",borderRadius:10,transition:"all 0.15s ease",letterSpacing:"-0.01em" }}
+            onFocus={(e) => { e.currentTarget.style.borderColor="#bae6fd"; e.currentTarget.style.background="#f0f9ff"; }}
+            onBlur={(e) => { e.currentTarget.style.borderColor="transparent"; e.currentTarget.style.background="transparent"; }}
+            value={document.pageTitle} onChange={(e) => setPageTitle(e.target.value)} />
+          <div style={{ width:1,height:22,background:"rgba(15,23,42,0.08)" }} />
           <div style={{ display:"flex",gap:2 }}>
             <TopBtn onClick={undo} disabled={past.length===0} title="Undo"><Undo2 size={16} /></TopBtn>
             <TopBtn onClick={redo} disabled={future.length===0} title="Redo"><Redo2 size={16} /></TopBtn>
             
-            <div style={{ width:1,height:24,background:"#e5e7eb",margin:"0 8px",alignSelf:"center" }} />
+            <div style={{ width:1,height:22,background:"rgba(15,23,42,0.08)",margin:"0 10px",alignSelf:"center" }} />
             
             <TopBtn 
               onClick={() => setActiveTool("pointer")} 
@@ -332,7 +338,7 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug }
               active={activeTool === "hand"}
             ><Hand size={16} /></TopBtn>
             
-            <div style={{ width:1,height:24,background:"#e5e7eb",margin:"0 8px",alignSelf:"center" }} />
+            <div style={{ width:1,height:22,background:"rgba(15,23,42,0.08)",margin:"0 10px",alignSelf:"center" }} />
             <TopBtn onClick={startTour} title="Show Tour"><HelpCircle size={16} /></TopBtn>
           </div>
         </div>
@@ -353,14 +359,15 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug }
                 appearance: "none",
                 background: "transparent",
                 border: "none",
-                fontSize: 11,
-                fontWeight: 600,
-                color: "#9ca3af",
-                minWidth: 44,
+                fontSize: 11.5,
+                fontWeight: 700,
+                color: "#475569",
+                minWidth: 46,
                 textAlign: "center",
                 outline: "none",
                 cursor: "pointer",
-                padding: "0 12px 0 4px",
+                padding: "0 14px 0 4px",
+                letterSpacing: "0.02em",
               }}
               title="Zoom size"
             >
@@ -378,48 +385,47 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug }
                 </option>
               )}
             </select>
-            <ChevronDown size={10} style={{ color: "#9ca3af", position: "absolute", right: 2, pointerEvents: "none" }} />
+            <ChevronDown size={10} style={{ color: "#94a3b8", position: "absolute", right: 4, pointerEvents: "none" }} />
           </div>
           <TopBtn onClick={() => setZoom(zoom+ZOOM_STEP*2)} title="Zoom in"><ZoomIn size={16} /></TopBtn>
         </div>
 
         <div id="tour-publish" style={{ display:"flex",alignItems:"center",gap:8 }}>
-          <div style={{ display:"flex",alignItems:"center",gap:4,padding:"4px 10px",borderRadius:8,background:"#f0f9ff",border:"1px solid #e0f2fe" }}>
-            <QrCode size={14} style={{ color:"#0ea5e9" }} />
-            <span style={{ fontSize:10,fontWeight:600,color:"#0ea5e9" }}>{t("toolbar.scanPreview")}</span>
-          </div>
           <a href={previewSlug?`/preview/${previewSlug}`:"#"} target={previewSlug?"_blank":undefined}
             onClick={(e) => { if (!previewSlug) { e.preventDefault(); alert("Please save first."); } }}
-            style={{ display:"flex",alignItems:"center",gap:4,height:36,padding:"0 14px",borderRadius:10,fontSize:12,fontWeight:600,color:"#6b7280",background:"#f9fafb",border:"1px solid #e5e7eb",textDecoration:"none",cursor:"pointer",transition:"all 0.15s" }}>
+            onMouseEnter={(e) => { e.currentTarget.style.background="#f1f5f9"; e.currentTarget.style.color="#0f172a"; e.currentTarget.style.borderColor="rgba(15,23,42,0.12)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background="#ffffff"; e.currentTarget.style.color="#475569"; e.currentTarget.style.borderColor="rgba(15,23,42,0.08)"; }}
+            style={{ display:"inline-flex",alignItems:"center",justifyContent:"center",gap:6,height:36,padding:"0 16px",borderRadius:10,fontSize:12.5,fontWeight:600,letterSpacing:"0.01em",color:"#475569",background:"#ffffff",border:"1px solid rgba(15,23,42,0.08)",textDecoration:"none",cursor:"pointer",transition:"all 0.15s",boxShadow:"0 1px 2px rgba(15,23,42,0.04)" }}>
             <Eye size={14} /> {t("toolbar.preview")}
           </a>
-          <button type="button" onClick={handleAction} disabled={isSaving}
-            style={{ display:"flex",alignItems:"center",justifyContent:"center",gap:6,minWidth:isDirty?100:180,height:36,padding:"0 18px",borderRadius:10,background:isDirty?"linear-gradient(135deg,#0ea5e9,#38bdf8)":"linear-gradient(135deg,#10b981,#059669)",color:"#fff",fontSize:12,fontWeight:700,border:"none",cursor:"pointer",opacity:isSaving?0.7:1,transition:"all 0.2s",boxShadow:isDirty?"0 2px 12px rgba(14,165,233,0.25)":"0 2px 12px rgba(16,185,129,0.25)" }}>
-            {isSaving && <Loader2 size={14} style={{ animation:"spin 0.6s linear infinite" }} />}
-            {!isSaving && (isDirty ? <Save size={14} /> : <QrCode size={14} />)}
-            {isSaving?(isDirty?"Saving...":"Generating..."):(isDirty?t("toolbar.saveDraft"):t("toolbar.generateQR"))}
+          <button type="button" onClick={handleSave} disabled={isSaving}
+            style={{ display:"inline-flex",alignItems:"center",justifyContent:"center",gap:6,height:36,padding:"0 18px",borderRadius:10,background:isDirty?"linear-gradient(135deg,#0ea5e9,#0284c7)":"linear-gradient(135deg,#0284c7,#0369a1)",color:"#fff",fontSize:12.5,fontWeight:700,letterSpacing:"0.01em",border:"none",cursor:isSaving?"wait":"pointer",opacity:isSaving?0.75:1,transition:"transform 0.15s ease, box-shadow 0.2s ease",boxShadow:"0 6px 16px rgba(2,132,199,0.28), inset 0 1px 0 rgba(255,255,255,0.25)" }}
+            onMouseEnter={(e) => { if (!isSaving) e.currentTarget.style.transform="translateY(-1px)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform="translateY(0)"; }}>
+            {isSaving ? <Loader2 size={14} style={{ animation:"spin 0.6s linear infinite" }} /> : <Save size={14} />}
+            {isSaving ? "Saving…" : isDirty ? t("toolbar.saveDraft") : "Saved"}
           </button>
         </div>
       </header>
 
       {/* ── Main Area ── */}
-      <div style={{ display:"flex", flex:1, minHeight:0 }}>
+      <div style={{ display:"flex", flex:1, minHeight:0, padding:"12px", gap:"12px" }}>
 
         {/* ── Left Tools Container ── */}
-        <div id="tour-drawer-container" style={{ display: "flex", height: "100%", zIndex: 40, flexShrink: 0 }}>
+        <div id="tour-drawer-container" style={{ display: "flex", height: "100%", zIndex: 40, flexShrink: 0, gap: 10 }}>
           {/* ── Left Tool Rail ── */}
-          <div id="tour-left-rail" style={{ width:56,flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",paddingTop:12,gap:4,background:"#fff",borderRight:"1px solid #e5e7eb" }}>
+          <div id="tour-left-rail" style={{ width:64,flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",padding:"10px 8px",gap:4,background:"linear-gradient(180deg,#eaf1fa 0%,#dfeaf6 100%)",borderRadius:18,border:"1px solid rgba(2,132,199,0.10)",boxShadow:"0 4px 16px rgba(15,23,42,0.06), inset 0 1px 0 rgba(255,255,255,0.5)" }}>
             <RailBtn id="tour-btn-themes" icon={<Palette size={18} />} label="Themes" active={leftDrawer==="themes"} onClick={() => setLeftDrawer(leftDrawer==="themes"?null:"themes")} />
             <RailBtn id="tour-btn-blocks" icon={<Puzzle size={18} />} label="Blocks" active={leftDrawer==="blocks"} onClick={() => setLeftDrawer(leftDrawer==="blocks"?null:"blocks")} />
             <RailBtn id="tour-btn-order" icon={<Layers size={18} />} label="Order" active={leftDrawer==="order"} onClick={() => setLeftDrawer(leftDrawer==="order"?null:"order")} />
             <RailBtn id="tour-btn-canvas" icon={<Settings size={18} />} label="Canvas" active={leftDrawer==="experience"} onClick={() => setLeftDrawer(leftDrawer==="experience"?null:"experience")} />
-            <div style={{ width: 32, height: 1, background: "#e5e7eb", margin: "8px 0" }} />
+            <div style={{ width: 32, height: 1, background: "rgba(2,132,199,0.18)", margin: "8px 0" }} />
             <RailBtn id="tour-btn-import" icon={<Sparkles size={18} />} label="AI Import" active={importOpen} onClick={() => setImportOpen(true)} />
           </div>
 
           {/* ── Left Drawer ── */}
           {leftDrawer && (
-            <div id="tour-left-drawer" style={{ width:260,flexShrink:0,background:"#fff",borderRight:"1px solid #e5e7eb",overflowY:"auto",animation:"slideInLeft 0.2s ease" }}>
+            <div id="tour-left-drawer" style={{ width:280,flexShrink:0,background:"#ffffff",borderRadius:18,border:"1px solid rgba(15,23,42,0.06)",boxShadow:"0 8px 28px rgba(15,23,42,0.08), 0 1px 2px rgba(15,23,42,0.04)",overflowY:"auto",animation:"slideInLeft 0.2s ease" }}>
               {leftDrawer==="themes" && <ThemePanel />}
               {leftDrawer==="blocks" && <ElementPanel />}
               {leftDrawer==="order" && <LayerPanel />}
@@ -429,7 +435,7 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug }
         </div>
 
         {/* ── Canvas ── */}
-        <div id="tour-canvas" ref={canvasRef} style={{ flex:1,overflow:"auto",position:"relative",cursor:panCursor||"default",background:"#f0f0f3" }}
+        <div id="tour-canvas" ref={canvasRef} style={{ flex:1,overflow:"auto",position:"relative",cursor:panCursor||"default",background:"linear-gradient(180deg,#f1f5f9 0%,#e6edf5 100%)",borderRadius:18,border:"1px solid rgba(15,23,42,0.06)",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.6), 0 4px 16px rgba(15,23,42,0.05)" }}
           onWheel={handleWheel} onPointerDown={handleCanvasPointerDown} onPointerMove={handleCanvasPointerMove} onPointerUp={handleCanvasPointerUp} onPointerCancel={handleCanvasPointerUp} onClick={handleCanvasClick}>
 
           {marquee && (
@@ -449,12 +455,12 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug }
           )}
 
           {isSpaceHeld && (
-            <div style={{ position:"sticky",top:8,left:"50%",transform:"translateX(-50%)",zIndex:99999,pointerEvents:"none",display:"flex",justifyContent:"center" }}>
-              <div style={{ background:"#0ea5e9",color:"#fff",fontSize:10,fontWeight:600,padding:"4px 12px",borderRadius:20,display:"flex",alignItems:"center",gap:4 }}><Hand size={12} /> Pan mode</div>
+            <div style={{ position:"sticky",top:10,left:"50%",transform:"translateX(-50%)",zIndex:99999,pointerEvents:"none",display:"flex",justifyContent:"center" }}>
+              <div style={{ background:"linear-gradient(135deg,#0ea5e9,#0284c7)",color:"#fff",fontSize:10.5,fontWeight:700,letterSpacing:"0.04em",padding:"5px 14px",borderRadius:999,display:"flex",alignItems:"center",gap:6,boxShadow:"0 6px 18px rgba(2,132,199,0.32), inset 0 1px 0 rgba(255,255,255,0.25)" }}><Hand size={12} /> PAN MODE</div>
             </div>
           )}
 
-          <div data-canvas-bg="true" style={{ position:"absolute",top:0,left:0,width:contentW*zoom,height:totalContentH*zoom,minWidth:"100%",minHeight:"100%",background:"radial-gradient(circle at 50% 30%,#e8e8ee 0%,#f0f0f3 70%)",zIndex:0 }} />
+          <div data-canvas-bg="true" style={{ position:"absolute",top:0,left:0,width:contentW*zoom,height:totalContentH*zoom,minWidth:"100%",minHeight:"100%",background:"radial-gradient(ellipse at 50% 25%, #e0f2fe 0%, #eef3f9 45%, #e6edf5 100%)",zIndex:0 }} />
 
           <div style={{ width:contentW*zoom,minWidth:contentW*zoom,minHeight:totalContentH*zoom,position:"relative",margin:"0 auto" }}>
             <div style={{ display:"flex",flexDirection:"column",alignItems:"center",gap:ARTBOARD_GAP,padding:`${CANVAS_V_PADDING}px ${CANVAS_H_PADDING}px`,transform:`scale(${zoom})`,transformOrigin:"top left",width:contentW }}>
@@ -469,21 +475,21 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug }
 
         {/* ── Right Panel (Block Settings) ── */}
         {showRightPanel && (
-          <div style={{ width:280,flexShrink:0,overflowY:"auto",background:"#fff",borderLeft:"1px solid #e5e7eb",animation:"slideInRight 0.2s ease" }}>
+          <div style={{ width:300,flexShrink:0,overflowY:"auto",background:"#ffffff",borderRadius:18,border:"1px solid rgba(15,23,42,0.06)",boxShadow:"0 8px 28px rgba(15,23,42,0.08), 0 1px 2px rgba(15,23,42,0.04)",animation:"slideInRight 0.2s ease" }}>
             <PropertiesPanel />
           </div>
         )}
       </div>
 
       {/* ── Status Bar ── */}
-      <footer style={{ display:"flex",alignItems:"center",justifyContent:"space-between",height:28,padding:"0 16px",background:"#fff",borderTop:"1px solid #e5e7eb",flexShrink:0 }}>
-        <div style={{ display:"flex",alignItems:"center",gap:12,fontSize:10,color:"#9ca3af" }}>
-          <span>{Object.keys(document.elements).length} {t("status.blocks")}</span>
-          {selectedIds.length>0 && <span style={{ color:"#0ea5e9",fontWeight:600 }}>{selectedIds.length} {t("status.selected")}</span>}
+      <footer style={{ display:"flex",alignItems:"center",justifyContent:"space-between",height:30,padding:"0 18px",background:"#ffffff",borderTop:"1px solid rgba(15,23,42,0.06)",flexShrink:0 }}>
+        <div style={{ display:"flex",alignItems:"center",gap:10,fontSize:10.5,color:"#94a3b8",fontWeight:500 }}>
+          <span style={{ display:"inline-flex",alignItems:"center",gap:5 }}><span style={{ width:6,height:6,borderRadius:999,background:"#22c55e",boxShadow:"0 0 0 2px rgba(34,197,94,0.18)" }} /> {Object.keys(document.elements).length} {t("status.blocks")}</span>
+          {selectedIds.length>0 && <span style={{ color:"#0284c7",fontWeight:700,padding:"2px 8px",borderRadius:999,background:"rgba(2,132,199,0.08)" }}>{selectedIds.length} {t("status.selected")}</span>}
         </div>
-        <div style={{ display:"flex",alignItems:"center",gap:8,fontSize:10,color:"#9ca3af" }}>
-          <span style={{ color:"#0ea5e9",fontWeight:600,display:"flex",alignItems:"center",gap:3 }}><Smartphone size={11} /> {t("status.mobilePreview")}</span>
-          <span>{Math.round(zoom*100)}%</span>
+        <div style={{ display:"flex",alignItems:"center",gap:10,fontSize:10.5,color:"#94a3b8",fontWeight:500 }}>
+          <span style={{ color:"#0284c7",fontWeight:700,display:"flex",alignItems:"center",gap:4,padding:"2px 8px",borderRadius:999,background:"rgba(2,132,199,0.08)" }}><Smartphone size={11} /> {t("status.mobilePreview")}</span>
+          <span style={{ letterSpacing:"0.02em" }}>{Math.round(zoom*100)}%</span>
         </div>
       </footer>
 
@@ -502,9 +508,9 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug }
 function TopBtn({ children, onClick, disabled, title, active }: { children: React.ReactNode; onClick: () => void; disabled?: boolean; title?: string; active?: boolean; }) {
   return (
     <button type="button" onClick={onClick} disabled={disabled} title={title}
-      style={{ width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center",borderRadius:8,border:"none",background:active?"#e0f2fe":"transparent",color:disabled?"#d1d5db":active?"#0284c7":"#6b7280",cursor:disabled?"not-allowed":"pointer",fontSize:14,transition:"all 0.15s" }}
-      onMouseEnter={(e) => { if (!disabled && !active) e.currentTarget.style.background="#f3f4f6"; }}
-      onMouseLeave={(e) => { if (!active) e.currentTarget.style.background="transparent"; }}>
+      style={{ width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",borderRadius:10,border:"1px solid transparent",background:active?"linear-gradient(135deg,#f0f9ff,#e0f2fe)":"transparent",color:disabled?"#cbd5e1":active?"#0284c7":"#64748b",cursor:disabled?"not-allowed":"pointer",fontSize:14,transition:"all 0.15s ease",boxShadow:active?"inset 0 -1px 0 rgba(2,132,199,0.06), 0 1px 2px rgba(2,132,199,0.08)":"none" }}
+      onMouseEnter={(e) => { if (!disabled && !active) { e.currentTarget.style.background="#f1f5f9"; e.currentTarget.style.color="#0f172a"; } }}
+      onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background="transparent"; e.currentTarget.style.color="#64748b"; } }}>
       {children}
     </button>
   );
@@ -513,11 +519,11 @@ function TopBtn({ children, onClick, disabled, title, active }: { children: Reac
 function RailBtn({ id, icon, label, active, onClick }: { id?: string; icon: React.ReactNode; label: string; active: boolean; onClick: () => void; }) {
   return (
     <button id={id} type="button" onClick={onClick} title={label}
-      style={{ width:44,height:44,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:2,borderRadius:12,border:active?"1px solid #bae6fd":"1px solid transparent",background:active?"#e0f2fe":"transparent",cursor:"pointer",transition:"all 0.15s",color:active?"#0ea5e9":"#9ca3af" }}
-      onMouseEnter={(e) => { if (!active) e.currentTarget.style.background="#f9fafb"; }}
-      onMouseLeave={(e) => { if (!active) e.currentTarget.style.background=active?"#e0f2fe":"transparent"; }}>
+      style={{ width:48,height:48,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:2,borderRadius:14,border:"1px solid transparent",background:active?"#ffffff":"transparent",cursor:"pointer",transition:"all 0.18s ease",color:active?"#0284c7":"#64748b",boxShadow:active?"0 4px 14px rgba(2,132,199,0.18), 0 1px 2px rgba(15,23,42,0.04), inset 0 1px 0 rgba(255,255,255,0.9)":"none" }}
+      onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background="rgba(255,255,255,0.55)"; e.currentTarget.style.color="#0f172a"; } }}
+      onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background="transparent"; e.currentTarget.style.color="#64748b"; } }}>
       {icon}
-      <span style={{ fontSize:8,fontWeight:700,color:active?"#0ea5e9":"#9ca3af",textTransform:"uppercase",letterSpacing:"0.05em" }}>{label}</span>
+      <span style={{ fontSize:8,fontWeight:700,color:active?"#0284c7":"#64748b",textTransform:"uppercase",letterSpacing:"0.06em" }}>{label}</span>
     </button>
   );
 }

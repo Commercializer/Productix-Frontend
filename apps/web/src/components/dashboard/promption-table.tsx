@@ -20,8 +20,7 @@ import {
   Trash2,
   Brush,
   Pencil,
-  Globe,
-  GlobeLock,
+  ArrowUpDown,
 } from "lucide-react";
 import type { Promption } from "@/hooks/use-promptions";
 import { QrModal } from "./qr-modal";
@@ -99,9 +98,6 @@ export function PromptionTable({
     [onDelete]
   );
 
-  const publishedCount = promptions.filter((p) => p.isPublished).length;
-  const draftCount = promptions.filter((p) => !p.isPublished).length;
-
   return (
     <div className="w-full">
       {/* Table Header / Toolbar */}
@@ -120,36 +116,26 @@ export function PromptionTable({
           />
         </div>
 
-        {/* Filter Pills */}
-        <div className="hidden lg:flex items-center gap-2 mx-4 text-[12px]">
-          <span className="px-2.5 py-1 rounded-full bg-[#f1f5f9] dark:bg-[#1e293b] text-(--ds-text-secondary) font-medium">
-            All {promptions.length}
-          </span>
-          <span className="px-2.5 py-1 rounded-full bg-[#eafafa] text-[#0f766e] font-medium">
-            Published {publishedCount}
-          </span>
-          <span className="px-2.5 py-1 rounded-full bg-[#f8fafc] dark:bg-[#1e293b] text-(--ds-text-muted) font-medium">
-            Draft {draftCount}
-          </span>
-        </div>
-
         {/* Actions Menu */}
         <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
-          <div className="hidden xl:flex items-center gap-3 text-(--ds-text-muted) mr-4">
-            <button className="hover:text-(--ds-text-primary) transition-colors">
-              <LineChart size={16} strokeWidth={2} />
+          <div className="hidden xl:flex items-center justify-between w-[375px] h-9 gap-2 p-0 text-(--ds-text-muted) mr-4">
+            <button className="w-9 h-9 flex items-center justify-center rounded-md hover:text-(--ds-text-primary) hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+              <LineChart size={18} strokeWidth={1.8} />
             </button>
-            <button className="hover:text-(--ds-text-primary) transition-colors">
-              <AlignLeft size={16} strokeWidth={2} />
+            <button className="w-9 h-9 flex items-center justify-center rounded-md hover:text-(--ds-text-primary) hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+              <AlignLeft size={18} strokeWidth={1.8} />
             </button>
-            <button className="hover:text-(--ds-text-primary) transition-colors">
-              <CloudUpload size={16} strokeWidth={2} />
+            <button className="w-9 h-9 flex items-center justify-center rounded-md hover:text-(--ds-text-primary) hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+              <CloudUpload size={18} strokeWidth={1.8} />
             </button>
-            <button className="hover:text-(--ds-text-primary) transition-colors">
-              <Share size={16} strokeWidth={2} />
+            <button className="w-9 h-9 flex items-center justify-center rounded-md hover:text-(--ds-text-primary) hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+              <Share size={18} strokeWidth={1.8} />
             </button>
-            <button className="hover:text-(--ds-text-primary) transition-colors">
-              <SlidersHorizontal size={16} strokeWidth={2} />
+            <button className="w-9 h-9 flex items-center justify-center rounded-md hover:text-(--ds-text-primary) hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+              <ArrowUpDown size={18} strokeWidth={1.8} />
+            </button>
+            <button className="w-9 h-9 flex items-center justify-center rounded-md hover:text-(--ds-text-primary) hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+              <SlidersHorizontal size={18} strokeWidth={1.8} />
             </button>
           </div>
           <Link
@@ -163,11 +149,11 @@ export function PromptionTable({
       </div>
 
       {/* Table Container */}
-      <div className="bg-(--ds-surface) border border-(--ds-border) rounded-xl">
+      <div>
         <div className="overflow-x-visible sm:overflow-x-auto min-h-[300px]">
           <table className="w-full text-[13px] whitespace-normal sm:whitespace-nowrap block sm:table">
             <thead className="hidden sm:table-header-group">
-              <tr className="border-b border-(--ds-border) text-(--ds-text-secondary) font-medium">
+              <tr className="border-b border-(--ds-border) text-[#64748B] font-medium">
                 <th className="py-4 px-4 text-left w-[40px]">
                   <div className="w-4 h-4 rounded-[4px] border border-(--ds-border)"></div>
                 </th>
@@ -178,7 +164,7 @@ export function PromptionTable({
                 </th>
                 <th className="py-4 px-4 text-left">
                   <div className="flex items-center gap-2">
-                    Public URL <span className="text-[10px]">↕</span>
+                    Link <span className="text-[10px]">↕</span>
                   </div>
                 </th>
                 <th className="py-4 px-4 text-left">
@@ -273,7 +259,7 @@ export function PromptionTable({
                       <td className="block sm:table-cell py-1.5 sm:py-3 px-0 sm:px-4">
                         <div className="flex items-center gap-2">
                           <span className="sm:hidden font-medium text-[11px] text-(--ds-text-secondary) mr-1">URL:</span>
-                          <span className="text-(--ds-text-secondary) max-w-[180px] break-all font-mono text-[12px] leading-tight">
+                          <span className="text-(--ds-text-secondary) max-w-55 truncate text-[13px] leading-tight">
                             {publicUrl}
                           </span>
                           <button
@@ -306,13 +292,11 @@ export function PromptionTable({
                         <div className="flex items-center gap-2">
                           <span className="sm:hidden font-medium text-[11px] text-(--ds-text-secondary) mr-1">Status:</span>
                           {p.isPublished ? (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium leading-none bg-[#eafafa] text-[#0f766e]">
-                              <Globe size={10} />
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-medium leading-none bg-[#dcfce7] text-[#15803d]">
                               Published
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium leading-none bg-[#f1f5f9] dark:bg-[#0f172a] sm:dark:bg-[#1e293b] text-[#475569] dark:text-[#94a3b8]">
-                              <GlobeLock size={10} />
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-medium leading-none bg-transparent border border-[#e2e8f0] dark:border-[#334155] text-(--ds-text-primary)">
                               Draft
                             </span>
                           )}

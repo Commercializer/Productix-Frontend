@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Package, BarChart2, Mail, Settings, LogOut } from "lucide-react";
@@ -58,9 +59,14 @@ export function DashboardSidebar() {
         >
           <LogOut size={22} strokeWidth={1.8} />
         </button>
-        <span className="hidden md:block text-(--ds-text-primary) font-bold text-xl tracking-tighter">
-          PX
-        </span>
+        <Image
+          src="/productix-logo.png"
+          alt="Productix"
+          width={20}
+          height={19}
+          className="hidden md:block"
+          priority
+        />
       </div>
     </aside>
   );

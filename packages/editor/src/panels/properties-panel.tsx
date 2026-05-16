@@ -14,7 +14,7 @@ import { useCanvasStore } from "../engine/canvas-store";
 import { getElementDefinition } from "../elements/registry";
 import { useTranslation } from "../i18n";
 import { getLocalizedProps } from "../utils/localize-props";
-import { CONTENT_LOCALE_META } from "@productix/types";
+import { getContentLocaleMeta } from "@productix/types";
 
 const BLOCK_LABELS: Record<string, string> = {
   text:"Product Text", heading:"Product Title", image:"Product Image", button:"CTA Button",
@@ -39,7 +39,7 @@ export function PropertiesPanel() {
   const contentLocale = useCanvasStore((s) => s.contentLocale);
   const { t } = useTranslation();
 
-  const localeMeta = CONTENT_LOCALE_META[contentLocale];
+  const localeMeta = getContentLocaleMeta(contentLocale);
   const isNonEnglish = contentLocale !== "en";
 
   if (selectedIds.length === 0) {

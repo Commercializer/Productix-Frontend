@@ -110,10 +110,28 @@ export default function EditorPage() {
 
   if (!initialDoc) {
     return (
-      <div className="flex h-screen items-center justify-center bg-gray-100">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
-          <p className="text-sm text-gray-500">Loading from database...</p>
+      <div
+        className="flex h-screen items-center justify-center"
+        style={{ background: "linear-gradient(180deg,#f8fafc 0%,#eef3f9 100%)" }}
+      >
+        <div className="flex flex-col items-center gap-4">
+          <div
+            className="flex items-center justify-center"
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: 18,
+              background: "linear-gradient(135deg,#f0f9ff,#e0f2fe)",
+              border: "1px solid rgba(2,132,199,0.12)",
+              boxShadow: "0 4px 14px rgba(2,132,199,0.12)",
+            }}
+          >
+            <img src="/productix-logo.png" alt="Productix" width={28} height={26} />
+          </div>
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#bae6fd] border-t-[#0284c7]" />
+          <p className="text-sm font-medium" style={{ color: "#475569" }}>
+            Preparing your editor…
+          </p>
         </div>
       </div>
     );

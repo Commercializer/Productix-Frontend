@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 
 import { fontSans, fontMono } from "@/lib/fonts";
 import { cn } from "@productix/utils";
@@ -16,6 +16,12 @@ export const metadata: Metadata = {
   description:
     "Create beautiful, responsive pages in minutes with our drag-and-drop visual editor. No code required.",
   keywords: ["page builder", "visual editor", "drag and drop", "landing page"],
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({

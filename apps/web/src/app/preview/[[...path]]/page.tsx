@@ -16,9 +16,9 @@ export default function PreviewPage() {
   const path = params.path as string[] | undefined;
   const slug = path?.[0];
 
-  // Read ?lang=si or ?lang=ta from URL, default to "en"
+  // Read ?lang=<code> from URL, default to "en"
   const langParam = searchParams.get("lang");
-  const contentLocale: ContentLocale = (langParam === "si" || langParam === "ta") ? langParam : "en";
+  const contentLocale: ContentLocale = langParam && /^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,4})?$/.test(langParam) ? langParam : "en";
 
   const [doc, setDoc] = useState<CanvasDocument | null>(null);
 
