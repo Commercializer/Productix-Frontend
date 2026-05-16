@@ -194,6 +194,8 @@ model Company {
   users             CompanyUser[]
   socialAccounts    CompanySocialAccount[]
   brandProfiles     BrandProfile[]
+  categories        Category[]
+  subCategories     SubCategory[]
   products          Product[]
   feedbackInquiries FeedbackInquiry[]
 
@@ -280,11 +282,49 @@ model BrandProfileSocialAccount {
   @@map("brand_profile_social_accounts")
 }
 
+/// Product category, scoped to a company. Used for organizing products.
+model Category {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId String   @map("company_id") @db.Uuid
+  name      String   @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company       Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  subCategories SubCategory[]
+  products      Product[]
+
+  @@unique([companyId, name])
+  @@index([companyId])
+  @@map("categories")
+}
+
+/// Product sub-category, scoped to a parent category.
+model SubCategory {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId  String   @map("company_id") @db.Uuid
+  categoryId String   @map("category_id") @db.Uuid
+  name       String   @db.VarChar(255)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company  Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  category Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  products Product[]
+
+  @@unique([categoryId, name])
+  @@index([companyId])
+  @@index([categoryId])
+  @@map("sub_categories")
+}
+
 /// Core product entity — belongs to a company, optionally under a brand profile.
 model Product {
   id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   brandProfileId      String?  @map("brand_profile_id") @db.Uuid
   companyId           String   @map("company_id") @db.Uuid
+  categoryId          String?  @map("category_id") @db.Uuid
+  subCategoryId       String?  @map("sub_category_id") @db.Uuid
   defaultLanguageCode String   @default("en") @map("default_language_code") @db.VarChar(10)
   isActive            Boolean  @default(true) @map("is_active")
   createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
@@ -293,6 +333,8 @@ model Product {
   // Relations
   brandProfile      BrandProfile?     @relation(fields: [brandProfileId], references: [id], onDelete: SetNull)
   company           Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  category          Category?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  subCategory       SubCategory?      @relation(fields: [subCategoryId], references: [id], onDelete: SetNull)
   profiles          ProductProfile[]
   linkedFrom        LinkedProduct[]   @relation("SourceProduct")
   linkedTo          LinkedProduct[]   @relation("LinkedProduct")
@@ -301,6 +343,8 @@ model Product {
   feedbackInquiries FeedbackInquiry[]
 
   @@index([companyId])
+  @@index([categoryId])
+  @@index([subCategoryId])
   @@map("products")
 }
 

@@ -88,6 +88,9 @@ export async function createPromptionAction(data: {
   description?: string;
   metaDescription?: string;
   ogImageUrl?: string;
+  categoryId?: string | null;
+  subCategoryId?: string | null;
+  brandProfileId?: string | null;
 }) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
@@ -107,11 +110,31 @@ export async function createPromptionAction(data: {
   const existing = await prisma.productProfile.findUnique({ where: { slug: data.slug } });
   if (existing) return { error: "Slug already taken. Choose a different one." };
 
+  // Validate scoped lookups belong to this company.
+  if (data.categoryId && isUUID(data.categoryId)) {
+    const cat = await prisma.category.findFirst({ where: { id: data.categoryId, companyId } });
+    if (!cat) return { error: "Selected category not found" };
+  }
+  if (data.subCategoryId && isUUID(data.subCategoryId)) {
+    const sub = await prisma.subCategory.findFirst({ where: { id: data.subCategoryId, companyId } });
+    if (!sub) return { error: "Selected sub-category not found" };
+    if (data.categoryId && sub.categoryId !== data.categoryId) {
+      return { error: "Sub-category does not belong to the selected category" };
+    }
+  }
+  if (data.brandProfileId && isUUID(data.brandProfileId)) {
+    const brand = await prisma.brandProfile.findFirst({ where: { id: data.brandProfileId, companyId } });
+    if (!brand) return { error: "Selected brand not found" };
+  }
+
   // Create Product + ProductProfile in a transaction
   const result = await prisma.$transaction(async (tx) => {
     const product = await tx.product.create({
       data: {
         companyId,
+        categoryId: data.categoryId && isUUID(data.categoryId) ? data.categoryId : null,
+        subCategoryId: data.subCategoryId && isUUID(data.subCategoryId) ? data.subCategoryId : null,
+        brandProfileId: data.brandProfileId && isUUID(data.brandProfileId) ? data.brandProfileId : null,
         isActive: true,
       },
     });
@@ -133,6 +156,149 @@ export async function createPromptionAction(data: {
   });
 
   return { success: true, ...result };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TAXONOMY (Category / SubCategory) + BRAND PROFILE LOOKUPS
+// ═══════════════════════════════════════════════════════════════
+
+export async function getCategoriesAction() {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const companyId = await getUserCompanyId(session.user.id);
+  if (!companyId) return { error: "No company found for user" };
+
+  const categories = await prisma.category.findMany({
+    where: { companyId },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true },
+  });
+
+  return { success: true, items: categories };
+}
+
+export async function getSubCategoriesAction(categoryId: string) {
+  if (!isUUID(categoryId)) return { error: "Invalid category ID" };
+
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const companyId = await getUserCompanyId(session.user.id);
+  if (!companyId) return { error: "No company found for user" };
+
+  const subCategories = await prisma.subCategory.findMany({
+    where: { companyId, categoryId },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true, categoryId: true },
+  });
+
+  return { success: true, items: subCategories };
+}
+
+export async function getBrandProfilesAction() {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const companyId = await getUserCompanyId(session.user.id);
+  if (!companyId) return { error: "No company found for user" };
+
+  const brands = await prisma.brandProfile.findMany({
+    where: { companyId },
+    orderBy: { brandName: "asc" },
+    select: { id: true, brandName: true, brandLogoUrl: true },
+  });
+
+  return { success: true, items: brands };
+}
+
+export async function createCategoryAction(name: string) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const trimmed = name.trim();
+  if (!trimmed) return { error: "Name is required" };
+  if (trimmed.length > 255) return { error: "Name too long" };
+
+  const companyId = await getUserCompanyId(session.user.id);
+  if (!companyId) return { error: "No company found for user" };
+
+  try {
+    const existing = await prisma.category.findFirst({
+      where: { companyId, name: { equals: trimmed, mode: "insensitive" } },
+      select: { id: true, name: true },
+    });
+    if (existing) return { success: true, item: existing };
+
+    const item = await prisma.category.create({
+      data: { companyId, name: trimmed },
+      select: { id: true, name: true },
+    });
+    return { success: true, item };
+  } catch (error: any) {
+    return { error: error.message };
+  }
+}
+
+export async function createSubCategoryAction(categoryId: string, name: string) {
+  if (!isUUID(categoryId)) return { error: "Invalid category ID" };
+
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const trimmed = name.trim();
+  if (!trimmed) return { error: "Name is required" };
+  if (trimmed.length > 255) return { error: "Name too long" };
+
+  const companyId = await getUserCompanyId(session.user.id);
+  if (!companyId) return { error: "No company found for user" };
+
+  const parent = await prisma.category.findFirst({ where: { id: categoryId, companyId } });
+  if (!parent) return { error: "Parent category not found" };
+
+  try {
+    const existing = await prisma.subCategory.findFirst({
+      where: { companyId, categoryId, name: { equals: trimmed, mode: "insensitive" } },
+      select: { id: true, name: true, categoryId: true },
+    });
+    if (existing) return { success: true, item: existing };
+
+    const item = await prisma.subCategory.create({
+      data: { companyId, categoryId, name: trimmed },
+      select: { id: true, name: true, categoryId: true },
+    });
+    return { success: true, item };
+  } catch (error: any) {
+    return { error: error.message };
+  }
+}
+
+export async function createBrandProfileAction(brandName: string) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const trimmed = brandName.trim();
+  if (!trimmed) return { error: "Brand name is required" };
+  if (trimmed.length > 255) return { error: "Brand name too long" };
+
+  const companyId = await getUserCompanyId(session.user.id);
+  if (!companyId) return { error: "No company found for user" };
+
+  try {
+    const existing = await prisma.brandProfile.findFirst({
+      where: { companyId, brandName: { equals: trimmed, mode: "insensitive" } },
+      select: { id: true, brandName: true, brandLogoUrl: true },
+    });
+    if (existing) return { success: true, item: existing };
+
+    const item = await prisma.brandProfile.create({
+      data: { companyId, brandName: trimmed },
+      select: { id: true, brandName: true, brandLogoUrl: true },
+    });
+    return { success: true, item };
+  } catch (error: any) {
+    return { error: error.message };
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════

@@ -1,16 +1,108 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Package, ArrowRight, Sparkles, Loader2 } from "lucide-react";
-import { createPromptionAction } from "@/lib/dashboard/actions";
+import { Package, ArrowRight, Sparkles, Loader2, Layers, Tag, Building2 } from "lucide-react";
+import {
+  createPromptionAction,
+  getCategoriesAction,
+  getSubCategoriesAction,
+  getBrandProfilesAction,
+  createCategoryAction,
+  createSubCategoryAction,
+  createBrandProfileAction,
+} from "@/lib/dashboard/actions";
+import { ComboBox, type ComboBoxOption } from "@/components/dashboard/combo-box";
 
 export default function NewPromptionPage() {
   const router = useRouter();
 
   const [productName, setProductName] = useState("");
+  const [categoryId, setCategoryId] = useState<string | null>(null);
+  const [subCategoryId, setSubCategoryId] = useState<string | null>(null);
+  const [brandProfileId, setBrandProfileId] = useState<string | null>(null);
+
+  const [categories, setCategories] = useState<ComboBoxOption[]>([]);
+  const [subCategories, setSubCategories] = useState<ComboBoxOption[]>([]);
+  const [brands, setBrands] = useState<ComboBoxOption[]>([]);
+
+  const [loadingLookups, setLoadingLookups] = useState(true);
+  const [loadingSubs, setLoadingSubs] = useState(false);
+
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      setLoadingLookups(true);
+      const [catRes, brandRes] = await Promise.all([
+        getCategoriesAction(),
+        getBrandProfilesAction(),
+      ]);
+      if (!active) return;
+      if ("items" in catRes) {
+        setCategories(catRes.items.map((c) => ({ id: c.id, label: c.name })));
+      }
+      if ("items" in brandRes) {
+        setBrands(brandRes.items.map((b) => ({ id: b.id, label: b.brandName })));
+      }
+      setLoadingLookups(false);
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    setSubCategoryId(null);
+    setSubCategories([]);
+    if (!categoryId) return;
+    let active = true;
+    (async () => {
+      setLoadingSubs(true);
+      const res = await getSubCategoriesAction(categoryId);
+      if (!active) return;
+      if ("items" in res) {
+        setSubCategories(res.items.map((s) => ({ id: s.id, label: s.name })));
+      }
+      setLoadingSubs(false);
+    })();
+    return () => {
+      active = false;
+    };
+  }, [categoryId]);
+
+  const handleCreateCategory = async (name: string): Promise<ComboBoxOption | null> => {
+    const res = await createCategoryAction(name);
+    if ("item" in res && res.item) {
+      const opt = { id: res.item.id, label: res.item.name };
+      setCategories((prev) => (prev.some((p) => p.id === opt.id) ? prev : [...prev, opt].sort((a, b) => a.label.localeCompare(b.label))));
+      return opt;
+    }
+    return null;
+  };
+
+  const handleCreateSubCategory = async (name: string): Promise<ComboBoxOption | null> => {
+    if (!categoryId) return null;
+    const res = await createSubCategoryAction(categoryId, name);
+    if ("item" in res && res.item) {
+      const opt = { id: res.item.id, label: res.item.name };
+      setSubCategories((prev) => (prev.some((p) => p.id === opt.id) ? prev : [...prev, opt].sort((a, b) => a.label.localeCompare(b.label))));
+      return opt;
+    }
+    return null;
+  };
+
+  const handleCreateBrand = async (name: string): Promise<ComboBoxOption | null> => {
+    const res = await createBrandProfileAction(name);
+    if ("item" in res && res.item) {
+      const opt = { id: res.item.id, label: res.item.brandName };
+      setBrands((prev) => (prev.some((p) => p.id === opt.id) ? prev : [...prev, opt].sort((a, b) => a.label.localeCompare(b.label))));
+      return opt;
+    }
+    return null;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,6 +119,9 @@ export default function NewPromptionPage() {
       const result = await createPromptionAction({
         productName: productName.trim(),
         slug,
+        categoryId,
+        subCategoryId,
+        brandProfileId,
       });
 
       if (result.error) {
@@ -79,6 +174,58 @@ export default function NewPromptionPage() {
                   autoFocus
                 />
               </div>
+            </div>
+
+            {/* Category */}
+            <div>
+              <label className="block text-[13px] font-semibold text-(--ds-text-primary) mb-2">
+                Category
+              </label>
+              <ComboBox
+                options={categories}
+                value={categoryId}
+                onChange={setCategoryId}
+                onCreate={handleCreateCategory}
+                loading={loadingLookups}
+                placeholder="Select a category"
+                emptyHint="No categories yet — type to add one"
+                icon={<Layers size={16} />}
+              />
+            </div>
+
+            {/* Sub Category */}
+            <div>
+              <label className="block text-[13px] font-semibold text-(--ds-text-primary) mb-2">
+                Sub Category
+              </label>
+              <ComboBox
+                options={subCategories}
+                value={subCategoryId}
+                onChange={setSubCategoryId}
+                onCreate={categoryId ? handleCreateSubCategory : undefined}
+                loading={loadingSubs}
+                disabled={!categoryId}
+                placeholder={categoryId ? "Select a sub-category" : "Pick a category first"}
+                emptyHint="No sub-categories yet — type to add one"
+                icon={<Tag size={16} />}
+              />
+            </div>
+
+            {/* Brand */}
+            <div>
+              <label className="block text-[13px] font-semibold text-(--ds-text-primary) mb-2">
+                Brand
+              </label>
+              <ComboBox
+                options={brands}
+                value={brandProfileId}
+                onChange={setBrandProfileId}
+                onCreate={handleCreateBrand}
+                loading={loadingLookups}
+                placeholder="Select a brand"
+                emptyHint="No brands yet — type to add one"
+                icon={<Building2 size={16} />}
+              />
             </div>
 
             {/* Error */}
