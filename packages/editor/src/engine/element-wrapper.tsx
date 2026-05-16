@@ -73,6 +73,7 @@ export const ElementWrapper = memo(function ElementWrapper({
   const groupInfo = isGrouped && groups ? groups[element.groupId!] : null;
 
   const def = getElementDefinition(element.type);
+  const isImageEditing = isEditing && element.type === "image";
 
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
@@ -105,7 +106,7 @@ export const ElementWrapper = memo(function ElementWrapper({
   const handleDoubleClick = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      if (element.type === "text" || element.type === "heading") {
+      if (element.type === "text" || element.type === "heading" || element.type === "image") {
         setEditingElement(element.id);
       }
     },
@@ -156,7 +157,7 @@ export const ElementWrapper = memo(function ElementWrapper({
         ...flowCSS,
         zIndex: element.zIndex,
         opacity: element.opacity,
-        cursor: element.locked ? "not-allowed" : isEditing ? "text" : "default",
+        cursor: element.locked ? "not-allowed" : isImageEditing ? "grab" : isEditing ? "text" : "default",
         outline: isSelected
           ? `2px solid ${isGrouped && groupColor ? groupColor : showOverrideIndicator ? "#38bdf8" : "#10b981"}`
           : isHovered
@@ -164,7 +165,7 @@ export const ElementWrapper = memo(function ElementWrapper({
             : "none",
         outlineOffset: 0,
         borderRadius: 1,
-        userSelect: isEditing ? "text" : ("none" as const),
+        userSelect: isEditing && !isImageEditing ? "text" : ("none" as const),
         transition: "width 0.2s ease, margin 0.2s ease, padding 0.2s ease",
       }
     : {
@@ -177,7 +178,7 @@ export const ElementWrapper = memo(function ElementWrapper({
         transform: rotation ? `rotate(${rotation}deg)` : undefined,
         zIndex: element.zIndex,
         opacity: element.opacity,
-        cursor: element.locked ? "not-allowed" : isEditing ? "text" : "move",
+        cursor: element.locked ? "not-allowed" : isImageEditing ? "grab" : isEditing ? "text" : "move",
         outline: isSelected
           ? `2px solid ${isGrouped && groupColor ? groupColor : showOverrideIndicator ? "#38bdf8" : "#3b82f6"}`
           : isHovered
@@ -185,7 +186,7 @@ export const ElementWrapper = memo(function ElementWrapper({
             : "none",
         outlineOffset: 0,
         borderRadius: 1,
-        userSelect: isEditing ? "text" : ("none" as const),
+        userSelect: isEditing && !isImageEditing ? "text" : ("none" as const),
       };
 
   // Determine rendered width/height for the component

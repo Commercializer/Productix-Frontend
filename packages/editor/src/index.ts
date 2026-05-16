@@ -46,6 +46,7 @@ export { ImportLayoutDialog } from "./panels/import-layout-dialog";
 export {
   buildAIPrompt,
   importLayoutFromJson,
+  type AIBrief,
   type ImportLayoutInput,
   type ImportResult,
   type ImportFailure,

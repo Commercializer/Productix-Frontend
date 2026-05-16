@@ -7,18 +7,64 @@
 
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Sparkles, Copy, Check, X, AlertCircle, Wand2 } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import { Sparkles, Copy, Check, X, AlertCircle, Wand2, ExternalLink } from "lucide-react";
 import { useCanvasStore } from "../engine/canvas-store";
-import { buildAIPrompt, importLayoutFromJson } from "../utils/import-layout";
+import { buildAIPrompt, importLayoutFromJson, type AIBrief } from "../utils/import-layout";
 
 interface ImportLayoutDialogProps {
   open: boolean;
   onClose: () => void;
 }
 
+const EMPTY_BRIEF: AIBrief = {
+  productName: "",
+  productCategory: "",
+  productDescription: "",
+  vibe: "",
+  backgroundColor: "",
+  accentColor: "",
+  audience: "",
+  keyFeatures: "",
+  ctaText: "",
+  extraNotes: "",
+};
+
+const CATEGORY_OPTIONS = [
+  "Food & Beverage",
+  "Skincare & Beauty",
+  "Fashion & Apparel",
+  "Tech & Electronics",
+  "Fitness & Wellness",
+  "Home & Living",
+  "Toys & Kids",
+  "Automotive",
+  "Hospitality / Travel",
+  "Other",
+];
+
+const VIBE_OPTIONS = [
+  "Bold & energetic",
+  "Minimal & elegant",
+  "Playful & fun",
+  "Premium & luxurious",
+  "Natural & organic",
+  "Tech & futuristic",
+  "Retro / vintage",
+  "Warm & friendly",
+];
+
+// Only ChatGPT and Claude reliably accept a prefilled prompt via URL query.
+// Gemini doesn't, so for it we still copy and just open the app.
+const AI_TARGETS = [
+  { id: "chatgpt", label: "ChatGPT", url: (q: string) => `https://chatgpt.com/?q=${encodeURIComponent(q)}` },
+  { id: "claude", label: "Claude", url: (q: string) => `https://claude.ai/new?q=${encodeURIComponent(q)}` },
+  { id: "gemini", label: "Gemini", url: (_: string) => `https://gemini.google.com/app` },
+] as const;
+
 export function ImportLayoutDialog({ open, onClose }: ImportLayoutDialogProps) {
   const loadDocument = useCanvasStore((s) => s.loadDocument);
+  const [brief, setBrief] = useState<AIBrief>(EMPTY_BRIEF);
   const [json, setJson] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
@@ -26,6 +72,7 @@ export function ImportLayoutDialog({ open, onClose }: ImportLayoutDialogProps) {
 
   useEffect(() => {
     if (!open) {
+      setBrief(EMPTY_BRIEF);
       setJson("");
       setError(null);
       setWarnings([]);
@@ -39,16 +86,33 @@ export function ImportLayoutDialog({ open, onClose }: ImportLayoutDialogProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
+  const prompt = useMemo(() => buildAIPrompt(brief), [brief]);
+
   if (!open) return null;
+
+  const setField = <K extends keyof AIBrief>(key: K, value: AIBrief[K]) => {
+    setBrief((prev) => ({ ...prev, [key]: value }));
+  };
 
   const handleCopyPrompt = async () => {
     try {
-      await navigator.clipboard.writeText(buildAIPrompt());
+      await navigator.clipboard.writeText(prompt);
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
     } catch {
       setError("Couldn't copy to clipboard — select the prompt manually.");
     }
+  };
+
+  const handleOpenIn = async (target: typeof AI_TARGETS[number]) => {
+    try {
+      await navigator.clipboard.writeText(prompt);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      // Non-fatal — still open the tool so user can paste manually.
+    }
+    window.open(target.url(prompt), "_blank", "noopener,noreferrer");
   };
 
   const handleImport = () => {
@@ -114,29 +178,88 @@ export function ImportLayoutDialog({ open, onClose }: ImportLayoutDialogProps) {
         </div>
 
         <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
-          {/* Step 1 */}
+          {/* Step 1 — Brief */}
           <section>
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
               <span style={{ fontSize: 10, fontWeight: 700, color: "#8b5cf6", letterSpacing: "0.06em", textTransform: "uppercase" }}>Step 1</span>
-              <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>Brief your AI</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>Tell us about the product</span>
             </div>
-            <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 10px", lineHeight: 1.5 }}>
-              Copy the prompt below into ChatGPT / Claude / Gemini. It includes the schema and a live
-              catalog of every element type and prop available in this editor. Add your own design
-              brief at the end (e.g. <em>“Design a hero for an organic skincare brand…”</em>).
+            <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 12px", lineHeight: 1.5 }}>
+              All fields are optional — anything you fill in gets baked into the prompt so the AI produces a more on-brand layout.
             </p>
-            <button type="button" onClick={handleCopyPrompt}
-              style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "8px 14px", borderRadius: 10, border: "1px solid #e0e7ff", background: copied ? "#ecfdf5" : "#eef2ff", color: copied ? "#059669" : "#4f46e5", fontSize: 12, fontWeight: 600, cursor: "pointer", transition: "all 0.15s" }}
-            >
-              {copied ? <Check size={14} /> : <Copy size={14} />}
-              {copied ? "Copied to clipboard" : "Copy AI prompt"}
-            </button>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <Field label="Product name">
+                <input type="text" value={brief.productName ?? ""} onChange={(e) => setField("productName", e.target.value)} placeholder="e.g. Aurora Cold Brew" style={inputStyle} />
+              </Field>
+              <Field label="Category">
+                <select value={brief.productCategory ?? ""} onChange={(e) => setField("productCategory", e.target.value)} style={inputStyle}>
+                  <option value="">— pick one —</option>
+                  {CATEGORY_OPTIONS.map((c) => (<option key={c} value={c}>{c}</option>))}
+                </select>
+              </Field>
+              <Field label="What it is (one line)" full>
+                <input type="text" value={brief.productDescription ?? ""} onChange={(e) => setField("productDescription", e.target.value)} placeholder="e.g. Small-batch nitro cold brew in recyclable cans" style={inputStyle} />
+              </Field>
+              <Field label="Vibe / style">
+                <select value={brief.vibe ?? ""} onChange={(e) => setField("vibe", e.target.value)} style={inputStyle}>
+                  <option value="">— pick one —</option>
+                  {VIBE_OPTIONS.map((v) => (<option key={v} value={v}>{v}</option>))}
+                </select>
+              </Field>
+              <Field label="Target audience">
+                <input type="text" value={brief.audience ?? ""} onChange={(e) => setField("audience", e.target.value)} placeholder="e.g. Urban professionals, 25–40" style={inputStyle} />
+              </Field>
+              <Field label="Background color">
+                <ColorField value={brief.backgroundColor ?? ""} onChange={(v) => setField("backgroundColor", v)} placeholder="#0f172a or 'no preference'" />
+              </Field>
+              <Field label="Accent color">
+                <ColorField value={brief.accentColor ?? ""} onChange={(v) => setField("accentColor", v)} placeholder="#22d3ee" />
+              </Field>
+              <Field label="Key features to highlight" full>
+                <textarea value={brief.keyFeatures ?? ""} onChange={(e) => setField("keyFeatures", e.target.value)} placeholder="e.g. 100% arabica, zero sugar, recyclable can" rows={2} style={{ ...inputStyle, resize: "vertical", minHeight: 52 }} />
+              </Field>
+              <Field label="Call-to-action text">
+                <input type="text" value={brief.ctaText ?? ""} onChange={(e) => setField("ctaText", e.target.value)} placeholder="e.g. Shop now" style={inputStyle} />
+              </Field>
+              <Field label="Anything else?">
+                <input type="text" value={brief.extraNotes ?? ""} onChange={(e) => setField("extraNotes", e.target.value)} placeholder="e.g. include a video hero" style={inputStyle} />
+              </Field>
+            </div>
           </section>
 
-          {/* Step 2 */}
+          {/* Step 2 — Send to AI */}
           <section>
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
               <span style={{ fontSize: 10, fontWeight: 700, color: "#0ea5e9", letterSpacing: "0.06em", textTransform: "uppercase" }}>Step 2</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>Send the prompt to your AI</span>
+            </div>
+            <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 10px", lineHeight: 1.5 }}>
+              We've built a prompt that includes your brief plus the live element schema for this editor.
+              Copy it, or open it directly in your tool of choice.
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              <button type="button" onClick={handleCopyPrompt}
+                style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "8px 14px", borderRadius: 10, border: "1px solid #e0e7ff", background: copied ? "#ecfdf5" : "#eef2ff", color: copied ? "#059669" : "#4f46e5", fontSize: 12, fontWeight: 600, cursor: "pointer", transition: "all 0.15s" }}
+              >
+                {copied ? <Check size={14} /> : <Copy size={14} />}
+                {copied ? "Copied to clipboard" : "Copy AI prompt"}
+              </button>
+              {AI_TARGETS.map((t) => (
+                <button key={t.id} type="button" onClick={() => handleOpenIn(t)}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 12px", borderRadius: 10, border: "1px solid #e2e8f0", background: "#fff", color: "#0f172a", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+                  title={t.id === "gemini" ? "Copies the prompt and opens Gemini — paste it there" : `Opens ${t.label} with the prompt prefilled`}
+                >
+                  <ExternalLink size={13} /> Open in {t.label}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          {/* Step 3 — Paste JSON */}
+          <section>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+              <span style={{ fontSize: 10, fontWeight: 700, color: "#10b981", letterSpacing: "0.06em", textTransform: "uppercase" }}>Step 3</span>
               <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>Paste the JSON</span>
             </div>
             <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 8px", lineHeight: 1.5 }}>
@@ -196,6 +319,51 @@ export function ImportLayoutDialog({ open, onClose }: ImportLayoutDialogProps) {
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  padding: "8px 10px",
+  borderRadius: 8,
+  border: "1px solid #e2e8f0",
+  background: "#fff",
+  fontSize: 12,
+  color: "#0f172a",
+  outline: "none",
+  fontFamily: "inherit",
+  boxSizing: "border-box",
+};
+
+function Field({ label, full, children }: { label: string; full?: boolean; children: React.ReactNode }) {
+  return (
+    <label style={{ display: "flex", flexDirection: "column", gap: 4, gridColumn: full ? "1 / -1" : "auto" }}>
+      <span style={{ fontSize: 10, fontWeight: 700, color: "#64748b", letterSpacing: "0.04em", textTransform: "uppercase" }}>{label}</span>
+      {children}
+    </label>
+  );
+}
+
+function ColorField({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+  // Color input needs a valid 6-digit hex; show one only when the text value looks like one.
+  const looksLikeHex = /^#[0-9a-fA-F]{6}$/.test(value);
+  return (
+    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+      <input
+        type="color"
+        value={looksLikeHex ? value : "#ffffff"}
+        onChange={(e) => onChange(e.target.value)}
+        style={{ width: 32, height: 32, padding: 0, border: "1px solid #e2e8f0", borderRadius: 8, background: "#fff", cursor: "pointer", flexShrink: 0 }}
+        aria-label="Pick color"
+      />
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        style={inputStyle}
+      />
     </div>
   );
 }

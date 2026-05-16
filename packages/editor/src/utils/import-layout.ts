@@ -127,13 +127,47 @@ export function importLayoutFromJson(raw: string): ImportResult | ImportFailure 
 
 /* ─── AI Prompt ─────────────────────────────── */
 
+export interface AIBrief {
+  productName?: string;
+  productCategory?: string;
+  productDescription?: string;
+  vibe?: string;
+  backgroundColor?: string;
+  accentColor?: string;
+  audience?: string;
+  keyFeatures?: string;
+  ctaText?: string;
+  extraNotes?: string;
+}
+
+function formatBrief(brief?: AIBrief): string {
+  if (!brief) return "";
+  const lines: string[] = [];
+  if (brief.productName) lines.push(`- Product name: ${brief.productName}`);
+  if (brief.productCategory) lines.push(`- Category: ${brief.productCategory}`);
+  if (brief.productDescription) lines.push(`- What it is: ${brief.productDescription}`);
+  if (brief.vibe) lines.push(`- Vibe / style: ${brief.vibe}`);
+  if (brief.backgroundColor) lines.push(`- Preferred background color: ${brief.backgroundColor} (use this for the artboard background)`);
+  if (brief.accentColor) lines.push(`- Accent / brand color: ${brief.accentColor} (use this for buttons, highlights, callouts)`);
+  if (brief.audience) lines.push(`- Target audience: ${brief.audience}`);
+  if (brief.keyFeatures) lines.push(`- Key features / selling points to highlight: ${brief.keyFeatures}`);
+  if (brief.ctaText) lines.push(`- Primary call-to-action text: "${brief.ctaText}"`);
+  if (brief.extraNotes) lines.push(`- Extra notes: ${brief.extraNotes}`);
+  if (lines.length === 0) return "";
+  return `\n# DESIGN BRIEF (from the user — honour these)\n${lines.join("\n")}\n`;
+}
+
 /**
  * Build a copy-paste prompt that explains the JSON
  * schema + lists every registered element type with
  * its props and default size. The catalog is generated
  * from the live element registry so it stays in sync.
+ *
+ * Pass a `brief` to inject the user's answers about the
+ * product (name, category, colors, audience, etc.) so
+ * the LLM produces a more targeted layout.
  */
-export function buildAIPrompt(): string {
+export function buildAIPrompt(brief?: AIBrief): string {
   const defs = getAllElements();
 
   const catalog = defs
@@ -151,6 +185,8 @@ ${propsList}
 }`;
     })
     .join("\n\n");
+
+  const briefSection = formatBrief(brief);
 
   return `You are designing a single mobile product showcase page for the Productix page builder.
 Return STRICT JSON ONLY — no prose, no markdown fences, no commentary. The user pastes your output into the importer.
@@ -203,6 +239,6 @@ ${catalog}
 3. Every element MUST have x, y, width, height (numbers).
 4. Use real placeholder image URLs (e.g. https://placehold.co/<w>x<h>) for image/video src — do NOT invent unreachable URLs.
 5. Compose 6–14 elements for a typical mobile showcase page.
-
-Now design the page based on the brief I give next.`;
+${briefSection}
+Now design the page based on the brief above${brief ? "" : " I give next"}.`;
 }
