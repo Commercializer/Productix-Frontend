@@ -41,10 +41,10 @@ export default function NewPromptionPage() {
         getBrandProfilesAction(),
       ]);
       if (!active) return;
-      if ("items" in catRes) {
+      if ("items" in catRes && catRes.items) {
         setCategories(catRes.items.map((c) => ({ id: c.id, label: c.name })));
       }
-      if ("items" in brandRes) {
+      if ("items" in brandRes && brandRes.items) {
         setBrands(brandRes.items.map((b) => ({ id: b.id, label: b.brandName })));
       }
       setLoadingLookups(false);
@@ -63,7 +63,7 @@ export default function NewPromptionPage() {
       setLoadingSubs(true);
       const res = await getSubCategoriesAction(categoryId);
       if (!active) return;
-      if ("items" in res) {
+      if ("items" in res && res.items) {
         setSubCategories(res.items.map((s) => ({ id: s.id, label: s.name })));
       }
       setLoadingSubs(false);
