@@ -20,7 +20,7 @@
 
 "use client";
 
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Crop, ImageIcon } from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
 import { ImageUploadWidget } from "../media/image-upload-widget";
@@ -45,14 +45,56 @@ function ImageElementComponent({ props, isEditing, width, height, onPropsChange 
   const zoom = (props.zoom as number) || DEFAULT_ZOOM;
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const blockRef = useRef<HTMLDivElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [isPanning, setIsPanning] = useState(false);
   const [nat, setNat] = useState<{ w: number; h: number } | null>(null);
+  const [measured, setMeasured] = useState<{ w: number; h: number } | null>(null);
   const panRef = useRef<{ startX: number; startY: number; startOffsetX: number; startOffsetY: number } | null>(null);
 
+  /* Measure the block's actual rendered (pre-transform) size so the cover-fit
+   * math stays correct under any wrapping layout — flow with % widths, the
+   * public renderer's `transform: scale()` outer wrapper, hydration mismatches,
+   * etc. Falls back to the width/height props until the observer fires. */
+  useEffect(() => {
+    const el = blockRef.current;
+    if (!el) return;
+    const measure = () => {
+      const w = el.clientWidth;
+      const h = el.clientHeight;
+      if (w > 0 && h > 0) setMeasured({ w, h });
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  /* Resolve natural image dimensions independently of the JSX <img>'s onLoad —
+   * which can miss the load when the image is already cached (e.g. served from
+   * SSR before hydration). Without this, `nat` stays null and the cover-fit
+   * math falls back to stretch-fit, making images appear squashed. */
+  useEffect(() => {
+    if (!src) {
+      setNat(null);
+      return;
+    }
+    let cancelled = false;
+    const img = new window.Image();
+    img.onload = () => {
+      if (!cancelled && img.naturalWidth && img.naturalHeight) {
+        setNat({ w: img.naturalWidth, h: img.naturalHeight });
+      }
+    };
+    img.src = src;
+    return () => {
+      cancelled = true;
+    };
+  }, [src]);
+
   /* Compute cover-fit baseline → final image size on the canvas */
-  const safeW = width || 1;
-  const safeH = height || 1;
+  const safeW = measured?.w || width || 1;
+  const safeH = measured?.h || height || 1;
   const blockAspect = safeW / safeH;
   const natAspect = nat && nat.h > 0 ? nat.w / nat.h : blockAspect;
   const baseW = natAspect >= blockAspect ? safeH * natAspect : safeW;
@@ -201,6 +243,7 @@ function ImageElementComponent({ props, isEditing, width, height, onPropsChange 
   /* ── Image state ── */
   return (
     <div
+      ref={blockRef}
       onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
       onDragLeave={() => setDragOver(false)}
       onDrop={handleDrop}
