@@ -19,7 +19,7 @@ import {
   Eye,
   Save,
   Loader2,
-  Puzzle,
+  Blocks,
   Layers,
   Settings,
   Hand,
@@ -416,7 +416,7 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug }
           {/* ── Left Tool Rail ── */}
           <div id="tour-left-rail" style={{ width:64,flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",padding:"10px 8px",gap:4,background:"linear-gradient(180deg,#eaf1fa 0%,#dfeaf6 100%)",borderRadius:18,border:"1px solid rgba(2,132,199,0.10)",boxShadow:"0 4px 16px rgba(15,23,42,0.06), inset 0 1px 0 rgba(255,255,255,0.5)" }}>
             <RailBtn id="tour-btn-themes" icon={<Palette size={18} />} label="Themes" active={leftDrawer==="themes"} onClick={() => setLeftDrawer(leftDrawer==="themes"?null:"themes")} />
-            <RailBtn id="tour-btn-blocks" icon={<Puzzle size={18} />} label="Blocks" active={leftDrawer==="blocks"} onClick={() => setLeftDrawer(leftDrawer==="blocks"?null:"blocks")} />
+            <RailBtn id="tour-btn-blocks" icon={<Blocks size={18} />} label="Blocks" active={leftDrawer==="blocks"} onClick={() => setLeftDrawer(leftDrawer==="blocks"?null:"blocks")} />
             <RailBtn id="tour-btn-order" icon={<Layers size={18} />} label="Order" active={leftDrawer==="order"} onClick={() => setLeftDrawer(leftDrawer==="order"?null:"order")} />
             <RailBtn id="tour-btn-canvas" icon={<Settings size={18} />} label="Canvas" active={leftDrawer==="experience"} onClick={() => setLeftDrawer(leftDrawer==="experience"?null:"experience")} />
             <div style={{ width: 32, height: 1, background: "rgba(2,132,199,0.18)", margin: "8px 0" }} />
