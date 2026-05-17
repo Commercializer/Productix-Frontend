@@ -20,16 +20,16 @@
     "@productix/ui": "workspace:*",
     "@productix/utils": "workspace:*",
     "driver.js": "^1.4.0",
-    "immer": "^11.1.4",
-    "lucide-react": "^0.468.0",
-    "zustand": "^5.0.12"
+    "immer": "^11.1.8",
+    "lucide-react": "^0.577.0",
+    "zustand": "^5.0.13"
   },
   "devDependencies": {
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "typescript": "^5.7.0"
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "typescript": "^6.0.3"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",
