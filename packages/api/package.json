@@ -15,7 +15,7 @@
     "@productix/types": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^20.11.0",
-    "typescript": "^5.7.0"
+    "@types/node": "^25.8.0",
+    "typescript": "^6.0.3"
   }
 }

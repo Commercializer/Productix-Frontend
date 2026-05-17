@@ -475,7 +475,7 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug }
 
         {/* ── Right Panel (Block Settings) ── */}
         {showRightPanel && (
-          <div style={{ width:300,flexShrink:0,overflowY:"auto",background:"#ffffff",borderRadius:18,border:"1px solid rgba(15,23,42,0.06)",boxShadow:"0 8px 28px rgba(15,23,42,0.08), 0 1px 2px rgba(15,23,42,0.04)",animation:"slideInRight 0.2s ease" }}>
+          <div className="properties-panel" style={{ width:300,flexShrink:0,overflowY:"auto",background:"#ffffff",borderRadius:18,border:"1px solid rgba(15,23,42,0.06)",boxShadow:"0 8px 28px rgba(15,23,42,0.08), 0 1px 2px rgba(15,23,42,0.04)",animation:"slideInRight 0.2s ease" }}>
             <PropertiesPanel />
           </div>
         )}

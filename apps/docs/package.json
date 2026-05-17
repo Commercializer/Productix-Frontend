@@ -10,21 +10,20 @@
   "dependencies": {
     "@productix/ui": "workspace:*",
     "@productix/utils": "workspace:*",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
   },
   "devDependencies": {
-    "@storybook/addon-essentials": "^8.4.0",
-    "@storybook/addon-links": "^8.4.0",
-    "@storybook/addon-themes": "^8.4.0",
-    "@storybook/react": "^8.4.0",
-    "@storybook/react-vite": "^8.4.0",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "autoprefixer": "^10.4.20",
-    "postcss": "^8.4.49",
-    "storybook": "^8.4.0",
-    "tailwindcss": "^4.2.4",
-    "typescript": "^5.7.0"
+    "@storybook/addon-links": "^10.4.0",
+    "@storybook/addon-themes": "^10.4.0",
+    "@storybook/react": "^10.4.0",
+    "@storybook/react-vite": "^10.4.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "autoprefixer": "^10.5.0",
+    "postcss": "^8.5.14",
+    "storybook": "^10.4.0",
+    "tailwindcss": "^4.3.0",
+    "typescript": "^6.0.3"
   }
 }

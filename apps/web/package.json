@@ -11,32 +11,32 @@
     "clean": "rm -rf .next .turbo"
   },
   "dependencies": {
-    "@auth/core": "^0.41.0",
-    "@aws-sdk/client-s3": "^3.1037.0",
+    "@auth/core": "^0.34.3",
+    "@aws-sdk/client-s3": "^3.1048.0",
     "@productix/db": "workspace:*",
     "@productix/editor": "workspace:*",
     "@productix/types": "workspace:*",
     "@productix/ui": "workspace:*",
     "@productix/utils": "workspace:*",
-    "bcryptjs": "^2.4.3",
-    "lucide-react": "^0.468.0",
-    "next": "^15.1.0",
+    "bcryptjs": "^3.0.3",
+    "lucide-react": "^0.577.0",
+    "next": "^16.2.6",
     "next-auth": "beta",
     "next-themes": "^0.4.6",
     "qrcode": "^1.5.4",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
     "recharts": "^3.8.1"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.2.4",
-    "@types/bcryptjs": "^2.4.6",
-    "@types/node": "^22.0.0",
+    "@tailwindcss/postcss": "^4.3.0",
+    "@types/bcryptjs": "^3.0.0",
+    "@types/node": "^25.8.0",
     "@types/qrcode": "^1.5.6",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "postcss": "^8.4.49",
-    "tailwindcss": "^4.2.4",
-    "typescript": "^5.7.0"
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "postcss": "^8.5.14",
+    "tailwindcss": "^4.3.0",
+    "typescript": "^6.0.3"
   }
 }

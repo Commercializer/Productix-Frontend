@@ -52,6 +52,6 @@ const nextAuthResult = NextAuth({
 });
 
 export const handlers = nextAuthResult.handlers;
-export const auth = nextAuthResult.auth;
+export const auth: typeof nextAuthResult.auth = nextAuthResult.auth;
 export const signIn = nextAuthResult.signIn as any;
 export const signOut = nextAuthResult.signOut as any;
