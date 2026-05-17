@@ -412,6 +412,30 @@
 }
 
 /* ─────────────────────────────────────────────
+ * Editor — Block Settings (Properties Panel)
+ * Force dark text on inputs/selects/buttons so
+ * values stay readable when the document theme
+ * (e.g. system dark mode) sets a light foreground.
+ * ──────────────────────────────────────────── */
+.properties-panel {
+  color: #111827;
+}
+.properties-panel input,
+.properties-panel textarea,
+.properties-panel select {
+  color: #111827;
+}
+.properties-panel input::placeholder,
+.properties-panel textarea::placeholder {
+  color: #9ca3af;
+  opacity: 1;
+}
+.properties-panel select option {
+  color: #111827;
+  background-color: #ffffff;
+}
+
+/* ─────────────────────────────────────────────
  * Design System — Dashboard & Admin Panel
  * Dark mode, Google Sans Flex font, reference-matched
  * ──────────────────────────────────────────── */
