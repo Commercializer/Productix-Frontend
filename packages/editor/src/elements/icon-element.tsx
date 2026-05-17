@@ -5,9 +5,85 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Sparkles } from "lucide-react";
-import { icons as lucideIcons } from "lucide-react";
+// Static named imports avoid lucide-react's lazy `icons` registry, which trips
+// Turbopack chunking on prod (e.g. "module factory is not available" for QrCode).
+import {
+  Activity, AlertCircle, AlertTriangle, AlignCenter, AlignJustify, AlignLeft, AlignRight, Apple,
+  Archive, ArrowBigLeft, ArrowBigRight, ArrowDown, ArrowDownLeft, ArrowDownRight, ArrowLeft, ArrowRight,
+  ArrowUp, ArrowUpLeft, ArrowUpRight, AtSign, Atom, Award, BadgeCheck, BadgeDollarSign,
+  Banknote, BarChart2, BarChart3, Battery, BatteryCharging, BatteryFull, BatteryLow, BatteryMedium,
+  BatteryWarning, Bell, Bike, Bold, Bolt, Book, BookOpen, Bookmark,
+  Box, Briefcase, Building, Building2, Calendar, CalendarDays, Camera, Car,
+  Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsDown, ChevronsLeft, ChevronsRight,
+  ChevronsUp, Chrome, Circle, CircleDollarSign, Clipboard, Clock, Cloud, CloudDrizzle,
+  CloudFog, CloudHail, CloudLightning, CloudMoon, CloudOff, CloudRain, CloudSnow, CloudSun,
+  Code, Coffee, Cog, Compass, Copy, CornerDownRight, Cpu, CreditCard,
+  Crown, Diamond, DollarSign, Download, Dribbble, Droplet, Droplets, Earth,
+  ExternalLink, Eye, EyeOff, Facebook, Figma, File, FileText, Filter,
+  Fingerprint, Flag, Flame, Flashlight, FlashlightOff, Flower2, Folder, FolderOpen,
+  Forward, Gem, Gift, GitBranch, Github, Globe, GraduationCap, Grid3X3,
+  Hammer, HardDrive, Hash, Heading, Headphones, Heart, HeartHandshake, HelpCircle,
+  Home, Image, Inbox, Info, Instagram, Italic, Key, Laptop,
+  LayoutDashboard, LayoutGrid, Leaf, Lightbulb, LightbulbOff, LineChart, Link, Linkedin,
+  List, Loader2, Locate, Lock, Mail, MailOpen, Map, MapPin,
+  Maximize, Medal, Megaphone, Menu, MessageCircle, MessageSquare, MessagesSquare, Mic,
+  MicOff, Minimize, Minus, Monitor, Moon, MoreHorizontal, MoreVertical, Move,
+  MoveDown, MoveLeft, MoveRight, MoveUp, Music, Navigation, Newspaper, Package,
+  Paintbrush, Palette, Pause, Pen, Pencil, Phone, PhoneCall, PieChart,
+  Pizza, Plane, Play, Plug, PlugZap, Plus, Podcast, Power,
+  PowerOff, QrCode, Quote, Radiation, Radio, RadioTower, Rainbow, Receipt,
+  Redo2, RefreshCw, Repeat, Reply, Rocket, RotateCcw, RotateCw, Rss,
+  Search, Send, Settings, Settings2, Share, Share2, Shield, ShieldAlert,
+  ShieldCheck, Ship, ShoppingBag, ShoppingCart, Shuffle, Signal, SignalHigh, SignalLow,
+  SignalMedium, Slack, SlidersHorizontal, Smartphone, Snowflake, Sparkle, Sparkles, Square,
+  Star, Store, Sun, Sunrise, Sunset, Tablet, Target, Terminal,
+  Thermometer, ThermometerSnowflake, ThermometerSun, ThumbsDown, ThumbsUp, Timer, ToggleLeft, ToggleRight,
+  Train, Trees, TrendingDown, TrendingUp, Triangle, Trophy, Truck, Twitch,
+  Twitter, Type, Umbrella, UmbrellaOff, Underline, Undo2, Unlock, Upload,
+  User, UserCheck, UserMinus, UserPlus, Users, UtensilsCrossed, Video, Volume2,
+  VolumeX, Wallet, Waves, Wifi, Wind, Wrench, X, Youtube,
+  Zap, ZapOff, ZoomIn, ZoomOut,
+} from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
+
+type LucideIconComp = React.ComponentType<{ size?: number; color?: string }>;
+const LUCIDE_ICONS: Record<string, LucideIconComp> = {
+  Activity, AlertCircle, AlertTriangle, AlignCenter, AlignJustify, AlignLeft, AlignRight, Apple,
+  Archive, ArrowBigLeft, ArrowBigRight, ArrowDown, ArrowDownLeft, ArrowDownRight, ArrowLeft, ArrowRight,
+  ArrowUp, ArrowUpLeft, ArrowUpRight, AtSign, Atom, Award, BadgeCheck, BadgeDollarSign,
+  Banknote, BarChart2, BarChart3, Battery, BatteryCharging, BatteryFull, BatteryLow, BatteryMedium,
+  BatteryWarning, Bell, Bike, Bold, Bolt, Book, BookOpen, Bookmark,
+  Box, Briefcase, Building, Building2, Calendar, CalendarDays, Camera, Car,
+  Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsDown, ChevronsLeft, ChevronsRight,
+  ChevronsUp, Chrome, Circle, CircleDollarSign, Clipboard, Clock, Cloud, CloudDrizzle,
+  CloudFog, CloudHail, CloudLightning, CloudMoon, CloudOff, CloudRain, CloudSnow, CloudSun,
+  Code, Coffee, Cog, Compass, Copy, CornerDownRight, Cpu, CreditCard,
+  Crown, Diamond, DollarSign, Download, Dribbble, Droplet, Droplets, Earth,
+  ExternalLink, Eye, EyeOff, Facebook, Figma, File, FileText, Filter,
+  Fingerprint, Flag, Flame, Flashlight, FlashlightOff, Flower2, Folder, FolderOpen,
+  Forward, Gem, Gift, GitBranch, Github, Globe, GraduationCap, Grid3X3,
+  Hammer, HardDrive, Hash, Heading, Headphones, Heart, HeartHandshake, HelpCircle,
+  Home, Image, Inbox, Info, Instagram, Italic, Key, Laptop,
+  LayoutDashboard, LayoutGrid, Leaf, Lightbulb, LightbulbOff, LineChart, Link, Linkedin,
+  List, Loader2, Locate, Lock, Mail, MailOpen, Map, MapPin,
+  Maximize, Medal, Megaphone, Menu, MessageCircle, MessageSquare, MessagesSquare, Mic,
+  MicOff, Minimize, Minus, Monitor, Moon, MoreHorizontal, MoreVertical, Move,
+  MoveDown, MoveLeft, MoveRight, MoveUp, Music, Navigation, Newspaper, Package,
+  Paintbrush, Palette, Pause, Pen, Pencil, Phone, PhoneCall, PieChart,
+  Pizza, Plane, Play, Plug, PlugZap, Plus, Podcast, Power,
+  PowerOff, QrCode, Quote, Radiation, Radio, RadioTower, Rainbow, Receipt,
+  Redo2, RefreshCw, Repeat, Reply, Rocket, RotateCcw, RotateCw, Rss,
+  Search, Send, Settings, Settings2, Share, Share2, Shield, ShieldAlert,
+  ShieldCheck, Ship, ShoppingBag, ShoppingCart, Shuffle, Signal, SignalHigh, SignalLow,
+  SignalMedium, Slack, SlidersHorizontal, Smartphone, Snowflake, Sparkle, Sparkles, Square,
+  Star, Store, Sun, Sunrise, Sunset, Tablet, Target, Terminal,
+  Thermometer, ThermometerSnowflake, ThermometerSun, ThumbsDown, ThumbsUp, Timer, ToggleLeft, ToggleRight,
+  Train, Trees, TrendingDown, TrendingUp, Triangle, Trophy, Truck, Twitch,
+  Twitter, Type, Umbrella, UmbrellaOff, Underline, Undo2, Unlock, Upload,
+  User, UserCheck, UserMinus, UserPlus, Users, UtensilsCrossed, Video, Volume2,
+  VolumeX, Wallet, Waves, Wifi, Wind, Wrench, X, Youtube,
+  Zap, ZapOff, ZoomIn, ZoomOut,
+};
 
 /* ─── Icon Categories ─────────────────────────── */
 
@@ -137,7 +213,7 @@ function IconRenderer({ name, size, color }: { name: string; size: number; color
   if (isEmoji(name)) {
     return <span style={{ fontSize: size, lineHeight: 1 }}>{name}</span>;
   }
-  const IconComp = (lucideIcons as Record<string, React.ComponentType<{ size?: number; color?: string }>>)[name];
+  const IconComp = LUCIDE_ICONS[name];
   if (!IconComp) return <span style={{ fontSize: size, color }}>{name}</span>;
   return <IconComp size={size} color={color} />;
 }
