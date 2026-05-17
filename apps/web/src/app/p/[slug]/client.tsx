@@ -62,6 +62,25 @@ export function PublicPageClient({ page }: PublicPageClientProps) {
   // Check if we have valid canvas content
   const hasCanvasContent = doc && doc.version && doc.artboards && doc.artboards.length > 0;
 
+  // Background color for the page chrome — match the first artboard so wide-viewport
+  // gutters (where the artboard is centered) and any sub-pixel scaling gaps don't
+  // reveal a different page background and look like "tiny white lines" on the sides.
+  const pageBackground = (hasCanvasContent && doc.artboards[0]?.backgroundColor) || "#fff";
+
+  // Sync browser chrome (Android Chrome address bar, etc.) with the actual page bg.
+  // generateViewport sets this on the server too, but we re-apply on the client so the
+  // meta stays correct if the canvas doc is updated after mount or the SSR fallback
+  // disagreed with what we actually render.
+  useEffect(() => {
+    let meta = document.querySelector('meta[name="theme-color"]');
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.setAttribute("name", "theme-color");
+      document.head.appendChild(meta);
+    }
+    meta.setAttribute("content", pageBackground);
+  }, [pageBackground]);
+
   // Close dropdown on outside click
   const handleOutsideClick = useCallback((e: MouseEvent) => {
     if (langDropdownRef.current && !langDropdownRef.current.contains(e.target as Node)) {
@@ -83,7 +102,10 @@ export function PublicPageClient({ page }: PublicPageClientProps) {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#fff", position: "relative" }}>
+    <div style={{ minHeight: "100vh", background: pageBackground, position: "relative" }}>
+      {/* Paint html/body the same color so iOS rubber-band overscroll and any
+          sub-pixel gaps around the scaled artboard don't reveal a white background. */}
+      <style>{`html, body { background: ${pageBackground}; }`}</style>
       {/* Language dropdown — top right floating */}
       {showLanguageSwitcher && (
         <div

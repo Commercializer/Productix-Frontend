@@ -1,4 +1,5 @@
-import type { Metadata } from "next";
+import { cache } from "react";
+import type { Metadata, Viewport } from "next";
 import { getPublicPageBySlugAction } from "@/lib/dashboard/actions";
 import { PublicPageClient } from "./client";
 
@@ -10,9 +11,31 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
+// Dedupe the DB call across generateMetadata, generateViewport, and the page.
+const getPage = cache(getPublicPageBySlugAction);
+
+/**
+ * Resolve the browser chrome color for this page.
+ *
+ * Priority: first artboard's background → stored page themeColor → brand themeColor → default.
+ * The artboard wins because that is what actually paints behind the rendered design,
+ * and we want the browser address bar / status bar to visually merge with the page.
+ */
+function resolveThemeColor(page: {
+  content?: unknown;
+  themeColor?: string | null;
+  brand?: { themeColor: string | null } | null;
+}) {
+  const artboardBg = (() => {
+    const doc = page.content as { artboards?: Array<{ backgroundColor?: string | null }> } | null;
+    return doc?.artboards?.[0]?.backgroundColor || null;
+  })();
+  return artboardBg || page.themeColor || page.brand?.themeColor || "#0284c7";
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const page = await getPublicPageBySlugAction(slug);
+  const page = await getPage(slug);
 
   if (!page) {
     return {
@@ -28,9 +51,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     page.description ||
     `${page.productName} by ${page.company.name}`;
 
+  const iconUrl = page.logoUrl || page.brand?.logoUrl || page.company.logoUrl || undefined;
+
   return {
     title,
     description,
+    applicationName: page.company.name,
+    authors: [{ name: page.company.name }],
     openGraph: {
       type: "website",
       title: page.productName,
@@ -52,9 +79,44 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       index: true,
       follow: true,
     },
-    other: {
-      "theme-color": page.themeColor || "#000000",
+    icons: iconUrl
+      ? {
+          icon: [{ url: iconUrl }],
+          shortcut: [{ url: iconUrl }],
+          apple: [{ url: iconUrl }],
+        }
+      : undefined,
+    appleWebApp: {
+      capable: true,
+      title: page.productName,
+      statusBarStyle: "black-translucent",
     },
+    formatDetection: {
+      telephone: false,
+      email: false,
+      address: false,
+    },
+    other: {
+      "msapplication-TileColor": resolveThemeColor(page),
+      ...(iconUrl && { "msapplication-TileImage": iconUrl }),
+    },
+  };
+}
+
+export async function generateViewport({ params }: PageProps): Promise<Viewport> {
+  const { slug } = await params;
+  const page = await getPage(slug);
+  const themeColor = page ? resolveThemeColor(page) : "#0284c7";
+
+  return {
+    themeColor: [
+      { media: "(prefers-color-scheme: light)", color: themeColor },
+      { media: "(prefers-color-scheme: dark)", color: themeColor },
+    ],
+    colorScheme: "light",
+    width: "device-width",
+    initialScale: 1,
+    viewportFit: "cover",
   };
 }
 
@@ -64,7 +126,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function PublicPage({ params }: PageProps) {
   const { slug } = await params;
-  const page = await getPublicPageBySlugAction(slug);
+  const page = await getPage(slug);
 
   if (!page) {
     return <NotFoundView />;
