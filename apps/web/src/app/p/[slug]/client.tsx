@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import type { CanvasDocument, ContentLocale } from "@productix/types";
 import { getContentLocaleMeta } from "@productix/types";
 import { PublicRenderer } from "@productix/editor";
+import { BrowserThemeWatcher } from "@/components/browser-theme-watcher";
 
 interface PublicPageData {
   id: string;
@@ -67,20 +68,6 @@ export function PublicPageClient({ page }: PublicPageClientProps) {
   // reveal a different page background and look like "tiny white lines" on the sides.
   const pageBackground = (hasCanvasContent && doc.artboards[0]?.backgroundColor) || "#fff";
 
-  // Sync browser chrome (Android Chrome address bar, etc.) with the actual page bg.
-  // generateViewport sets this on the server too, but we re-apply on the client so the
-  // meta stays correct if the canvas doc is updated after mount or the SSR fallback
-  // disagreed with what we actually render.
-  useEffect(() => {
-    let meta = document.querySelector('meta[name="theme-color"]');
-    if (!meta) {
-      meta = document.createElement("meta");
-      meta.setAttribute("name", "theme-color");
-      document.head.appendChild(meta);
-    }
-    meta.setAttribute("content", pageBackground);
-  }, [pageBackground]);
-
   // Close dropdown on outside click
   const handleOutsideClick = useCallback((e: MouseEvent) => {
     if (langDropdownRef.current && !langDropdownRef.current.contains(e.target as Node)) {
@@ -106,6 +93,9 @@ export function PublicPageClient({ page }: PublicPageClientProps) {
       {/* Paint html/body the same color so iOS rubber-band overscroll and any
           sub-pixel gaps around the scaled artboard don't reveal a white background. */}
       <style>{`html, body { background: ${pageBackground}; }`}</style>
+
+      {/* Keep browser chrome (Android Chrome address bar, etc.) in sync with the page bg. */}
+      <BrowserThemeWatcher color={pageBackground} />
       {/* Language dropdown — top right floating */}
       {showLanguageSwitcher && (
         <div
