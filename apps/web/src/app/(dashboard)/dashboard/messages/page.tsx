@@ -51,7 +51,7 @@ export default function MessagesPage() {
                       <td className="p-4 text-(--ds-text-secondary)">{msg.productName}</td>
                       <td className="p-4">
                         <span className={`px-2.5 py-1 rounded-full text-[11px] font-medium uppercase tracking-tight ${
-                          msg.status === 'NEW' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' :
+                          msg.status === 'NEW' ? 'bg-primary/10 text-primary' :
                           msg.status === 'CLOSED' ? 'bg-green-500/10 text-green-600 dark:text-green-400' :
                           'bg-orange-500/10 text-orange-600 dark:text-orange-400'
                         }`}>

@@ -28,7 +28,7 @@ export default function AnalyticsPage() {
           </div>
           <div className="bg-(--ds-surface) border border-(--ds-border) rounded-xl p-5 shadow-xs">
             <p className="text-[13px] text-(--ds-text-secondary) font-medium mb-1">Total QR Scans</p>
-            <h2 className="text-3xl font-bold text-blue-600 dark:text-blue-500">
+            <h2 className="text-3xl font-bold text-primary">
               {loading ? "—" : (stats?.totalQrLeads ?? 0).toLocaleString()}
             </h2>
           </div>

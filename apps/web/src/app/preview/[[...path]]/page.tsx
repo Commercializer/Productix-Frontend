@@ -88,7 +88,7 @@ export default function PreviewPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/editor"
-            className="inline-flex h-8 items-center rounded-md bg-blue-600 px-4 text-xs font-semibold text-white transition-colors hover:bg-blue-700"
+            className="inline-flex h-8 items-center rounded-md bg-primary px-4 text-xs font-semibold text-primary-foreground transition-colors hover:opacity-90"
           >
             Edit Page
           </Link>

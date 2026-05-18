@@ -31,9 +31,10 @@ function TextElementComponent({ props, isEditing, scaleFactor = 1, onPropsChange
   const scaledFontSize = Math.round(actualFontSize * scaleFactor);
   const scaledPadding = Math.round(4 * scaleFactor);
 
-  // Sync external text changes to the DOM (e.g. from the property panel).
-  // Skip while the user is actively editing — overwriting would clobber the
-  // caret and any in-progress line breaks.
+  // The contentEditable div has NO React children — we manage its content
+  // imperatively via this effect. Rendering {text} as a JSX child would let
+  // React reconcile and clobber the user's in-progress typing on any
+  // re-render. Skip while focused so we never wipe the caret.
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -43,10 +44,20 @@ function TextElementComponent({ props, isEditing, scaleFactor = 1, onPropsChange
     }
   }, [text]);
 
+  // Commit on every input so edits stick even if blur never fires — e.g. when
+  // clicking another element flips isEditing to false and contentEditable
+  // from true to false on a still-focused node, which some browsers do not
+  // treat as a blur.
+  const handleInput = useCallback(() => {
+    if (!ref.current) return;
+    const newText = ref.current.innerText;
+    if (newText !== text) {
+      onPropsChange({ text: newText });
+    }
+  }, [text, onPropsChange]);
+
   const handleBlur = useCallback(() => {
     if (!ref.current) return;
-    // innerText preserves Shift+Enter/Enter as \n across the <br>/<div>
-    // structures different browsers insert in contentEditable.
     const newText = ref.current.innerText;
     if (newText !== text) {
       onPropsChange({ text: newText });
@@ -88,6 +99,7 @@ function TextElementComponent({ props, isEditing, scaleFactor = 1, onPropsChange
       ref={ref}
       contentEditable={isEditing}
       suppressContentEditableWarning
+      onInput={isEditing ? handleInput : undefined}
       onBlur={handleBlur}
       onKeyDown={isEditing ? handleKeyDown : undefined}
       style={{
@@ -106,9 +118,7 @@ function TextElementComponent({ props, isEditing, scaleFactor = 1, onPropsChange
         cursor: isEditing ? "text" : "default",
         padding: scaledPadding,
       }}
-    >
-      {text}
-    </div>
+    />
   );
 }
 

@@ -333,8 +333,16 @@
 }
 
 @utility text-gradient {
-  /* Gradient text */
-  @apply bg-linear-to-r from-primary to-blue-400 bg-clip-text text-transparent;
+  /* Gradient text — brand */
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility brand-gradient {
+  /* Brand gradient background */
+  background: var(--brand-gradient);
 }
 
 @utility no-scrollbar {
@@ -361,8 +369,8 @@
     --popover-foreground: hsl(222.2 84% 4.9%);
 
     /* Brand */
-    --primary: hsl(221.2 83.2% 53.3%);
-    --primary-foreground: hsl(210 40% 98%);
+    --primary: hsl(204 61% 66%);
+    --primary-foreground: hsl(0 0% 100%);
     --secondary: hsl(210 40% 96.1%);
     --secondary-foreground: hsl(222.2 47.4% 11.2%);
 
@@ -377,7 +385,7 @@
     /* Chrome */
     --border: hsl(214.3 31.8% 91.4%);
     --input: hsl(214.3 31.8% 91.4%);
-    --ring: hsl(221.2 83.2% 53.3%);
+    --ring: hsl(204 61% 66%);
     --radius: 0.625rem;
   }
 
@@ -391,8 +399,8 @@
     --popover-foreground: hsl(210 40% 98%);
 
     /* Brand */
-    --primary: hsl(217.2 91.2% 59.8%);
-    --primary-foreground: hsl(222.2 47.4% 11.2%);
+    --primary: hsl(204 61% 66%);
+    --primary-foreground: hsl(0 0% 100%);
     --secondary: hsl(217.2 32.6% 17.5%);
     --secondary-foreground: hsl(210 40% 98%);
 
@@ -407,7 +415,7 @@
     /* Chrome */
     --border: hsl(217.2 32.6% 17.5%);
     --input: hsl(217.2 32.6% 17.5%);
-    --ring: hsl(224.3 76.3% 48%);
+    --ring: hsl(204 61% 66%);
     --radius: 0.625rem;
   }
 }
@@ -481,9 +489,12 @@
   --ds-surface: #ffffff;
   --ds-surface-2: #f8fafc;
   --ds-border: #f1f5f9;
-  --ds-accent: #bae6fd;
-  --ds-accent-hover: #7dd3fc;
-  --ds-accent-text: #0284c7;
+  --ds-accent: #73B2DD;
+  --ds-accent-hover: #5F9FD1;
+  --ds-accent-text: #ffffff;
+  --ds-accent-strong: #244B7A;
+  --ds-accent-rgb: 115, 178, 221;
+  --brand-gradient: linear-gradient(135deg, #73B2DD 0%, #5F9FD1 30%, #4A88C7 65%, #244B7A 100%);
   --ds-text-primary: #0f172a;
   --ds-text-secondary: #475569;
   --ds-text-muted: #94a3b8;
@@ -505,9 +516,12 @@
   --ds-surface: #0F2230;
   --ds-surface-2: #16303F;
   --ds-border: rgba(255, 255, 255, 0.1);
-  --ds-accent: #bae6fd;
-  --ds-accent-hover: #7dd3fc;
-  --ds-accent-text: #0284c7;
+  --ds-accent: #73B2DD;
+  --ds-accent-hover: #5F9FD1;
+  --ds-accent-text: #ffffff;
+  --ds-accent-strong: #244B7A;
+  --ds-accent-rgb: 115, 178, 221;
+  --brand-gradient: linear-gradient(135deg, #73B2DD 0%, #5F9FD1 30%, #4A88C7 65%, #244B7A 100%);
   --ds-text-primary: #ededed;
   --ds-text-secondary: #a1a1aa;
   --ds-text-muted: #71717a;
@@ -916,8 +930,8 @@
   width: 30px;
   height: 30px;
   border-radius: 8px;
-  background: rgba(2,132,199,0.1);
-  color: var(--ds-accent-text);
+  background: rgba(var(--ds-accent-rgb), 0.15);
+  color: var(--ds-accent-strong);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1082,7 +1096,7 @@
 }
 
 .form-input::placeholder { color: var(--ds-text-muted); }
-.form-input:focus { border-color: var(--ds-accent-text); box-shadow: 0 0 0 3px rgba(2,132,199,0.12); }
+.form-input:focus { border-color: var(--ds-accent); box-shadow: 0 0 0 3px rgba(var(--ds-accent-rgb), 0.18); }
 .form-input:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .password-field { position: relative; display: flex; align-items: center; }
@@ -1176,8 +1190,8 @@
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse 600px 400px at 10% 20%, rgba(79,110,247,0.1) 0%, transparent 70%),
-    radial-gradient(ellipse 500px 400px at 90% 80%, rgba(167,139,250,0.08) 0%, transparent 70%);
+    radial-gradient(ellipse 600px 400px at 10% 20%, rgba(115,178,221,0.18) 0%, transparent 70%),
+    radial-gradient(ellipse 500px 400px at 90% 80%, rgba(36,75,122,0.12) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -1253,14 +1267,14 @@
   transition: all 0.15s;
 }
 
-.quick-link-card:hover { border-color: var(--ds-accent); background: rgba(2,132,199,0.05); transform: translateY(-1px); }
+.quick-link-card:hover { border-color: var(--ds-accent); background: rgba(var(--ds-accent-rgb), 0.08); transform: translateY(-1px); }
 
 .quick-link-icon {
   width: 42px;
   height: 42px;
   border-radius: 10px;
-  background: rgba(2,132,199,0.1);
-  color: var(--ds-accent-text);
+  background: rgba(var(--ds-accent-rgb), 0.15);
+  color: var(--ds-accent-strong);
   display: flex;
   align-items: center;
   justify-content: center;
