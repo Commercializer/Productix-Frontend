@@ -9,6 +9,16 @@ import { MousePointerClick } from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
 import { HexColorPopover } from "./hex-color-popover";
 
+/** True when running inside the editor canvas (set by EditRenderer). */
+function isInsideEditor(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return !!(window as unknown as Record<string, unknown>).__productixEditor;
+  } catch {
+    return false;
+  }
+}
+
 /* ─── Component ─────────────────────────────── */
 
 function ButtonElementComponent({ props, isEditing, scaleFactor = 1 }: ElementRenderProps) {
@@ -47,7 +57,7 @@ function ButtonElementComponent({ props, isEditing, scaleFactor = 1 }: ElementRe
     borderRadius: scaledBorderRadius,
     fontSize: scaledFontSize,
     fontWeight,
-    cursor: isEditing ? "default" : "pointer",
+    cursor: isInsideEditor() ? "inherit" : isEditing ? "default" : "pointer",
     transition: "all 0.15s ease",
     textDecoration: "none",
     letterSpacing: "0.01em",
@@ -62,7 +72,10 @@ function ButtonElementComponent({ props, isEditing, scaleFactor = 1 }: ElementRe
 
   const url = props.url as string;
 
-  if (!isEditing && url) {
+  // In the editor canvas, never render as <a> — the browser's native
+  // link-drag behavior fights with our pointer-capture drag and makes
+  // buttons feel un-draggable / glitchy. Anchor is only for live pages.
+  if (!isEditing && url && !isInsideEditor()) {
     return (
       <a href={url} target="_blank" rel="noopener noreferrer" style={style}>
         {text}
@@ -70,7 +83,11 @@ function ButtonElementComponent({ props, isEditing, scaleFactor = 1 }: ElementRe
     );
   }
 
-  return <div style={style}>{text}</div>;
+  return (
+    <div style={style} draggable={false}>
+      {text}
+    </div>
+  );
 }
 
 /* ─── Property Panel ────────────────────────── */

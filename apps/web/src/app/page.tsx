@@ -149,9 +149,9 @@ function Hero() {
     <section className="lp-noise-light relative isolate overflow-hidden pt-32 pb-24 md:pt-40 md:pb-32">
       {/* Pastel aurora gradients */}
       <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute left-1/2 top-[-10%] h-[680px] w-[680px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(168,85,247,0.26),transparent_60%)] blur-3xl [animation:lp-aurora-shift_18s_ease-in-out_infinite]" />
-        <div className="absolute right-[-10%] top-[18%] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle,rgba(56,189,248,0.22),transparent_60%)] blur-3xl [animation:lp-aurora-shift-2_22s_ease-in-out_infinite]" />
-        <div className="absolute left-[-10%] bottom-[-10%] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle,rgba(244,114,182,0.22),transparent_60%)] blur-3xl [animation:lp-aurora-shift_24s_ease-in-out_infinite_reverse]" />
+        <div className="absolute left-1/2 top-[-10%] h-[680px] w-[680px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(115,178,221,0.26),transparent_60%)] blur-3xl [animation:lp-aurora-shift_18s_ease-in-out_infinite]" />
+        <div className="absolute right-[-10%] top-[18%] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle,rgba(115,178,221,0.22),transparent_60%)] blur-3xl [animation:lp-aurora-shift-2_22s_ease-in-out_infinite]" />
+        <div className="absolute left-[-10%] bottom-[-10%] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle,rgba(36,75,122,0.22),transparent_60%)] blur-3xl [animation:lp-aurora-shift_24s_ease-in-out_infinite_reverse]" />
       </div>
 
       <div className="lp-grid-bg-light pointer-events-none absolute inset-0 -z-10 opacity-70 [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_70%)]" />
@@ -160,8 +160,8 @@ function Hero() {
         <div className="lp-reveal">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-black/[0.08] bg-white/70 px-3 py-1.5 text-[11.5px] font-medium uppercase tracking-[0.14em] text-black/65 shadow-[0_1px_2px_rgba(0,0,0,0.04)] backdrop-blur-md">
             <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inset-0 rounded-full bg-emerald-500 [animation:lp-ping-slow_2s_ease-out_infinite]" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              <span className="absolute inset-0 rounded-full bg-sky-500 [animation:lp-ping-slow_2s_ease-out_infinite]" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-sky-500" />
             </span>
             Enterprise · Product Experience Infrastructure
           </div>
@@ -171,7 +171,7 @@ function Hero() {
             <br className="hidden sm:block" />{" "}
             Infrastructure for{" "}
             <span className="relative inline-block">
-              <span className="bg-gradient-to-r from-fuchsia-600 via-violet-600 to-cyan-600 bg-clip-text italic text-transparent">
+              <span className="bg-gradient-to-r from-sky-600 via-blue-600 to-sky-600 bg-clip-text italic text-transparent">
                 modern consumer brands.
               </span>
               <svg
@@ -195,8 +195,8 @@ function Hero() {
                 />
                 <defs>
                   <linearGradient id="hero-underline" x1="0" x2="1" y1="0" y2="0">
-                    <stop offset="0%" stopColor="#c026d3" />
-                    <stop offset="100%" stopColor="#0891b2" />
+                    <stop offset="0%" stopColor="#73B2DD" />
+                    <stop offset="100%" stopColor="#244B7A" />
                   </linearGradient>
                 </defs>
               </svg>
@@ -255,12 +255,12 @@ function ConnectedProductHero() {
   return (
     <div className="relative">
       {/* Soft glow halo */}
-      <div className="absolute -inset-10 -z-10 rounded-[3rem] bg-gradient-to-br from-fuchsia-400/25 via-violet-400/15 to-cyan-400/25 blur-3xl [animation:lp-glow-pulse_4s_ease-in-out_infinite]" />
+      <div className="absolute -inset-10 -z-10 rounded-[3rem] bg-gradient-to-br from-sky-400/25 via-blue-400/15 to-sky-400/25 blur-3xl [animation:lp-glow-pulse_4s_ease-in-out_infinite]" />
 
       {/* Floating annotation chips */}
       <div className="absolute -top-3 -left-2 z-30 hidden md:block">
         <div className="flex items-center gap-2 rounded-full border border-black/[0.06] bg-white px-3 py-1.5 text-[11px] font-medium text-black/75 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.25)] [animation:lp-float-y_5s_ease-in-out_infinite]">
-          <Radio className="h-3 w-3 text-fuchsia-500" />
+          <Radio className="h-3 w-3 text-sky-500" />
           Scan · LIVE
         </div>
       </div>
@@ -269,7 +269,7 @@ function ConnectedProductHero() {
           className="flex items-center gap-2 rounded-full border border-black/[0.06] bg-white px-3 py-1.5 text-[11px] font-medium text-black/75 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.25)] [animation:lp-float-y-sm_4.2s_ease-in-out_infinite]"
           style={{ animationDelay: "0.6s" }}
         >
-          <span className="h-1.5 w-1.5 rounded-full bg-cyan-500" />
+          <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
           12 markets · 4 langs
         </div>
       </div>
@@ -279,7 +279,7 @@ function ConnectedProductHero() {
         {/* Status bar */}
         <div className="flex items-center justify-between px-4 pt-1 pb-2 text-[10px] font-semibold text-white/55">
           <span>9:41</span>
-          <span className="rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-300">
+          <span className="rounded-full bg-sky-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-sky-300">
             Connected
           </span>
         </div>
@@ -307,7 +307,7 @@ function ConnectedProductHero() {
 
           {/* Pulse rings (animated outward) */}
           <div className="absolute left-1/2 top-[42%] -translate-x-1/2 -translate-y-1/2">
-            <span className="block h-24 w-24 rounded-full border border-fuchsia-400/40 [animation:lp-pulse-ring_2.4s_ease-out_infinite]" />
+            <span className="block h-24 w-24 rounded-full border border-sky-400/40 [animation:lp-pulse-ring_2.4s_ease-out_infinite]" />
           </div>
 
           {/* 3D packaging mockup */}
@@ -315,12 +315,12 @@ function ConnectedProductHero() {
             className="absolute left-1/2 top-[42%] -translate-x-1/2 -translate-y-1/2"
             style={{ animation: "lp-tilt-3d 6s ease-in-out infinite" }}
           >
-            <div className="relative h-44 w-24 rounded-[18px] bg-gradient-to-b from-amber-300 via-orange-500 to-rose-700 shadow-[0_30px_60px_-10px_rgba(220,38,38,0.45),inset_0_2px_0_rgba(255,255,255,0.5),inset_-6px_0_18px_rgba(0,0,0,0.25)]">
+            <div className="relative h-44 w-24 rounded-[18px] bg-gradient-to-b from-sky-300 via-blue-500 to-blue-700 shadow-[0_30px_60px_-10px_rgba(36,75,122,0.45),inset_0_2px_0_rgba(255,255,255,0.5),inset_-6px_0_18px_rgba(0,0,0,0.25)]">
               {/* Cap */}
               <div className="absolute left-1/2 -top-2 h-3 w-10 -translate-x-1/2 rounded-t-md bg-gradient-to-b from-zinc-300 to-zinc-600 shadow-md" />
               {/* Label */}
               <div className="absolute inset-x-1.5 top-9 rounded-md bg-black/35 px-1.5 py-1.5 backdrop-blur-sm">
-                <div className="text-[8px] font-bold uppercase tracking-[0.18em] text-amber-200">
+                <div className="text-[8px] font-bold uppercase tracking-[0.18em] text-sky-200">
                   Volt · No 7
                 </div>
                 <div className="mt-1 text-[10px] font-bold leading-tight text-white">
@@ -353,13 +353,13 @@ function ConnectedProductHero() {
           {/* Scan sweep line */}
           <div className="pointer-events-none absolute inset-x-0 top-0 h-full overflow-hidden">
             <div
-              className="absolute inset-x-12 h-px bg-gradient-to-r from-transparent via-cyan-300 to-transparent shadow-[0_0_18px_rgba(34,211,238,0.85)]"
+              className="absolute inset-x-12 h-px bg-gradient-to-r from-transparent via-sky-300 to-transparent shadow-[0_0_18px_rgba(115,178,221,0.85)]"
               style={{ animation: "lp-scan-sweep 3.2s ease-in-out infinite" }}
             />
           </div>
 
           {/* Hairline crosshair */}
-          <div className="absolute left-1/2 top-[42%] h-44 w-24 -translate-x-1/2 -translate-y-1/2 rounded-[18px] border border-cyan-300/70 shadow-[0_0_18px_rgba(34,211,238,0.35)_inset]">
+          <div className="absolute left-1/2 top-[42%] h-44 w-24 -translate-x-1/2 -translate-y-1/2 rounded-[18px] border border-sky-300/70 shadow-[0_0_18px_rgba(115,178,221,0.35)_inset]">
             {[
               "-top-1 -left-1",
               "-top-1 -right-1",
@@ -368,17 +368,17 @@ function ConnectedProductHero() {
             ].map((pos) => (
               <span
                 key={pos}
-                className={`absolute ${pos} h-2 w-2 rounded-[2px] border border-cyan-300 bg-[#0a0a14]`}
+                className={`absolute ${pos} h-2 w-2 rounded-[2px] border border-sky-300 bg-[#0a0a14]`}
               />
             ))}
-            <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-cyan-400 px-1.5 py-0.5 text-[9px] font-bold text-black">
+            <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-sky-400 px-1.5 py-0.5 text-[9px] font-bold text-black">
               SKU · VLT-007-EU
             </span>
           </div>
 
           {/* Top label */}
           <div className="absolute left-4 top-3">
-            <div className="text-[9px] font-semibold uppercase tracking-[0.22em] text-fuchsia-200/80">
+            <div className="text-[9px] font-semibold uppercase tracking-[0.22em] text-sky-200/80">
               Productix · Live Scan
             </div>
             <div className="mt-1 text-[14px] font-bold leading-tight text-white">
@@ -394,16 +394,16 @@ function ConnectedProductHero() {
               <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/55">
                 Scan Intelligence
               </span>
-              <span className="flex items-center gap-1 text-[9px] font-semibold text-emerald-300">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 [animation:lp-data-pulse_1.6s_ease-in-out_infinite]" />
+              <span className="flex items-center gap-1 text-[9px] font-semibold text-sky-300">
+                <span className="h-1.5 w-1.5 rounded-full bg-sky-400 [animation:lp-data-pulse_1.6s_ease-in-out_infinite]" />
                 streaming
               </span>
             </div>
             <div className="grid grid-cols-3 gap-2">
               {[
-                { l: "Scans · 24h", v: "12,847", c: "text-cyan-300" },
-                { l: "Avg dwell", v: "1m 38s", c: "text-fuchsia-300" },
-                { l: "Convert", v: "8.4%", c: "text-amber-300" },
+                { l: "Scans · 24h", v: "12,847", c: "text-sky-300" },
+                { l: "Avg dwell", v: "1m 38s", c: "text-sky-300" },
+                { l: "Convert", v: "8.4%", c: "text-sky-300" },
               ].map((m) => (
                 <div key={m.l}>
                   <div className={`font-mono text-[14px] font-bold ${m.c}`}>
@@ -420,7 +420,7 @@ function ConnectedProductHero() {
       {/* Floating side cards */}
       <div className="pointer-events-none absolute -left-10 bottom-20 hidden w-48 rotate-[-6deg] rounded-xl border border-black/[0.06] bg-white p-3 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] [animation:lp-float-y-lg_7s_ease-in-out_infinite] lg:block">
         <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-gradient-to-br from-fuchsia-500 to-violet-600 text-white">
+          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-gradient-to-br from-sky-500 to-blue-600 text-white">
             <QrCode className="h-3.5 w-3.5" />
           </div>
           <div className="flex-1 text-[10.5px] font-semibold text-black">
@@ -434,7 +434,7 @@ function ConnectedProductHero() {
       </div>
 
       <div className="pointer-events-none absolute -right-6 top-16 hidden w-52 rotate-[5deg] rounded-xl border border-black/[0.06] bg-white p-3 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] [animation:lp-float-y_8s_ease-in-out_infinite] lg:block">
-        <div className="text-[9.5px] font-bold uppercase tracking-widest text-cyan-600">
+        <div className="text-[9.5px] font-bold uppercase tracking-widest text-sky-600">
           First-party signal
         </div>
         <div className="mt-2 space-y-1">
@@ -487,7 +487,7 @@ function EnterpriseTrustStrip() {
                 className="flex items-center gap-3 whitespace-nowrap text-[13px] font-bold tracking-[0.18em] text-black/45 transition-colors hover:text-black/80 sm:text-[15px]"
                 style={{ fontFamily: "var(--font-sans)" }}
               >
-                <span className="h-1.5 w-1.5 rounded-full bg-gradient-to-br from-fuchsia-500 to-cyan-500" />
+                <span className="h-1.5 w-1.5 rounded-full bg-gradient-to-br from-sky-500 to-sky-500" />
                 {label}
               </span>
             ))}
@@ -519,7 +519,7 @@ function ProblemSection() {
           </span>
           <h2 className="mt-6 text-[clamp(2rem,4.5vw,3.6rem)] font-medium leading-[1.05] tracking-[-0.025em] text-balance">
             Packaging is still the most{" "}
-            <span className="bg-gradient-to-r from-rose-600 via-fuchsia-600 to-cyan-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-blue-600 via-sky-600 to-sky-600 bg-clip-text text-transparent">
               underutilized consumer touchpoint.
             </span>
           </h2>
@@ -547,7 +547,7 @@ function ProblemSection() {
                 <span className="text-[13.5px] font-medium text-black/70 group-hover:text-black">
                   {l.label}
                 </span>
-                <span className="ml-auto select-none text-[11px] font-mono text-rose-500/60">
+                <span className="ml-auto select-none text-[11px] font-mono text-blue-500/60">
                   ✕
                 </span>
               </div>
@@ -576,7 +576,7 @@ function WhatProductixDoes() {
       className="relative overflow-hidden border-y border-black/[0.06] bg-white px-6 py-24 md:py-32"
     >
       <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute left-1/2 top-0 h-[420px] w-[900px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse,rgba(167,139,250,0.16),transparent_60%)] blur-3xl" />
+        <div className="absolute left-1/2 top-0 h-[420px] w-[900px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse,rgba(115,178,221,0.16),transparent_60%)] blur-3xl" />
       </div>
 
       <div className="mx-auto max-w-6xl">
@@ -606,21 +606,21 @@ function WhatProductixDoes() {
               icon: QrCode,
               title: "Physical product",
               desc: "QR-enabled packaging on shelf",
-              tone: "from-amber-400 to-orange-500",
+              tone: "from-sky-400 to-blue-500",
             },
             null,
             {
               icon: Cpu,
               title: "Productix engine",
               desc: "Dynamic, localized, intelligent",
-              tone: "from-fuchsia-500 to-violet-600",
+              tone: "from-sky-500 to-blue-600",
             },
             null,
             {
               icon: LineChart,
               title: "Brand intelligence",
               desc: "First-party scan + feedback data",
-              tone: "from-cyan-400 to-blue-600",
+              tone: "from-sky-400 to-blue-600",
             },
           ].map((node, i) => {
             if (node === null) {
@@ -699,7 +699,7 @@ function CoreCapabilityGrid() {
           <BentoCard className="md:col-span-4 md:row-span-2">
             <div className="flex h-full flex-col justify-between gap-6">
               <div>
-                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-fuchsia-700">
+                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-sky-700">
                   <QrCode className="h-3.5 w-3.5" /> 01 · Connected Packaging
                 </div>
                 <h4 className="mt-3 text-[26px] font-medium leading-[1.1] tracking-[-0.01em] sm:text-[30px]">
@@ -716,9 +716,9 @@ function CoreCapabilityGrid() {
                 <div className="lp-dot-bg absolute inset-0 opacity-30" />
                 {/* 3 mini products with QR codes */}
                 {[
-                  { x: "10%", tone: "from-fuchsia-400 to-rose-500", delay: "0s" },
-                  { x: "42%", tone: "from-amber-300 to-orange-500", delay: "0.4s" },
-                  { x: "74%", tone: "from-cyan-300 to-blue-500", delay: "0.8s" },
+                  { x: "10%", tone: "from-sky-400 to-blue-500", delay: "0s" },
+                  { x: "42%", tone: "from-sky-300 to-blue-500", delay: "0.4s" },
+                  { x: "74%", tone: "from-sky-300 to-blue-500", delay: "0.8s" },
                 ].map((p) => (
                   <div
                     key={p.x}
@@ -744,7 +744,7 @@ function CoreCapabilityGrid() {
                   </div>
                 ))}
                 {/* Connecting line + pulse */}
-                <div className="absolute bottom-6 left-0 right-0 mx-6 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent" />
+                <div className="absolute bottom-6 left-0 right-0 mx-6 h-px bg-gradient-to-r from-transparent via-sky-400/60 to-transparent" />
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.06),transparent_60%)]" />
               </div>
             </div>
@@ -754,7 +754,7 @@ function CoreCapabilityGrid() {
           <BentoCard className="md:col-span-2">
             <div className="flex h-full flex-col justify-between gap-4">
               <div>
-                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-violet-700">
+                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-blue-700">
                   <Wand2 className="h-3.5 w-3.5" /> 02 · Studio
                 </div>
                 <h4 className="mt-3 text-[20px] font-medium leading-tight tracking-[-0.01em]">
@@ -763,11 +763,11 @@ function CoreCapabilityGrid() {
               </div>
               <div className="relative h-24 overflow-hidden rounded-lg border border-black/[0.06] bg-[#0c0c10]">
                 <div className="lp-dot-bg absolute inset-0 opacity-30" />
-                <div className="absolute left-3 top-3 h-7 w-12 rounded bg-gradient-to-br from-fuchsia-400 to-rose-500 shadow" />
+                <div className="absolute left-3 top-3 h-7 w-12 rounded bg-gradient-to-br from-sky-400 to-blue-500 shadow" />
                 <div className="absolute left-16 top-4 h-5 w-20 rounded bg-white/85" />
                 <div className="absolute left-16 top-11 h-2 w-14 rounded bg-white/50" />
                 <div className="absolute left-16 top-15 h-2 w-10 rounded bg-white/30" />
-                <div className="absolute -bottom-3 right-3 h-9 w-9 rounded-full bg-gradient-to-br from-cyan-300 to-blue-500 shadow-lg" />
+                <div className="absolute -bottom-3 right-3 h-9 w-9 rounded-full bg-gradient-to-br from-sky-300 to-blue-500 shadow-lg" />
               </div>
             </div>
           </BentoCard>
@@ -776,7 +776,7 @@ function CoreCapabilityGrid() {
           <BentoCard className="md:col-span-2">
             <div className="flex h-full flex-col justify-between gap-4">
               <div>
-                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-cyan-700">
+                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-sky-700">
                   <BarChart3 className="h-3.5 w-3.5" /> 03 · Intelligence
                 </div>
                 <h4 className="mt-3 text-[20px] font-medium leading-tight tracking-[-0.01em]">
@@ -787,7 +787,7 @@ function CoreCapabilityGrid() {
                 {[42, 68, 51, 79, 62, 88, 74, 95, 70, 84].map((h, i) => (
                   <div
                     key={i}
-                    className="w-2 rounded-t bg-gradient-to-t from-cyan-500 to-fuchsia-500"
+                    className="w-2 rounded-t bg-gradient-to-t from-sky-500 to-sky-500"
                     style={{
                       height: `${h * 0.6}px`,
                       animation: `lp-data-pulse ${1.8 + (i % 3) * 0.3}s ease-in-out ${i * 0.08}s infinite`,
@@ -802,7 +802,7 @@ function CoreCapabilityGrid() {
           <BentoCard className="md:col-span-2">
             <div className="flex h-full flex-col justify-between gap-3">
               <div>
-                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-emerald-700">
+                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-sky-700">
                   <MessageSquareHeart className="h-3.5 w-3.5" /> 04 · Feedback Hub
                 </div>
                 <h4 className="mt-3 text-[20px] font-medium leading-tight tracking-[-0.01em]">
@@ -819,7 +819,7 @@ function CoreCapabilityGrid() {
                     key={c.a}
                     className="flex items-center gap-2 rounded-md bg-[#fafaf7] px-2 py-1.5 text-[11px]"
                   >
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
                     <span className="flex-1 text-black/75">{c.t}</span>
                     <span className="text-[9.5px] text-black/40">{c.a}</span>
                   </div>
@@ -832,7 +832,7 @@ function CoreCapabilityGrid() {
           <BentoCard className="md:col-span-2">
             <div className="flex h-full flex-col justify-between gap-4">
               <div>
-                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-amber-700">
+                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-sky-700">
                   <Languages className="h-3.5 w-3.5" /> 05 · Multilingual
                 </div>
                 <h4 className="mt-3 text-[20px] font-medium leading-tight tracking-[-0.01em]">
@@ -861,7 +861,7 @@ function CoreCapabilityGrid() {
           <BentoCard className="md:col-span-2">
             <div className="flex h-full flex-col justify-between gap-3">
               <div>
-                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-rose-700">
+                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-blue-700">
                   <Megaphone className="h-3.5 w-3.5" /> 06 · Activation
                 </div>
                 <h4 className="mt-3 text-[20px] font-medium leading-tight tracking-[-0.01em]">
@@ -870,12 +870,12 @@ function CoreCapabilityGrid() {
               </div>
               <div className="mt-auto grid grid-cols-3 gap-1.5">
                 {[
-                  { l: "Promo", c: "bg-fuchsia-500/15 text-fuchsia-700" },
-                  { l: "Loyalty", c: "bg-amber-500/15 text-amber-700" },
-                  { l: "Event", c: "bg-cyan-500/15 text-cyan-700" },
-                  { l: "Sample", c: "bg-emerald-500/15 text-emerald-700" },
-                  { l: "Drop", c: "bg-rose-500/15 text-rose-700" },
-                  { l: "Survey", c: "bg-violet-500/15 text-violet-700" },
+                  { l: "Promo", c: "bg-sky-500/15 text-sky-700" },
+                  { l: "Loyalty", c: "bg-sky-500/15 text-sky-700" },
+                  { l: "Event", c: "bg-sky-500/15 text-sky-700" },
+                  { l: "Sample", c: "bg-sky-500/15 text-sky-700" },
+                  { l: "Drop", c: "bg-blue-500/15 text-blue-700" },
+                  { l: "Survey", c: "bg-blue-500/15 text-blue-700" },
                 ].map((b) => (
                   <div
                     key={b.l}
@@ -905,7 +905,7 @@ function BentoCard({
       className={`group relative overflow-hidden rounded-2xl border border-black/[0.07] bg-white p-6 shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-all duration-500 hover:border-black/15 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.15)] ${className}`}
     >
       <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_var(--mx,50%)_var(--my,0%),rgba(168,85,247,0.06),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_var(--mx,50%)_var(--my,0%),rgba(115,178,221,0.06),transparent_50%)]" />
       </div>
       <div className="relative">{children}</div>
     </div>
@@ -921,7 +921,7 @@ function LiveStudioShowcase() {
       className="relative overflow-hidden border-y border-black/[0.06] bg-white px-6 py-24 md:py-32"
     >
       <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute left-1/2 top-1/2 h-[600px] w-[1100px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse,rgba(167,139,250,0.18),transparent_60%)] blur-3xl" />
+        <div className="absolute left-1/2 top-1/2 h-[600px] w-[1100px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse,rgba(115,178,221,0.18),transparent_60%)] blur-3xl" />
       </div>
 
       <div className="mx-auto max-w-7xl">
@@ -942,20 +942,20 @@ function LiveStudioShowcase() {
         </div>
 
         <div className="relative mx-auto max-w-5xl">
-          <div className="absolute -inset-10 -z-10 rounded-[3rem] bg-gradient-to-br from-fuchsia-400/20 via-violet-400/15 to-cyan-400/20 blur-3xl" />
+          <div className="absolute -inset-10 -z-10 rounded-[3rem] bg-gradient-to-br from-sky-400/20 via-blue-400/15 to-sky-400/20 blur-3xl" />
           <div className="relative overflow-hidden rounded-2xl border border-black/10 bg-[#0c0c10] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.35)]">
             <div className="flex h-9 items-center gap-3 border-b border-white/[0.06] bg-[#0a0a0d] px-3.5">
               <div className="flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
-                <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
-                <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
+                <span className="h-2.5 w-2.5 rounded-full bg-[#73B2DD]" />
+                <span className="h-2.5 w-2.5 rounded-full bg-[#4A88C7]" />
+                <span className="h-2.5 w-2.5 rounded-full bg-[#244B7A]" />
               </div>
               <div className="mx-auto flex items-center gap-1.5 rounded-md bg-white/[0.05] px-2.5 py-1 text-[10.5px] font-medium text-white/55">
                 <Globe2 className="h-3 w-3" />
                 productix.studio / experiences / volt-no-7
               </div>
               <div className="ml-auto flex items-center gap-1.5">
-                <span className="rounded-md bg-emerald-500/15 px-1.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-wider text-emerald-300">
+                <span className="rounded-md bg-sky-500/15 px-1.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-wider text-sky-300">
                   Synced
                 </span>
               </div>
@@ -965,24 +965,24 @@ function LiveStudioShowcase() {
               <div className="lp-dot-bg absolute inset-0 opacity-30" />
 
               <div
-                className="absolute left-[14%] top-[20%] h-[60%] w-[72%] rounded border-2 border-cyan-400/70 bg-cyan-400/[0.04]"
+                className="absolute left-[14%] top-[20%] h-[60%] w-[72%] rounded border-2 border-sky-400/70 bg-sky-400/[0.04]"
                 style={{
                   animation: "lp-handle-pop 4s ease-in-out infinite",
                 }}
               />
 
-              <div className="absolute left-1/2 top-0 h-full w-px bg-fuchsia-400/50" />
-              <div className="absolute left-0 top-1/2 h-px w-full bg-fuchsia-400/50" />
+              <div className="absolute left-1/2 top-0 h-full w-px bg-sky-400/50" />
+              <div className="absolute left-0 top-1/2 h-px w-full bg-sky-400/50" />
 
               <FloatingElement
                 style={{ left: "20%", top: "26%" }}
-                className="h-24 w-32 rounded-lg bg-gradient-to-br from-fuchsia-400 to-rose-500"
+                className="h-24 w-32 rounded-lg bg-gradient-to-br from-sky-400 to-blue-500"
                 label="Hero"
                 delay="0s"
               />
               <FloatingElement
                 style={{ left: "45%", top: "30%" }}
-                className="h-28 w-28 rounded-full bg-gradient-to-br from-cyan-300 to-blue-500"
+                className="h-28 w-28 rounded-full bg-gradient-to-br from-sky-300 to-blue-500"
                 label="Brand mark"
                 delay="0.3s"
               />
@@ -996,19 +996,19 @@ function LiveStudioShowcase() {
               </FloatingElement>
               <FloatingElement
                 style={{ left: "22%", top: "60%" }}
-                className="h-20 w-56 rounded-lg bg-gradient-to-br from-amber-300 to-orange-500"
+                className="h-20 w-56 rounded-lg bg-gradient-to-br from-sky-300 to-blue-500"
                 label="Promo strip"
                 delay="0.9s"
               />
               <FloatingElement
                 style={{ left: "58%", top: "63%" }}
-                className="h-20 w-44 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-700"
+                className="h-20 w-44 rounded-lg bg-gradient-to-br from-blue-500 to-sky-700"
                 label="Loyalty tile"
                 delay="1.2s"
               />
 
               <div className="absolute right-5 top-5 flex items-center gap-2 rounded-full bg-[#0c0c10]/90 px-3 py-1.5 text-[11px] font-semibold text-white backdrop-blur-md">
-                <span className="h-2 w-2 rounded-full bg-cyan-400" />
+                <span className="h-2 w-2 rounded-full bg-sky-400" />
                 5 layers selected
                 <kbd className="ml-1 rounded bg-white/10 px-1.5 py-0.5 font-mono text-[9.5px] text-white/70">
                   ⌘G
@@ -1045,7 +1045,7 @@ function FloatingElement({
       }}
     >
       <div className={`relative shadow-xl ${className}`}>
-        <div className="absolute -inset-1 rounded-[inherit] border border-cyan-400/60" />
+        <div className="absolute -inset-1 rounded-[inherit] border border-sky-400/60" />
         {[
           "-top-1 -left-1",
           "-top-1 -right-1",
@@ -1054,11 +1054,11 @@ function FloatingElement({
         ].map((p) => (
           <span
             key={p}
-            className={`absolute ${p} h-2 w-2 rounded-[2px] border border-cyan-300 bg-[#0a0a0d]`}
+            className={`absolute ${p} h-2 w-2 rounded-[2px] border border-sky-300 bg-[#0a0a0d]`}
           />
         ))}
         {children}
-        <span className="absolute -top-6 left-0 whitespace-nowrap rounded bg-cyan-400 px-1.5 py-0.5 text-[9.5px] font-bold text-black">
+        <span className="absolute -top-6 left-0 whitespace-nowrap rounded bg-sky-400 px-1.5 py-0.5 text-[9.5px] font-bold text-black">
           {label}
         </span>
       </div>
@@ -1074,11 +1074,11 @@ function TemplatesShowcase({
   onPreview: (t: Template) => void;
 }) {
   const categoryAccents: Record<string, string> = {
-    marketing: "from-fuchsia-500 to-rose-500",
-    event: "from-amber-400 to-orange-600",
-    brand: "from-cyan-400 to-blue-500",
-    social: "from-emerald-400 to-teal-500",
-    custom: "from-violet-400 to-purple-700",
+    marketing: "from-sky-500 to-blue-500",
+    event: "from-sky-400 to-blue-600",
+    brand: "from-sky-400 to-blue-500",
+    social: "from-sky-400 to-sky-500",
+    custom: "from-blue-400 to-blue-700",
   };
 
   return (
@@ -1106,7 +1106,7 @@ function TemplatesShowcase({
           {templates.map((template, i) => {
             const accent =
               categoryAccents[template.meta.category as string] ||
-              "from-fuchsia-500 to-cyan-400";
+              "from-sky-500 to-sky-400";
             return (
               <button
                 key={template.meta.id}
@@ -1160,7 +1160,7 @@ function TemplatesShowcase({
           >
             <div className="relative flex h-14 w-14 items-center justify-center rounded-full border border-black/15 bg-white transition-transform duration-500 group-hover:rotate-90">
               <span className="text-2xl text-black/65">+</span>
-              <span className="absolute inset-0 rounded-full border border-fuchsia-500/40 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+              <span className="absolute inset-0 rounded-full border border-sky-500/40 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
             </div>
             <h4 className="mt-5 text-[16px] font-semibold text-black">
               Custom experience
@@ -1185,37 +1185,37 @@ function WhyEnterprisesChoose() {
       icon: Boxes,
       title: "Multi-Brand & Multi-Region",
       desc: "Manage multiple brands, SKUs, business units, and regional teams from one centralized environment.",
-      tone: "from-fuchsia-500 to-rose-500",
+      tone: "from-sky-500 to-blue-500",
     },
     {
       icon: ShieldCheck,
       title: "Role-Based Team Management",
       desc: "Support marketing, compliance, agencies, distributors, and regional operators with enterprise-grade permissions.",
-      tone: "from-cyan-500 to-blue-600",
+      tone: "from-sky-500 to-blue-600",
     },
     {
       icon: Wand2,
       title: "Dynamic Product Content",
       desc: "Update product information instantly without changing packaging or reprinting materials.",
-      tone: "from-amber-400 to-orange-500",
+      tone: "from-sky-400 to-blue-500",
     },
     {
       icon: BarChart3,
       title: "Packaging Analytics",
       desc: "Measure packaging engagement performance with actionable consumer interaction insights.",
-      tone: "from-emerald-400 to-teal-600",
+      tone: "from-sky-400 to-sky-600",
     },
     {
       icon: Smartphone,
       title: "Mobile-First Delivery",
       desc: "Deliver optimized experiences across all modern mobile devices and markets.",
-      tone: "from-violet-500 to-purple-700",
+      tone: "from-blue-500 to-blue-700",
     },
     {
       icon: Workflow,
       title: "Scalable Product Operations",
       desc: "Manage thousands of products, campaigns, and experiences within one scalable infrastructure.",
-      tone: "from-rose-500 to-fuchsia-600",
+      tone: "from-blue-500 to-sky-600",
     },
   ];
 
@@ -1228,7 +1228,7 @@ function WhyEnterprisesChoose() {
           </span>
           <h3 className="mt-3 text-[clamp(1.9rem,4vw,2.8rem)] font-medium leading-tight tracking-[-0.02em]">
             Enterprise-ready infrastructure for{" "}
-            <span className="bg-gradient-to-r from-fuchsia-600 via-violet-600 to-cyan-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-sky-600 via-blue-600 to-sky-600 bg-clip-text text-transparent">
               scalable consumer engagement.
             </span>
           </h3>
@@ -1306,7 +1306,7 @@ function BusinessOutcomes() {
     >
       <div className="lp-grid-bg pointer-events-none absolute inset-0 opacity-30 [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_70%)]" />
       <div className="pointer-events-none absolute inset-0 -z-0">
-        <div className="absolute left-1/2 top-1/2 h-[600px] w-[1000px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse,rgba(168,85,247,0.18),transparent_60%)] blur-3xl" />
+        <div className="absolute left-1/2 top-1/2 h-[600px] w-[1000px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse,rgba(115,178,221,0.18),transparent_60%)] blur-3xl" />
       </div>
 
       <div className="relative mx-auto max-w-7xl">
@@ -1316,7 +1316,7 @@ function BusinessOutcomes() {
           </span>
           <h3 className="mt-3 text-[clamp(1.9rem,4vw,2.8rem)] font-medium leading-tight tracking-[-0.02em] text-white">
             Beyond QR codes —{" "}
-            <span className="bg-gradient-to-r from-fuchsia-400 via-violet-400 to-cyan-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-sky-400 via-blue-400 to-sky-400 bg-clip-text text-transparent">
               built for measurable business impact.
             </span>
           </h3>
@@ -1357,31 +1357,31 @@ function EnterpriseUseCases() {
     {
       sector: "FMCG & Packaged Foods",
       desc: "Interactive packaging, ingredient transparency, campaigns, and loyalty activations.",
-      tone: "from-amber-400 to-orange-500",
+      tone: "from-sky-400 to-blue-500",
       tag: "FMCG",
     },
     {
       sector: "Beverage Brands",
       desc: "Event activations, limited campaigns, customer engagement, and regional storytelling.",
-      tone: "from-fuchsia-500 to-rose-600",
+      tone: "from-sky-500 to-blue-600",
       tag: "BEV",
     },
     {
       sector: "Cosmetics & Personal Care",
       desc: "Usage guides, tutorials, influencer campaigns, and personalized product experiences.",
-      tone: "from-rose-400 to-pink-600",
+      tone: "from-blue-400 to-sky-600",
       tag: "COS",
     },
     {
       sector: "Nutrition & Wellness",
       desc: "Authenticity verification, educational content, certifications, and retention programs.",
-      tone: "from-emerald-400 to-teal-600",
+      tone: "from-sky-400 to-sky-600",
       tag: "NTR",
     },
     {
       sector: "Retail & Distribution",
       desc: "Regionalized product communication and channel-specific engagement experiences.",
-      tone: "from-cyan-400 to-blue-600",
+      tone: "from-sky-400 to-blue-600",
       tag: "RTL",
     },
   ];
@@ -1506,8 +1506,8 @@ function VisionSection() {
   return (
     <section className="relative overflow-hidden px-6 py-24 md:py-32">
       <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute left-1/2 top-1/2 h-[700px] w-[1100px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse,rgba(244,114,182,0.16),transparent_60%)] blur-3xl [animation:lp-aurora-shift_22s_ease-in-out_infinite]" />
-        <div className="absolute right-0 top-0 h-[400px] w-[600px] rounded-full bg-[radial-gradient(ellipse,rgba(56,189,248,0.12),transparent_60%)] blur-3xl" />
+        <div className="absolute left-1/2 top-1/2 h-[700px] w-[1100px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse,rgba(36,75,122,0.16),transparent_60%)] blur-3xl [animation:lp-aurora-shift_22s_ease-in-out_infinite]" />
+        <div className="absolute right-0 top-0 h-[400px] w-[600px] rounded-full bg-[radial-gradient(ellipse,rgba(115,178,221,0.12),transparent_60%)] blur-3xl" />
       </div>
 
       <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-14 lg:grid-cols-2">
@@ -1517,7 +1517,7 @@ function VisionSection() {
           </span>
           <h3 className="mt-3 text-[clamp(2rem,4.5vw,3.4rem)] font-medium leading-[1.04] tracking-[-0.025em] text-balance">
             Building the{" "}
-            <span className="bg-gradient-to-r from-fuchsia-600 via-violet-600 to-cyan-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-sky-600 via-blue-600 to-sky-600 bg-clip-text text-transparent">
               digital layer
             </span>{" "}
             of physical products.
@@ -1546,7 +1546,7 @@ function VisionSection() {
 
         {/* Right — orbiting connected layer visualization */}
         <div className="relative mx-auto h-[420px] w-full max-w-lg lg:h-[480px]">
-          <div className="absolute inset-0 -z-10 rounded-[3rem] bg-gradient-to-br from-fuchsia-400/20 via-violet-400/15 to-cyan-400/20 blur-3xl" />
+          <div className="absolute inset-0 -z-10 rounded-[3rem] bg-gradient-to-br from-sky-400/20 via-blue-400/15 to-sky-400/20 blur-3xl" />
 
           {/* Center node */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
@@ -1558,9 +1558,9 @@ function VisionSection() {
                 height={20}
                 className="h-5 w-auto select-none"
               />
-              <span className="absolute -inset-2 rounded-[1.6rem] border border-fuchsia-400/30 [animation:lp-pulse-ring_3s_ease-out_infinite]" />
+              <span className="absolute -inset-2 rounded-[1.6rem] border border-sky-400/30 [animation:lp-pulse-ring_3s_ease-out_infinite]" />
               <span
-                className="absolute -inset-2 rounded-[1.6rem] border border-cyan-400/30 [animation:lp-pulse-ring_3s_ease-out_1.5s_infinite]"
+                className="absolute -inset-2 rounded-[1.6rem] border border-sky-400/30 [animation:lp-pulse-ring_3s_ease-out_1.5s_infinite]"
               />
             </div>
           </div>
@@ -1667,8 +1667,8 @@ function FinalCTA() {
       className="relative overflow-hidden px-6 py-32 md:py-40"
     >
       <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute left-1/2 top-1/2 h-[800px] w-[1200px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse,rgba(244,114,182,0.28),transparent_55%)] blur-3xl [animation:lp-aurora-shift_20s_ease-in-out_infinite]" />
-        <div className="absolute left-1/2 top-1/2 h-[600px] w-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse,rgba(56,189,248,0.24),transparent_55%)] blur-3xl [animation:lp-aurora-shift-2_24s_ease-in-out_infinite]" />
+        <div className="absolute left-1/2 top-1/2 h-[800px] w-[1200px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse,rgba(36,75,122,0.28),transparent_55%)] blur-3xl [animation:lp-aurora-shift_20s_ease-in-out_infinite]" />
+        <div className="absolute left-1/2 top-1/2 h-[600px] w-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse,rgba(115,178,221,0.24),transparent_55%)] blur-3xl [animation:lp-aurora-shift-2_24s_ease-in-out_infinite]" />
       </div>
       <div className="lp-grid-bg-light pointer-events-none absolute inset-0 -z-10 opacity-50 [mask-image:radial-gradient(ellipse_at_center,black,transparent_70%)]" />
 
@@ -1679,7 +1679,7 @@ function FinalCTA() {
         <h2 className="mt-8 text-[clamp(2.2rem,5.5vw,4.6rem)] font-medium leading-[0.98] tracking-[-0.035em] text-balance">
           Transform packaging into a
           <br />
-          <span className="bg-gradient-to-r from-rose-600 via-fuchsia-600 to-cyan-600 bg-clip-text italic text-transparent">
+          <span className="bg-gradient-to-r from-blue-600 via-sky-600 to-sky-600 bg-clip-text italic text-transparent">
             measurable engagement channel.
           </span>
         </h2>
