@@ -8,6 +8,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
+    "build": "prisma generate",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf dist .turbo",
     "db:generate": "prisma generate",

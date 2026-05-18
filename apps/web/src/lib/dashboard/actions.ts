@@ -67,7 +67,7 @@ export async function getMyPromptionsAction() {
       updatedAt: p.updatedAt.toISOString(),
       productId: p.product.id,
       companyId: p.product.companyId,
-      shortCode: p.product.shortCode,
+      shortCode: p.product.shortCode as string,
       slugVisible: p.product.slugVisible,
       isPublished: p.isPublished,
       publishedAt: p.publishedAt?.toISOString() ?? null,
