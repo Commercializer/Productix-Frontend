@@ -1,39 +1,42 @@
 /* ─────────────────────────────────────────────
- * ImageCropDialog — Pan & zoom an image to fit a block
+ * ImageCropDialog — Free-style rectangular crop
  *
  * Model:
- *   - Frame is locked to the block's aspect ratio.
- *   - Image is rendered absolutely-positioned, sized to
- *     "cover-fit" the frame at zoom=1 and scaled by zoom.
- *   - Pan is a free 2D offset in pixels — works regardless
- *     of whether the image aspect matches the frame aspect.
- *   - On confirm we return normalized offsets (fractions of
- *     frame size) so the canvas renderer can apply the same
- *     geometry without knowing the original frame dimensions.
+ *   - Show the full source image fit inside a viewport.
+ *   - User drags a crop rectangle (corners, edges, or interior)
+ *     at any aspect ratio.
+ *   - Output is a `cropRect` in fractions of the source image:
+ *     { x, y, w, h } ∈ [0..1]. The canvas renderer maps this
+ *     region into the block according to objectFit.
  * ──────────────────────────────────────────── */
 
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
+export interface CropRect {
+  x: number; // fraction of source width
+  y: number; // fraction of source height
+  w: number; // fraction of source width
+  h: number; // fraction of source height
+}
+
 export interface CropResult {
-  cropOffsetX: number; // fraction of frame width (e.g. 0.12 = 12% right)
-  cropOffsetY: number;
-  zoom: number;        // 1.0 – 4.0
+  cropRect: CropRect;
 }
 
 interface ImageCropDialogProps {
   src: string;
-  /** Block aspect ratio (width / height). Defines the crop frame shape. */
-  aspectRatio: number;
-  initialOffsetX?: number;
-  initialOffsetY?: number;
-  initialZoom?: number;
+  /** Existing crop rect, if editing. Defaults to the full image. */
+  initialCropRect?: CropRect;
   onConfirm: (result: CropResult) => void;
   onCancel: () => void;
 }
 
-const FRAME_TARGET = 460; // px — longest side of the crop frame
+const VIEWPORT_TARGET = 560; // px — longest side of viewport
+const MIN_HANDLE_PX = 12;    // px — minimum crop dimension in viewport pixels
+
+type Handle = "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w" | "move";
 
 function clamp(v: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, v));
@@ -41,89 +44,98 @@ function clamp(v: number, lo: number, hi: number) {
 
 export function ImageCropDialog({
   src,
-  aspectRatio,
-  initialOffsetX = 0,
-  initialOffsetY = 0,
-  initialZoom = 1,
+  initialCropRect,
   onConfirm,
   onCancel,
 }: ImageCropDialogProps) {
-  // Frame sized to the block's aspect ratio, with the longest side ≈ 460px.
-  const frameW = aspectRatio >= 1 ? FRAME_TARGET : FRAME_TARGET * aspectRatio;
-  const frameH = aspectRatio >= 1 ? FRAME_TARGET / aspectRatio : FRAME_TARGET;
-
-  // Pan state lives in pixels relative to the frame; converted to fractions on confirm.
-  const [offsetX, setOffsetX] = useState(() => initialOffsetX * frameW);
-  const [offsetY, setOffsetY] = useState(() => initialOffsetY * frameH);
-  const [zoom, setZoom] = useState(initialZoom);
-  const [isDragging, setIsDragging] = useState(false);
   const [nat, setNat] = useState<{ w: number; h: number } | null>(null);
+  const [crop, setCrop] = useState<CropRect>(
+    () => initialCropRect ?? { x: 0, y: 0, w: 1, h: 1 }
+  );
+  const dragRef = useRef<{
+    mode: Handle;
+    startX: number;
+    startY: number;
+    startCrop: CropRect;
+  } | null>(null);
 
-  const dragRef = useRef<{ startX: number; startY: number; startOffsetX: number; startOffsetY: number } | null>(null);
-
-  // Compute the cover-fit baseline size (image fills the frame in one axis at zoom=1).
-  const natAspect = nat && nat.h > 0 ? nat.w / nat.h : aspectRatio;
-  const baseW = natAspect >= aspectRatio ? frameH * natAspect : frameW;
-  const baseH = natAspect >= aspectRatio ? frameH : frameW / natAspect;
-  const finalW = baseW * zoom;
-  const finalH = baseH * zoom;
+  // Viewport size: fit image inside a VIEWPORT_TARGET-px box, preserving aspect.
+  const natAspect = nat && nat.h > 0 ? nat.w / nat.h : 1;
+  const viewW = natAspect >= 1 ? VIEWPORT_TARGET : VIEWPORT_TARGET * natAspect;
+  const viewH = natAspect >= 1 ? VIEWPORT_TARGET / natAspect : VIEWPORT_TARGET;
 
   const handlePointerDown = useCallback(
-    (e: React.PointerEvent) => {
+    (mode: Handle) => (e: React.PointerEvent) => {
       e.preventDefault();
+      e.stopPropagation();
       dragRef.current = {
+        mode,
         startX: e.clientX,
         startY: e.clientY,
-        startOffsetX: offsetX,
-        startOffsetY: offsetY,
+        startCrop: { ...crop },
       };
-      setIsDragging(true);
       (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     },
-    [offsetX, offsetY]
+    [crop]
   );
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
       if (!dragRef.current) return;
-      const dx = e.clientX - dragRef.current.startX;
-      const dy = e.clientY - dragRef.current.startY;
-      // Clamp so the image always covers the frame.
-      const maxX = Math.max(0, (finalW - frameW) / 2);
-      const maxY = Math.max(0, (finalH - frameH) / 2);
-      setOffsetX(clamp(dragRef.current.startOffsetX + dx, -maxX, maxX));
-      setOffsetY(clamp(dragRef.current.startOffsetY + dy, -maxY, maxY));
+      const { mode, startX, startY, startCrop } = dragRef.current;
+      const dxFrac = (e.clientX - startX) / viewW;
+      const dyFrac = (e.clientY - startY) / viewH;
+      const minW = MIN_HANDLE_PX / viewW;
+      const minH = MIN_HANDLE_PX / viewH;
+
+      const next: CropRect = { ...startCrop };
+
+      if (mode === "move") {
+        next.x = clamp(startCrop.x + dxFrac, 0, 1 - startCrop.w);
+        next.y = clamp(startCrop.y + dyFrac, 0, 1 - startCrop.h);
+      } else {
+        const hasW = mode.includes("w");
+        const hasE = mode.includes("e");
+        const hasN = mode.includes("n");
+        const hasS = mode.includes("s");
+        if (hasW) {
+          const newX = clamp(startCrop.x + dxFrac, 0, startCrop.x + startCrop.w - minW);
+          next.x = newX;
+          next.w = startCrop.w - (newX - startCrop.x);
+        }
+        if (hasE) {
+          next.w = clamp(startCrop.w + dxFrac, minW, 1 - startCrop.x);
+        }
+        if (hasN) {
+          const newY = clamp(startCrop.y + dyFrac, 0, startCrop.y + startCrop.h - minH);
+          next.y = newY;
+          next.h = startCrop.h - (newY - startCrop.y);
+        }
+        if (hasS) {
+          next.h = clamp(startCrop.h + dyFrac, minH, 1 - startCrop.y);
+        }
+      }
+
+      setCrop(next);
     },
-    [finalW, finalH, frameW, frameH]
+    [viewW, viewH]
   );
 
   const handlePointerUp = useCallback((e: React.PointerEvent) => {
     dragRef.current = null;
-    setIsDragging(false);
     try { (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId); } catch { /* noop */ }
   }, []);
 
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault();
-    const step = e.deltaY > 0 ? -0.08 : 0.08;
-    setZoom((z) => clamp(z + step, 1, 4));
-  }, []);
-
-  // When zoom shrinks, re-clamp existing offset.
-  useEffect(() => {
-    const maxX = Math.max(0, (finalW - frameW) / 2);
-    const maxY = Math.max(0, (finalH - frameH) / 2);
-    setOffsetX((v) => clamp(v, -maxX, maxX));
-    setOffsetY((v) => clamp(v, -maxY, maxY));
-  }, [finalW, finalH, frameW, frameH]);
-
   const confirm = useCallback(() => {
     onConfirm({
-      cropOffsetX: Number((offsetX / frameW).toFixed(4)),
-      cropOffsetY: Number((offsetY / frameH).toFixed(4)),
-      zoom: Number(zoom.toFixed(2)),
+      cropRect: {
+        x: Number(crop.x.toFixed(4)),
+        y: Number(crop.y.toFixed(4)),
+        w: Number(crop.w.toFixed(4)),
+        h: Number(crop.h.toFixed(4)),
+      },
     });
-  }, [onConfirm, offsetX, offsetY, zoom, frameW, frameH]);
+  }, [onConfirm, crop]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -134,6 +146,12 @@ export function ImageCropDialog({
     return () => window.removeEventListener("keydown", onKey);
   }, [onCancel, confirm]);
 
+  // Crop rect in viewport pixels:
+  const cropPxX = crop.x * viewW;
+  const cropPxY = crop.y * viewH;
+  const cropPxW = crop.w * viewW;
+  const cropPxH = crop.h * viewH;
+
   return (
     <div
       className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-sm"
@@ -141,13 +159,13 @@ export function ImageCropDialog({
     >
       <div
         className="rounded-2xl bg-white p-6 shadow-2xl"
-        style={{ width: Math.max(frameW, 360) + 48 }}
+        style={{ width: Math.max(viewW, 360) + 48 }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between mb-3">
           <div>
-            <h3 className="text-base font-bold text-gray-900">Crop & Position</h3>
-            <p className="text-xs text-gray-500 mt-0.5">Drag to pan · scroll or slide to zoom</p>
+            <h3 className="text-base font-bold text-gray-900">Crop Image</h3>
+            <p className="text-xs text-gray-500 mt-0.5">Drag handles to resize · drag inside to move</p>
           </div>
           <button
             type="button"
@@ -161,19 +179,13 @@ export function ImageCropDialog({
 
         <div className="flex justify-center">
           <div
-            onPointerDown={handlePointerDown}
+            className="relative overflow-hidden rounded-lg bg-gray-900 select-none"
+            style={{ width: viewW, height: viewH, touchAction: "none" }}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onPointerCancel={handlePointerUp}
-            onWheel={handleWheel}
-            className="relative overflow-hidden rounded-lg bg-gray-900 select-none"
-            style={{
-              width: frameW,
-              height: frameH,
-              cursor: isDragging ? "grabbing" : "grab",
-              touchAction: "none",
-            }}
           >
+            {/* Full image at viewport size */}
             <img
               src={src}
               alt=""
@@ -186,49 +198,65 @@ export function ImageCropDialog({
               }}
               style={{
                 position: "absolute",
-                width: finalW,
-                height: finalH,
-                left: (frameW - finalW) / 2 + offsetX,
-                top: (frameH - finalH) / 2 + offsetY,
+                inset: 0,
+                width: "100%",
+                height: "100%",
                 pointerEvents: "none",
                 userSelect: "none",
                 display: "block",
-                maxWidth: "none",
               }}
             />
-            {/* Rule-of-thirds grid */}
-            <div className="pointer-events-none absolute inset-0">
-              <div className="absolute inset-x-0 top-1/3 h-px bg-white/40" />
-              <div className="absolute inset-x-0 top-2/3 h-px bg-white/40" />
-              <div className="absolute inset-y-0 left-1/3 w-px bg-white/40" />
-              <div className="absolute inset-y-0 left-2/3 w-px bg-white/40" />
-              <div className="absolute inset-0 ring-1 ring-inset ring-white/30" />
+
+            {/* Dim overlay outside the crop rectangle (4 strips). */}
+            <div style={dimStyle({ top: 0, left: 0, right: 0, height: cropPxY })} />
+            <div style={dimStyle({ top: cropPxY + cropPxH, left: 0, right: 0, bottom: 0 })} />
+            <div style={dimStyle({ top: cropPxY, left: 0, width: cropPxX, height: cropPxH })} />
+            <div style={dimStyle({ top: cropPxY, left: cropPxX + cropPxW, right: 0, height: cropPxH })} />
+
+            {/* Crop frame: border + drag-to-move + handles */}
+            <div
+              onPointerDown={handlePointerDown("move")}
+              style={{
+                position: "absolute",
+                left: cropPxX,
+                top: cropPxY,
+                width: cropPxW,
+                height: cropPxH,
+                cursor: "move",
+                boxShadow: "inset 0 0 0 2px rgba(59,130,246,0.95)",
+              }}
+            >
+              <div className="pointer-events-none absolute inset-0">
+                <div className="absolute inset-x-0 top-1/3 h-px bg-white/30" />
+                <div className="absolute inset-x-0 top-2/3 h-px bg-white/30" />
+                <div className="absolute inset-y-0 left-1/3 w-px bg-white/30" />
+                <div className="absolute inset-y-0 left-2/3 w-px bg-white/30" />
+              </div>
+              {(["nw", "n", "ne", "e", "se", "s", "sw", "w"] as Handle[]).map((h) => (
+                <div
+                  key={h}
+                  onPointerDown={handlePointerDown(h)}
+                  style={{
+                    position: "absolute",
+                    width: 12,
+                    height: 12,
+                    background: "white",
+                    border: "1.5px solid rgb(59,130,246)",
+                    borderRadius: 2,
+                    boxSizing: "border-box",
+                    ...handlePosition(h),
+                    cursor: handleCursor(h),
+                  }}
+                />
+              ))}
             </div>
           </div>
-        </div>
-
-        <div className="mt-4">
-          <label className="flex items-center gap-3">
-            <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 w-10">Zoom</span>
-            <input
-              type="range"
-              min={1}
-              max={4}
-              step={0.05}
-              value={zoom}
-              onChange={(e) => setZoom(clamp(Number(e.target.value), 1, 4))}
-              className="flex-1 accent-blue-600"
-            />
-            <span className="text-xs font-medium text-gray-600 w-12 text-right tabular-nums">
-              {zoom.toFixed(2)}x
-            </span>
-          </label>
         </div>
 
         <div className="mt-5 flex items-center justify-between gap-2">
           <button
             type="button"
-            onClick={() => { setOffsetX(0); setOffsetY(0); setZoom(1); }}
+            onClick={() => setCrop({ x: 0, y: 0, w: 1, h: 1 })}
             className="rounded-md border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50"
           >
             Reset
@@ -253,4 +281,42 @@ export function ImageCropDialog({
       </div>
     </div>
   );
+}
+
+function dimStyle(box: React.CSSProperties): React.CSSProperties {
+  return {
+    position: "absolute",
+    background: "rgba(0,0,0,0.5)",
+    pointerEvents: "none",
+    ...box,
+  };
+}
+
+function handlePosition(h: Handle): React.CSSProperties {
+  const off = -6;
+  switch (h) {
+    case "nw": return { top: off, left: off };
+    case "n":  return { top: off, left: "50%", marginLeft: -6 };
+    case "ne": return { top: off, right: off };
+    case "e":  return { top: "50%", right: off, marginTop: -6 };
+    case "se": return { bottom: off, right: off };
+    case "s":  return { bottom: off, left: "50%", marginLeft: -6 };
+    case "sw": return { bottom: off, left: off };
+    case "w":  return { top: "50%", left: off, marginTop: -6 };
+    default:   return {};
+  }
+}
+
+function handleCursor(h: Handle): string {
+  switch (h) {
+    case "nw":
+    case "se": return "nwse-resize";
+    case "ne":
+    case "sw": return "nesw-resize";
+    case "n":
+    case "s":  return "ns-resize";
+    case "e":
+    case "w":  return "ew-resize";
+    default:   return "default";
+  }
 }

@@ -28,7 +28,6 @@ import { Crop, ImageIcon } from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
 import { ImageUploadWidget } from "../media/image-upload-widget";
 import { ImageCropDialog } from "../media/image-crop-dialog";
-import { useCanvasStore } from "../engine/canvas-store";
 import { HexColorPopover } from "./hex-color-popover";
 
 const DEFAULT_OFFSET = 0;
@@ -59,6 +58,20 @@ function ImageElementComponent({ props, isEditing, width, height, onPropsChange 
   const cropOffsetY = (props.cropOffsetY as number) ?? DEFAULT_OFFSET;
   const zoom = (props.zoom as number) || DEFAULT_ZOOM;
   const svgColor = (props.svgColor as string) || "";
+  const objectFit = ((props.objectFit as string) || "cover") as
+    | "cover"
+    | "contain"
+    | "fill"
+    | "none"
+    | "scale-down";
+  const objectPosition = (props.objectPosition as string) || "center";
+  const cropRect = props.cropRect as
+    | { x: number; y: number; w: number; h: number }
+    | undefined;
+  // Free-style crop takes precedence. Otherwise: cover uses the legacy
+  // cover-fit + pan/zoom model; other fits use plain CSS object-fit.
+  const useCustomCover = !cropRect && objectFit === "cover";
+  const useFreeCrop = !!cropRect;
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const blockRef = useRef<HTMLDivElement>(null);
@@ -255,6 +268,174 @@ function ImageElementComponent({ props, isEditing, width, height, onPropsChange 
     );
   }
 
+  /* ── Image state: free-style crop ── */
+  if (useFreeCrop && cropRect) {
+    // Map the cropped source region into the block using `objectFit`.
+    // Geometry summary:
+    //   - cw, ch  : crop region size in source pixels.
+    //   - cropDispW, cropDispH : size at which the crop region is drawn inside the block.
+    //   - imgDispW, imgDispH   : displayed size of the (full) source image.
+    //   - imgLeft, imgTop      : top-left of the source image relative to the block.
+    const cw = Math.max(1, cropRect.w * (nat?.w || safeW));
+    const ch = Math.max(1, cropRect.h * (nat?.h || safeH));
+    const cropAspect = cw / ch;
+    const blockAspect = safeW / safeH;
+
+    let cropDispW = safeW;
+    let cropDispH = safeH;
+    if (objectFit === "cover") {
+      if (cropAspect >= blockAspect) {
+        cropDispH = safeH;
+        cropDispW = safeH * cropAspect;
+      } else {
+        cropDispW = safeW;
+        cropDispH = safeW / cropAspect;
+      }
+    } else if (objectFit === "contain") {
+      if (cropAspect >= blockAspect) {
+        cropDispW = safeW;
+        cropDispH = safeW / cropAspect;
+      } else {
+        cropDispH = safeH;
+        cropDispW = safeH * cropAspect;
+      }
+    } else if (objectFit === "fill") {
+      cropDispW = safeW;
+      cropDispH = safeH;
+    } else if (objectFit === "none") {
+      cropDispW = cw;
+      cropDispH = ch;
+    } else /* scale-down */ {
+      if (cw > safeW || ch > safeH) {
+        if (cropAspect >= blockAspect) {
+          cropDispW = safeW;
+          cropDispH = safeW / cropAspect;
+        } else {
+          cropDispH = safeH;
+          cropDispW = safeH * cropAspect;
+        }
+      } else {
+        cropDispW = cw;
+        cropDispH = ch;
+      }
+    }
+
+    const sx = cropDispW / cw;
+    const sy = cropDispH / ch;
+    const imgDispW = (nat?.w || safeW) * sx;
+    const imgDispH = (nat?.h || safeH) * sy;
+    const cropLeft = (safeW - cropDispW) / 2;
+    const cropTop = (safeH - cropDispH) / 2;
+    const imgLeft = cropLeft - cropRect.x * imgDispW;
+    const imgTop = cropTop - cropRect.y * imgDispH;
+
+    return (
+      <div
+        ref={blockRef}
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={handleDrop}
+        style={{
+          width: "100%",
+          height: "100%",
+          borderRadius,
+          overflow: "hidden",
+          position: "relative",
+        }}
+      >
+        <img
+          src={isSvgSrc(src) && svgColor ? recoloredSvgUrl(src, svgColor) : src}
+          alt={alt}
+          draggable={false}
+          onLoad={(e) => {
+            const i = e.currentTarget;
+            if (i.naturalWidth && i.naturalHeight) {
+              setNat({ w: i.naturalWidth, h: i.naturalHeight });
+            }
+          }}
+          style={{
+            position: "absolute",
+            width: imgDispW,
+            height: imgDispH,
+            left: imgLeft,
+            top: imgTop,
+            display: "block",
+            pointerEvents: "none",
+            userSelect: "none",
+            maxWidth: "none",
+          }}
+        />
+        {dragOver && !isEditing && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "rgba(59,130,246,0.2)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 14,
+              fontWeight: 600,
+              color: "#1d4ed8",
+            }}
+          >
+            Drop to replace
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  /* ── Image state: non-cover fits (contain / fill / none / scale-down) ── */
+  if (!useCustomCover) {
+    return (
+      <div
+        ref={blockRef}
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={handleDrop}
+        style={{
+          width: "100%",
+          height: "100%",
+          borderRadius,
+          overflow: "hidden",
+          position: "relative",
+        }}
+      >
+        <img
+          src={isSvgSrc(src) && svgColor ? recoloredSvgUrl(src, svgColor) : src}
+          alt={alt}
+          draggable={false}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit,
+            objectPosition,
+            display: "block",
+            userSelect: "none",
+          }}
+        />
+        {dragOver && !isEditing && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "rgba(59,130,246,0.2)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 14,
+              fontWeight: 600,
+              color: "#1d4ed8",
+            }}
+          >
+            Drop to replace
+          </div>
+        )}
+      </div>
+    );
+  }
+
   /* ── Image state ── */
   return (
     <div
@@ -362,28 +543,24 @@ function ImageElementComponent({ props, isEditing, width, height, onPropsChange 
 
 function ImagePropertyPanel({ props, onChange }: PropertyPanelProps) {
   const src = (props.src as string) || "";
-  const cropOffsetX = (props.cropOffsetX as number) ?? DEFAULT_OFFSET;
-  const cropOffsetY = (props.cropOffsetY as number) ?? DEFAULT_OFFSET;
   const zoom = (props.zoom as number) || DEFAULT_ZOOM;
   const svgColor = (props.svgColor as string) || "";
+  const objectFit = (props.objectFit as string) || "cover";
+  const objectPosition = (props.objectPosition as string) || "center";
+  const cropRect = props.cropRect as
+    | { x: number; y: number; w: number; h: number }
+    | undefined;
   const isSvg = isSvgSrc(src);
 
   const [cropOpen, setCropOpen] = useState(false);
 
-  // Read the currently-selected element's transform so the crop frame
-  // matches the block's actual aspect ratio.
-  const selectedIds = useCanvasStore((s) => s.selectedIds);
-  const elements = useCanvasStore((s) => s.document.elements);
-  const selEl = selectedIds[0] ? elements[selectedIds[0]] : null;
-  const aspectRatio = selEl && selEl.transform.height > 0
-    ? selEl.transform.width / selEl.transform.height
-    : 1;
-
-  const handleCropConfirm = (result: { cropOffsetX: number; cropOffsetY: number; zoom: number }) => {
+  const handleCropConfirm = (result: { cropRect: { x: number; y: number; w: number; h: number } }) => {
     onChange({
-      cropOffsetX: result.cropOffsetX,
-      cropOffsetY: result.cropOffsetY,
-      zoom: result.zoom,
+      cropRect: result.cropRect,
+      // Clear legacy crop/pan/zoom — the new cropRect supersedes them.
+      cropOffsetX: DEFAULT_OFFSET,
+      cropOffsetY: DEFAULT_OFFSET,
+      zoom: DEFAULT_ZOOM,
     });
     setCropOpen(false);
   };
@@ -396,6 +573,7 @@ function ImagePropertyPanel({ props, onChange }: PropertyPanelProps) {
           if (url !== src) {
             onChange({
               src: url,
+              cropRect: undefined,
               cropOffsetX: DEFAULT_OFFSET,
               cropOffsetY: DEFAULT_OFFSET,
               zoom: DEFAULT_ZOOM,
@@ -407,14 +585,64 @@ function ImagePropertyPanel({ props, onChange }: PropertyPanelProps) {
       />
 
       {src && (
-        <button
-          type="button"
-          onClick={() => setCropOpen(true)}
-          className="flex w-full items-center justify-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition-colors"
-        >
-          <Crop size={12} />
-          Crop & Position
-        </button>
+        <label className="block">
+          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Image Fit</span>
+          <select
+            className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
+            value={objectFit}
+            onChange={(e) => onChange({ objectFit: e.target.value })}
+          >
+            <option value="cover">Cover (crop to fill)</option>
+            <option value="contain">Contain (fit inside)</option>
+            <option value="fill">Fill (stretch)</option>
+            <option value="none">None (original size)</option>
+            <option value="scale-down">Scale down</option>
+          </select>
+        </label>
+      )}
+
+      {src && objectFit !== "cover" && (
+        <label className="block">
+          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Image Position</span>
+          <select
+            className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
+            value={objectPosition}
+            onChange={(e) => onChange({ objectPosition: e.target.value })}
+          >
+            <option value="center">Center</option>
+            <option value="top">Top</option>
+            <option value="bottom">Bottom</option>
+            <option value="left">Left</option>
+            <option value="right">Right</option>
+            <option value="top left">Top Left</option>
+            <option value="top right">Top Right</option>
+            <option value="bottom left">Bottom Left</option>
+            <option value="bottom right">Bottom Right</option>
+          </select>
+        </label>
+      )}
+
+      {src && (
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setCropOpen(true)}
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition-colors"
+          >
+            <Crop size={12} />
+            {cropRect ? "Edit Crop" : "Crop Image"}
+          </button>
+          {cropRect && (
+            <button
+              type="button"
+              onClick={() => onChange({ cropRect: undefined })}
+              className="rounded-md border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50"
+              title="Remove crop"
+            >
+              Clear
+            </button>
+          )}
+        </div>
       )}
 
       {isSvg && (
@@ -455,7 +683,7 @@ function ImagePropertyPanel({ props, onChange }: PropertyPanelProps) {
         />
       </label>
 
-      {src && (
+      {src && objectFit === "cover" && !cropRect && (
         <label className="block">
           <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Zoom</span>
           <div className="mt-1 flex items-center gap-2">
@@ -490,10 +718,7 @@ function ImagePropertyPanel({ props, onChange }: PropertyPanelProps) {
       {cropOpen && src && (
         <ImageCropDialog
           src={src}
-          aspectRatio={aspectRatio}
-          initialOffsetX={cropOffsetX}
-          initialOffsetY={cropOffsetY}
-          initialZoom={zoom}
+          initialCropRect={cropRect}
           onConfirm={handleCropConfirm}
           onCancel={() => setCropOpen(false)}
         />
@@ -512,6 +737,8 @@ registerElement({
   defaultProps: {
     src: "",
     alt: "",
+    objectFit: "contain",
+    objectPosition: "center",
     cropOffsetX: DEFAULT_OFFSET,
     cropOffsetY: DEFAULT_OFFSET,
     zoom: DEFAULT_ZOOM,

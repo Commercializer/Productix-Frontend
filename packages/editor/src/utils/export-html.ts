@@ -28,6 +28,11 @@ function escapeHtml(str: string): string {
     .replace(/"/g, "&quot;");
 }
 
+/** Like escapeHtml, but preserves user-entered line breaks as <br>. */
+function escapeHtmlMultiline(str: string): string {
+  return escapeHtml(str).replace(/\r\n|\r|\n/g, "<br>");
+}
+
 /**
  * Generate HTML for a single element based on its type and props.
  */
@@ -48,16 +53,30 @@ function elementToHtml(el: ElementNode, isFlowMode: boolean): string {
       const actualFontSize = variant === "heading" ? Math.max(fontSize, 24) : fontSize;
       const actualFontWeight = variant === "heading" ? "700" : fontWeight;
       const tag = variant === "heading" ? "h2" : "p";
-      return `<${tag} style="font-size:${actualFontSize}px;font-weight:${actualFontWeight};color:${color};text-align:${textAlign};line-height:${lineHeight};margin:0;padding:4px;word-break:break-word;width:100%;">${escapeHtml(text)}</${tag}>`;
+      return `<${tag} style="font-size:${actualFontSize}px;font-weight:${actualFontWeight};color:${color};text-align:${textAlign};line-height:${lineHeight};margin:0;padding:4px;word-break:break-word;white-space:pre-wrap;width:100%;">${escapeHtmlMultiline(text)}</${tag}>`;
     }
 
     case "image": {
       const src = (p.src as string) || "";
       const alt = (p.alt as string) || "";
       const objectFit = (p.objectFit as string) || "cover";
+      const objectPosition = (p.objectPosition as string) || "center";
       const borderRadius = (p.borderRadius as number) || 0;
+      const cropRect = p.cropRect as { x: number; y: number; w: number; h: number } | undefined;
       if (!src) return `<div style="width:100%;height:100%;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border-radius:${borderRadius}px;"><span style="color:#9ca3af;font-size:14px;">🖼️ No image</span></div>`;
-      return `<img src="${escapeHtml(src)}" alt="${escapeHtml(alt)}" style="width:100%;height:auto;object-fit:${objectFit};border-radius:${borderRadius}px;display:block;max-width:100%;" loading="lazy" />`;
+      if (cropRect) {
+        // Cropped region is stretched to fill the block. Static HTML can't
+        // know the source image's intrinsic size, so objectFit on top of the
+        // crop is approximated as "fill" — the canvas editor honors objectFit
+        // precisely.
+        const cw = Math.max(0.0001, cropRect.w);
+        const ch = Math.max(0.0001, cropRect.h);
+        const sizePct = `${(100 / cw).toFixed(4)}% ${(100 / ch).toFixed(4)}%`;
+        const posX = cw >= 0.9999 ? "0%" : `${((cropRect.x / (1 - cw)) * 100).toFixed(4)}%`;
+        const posY = ch >= 0.9999 ? "0%" : `${((cropRect.y / (1 - ch)) * 100).toFixed(4)}%`;
+        return `<div role="img" aria-label="${escapeHtml(alt)}" style="width:100%;height:100%;background-image:url('${escapeHtml(src)}');background-repeat:no-repeat;background-size:${sizePct};background-position:${posX} ${posY};border-radius:${borderRadius}px;"></div>`;
+      }
+      return `<img src="${escapeHtml(src)}" alt="${escapeHtml(alt)}" style="width:100%;height:100%;object-fit:${objectFit};object-position:${objectPosition};border-radius:${borderRadius}px;display:block;" loading="lazy" />`;
     }
 
     case "button": {

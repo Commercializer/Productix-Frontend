@@ -4,7 +4,7 @@
 
 "use client";
 
-import React, { useRef, useCallback } from "react";
+import React, { useRef, useCallback, useEffect } from "react";
 import { Type, Heading as HeadingIcon } from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
 import { FontPicker } from "../panels/font-picker";
@@ -12,7 +12,7 @@ import { HexColorPopover } from "./hex-color-popover";
 
 /* ─── Component ─────────────────────────────── */
 
-function TextElementComponent({ props, isEditing, scaleFactor = 1 }: ElementRenderProps) {
+function TextElementComponent({ props, isEditing, scaleFactor = 1, onPropsChange }: ElementRenderProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   const text = (props.text as string) || "Text";
@@ -31,12 +31,27 @@ function TextElementComponent({ props, isEditing, scaleFactor = 1 }: ElementRend
   const scaledFontSize = Math.round(actualFontSize * scaleFactor);
   const scaledPadding = Math.round(4 * scaleFactor);
 
-  const handleBlur = useCallback(() => {
-    if (ref.current) {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const _ = ref.current.textContent; // read content
+  // Sync external text changes to the DOM (e.g. from the property panel).
+  // Skip while the user is actively editing — overwriting would clobber the
+  // caret and any in-progress line breaks.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (typeof document !== "undefined" && document.activeElement === el) return;
+    if (el.innerText !== text) {
+      el.innerText = text;
     }
-  }, []);
+  }, [text]);
+
+  const handleBlur = useCallback(() => {
+    if (!ref.current) return;
+    // innerText preserves Shift+Enter/Enter as \n across the <br>/<div>
+    // structures different browsers insert in contentEditable.
+    const newText = ref.current.innerText;
+    if (newText !== text) {
+      onPropsChange({ text: newText });
+    }
+  }, [text, onPropsChange]);
 
   return (
     <div
@@ -56,6 +71,7 @@ function TextElementComponent({ props, isEditing, scaleFactor = 1 }: ElementRend
         outline: "none",
         overflow: "hidden",
         wordBreak: "break-word",
+        whiteSpace: "pre-wrap",
         cursor: isEditing ? "text" : "default",
         display: "flex",
         alignItems: "flex-start",
