@@ -10,12 +10,23 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Productix — Visual Page Builder",
+    default:
+      "Productix — Product Experience Infrastructure for Modern Consumer Brands",
     template: "%s | Productix",
   },
   description:
-    "Create beautiful, responsive pages in minutes with our drag-and-drop visual editor. No code required.",
-  keywords: ["page builder", "visual editor", "drag and drop", "landing page"],
+    "Productix transforms physical products into connected digital experiences through dynamic product engagement, consumer intelligence, packaging analytics, and activation infrastructure — built for FMCG and packaged-product brands at enterprise scale.",
+  keywords: [
+    "product experience infrastructure",
+    "connected packaging",
+    "FMCG",
+    "consumer brands",
+    "packaging analytics",
+    "QR-enabled packaging",
+    "consumer intelligence",
+    "multilingual product delivery",
+    "brand activation",
+  ],
 };
 
 export const viewport: Viewport = {
