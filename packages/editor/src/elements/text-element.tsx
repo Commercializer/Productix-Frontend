@@ -53,12 +53,43 @@ function TextElementComponent({ props, isEditing, scaleFactor = 1, onPropsChange
     }
   }, [text, onPropsChange]);
 
+  // Intercept Enter / Shift+Enter so the browser inserts a literal "\n"
+  // text node instead of a <br> or wrapping <div>. With whiteSpace:
+  // pre-wrap, the \n renders as a real line break, and on blur we get
+  // a clean string with embedded newlines back from innerText — no
+  // browser-specific DOM structure to interpret.
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      // execCommand is deprecated but still the only one-liner that
+      // works across browsers for inserting text at the caret while
+      // preserving undo/redo. Falls back to manual Selection insertion.
+      const ok = typeof document !== "undefined"
+        && typeof document.execCommand === "function"
+        && document.execCommand("insertText", false, "\n");
+      if (!ok && typeof window !== "undefined") {
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount) {
+          const range = sel.getRangeAt(0);
+          range.deleteContents();
+          const node = document.createTextNode("\n");
+          range.insertNode(node);
+          range.setStartAfter(node);
+          range.setEndAfter(node);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+      }
+    }
+  }, []);
+
   return (
     <div
       ref={ref}
       contentEditable={isEditing}
       suppressContentEditableWarning
       onBlur={handleBlur}
+      onKeyDown={isEditing ? handleKeyDown : undefined}
       style={{
         width: "100%",
         height: "100%",
@@ -73,8 +104,6 @@ function TextElementComponent({ props, isEditing, scaleFactor = 1, onPropsChange
         wordBreak: "break-word",
         whiteSpace: "pre-wrap",
         cursor: isEditing ? "text" : "default",
-        display: "flex",
-        alignItems: "flex-start",
         padding: scaledPadding,
       }}
     >
