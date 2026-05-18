@@ -55,12 +55,14 @@ const VIBE_OPTIONS = [
   "Warm & friendly",
 ];
 
-// Only ChatGPT and Claude reliably accept a prefilled prompt via URL query.
-// Gemini doesn't, so for it we still copy and just open the app.
+// Claude is the only provider that reliably accepts a prompt this long via
+// URL. ChatGPT and Gemini have hard URL-length caps that our catalog-laden
+// prompt blows through (HTTP 431), so for those we offer a "copy + open"
+// flow — clipboard carries the prompt, user pastes with ⌘V / Ctrl+V.
 const AI_TARGETS = [
-  { id: "chatgpt", label: "ChatGPT", url: (q: string) => `https://chatgpt.com/?q=${encodeURIComponent(q)}` },
-  { id: "claude", label: "Claude", url: (q: string) => `https://claude.ai/new?q=${encodeURIComponent(q)}` },
-  { id: "gemini", label: "Gemini", url: (_: string) => `https://gemini.google.com/app` },
+  { id: "claude", label: "Claude", url: (q: string) => `https://claude.ai/new?q=${encodeURIComponent(q)}`, mode: "prefill" as const },
+  { id: "chatgpt", label: "ChatGPT", url: (_: string) => "https://chatgpt.com/", mode: "copy" as const },
+  { id: "gemini", label: "Gemini", url: (_: string) => "https://gemini.google.com/app", mode: "copy" as const },
 ] as const;
 
 export function ImportLayoutDialog({ open, onClose }: ImportLayoutDialogProps) {
@@ -70,6 +72,7 @@ export function ImportLayoutDialog({ open, onClose }: ImportLayoutDialogProps) {
   const [error, setError] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [copied, setCopied] = useState(false);
+  const [customCategoryMode, setCustomCategoryMode] = useState(false);
 
   useEffect(() => {
     if (!open) {
@@ -78,6 +81,7 @@ export function ImportLayoutDialog({ open, onClose }: ImportLayoutDialogProps) {
       setError(null);
       setWarnings([]);
       setCopied(false);
+      setCustomCategoryMode(false);
       return;
     }
     const onKey = (e: KeyboardEvent) => {
@@ -105,14 +109,19 @@ export function ImportLayoutDialog({ open, onClose }: ImportLayoutDialogProps) {
     }
   };
 
-  const handleOpenIn = async (target: typeof AI_TARGETS[number]) => {
-    try {
-      await navigator.clipboard.writeText(prompt);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
-    } catch {
-      // Non-fatal — still open the tool so user can paste manually.
-    }
+  const handleOpenIn = (target: typeof AI_TARGETS[number]) => {
+    // Order matters: fire clipboard write first while the document still has
+    // focus (writeText silently fails if focus has moved). Both calls run
+    // synchronously in the same user-gesture turn, so popup blocker is happy.
+    navigator.clipboard.writeText(prompt).then(
+      () => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1800);
+      },
+      () => {
+        // Non-fatal — user can still hit "Copy AI prompt" manually.
+      },
+    );
     window.open(target.url(prompt), "_blank", "noopener,noreferrer");
   };
 
@@ -162,7 +171,7 @@ export function ImportLayoutDialog({ open, onClose }: ImportLayoutDialogProps) {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "16px 20px", borderBottom: "1px solid #f1f5f9" }}>
-          <div style={{ width: 32, height: 32, borderRadius: 10, background: "linear-gradient(135deg,#8b5cf6,#ec4899)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
+          <div style={{ width: 32, height: 32, borderRadius: 10, background: "#0284c7", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
             <Sparkles size={16} />
           </div>
           <div style={{ flex: 1 }}>
@@ -182,7 +191,7 @@ export function ImportLayoutDialog({ open, onClose }: ImportLayoutDialogProps) {
           {/* Step 1 — Brief */}
           <section>
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-              <span style={{ fontSize: 10, fontWeight: 700, color: "#8b5cf6", letterSpacing: "0.06em", textTransform: "uppercase" }}>Step 1</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: "#0284c7", letterSpacing: "0.06em", textTransform: "uppercase" }}>Step 1</span>
               <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>Tell us about the product</span>
             </div>
             <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 12px", lineHeight: 1.5 }}>
@@ -194,10 +203,33 @@ export function ImportLayoutDialog({ open, onClose }: ImportLayoutDialogProps) {
                 <input type="text" value={brief.productName ?? ""} onChange={(e) => setField("productName", e.target.value)} placeholder="e.g. Aurora Cold Brew" style={inputStyle} />
               </Field>
               <Field label="Category">
-                <select value={brief.productCategory ?? ""} onChange={(e) => setField("productCategory", e.target.value)} style={inputStyle}>
+                <select
+                  value={customCategoryMode ? "Other" : (brief.productCategory ?? "")}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (v === "Other") {
+                      setCustomCategoryMode(true);
+                      setField("productCategory", "");
+                    } else {
+                      setCustomCategoryMode(false);
+                      setField("productCategory", v);
+                    }
+                  }}
+                  style={inputStyle}
+                >
                   <option value="">— pick one —</option>
                   {CATEGORY_OPTIONS.map((c) => (<option key={c} value={c}>{c}</option>))}
                 </select>
+                {customCategoryMode && (
+                  <input
+                    type="text"
+                    autoFocus
+                    value={brief.productCategory ?? ""}
+                    onChange={(e) => setField("productCategory", e.target.value)}
+                    placeholder="Enter category"
+                    style={{ ...inputStyle, marginTop: 6 }}
+                  />
+                )}
               </Field>
               <Field label="What it is (one line)" full>
                 <input type="text" value={brief.productDescription ?? ""} onChange={(e) => setField("productDescription", e.target.value)} placeholder="e.g. Small-batch nitro cold brew in recyclable cans" style={inputStyle} />
@@ -232,16 +264,16 @@ export function ImportLayoutDialog({ open, onClose }: ImportLayoutDialogProps) {
           {/* Step 2 — Send to AI */}
           <section>
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-              <span style={{ fontSize: 10, fontWeight: 700, color: "#0ea5e9", letterSpacing: "0.06em", textTransform: "uppercase" }}>Step 2</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: "#0284c7", letterSpacing: "0.06em", textTransform: "uppercase" }}>Step 2</span>
               <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>Send the prompt to your AI</span>
             </div>
             <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 10px", lineHeight: 1.5 }}>
               We've built a prompt that includes your brief plus the live element schema for this editor.
-              Copy it, or open it directly in your tool of choice.
+              Click an AI below — we'll open it and copy the prompt to your clipboard, ready to paste (⌘V / Ctrl+V).
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               <button type="button" onClick={handleCopyPrompt}
-                style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "8px 14px", borderRadius: 10, border: "1px solid #e0e7ff", background: copied ? "#ecfdf5" : "#eef2ff", color: copied ? "#059669" : "#4f46e5", fontSize: 12, fontWeight: 600, cursor: "pointer", transition: "all 0.15s" }}
+                style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "8px 14px", borderRadius: 10, border: "1px solid #bae6fd", background: copied ? "#bae6fd" : "#e0f2fe", color: "#0284c7", fontSize: 12, fontWeight: 600, cursor: "pointer", transition: "all 0.15s" }}
               >
                 {copied ? <Check size={14} /> : <Copy size={14} />}
                 {copied ? "Copied to clipboard" : "Copy AI prompt"}
@@ -249,9 +281,14 @@ export function ImportLayoutDialog({ open, onClose }: ImportLayoutDialogProps) {
               {AI_TARGETS.map((t) => (
                 <button key={t.id} type="button" onClick={() => handleOpenIn(t)}
                   style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 12px", borderRadius: 10, border: "1px solid #e2e8f0", background: "#fff", color: "#0f172a", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
-                  title={t.id === "gemini" ? "Copies the prompt and opens Gemini — paste it there" : `Opens ${t.label} with the prompt prefilled`}
+                  title={
+                    t.mode === "prefill"
+                      ? `Opens ${t.label} with the prompt prefilled`
+                      : `Copies the prompt and opens ${t.label} — paste with ⌘V / Ctrl+V`
+                  }
                 >
-                  <ExternalLink size={13} /> Open in {t.label}
+                  {t.mode === "prefill" ? <ExternalLink size={13} /> : <Copy size={13} />}
+                  {t.mode === "prefill" ? `Open in ${t.label}` : `Copy + Open ${t.label}`}
                 </button>
               ))}
             </div>
@@ -260,7 +297,7 @@ export function ImportLayoutDialog({ open, onClose }: ImportLayoutDialogProps) {
           {/* Step 3 — Paste JSON */}
           <section>
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-              <span style={{ fontSize: 10, fontWeight: 700, color: "#10b981", letterSpacing: "0.06em", textTransform: "uppercase" }}>Step 3</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: "#0284c7", letterSpacing: "0.06em", textTransform: "uppercase" }}>Step 3</span>
               <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>Paste the JSON</span>
             </div>
             <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 8px", lineHeight: 1.5 }}>
@@ -314,7 +351,7 @@ export function ImportLayoutDialog({ open, onClose }: ImportLayoutDialogProps) {
             Cancel
           </button>
           <button type="button" onClick={handleImport} disabled={!json.trim()}
-            style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 18px", borderRadius: 10, border: "none", background: !json.trim() ? "#cbd5e1" : "linear-gradient(135deg,#8b5cf6,#ec4899)", color: "#fff", fontSize: 12, fontWeight: 700, cursor: !json.trim() ? "not-allowed" : "pointer", boxShadow: !json.trim() ? "none" : "0 4px 14px rgba(139,92,246,0.35)" }}
+            style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 18px", borderRadius: 10, border: "none", background: !json.trim() ? "#cbd5e1" : "#0284c7", color: "#fff", fontSize: 12, fontWeight: 700, cursor: !json.trim() ? "not-allowed" : "pointer", boxShadow: !json.trim() ? "none" : "0 4px 14px rgba(2,132,199,0.35)" }}
           >
             <Wand2 size={14} /> Import layout
           </button>
