@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition, useCallback } from "react";
+import { useState, useTransition, useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import {
   Search,
@@ -21,6 +22,9 @@ import {
   Brush,
   Pencil,
   ArrowUpDown,
+  Link2,
+  Hash,
+  X,
 } from "lucide-react";
 import type { Promption } from "@/hooks/use-promptions";
 import { QrModal } from "./qr-modal";
@@ -30,6 +34,8 @@ interface PromptionTableProps {
   onDelete: (id: string) => Promise<{ success?: boolean; error?: string }>;
   onPublish?: (id: string) => Promise<{ success?: boolean; error?: string; slug?: string }>;
   onUnpublish?: (id: string) => Promise<{ success?: boolean; error?: string }>;
+  onSetSlugVisible?: (productId: string, visible: boolean) => Promise<{ success?: boolean; error?: string }>;
+  onRenameSlug?: (profileId: string, slug: string) => Promise<{ success?: boolean; error?: string; slug?: string }>;
   readOnly?: boolean;
 }
 
@@ -46,11 +52,14 @@ export function PromptionTable({
   onDelete,
   onPublish,
   onUnpublish,
+  onSetSlugVisible,
+  onRenameSlug,
   readOnly = false,
 }: PromptionTableProps) {
   const [search, setSearch] = useState("");
   const [selectedIDs, setSelectedIDs] = useState<Set<string>>(new Set());
-  const [qrModal, setQrModal] = useState<{ name: string; slug: string } | null>(null);
+  const [qrModal, setQrModal] = useState<{ name: string; shortCode: string } | null>(null);
+  const [slugEditor, setSlugEditor] = useState<{ profileId: string; currentSlug: string } | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -58,7 +67,8 @@ export function PromptionTable({
   const filtered = promptions.filter(
     (p) =>
       p.productName.toLowerCase().includes(search.toLowerCase()) ||
-      p.slug.toLowerCase().includes(search.toLowerCase())
+      p.slug.toLowerCase().includes(search.toLowerCase()) ||
+      p.shortCode.toLowerCase().includes(search.toLowerCase())
   );
 
   const toggleSelect = (id: string) => {
@@ -68,12 +78,22 @@ export function PromptionTable({
     setSelectedIDs(newPaths);
   };
 
-  const handleCopyLink = useCallback(async (slug: string, id: string) => {
-    const url = `${window.location.origin}/p/${slug}`;
+  const handleCopyLink = useCallback(async (shortCode: string, id: string) => {
+    const url = `${window.location.origin}/p/${shortCode}`;
     await navigator.clipboard.writeText(url);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
   }, []);
+
+  const handleToggleSlug = useCallback(
+    (p: Promption) => {
+      setActiveMenu(null);
+      startTransition(async () => {
+        await onSetSlugVisible?.(p.productId, !p.slugVisible);
+      });
+    },
+    [onSetSlugVisible]
+  );
 
   const handlePublishToggle = useCallback(
     (p: Promption) => {
@@ -150,7 +170,7 @@ export function PromptionTable({
 
       {/* Table Container */}
       <div>
-        <div className="overflow-x-visible sm:overflow-x-auto min-h-[300px]">
+        <div className="overflow-visible min-h-[480px]">
           <table className="w-full text-[13px] whitespace-normal sm:whitespace-nowrap block sm:table">
             <thead className="hidden sm:table-header-group">
               <tr className="border-b border-(--ds-border) text-[#64748B] font-medium">
@@ -197,7 +217,9 @@ export function PromptionTable({
               ) : (
                 filtered.map((p) => {
                   const isChecked = selectedIDs.has(p.id);
-                  const publicUrl = `/p/${p.slug}`;
+                  // The shareable URL always uses the 8-char short code; the slug
+                  // is only visible to end visitors when slugVisible is on.
+                  const publicUrl = `/p/${p.shortCode}`;
 
                   return (
                     <tr
@@ -263,7 +285,7 @@ export function PromptionTable({
                             {publicUrl}
                           </span>
                           <button
-                            onClick={() => handleCopyLink(p.slug, p.id)}
+                            onClick={() => handleCopyLink(p.shortCode, p.id)}
                             className="w-6 h-6 flex items-center justify-center text-(--ds-text-muted) hover:text-[#0284c7] rounded transition-colors shrink-0"
                             title="Copy link"
                           >
@@ -328,7 +350,7 @@ export function PromptionTable({
                             onClick={() =>
                               setQrModal({
                                 name: p.productName,
-                                slug: p.slug,
+                                shortCode: p.shortCode,
                               })
                             }
                             className="w-9 h-9 flex items-center justify-center text-[#0f172a] dark:text-white bg-white dark:bg-[#0f172a] sm:dark:bg-[#1e293b] rounded-[10px] border-[1.5px] border-[#e2e8f0] dark:border-[#334155] hover:border-[#bae6fd] hover:text-[#0284c7] hover:bg-[#f0f9ff] dark:hover:bg-[#334155] shadow-xs transition-all"
@@ -388,7 +410,45 @@ export function PromptionTable({
                                     <Rocket size={15} className="text-[#64748b]" />
                                     {p.isPublished ? "Unpublish" : "Publish"}
                                   </button>
-                                  
+
+                                  {onRenameSlug && (
+                                    <button
+                                      onClick={() => {
+                                        setActiveMenu(null);
+                                        setSlugEditor({ profileId: p.id, currentSlug: p.slug });
+                                      }}
+                                      className="w-full px-3 py-2 text-left text-[13px] hover:bg-[#f8fafc] dark:hover:bg-[#334155] flex items-center gap-2 transition-colors text-(--ds-text-primary)"
+                                    >
+                                      <Hash size={15} className="text-[#64748b]" />
+                                      Edit slug
+                                    </button>
+                                  )}
+
+                                  {onSetSlugVisible && (
+                                    <button
+                                      onClick={() => handleToggleSlug(p)}
+                                      disabled={isPending}
+                                      className="w-full px-3 py-2 text-left text-[13px] hover:bg-[#f8fafc] dark:hover:bg-[#334155] flex items-center justify-between gap-2 transition-colors text-(--ds-text-primary)"
+                                      title="When on, visitors are redirected to /p/<slug>. When off, the share URL stays as /p/<shortCode>."
+                                    >
+                                      <span className="flex items-center gap-2">
+                                        <Link2 size={15} className="text-[#64748b]" />
+                                        Show slug in URL
+                                      </span>
+                                      <span
+                                        className={`inline-flex h-4 w-7 items-center rounded-full transition-colors ${
+                                          p.slugVisible ? "bg-(--ds-accent)" : "bg-[#cbd5e1] dark:bg-[#475569]"
+                                        }`}
+                                      >
+                                        <span
+                                          className={`inline-block h-3 w-3 rounded-full bg-white transition-transform ${
+                                            p.slugVisible ? "translate-x-3.5" : "translate-x-0.5"
+                                          }`}
+                                        />
+                                      </span>
+                                    </button>
+                                  )}
+
                                   <div className="h-px bg-[#e2e8f0] dark:bg-[#334155] my-1" />
                                   <button
                                     onClick={() => handleDelete(p.id)}
@@ -418,9 +478,118 @@ export function PromptionTable({
           isOpen={!!qrModal}
           onClose={() => setQrModal(null)}
           productName={qrModal.name}
-          slug={qrModal.slug}
+          shortCode={qrModal.shortCode}
+        />
+      )}
+
+      {/* Slug Edit Modal */}
+      {slugEditor && onRenameSlug && (
+        <SlugEditModal
+          profileId={slugEditor.profileId}
+          currentSlug={slugEditor.currentSlug}
+          onClose={() => setSlugEditor(null)}
+          onSave={onRenameSlug}
         />
       )}
     </div>
+  );
+}
+
+interface SlugEditModalProps {
+  profileId: string;
+  currentSlug: string;
+  onClose: () => void;
+  onSave: (profileId: string, slug: string) => Promise<{ success?: boolean; error?: string; slug?: string }>;
+}
+
+function SlugEditModal({ profileId, currentSlug, onClose, onSave }: SlugEditModalProps) {
+  const [value, setValue] = useState(currentSlug);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+
+  useEffect(() => setMounted(true), []);
+
+  const handleSave = async () => {
+    setError(null);
+    setSaving(true);
+    const result = await onSave(profileId, value);
+    setSaving(false);
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
+    onClose();
+  };
+
+  if (!mounted) return null;
+
+  // Render via portal so the modal escapes any parent stacking contexts
+  // (transforms / filters / overflow clips on the table or layout).
+  return createPortal(
+    <>
+      <div className="fixed inset-0 z-[9998] bg-black/40 backdrop-blur-xs" onClick={onClose} />
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" onClick={onClose}>
+        <div
+          className="relative w-full max-w-[440px] rounded-2xl bg-white dark:bg-[#1e293b] shadow-2xl border border-[#e2e8f0] dark:border-[#334155] overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between px-6 pt-6 pb-2">
+            <div>
+              <h3 className="text-lg font-bold text-[#0f172a] dark:text-white">Edit slug</h3>
+              <p className="text-[13px] text-[#64748b] dark:text-[#94a3b8] mt-0.5">
+                Visitors see this in the address bar when Show slug in URL is on.
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-white hover:bg-[#f1f5f9] dark:hover:bg-[#334155] transition-colors"
+            >
+              <X size={18} />
+            </button>
+          </div>
+          <div className="px-6 py-4">
+            <label className="block text-[12px] font-medium text-[#64748b] dark:text-[#94a3b8] mb-1.5">
+              Slug
+            </label>
+            <div className="flex items-stretch rounded-lg border border-[#e2e8f0] dark:border-[#334155] overflow-hidden focus-within:border-[#93c5fd]">
+              <span className="px-3 flex items-center text-[12px] font-mono text-[#94a3b8] bg-[#f8fafc] dark:bg-[#0f172a] border-r border-[#e2e8f0] dark:border-[#334155]">
+                {origin}/p/
+              </span>
+              <input
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                placeholder="my-product"
+                autoFocus
+                className="flex-1 px-3 py-2.5 text-[13px] text-[#0f172a] dark:text-white bg-transparent outline-hidden"
+              />
+            </div>
+            <p className="mt-1.5 text-[11px] text-[#94a3b8]">
+              Lowercase letters, numbers, hyphens. 1–64 chars.
+            </p>
+            {error && (
+              <p className="mt-2 text-[12px] text-red-600 dark:text-red-400">{error}</p>
+            )}
+          </div>
+          <div className="px-6 pb-6 flex gap-3">
+            <button
+              onClick={onClose}
+              className="flex-1 h-[42px] rounded-xl border border-[#e2e8f0] dark:border-[#334155] text-[#0f172a] dark:text-white font-semibold text-[13px] hover:bg-[#f8fafc] dark:hover:bg-[#334155] transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving || value.trim() === currentSlug || !value.trim()}
+              className="flex-1 h-[42px] rounded-xl bg-[#0f172a] dark:bg-white text-white dark:text-[#0f172a] font-semibold text-[13px] hover:opacity-90 transition-opacity disabled:opacity-50"
+            >
+              {saving ? "Saving…" : "Save"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </>,
+    document.body
   );
 }

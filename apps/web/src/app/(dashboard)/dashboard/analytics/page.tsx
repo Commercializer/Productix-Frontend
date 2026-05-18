@@ -14,25 +14,25 @@ export default function AnalyticsPage() {
         <h2 className="text-xl font-bold text-(--ds-text-primary) mb-6 tracking-tight">Analytics Overview</h2>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white dark:bg-[#111] border border-(--ds-border) rounded-xl p-5 shadow-xs">
+          <div className="bg-(--ds-surface) border border-(--ds-border) rounded-xl p-5 shadow-xs">
             <p className="text-[13px] text-(--ds-text-secondary) font-medium mb-1">Total Products</p>
             <h2 className="text-3xl font-bold text-(--ds-text-primary)">
               {loading ? "—" : stats?.totalProducts ?? 0}
             </h2>
           </div>
-          <div className="bg-white dark:bg-[#111] border border-(--ds-border) rounded-xl p-5 shadow-xs">
+          <div className="bg-(--ds-surface) border border-(--ds-border) rounded-xl p-5 shadow-xs">
             <p className="text-[13px] text-(--ds-text-secondary) font-medium mb-1">Published</p>
-            <h2 className="text-3xl font-bold text-(--ds-text-primary) text-green-600 dark:text-green-500">
+            <h2 className="text-3xl font-bold text-green-600 dark:text-green-500">
               {loading ? "—" : stats?.publishedProducts ?? 0}
             </h2>
           </div>
-          <div className="bg-white dark:bg-[#111] border border-(--ds-border) rounded-xl p-5 shadow-xs">
+          <div className="bg-(--ds-surface) border border-(--ds-border) rounded-xl p-5 shadow-xs">
             <p className="text-[13px] text-(--ds-text-secondary) font-medium mb-1">Total QR Scans</p>
-            <h2 className="text-3xl font-bold text-(--ds-text-primary) text-blue-600 dark:text-blue-500">
+            <h2 className="text-3xl font-bold text-blue-600 dark:text-blue-500">
               {loading ? "—" : (stats?.totalQrLeads ?? 0).toLocaleString()}
             </h2>
           </div>
-          <div className="bg-white dark:bg-[#111] border border-(--ds-border) rounded-xl p-5 shadow-xs">
+          <div className="bg-(--ds-surface) border border-(--ds-border) rounded-xl p-5 shadow-xs">
             <p className="text-[13px] text-(--ds-text-secondary) font-medium mb-1">Total Support Threads</p>
             <h2 className="text-3xl font-bold text-(--ds-text-primary)">
               {loading ? "—" : stats?.feedbackCount ?? 0}

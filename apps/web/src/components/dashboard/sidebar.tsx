@@ -13,24 +13,40 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  Users,
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 
-const navItems = [
+const baseNavItems = [
   { href: "/dashboard", label: "Home", icon: <Home size={22} strokeWidth={1.25} /> },
   { href: "/dashboard/products", label: "Products", icon: <Package size={22} strokeWidth={1.25} /> },
   { href: "/dashboard/analytics", label: "Analytics", icon: <BarChart2 size={22} strokeWidth={1.25} /> },
   { href: "/dashboard/messages", label: "Messages", icon: <Mail size={22} strokeWidth={1.25} /> },
-  { href: "/dashboard/settings", label: "Settings", icon: <Settings size={22} strokeWidth={1.25} /> },
 ];
+
+const teamNavItem = {
+  href: "/dashboard/team",
+  label: "Team",
+  icon: <Users size={22} strokeWidth={1.25} />,
+};
+
+const settingsNavItem = {
+  href: "/dashboard/settings",
+  label: "Settings",
+  icon: <Settings size={22} strokeWidth={1.25} />,
+};
 
 const STORAGE_KEY = "productix.dashboard.sidebar.expanded";
 
 export function DashboardSidebar() {
   const pathname = usePathname();
-  const { signOut } = useAuth();
+  const { signOut, isCompanyAdmin } = useAuth();
   const [expanded, setExpanded] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+
+  const navItems = isCompanyAdmin
+    ? [...baseNavItems, teamNavItem, settingsNavItem]
+    : [...baseNavItems, settingsNavItem];
 
   useEffect(() => {
     try {

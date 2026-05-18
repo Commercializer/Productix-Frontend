@@ -78,10 +78,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-// Allow up to 25MB bodies for audio
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};

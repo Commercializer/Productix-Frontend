@@ -58,6 +58,108 @@ export async function listAllUsersAction(search?: string) {
   }));
 }
 
+export async function listUsersByCompanyAction() {
+  // Pull every company with its admins + users (and user details).
+  const companies = await prisma.company.findMany({
+    select: {
+      id: true,
+      name: true,
+      businessUsername: true,
+      maximumUsers: true,
+      isActive: true,
+      tenant: { select: { id: true, name: true } },
+      admins: {
+        select: {
+          id: true,
+          createdAt: true,
+          user: {
+            select: {
+              id: true,
+              email: true,
+              role: true,
+              isActive: true,
+              createdAt: true,
+              lastSignInAt: true,
+            },
+          },
+        },
+      },
+      users: {
+        select: {
+          id: true,
+          createdAt: true,
+          user: {
+            select: {
+              id: true,
+              email: true,
+              role: true,
+              isActive: true,
+              createdAt: true,
+              lastSignInAt: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  // Platform users not attached to a company: SUPER_ADMIN, TENANT_ADMIN, or
+  // any user that somehow lacks a company link.
+  const platformUsers = await prisma.user.findMany({
+    where: {
+      AND: [
+        { companyAdmin: { is: null } },
+        { companyUser: { is: null } },
+      ],
+    },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      isActive: true,
+      createdAt: true,
+      lastSignInAt: true,
+      tenantAdmin: { select: { tenant: { select: { id: true, name: true } } } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const toUserRow = (u: {
+    id: string;
+    email: string;
+    role: string;
+    isActive: boolean;
+    createdAt: Date;
+    lastSignInAt: Date | null;
+  }) => ({
+    id: u.id,
+    email: u.email,
+    role: u.role,
+    isActive: u.isActive,
+    createdAt: u.createdAt.toISOString(),
+    lastSignIn: u.lastSignInAt?.toISOString() ?? null,
+  });
+
+  return {
+    companies: companies.map((c) => ({
+      id: c.id,
+      name: c.name,
+      businessUsername: c.businessUsername,
+      maximumUsers: c.maximumUsers,
+      isActive: c.isActive,
+      tenantId: c.tenant.id,
+      tenantName: c.tenant.name,
+      admins: c.admins.map((a) => toUserRow(a.user)),
+      users: c.users.map((m) => toUserRow(m.user)),
+    })),
+    platformUsers: platformUsers.map((u) => ({
+      ...toUserRow(u),
+      tenantName: u.tenantAdmin?.tenant?.name ?? null,
+    })),
+  };
+}
+
 export async function createUserAction(data: {
   email: string;
   password: string;

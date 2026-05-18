@@ -12,7 +12,7 @@ export default function MessagesPage() {
       <section className="section mt-0!">
         <h2 className="text-xl font-bold text-(--ds-text-primary) mb-6">Customer Messages</h2>
         
-        <div className="bg-white dark:bg-[#111] border border-(--ds-border) rounded-xl overflow-hidden">
+        <div className="bg-(--ds-surface) border border-(--ds-border) rounded-xl overflow-hidden">
           {loading ? (
             <div className="skeleton-table p-6">
               {[...Array(4)].map((_, i) => (
@@ -27,7 +27,7 @@ export default function MessagesPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-(--ds-border) text-[12px] uppercase tracking-wider text-(--ds-text-secondary) bg-black/2 dark:bg-white/2">
+                  <tr className="border-b border-(--ds-border) text-[12px] uppercase tracking-wider text-(--ds-text-secondary) bg-(--ds-surface-2)">
                     <th className="p-4 font-medium">Customer</th>
                     <th className="p-4 font-medium">Type</th>
                     <th className="p-4 font-medium">Product</th>
@@ -38,13 +38,13 @@ export default function MessagesPage() {
                 </thead>
                 <tbody className="text-[14px]">
                   {messages.map((msg) => (
-                    <tr key={msg.id} className="border-b border-(--ds-border) hover:bg-black/2 dark:hover:bg-white/2 transition-colors">
+                    <tr key={msg.id} className="border-b border-(--ds-border) hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
                       <td className="p-4">
                         <div className="font-medium text-(--ds-text-primary)">{msg.name}</div>
                         <div className="text-[12px] text-(--ds-text-secondary)">{msg.email}</div>
                       </td>
                       <td className="p-4">
-                        <span className="px-2.5 py-1 rounded-full text-[11px] font-medium bg-black/5 dark:bg-white/10 text-(--ds-text-primary) uppercase tracking-tight">
+                        <span className="px-2.5 py-1 rounded-full text-[11px] font-medium bg-(--ds-surface-2) text-(--ds-text-primary) uppercase tracking-tight">
                           {msg.type} {msg.feedbackType ? `- ${msg.feedbackType}` : ""}
                         </span>
                       </td>

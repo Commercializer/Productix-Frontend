@@ -11,6 +11,7 @@ import React from "react";
 import { LayoutDashboard } from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
 import { ImageUploadWidget } from "../media/image-upload-widget";
+import { HexColorPopover } from "./hex-color-popover";
 
 /* ─── Component ─────────────────────────────── */
 
@@ -88,11 +89,10 @@ function CardPropertyPanel({ props, onChange }: PropertyPanelProps) {
       <label className="block">
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Background</span>
         <div className="mt-1 flex gap-2 items-center">
-          <input
-            type="color"
-            className="h-8 w-8 cursor-pointer rounded border border-gray-200"
-            value={(props.bgColor as string) || "#ffffff"}
-            onChange={(e) => onChange({ bgColor: e.target.value })}
+          <HexColorPopover
+            value={(props.bgColor as string) || ""}
+            onChange={(hex) => onChange({ bgColor: hex })}
+            fallback="#ffffff"
           />
           <input
             type="text"
@@ -147,11 +147,10 @@ function CardPropertyPanel({ props, onChange }: PropertyPanelProps) {
           <label className="block">
             <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">Overlay</span>
             <div className="mt-0.5 flex gap-2 items-center">
-              <input
-                type="color"
-                className="h-6 w-6 cursor-pointer rounded border border-gray-200"
-                value={(props.overlayColor as string) || "#000000"}
-                onChange={(e) => onChange({ overlayColor: e.target.value + "80" })}
+              <HexColorPopover
+                value={((props.overlayColor as string) || "").slice(0, 7)}
+                onChange={(hex) => onChange({ overlayColor: hex + "80" })}
+                fallback="#000000"
               />
               <button
                 type="button"
@@ -194,11 +193,10 @@ function CardPropertyPanel({ props, onChange }: PropertyPanelProps) {
       <label className="block">
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Border Color</span>
         <div className="mt-1 flex gap-2 items-center">
-          <input
-            type="color"
-            className="h-8 w-8 cursor-pointer rounded border border-gray-200"
-            value={(props.borderColor as string) || "#e5e7eb"}
-            onChange={(e) => onChange({ borderColor: e.target.value })}
+          <HexColorPopover
+            value={(props.borderColor as string) || ""}
+            onChange={(hex) => onChange({ borderColor: hex })}
+            fallback="#e5e7eb"
           />
           <input
             type="number"

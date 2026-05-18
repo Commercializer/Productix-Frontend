@@ -1,20 +1,32 @@
 "use client";
 
 import { useState, useEffect, useTransition, useCallback } from "react";
-import { listAllUsersAction } from "@/lib/admin/actions";
-import { UserTable, type AdminUser } from "@/components/admin/user-table";
+import { listUsersByCompanyAction } from "@/lib/admin/actions";
+import { UserTree, type CompanyGroup } from "@/components/admin/user-tree";
 import { CreateUserModal } from "@/components/admin/create-user-modal";
 
+interface PlatformUser {
+  id: string;
+  email: string;
+  role: string;
+  isActive: boolean;
+  createdAt: string;
+  lastSignIn: string | null;
+  tenantName: string | null;
+}
+
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [companies, setCompanies] = useState<CompanyGroup[]>([]);
+  const [platformUsers, setPlatformUsers] = useState<PlatformUser[]>([]);
   const [isPending, startTransition] = useTransition();
   const [showCreate, setShowCreate] = useState(false);
 
-  const loadUsers = useCallback(() => {
+  const load = useCallback(() => {
     startTransition(async () => {
       try {
-        const data = await listAllUsersAction();
-        setUsers(data as AdminUser[]);
+        const data = await listUsersByCompanyAction();
+        setCompanies(data.companies as CompanyGroup[]);
+        setPlatformUsers(data.platformUsers as PlatformUser[]);
       } catch (e) {
         console.error(e);
       }
@@ -22,36 +34,39 @@ export default function AdminUsersPage() {
   }, []);
 
   useEffect(() => {
-    loadUsers();
-  }, [loadUsers]);
+    load();
+  }, [load]);
+
+  const empty = companies.length === 0 && platformUsers.length === 0;
 
   return (
     <div className="page-content">
       <div className="page-header">
         <div>
           <h1 className="page-title">Users</h1>
-          <p className="page-sub">Manage all platform users and their roles</p>
+          <p className="page-sub">All platform users, grouped by their company</p>
         </div>
       </div>
 
-      {isPending && users.length === 0 ? (
+      {isPending && empty ? (
         <div className="skeleton-table">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="skeleton-row" />
           ))}
         </div>
       ) : (
-        <UserTable
-          users={users}
+        <UserTree
+          companies={companies}
+          platformUsers={platformUsers}
           onCreateUser={() => setShowCreate(true)}
-          onRefresh={loadUsers}
+          onRefresh={load}
         />
       )}
 
       {showCreate && (
         <CreateUserModal
           onClose={() => setShowCreate(false)}
-          onSuccess={loadUsers}
+          onSuccess={load}
         />
       )}
     </div>

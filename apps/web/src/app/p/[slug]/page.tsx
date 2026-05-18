@@ -1,6 +1,7 @@
 import { cache } from "react";
 import type { Metadata, Viewport } from "next";
-import { getPublicPageBySlugAction } from "@/lib/dashboard/actions";
+import { redirect } from "next/navigation";
+import { getPublicPageByHandleAction } from "@/lib/dashboard/actions";
 import { PublicPageClient } from "./client";
 
 // ═══════════════════════════════════════════════════════════════
@@ -8,11 +9,15 @@ import { PublicPageClient } from "./client";
 // ═══════════════════════════════════════════════════════════════
 
 interface PageProps {
+  // [slug] is the route segment but accepts either a slug or an 8-char shortCode.
   params: Promise<{ slug: string }>;
 }
 
 // Dedupe the DB call across generateMetadata, generateViewport, and the page.
-const getPage = cache(getPublicPageBySlugAction);
+const getPage = cache(async (handle: string) => {
+  const result = await getPublicPageByHandleAction(handle);
+  return result?.page ?? null;
+});
 
 /**
  * Resolve the browser chrome color for this page.
@@ -52,6 +57,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     `${page.productName} by ${page.company.name}`;
 
   const iconUrl = page.logoUrl || page.brand?.logoUrl || page.company.logoUrl || undefined;
+  // Canonical/og URL follows the same rule as the route: slug when visible, shortCode otherwise.
+  const canonicalPath = `/p/${page.slugVisible ? page.slug : page.shortCode}`;
 
   return {
     title,
@@ -64,7 +71,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       description,
       siteName: page.company.name,
       ...(page.ogImageUrl && { images: [{ url: page.ogImageUrl, width: 1200, height: 630 }] }),
-      url: `/p/${page.slug}`,
+      url: canonicalPath,
     },
     twitter: {
       card: page.ogImageUrl ? "summary_large_image" : "summary",
@@ -73,7 +80,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       ...(page.ogImageUrl && { images: [page.ogImageUrl] }),
     },
     alternates: {
-      canonical: `/p/${page.slug}`,
+      canonical: canonicalPath,
     },
     robots: {
       index: true,
@@ -125,11 +132,18 @@ export async function generateViewport({ params }: PageProps): Promise<Viewport>
 // ═══════════════════════════════════════════════════════════════
 
 export default async function PublicPage({ params }: PageProps) {
-  const { slug } = await params;
-  const page = await getPage(slug);
+  const { slug: handle } = await params;
+  const page = await getPage(handle);
 
   if (!page) {
     return <NotFoundView />;
+  }
+
+  // If the visitor arrived via the 8-char short code and the product opted to
+  // show pretty URLs, swap them to the slug. When slugVisible is off the
+  // short-code URL is rendered in place so the visitor never sees the slug.
+  if (page.slugVisible && handle === page.shortCode && page.slug !== handle) {
+    redirect(`/p/${page.slug}`);
   }
 
   return <PublicPageClient page={page} />;

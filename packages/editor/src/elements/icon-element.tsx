@@ -45,6 +45,7 @@ import {
   Zap, ZapOff, ZoomIn, ZoomOut,
 } from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
+import { HexColorPopover } from "./hex-color-popover";
 
 type LucideIconComp = React.ComponentType<{ size?: number; color?: string }>;
 const LUCIDE_ICONS: Record<string, LucideIconComp> = {
@@ -365,9 +366,10 @@ function IconPropertyPanel({ props, onChange }: PropertyPanelProps) {
       <label className="block">
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Color</span>
         <div className="mt-1 flex gap-2 items-center">
-          <input type="color" className="h-8 w-8 cursor-pointer rounded border border-gray-200"
-            value={(props.color as string) || "#3b82f6"}
-            onChange={(e) => onChange({ color: e.target.value })}
+          <HexColorPopover
+            value={(props.color as string) || ""}
+            onChange={(hex) => onChange({ color: hex })}
+            fallback="#3b82f6"
           />
           <input type="text" className="flex-1 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
             value={(props.color as string) || "#3b82f6"}
@@ -380,9 +382,10 @@ function IconPropertyPanel({ props, onChange }: PropertyPanelProps) {
       <label className="block">
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Background</span>
         <div className="mt-1 flex gap-2 items-center">
-          <input type="color" className="h-8 w-8 cursor-pointer rounded border border-gray-200"
-            value={(props.bgColor as string) || "#ffffff"}
-            onChange={(e) => onChange({ bgColor: e.target.value })}
+          <HexColorPopover
+            value={(props.bgColor as string) || ""}
+            onChange={(hex) => onChange({ bgColor: hex })}
+            fallback="#ffffff"
           />
           <button type="button" className="text-xs text-gray-500 hover:text-gray-700"
             onClick={() => onChange({ bgColor: "transparent" })}>Clear</button>

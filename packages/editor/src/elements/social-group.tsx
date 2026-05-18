@@ -21,6 +21,7 @@ import {
   Phone,
 } from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
+import { HexColorPopover } from "./hex-color-popover";
 
 /* ─── Platform icon map ──────────────────────── */
 
@@ -154,11 +155,11 @@ function SocialGroupPropertyPanel({ props, onChange }: PropertyPanelProps) {
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Colors</span>
         <div className="mt-1 flex gap-3 items-center">
           <div className="flex flex-col items-center gap-0.5">
-            <input type="color" className="h-8 w-8 cursor-pointer rounded border border-gray-200" value={(props.iconColor as string) || "#ffffff"} onChange={(e) => onChange({ iconColor: e.target.value })} />
+            <HexColorPopover value={(props.iconColor as string) || ""} onChange={(hex) => onChange({ iconColor: hex })} fallback="#ffffff" />
             <span className="text-[9px] text-gray-400">Icon</span>
           </div>
           <div className="flex flex-col items-center gap-0.5">
-            <input type="color" className="h-8 w-8 cursor-pointer rounded border border-gray-200" value={(props.iconBg as string) || "#1a1a2e"} onChange={(e) => onChange({ iconBg: e.target.value })} />
+            <HexColorPopover value={(props.iconBg as string) || ""} onChange={(hex) => onChange({ iconBg: hex })} fallback="#1a1a2e" />
             <span className="text-[9px] text-gray-400">BG</span>
           </div>
         </div>

@@ -8,6 +8,7 @@ import React, { useRef, useCallback } from "react";
 import { Type, Heading as HeadingIcon } from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
 import { FontPicker } from "../panels/font-picker";
+import { HexColorPopover } from "./hex-color-popover";
 
 /* ─── Component ─────────────────────────────── */
 
@@ -127,11 +128,10 @@ function TextPropertyPanel({ props, onChange }: PropertyPanelProps) {
       <label className="block">
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Color</span>
         <div className="mt-1 flex gap-2 items-center">
-          <input
-            type="color"
-            className="h-8 w-8 cursor-pointer rounded border border-gray-200"
-            value={(props.color as string) || "#1a1a2e"}
-            onChange={(e) => onChange({ color: e.target.value })}
+          <HexColorPopover
+            value={(props.color as string) || ""}
+            onChange={(hex) => onChange({ color: hex })}
+            fallback="#1a1a2e"
           />
           <input
             type="text"

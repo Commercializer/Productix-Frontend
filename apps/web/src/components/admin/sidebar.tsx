@@ -17,6 +17,15 @@ const navItems = [
     ),
   },
   {
+    href: "/admin/companies",
+    label: "Companies",
+    icon: (
+      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2M5 21H3m4-8h.01M9 13h.01M11 13h.01M13 13h.01M9 17h.01M11 17h.01M13 17h.01M9 9h.01M11 9h.01M13 9h.01" />
+      </svg>
+    ),
+  },
+  {
     href: "/admin/users",
     label: "Users",
     icon: (

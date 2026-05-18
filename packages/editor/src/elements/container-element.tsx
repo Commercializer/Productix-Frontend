@@ -12,6 +12,7 @@ import React from "react";
 import { Box } from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
 import { ImageUploadWidget } from "../media/image-upload-widget";
+import { HexColorPopover } from "./hex-color-popover";
 
 function ContainerElementComponent({ props, scaleFactor = 1 }: ElementRenderProps) {
   const bgColor = (props.bgColor as string) || "transparent";
@@ -86,15 +87,15 @@ function ContainerPropertyPanel({ props, onChange }: PropertyPanelProps) {
       <label className="block">
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Background</span>
         <div className="mt-1 flex gap-2 items-center">
-          <input type="color" className="h-8 w-8 cursor-pointer rounded border border-gray-200" value={(props.bgColor as string) || "#f3f4f6"} onChange={(e) => onChange({ bgColor: e.target.value })} />
+          <HexColorPopover value={(props.bgColor as string) || ""} onChange={(hex) => onChange({ bgColor: hex })} fallback="#f3f4f6" />
           <button type="button" className="text-xs text-gray-500 hover:text-gray-700" onClick={() => onChange({ bgColor: "transparent" })}>Clear</button>
         </div>
       </label>
       <div>
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Gradient</span>
         <div className="mt-1 flex gap-2 items-center">
-          <input type="color" className="h-8 w-8 cursor-pointer rounded border border-gray-200" value={(props.bgGradientFrom as string) || "#ffffff"} onChange={(e) => onChange({ bgGradientFrom: e.target.value })} />
-          <input type="color" className="h-8 w-8 cursor-pointer rounded border border-gray-200" value={(props.bgGradientTo as string) || "#ffffff"} onChange={(e) => onChange({ bgGradientTo: e.target.value })} />
+          <HexColorPopover value={(props.bgGradientFrom as string) || ""} onChange={(hex) => onChange({ bgGradientFrom: hex })} fallback="#ffffff" />
+          <HexColorPopover value={(props.bgGradientTo as string) || ""} onChange={(hex) => onChange({ bgGradientTo: hex })} fallback="#ffffff" />
           <span className="text-xs text-gray-400">From / To</span>
           <button type="button" className="text-xs text-gray-500 hover:text-gray-700" onClick={() => onChange({ bgGradientFrom: "", bgGradientTo: "" })}>Clear</button>
         </div>
@@ -144,7 +145,7 @@ function ContainerPropertyPanel({ props, onChange }: PropertyPanelProps) {
           <label className="block">
             <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">Overlay Color</span>
             <div className="flex gap-2 items-center mt-0.5">
-              <input type="color" className="h-6 w-6 cursor-pointer rounded border border-gray-200" value={(props.overlayColor as string) || "#000000"} onChange={(e) => onChange({ overlayColor: e.target.value })} />
+              <HexColorPopover value={(props.overlayColor as string) || ""} onChange={(hex) => onChange({ overlayColor: hex })} fallback="#000000" />
               <input
                 type="range"
                 className="flex-1"
@@ -169,7 +170,7 @@ function ContainerPropertyPanel({ props, onChange }: PropertyPanelProps) {
       <label className="block">
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Border</span>
         <div className="mt-1 flex gap-2 items-center">
-          <input type="color" className="h-8 w-8 cursor-pointer rounded border border-gray-200" value={(props.borderColor as string) || "#e5e7eb"} onChange={(e) => onChange({ borderColor: e.target.value })} />
+          <HexColorPopover value={(props.borderColor as string) || ""} onChange={(hex) => onChange({ borderColor: hex })} fallback="#e5e7eb" />
           <input type="number" className="w-16 rounded-md border border-gray-200 bg-white px-2 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none" value={(props.borderWidth as number) || 0} onChange={(e) => onChange({ borderWidth: Number(e.target.value) })} min={0} max={10} />
           <span className="text-xs text-gray-400">px</span>
         </div>

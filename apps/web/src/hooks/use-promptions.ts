@@ -6,11 +6,15 @@ import {
   deletePromptionAction as deleteAction,
   publishPageAction,
   unpublishPageAction,
+  setSlugVisibleAction,
+  updateSlugAction,
 } from "@/lib/dashboard/actions";
 
 export interface Promption {
   id: string;
   slug: string;
+  shortCode: string;
+  slugVisible: boolean;
   productName: string;
   tagline: string | null;
   createdAt: string;
@@ -85,6 +89,32 @@ export function usePromptions() {
     []
   );
 
+  const setSlugVisible = useCallback(
+    async (productId: string, visible: boolean) => {
+      // Optimistic update — the row updates instantly and rolls back on error.
+      setPromptions((prev) => prev.map((p) => (p.productId === productId ? { ...p, slugVisible: visible } : p)));
+      const result = await setSlugVisibleAction(productId, visible);
+      if (result.error) {
+        setPromptions((prev) => prev.map((p) => (p.productId === productId ? { ...p, slugVisible: !visible } : p)));
+        return { error: result.error };
+      }
+      return { success: true };
+    },
+    []
+  );
+
+  const updateSlug = useCallback(
+    async (profileId: string, slug: string) => {
+      const result = await updateSlugAction(profileId, slug);
+      if (result.error) return { error: result.error };
+      if (result.success && result.slug) {
+        setPromptions((prev) => prev.map((p) => (p.id === profileId ? { ...p, slug: result.slug! } : p)));
+      }
+      return { success: true, slug: result.slug };
+    },
+    []
+  );
+
   return {
     promptions,
     loading,
@@ -93,5 +123,7 @@ export function usePromptions() {
     deletePromption,
     publishPromption,
     unpublishPromption,
+    setSlugVisible,
+    updateSlug,
   };
 }

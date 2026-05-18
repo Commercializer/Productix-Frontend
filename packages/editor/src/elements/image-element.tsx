@@ -16,6 +16,9 @@
  *     crop mode; drag to pan, wheel to zoom.
  *   - Property panel has a "Crop & Position" button to re-open
  *     the dialog any time.
+ *   - SVG files get an optional color override: the SVG is fetched,
+ *     parsed, and all non-none fills/strokes are replaced with the
+ *     chosen color before rendering.
  * ──────────────────────────────────────────── */
 
 "use client";
@@ -26,12 +29,24 @@ import { registerElement, type ElementRenderProps, type PropertyPanelProps } fro
 import { ImageUploadWidget } from "../media/image-upload-widget";
 import { ImageCropDialog } from "../media/image-crop-dialog";
 import { useCanvasStore } from "../engine/canvas-store";
+import { HexColorPopover } from "./hex-color-popover";
 
 const DEFAULT_OFFSET = 0;
 const DEFAULT_ZOOM = 1;
 
 function clamp(v: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, v));
+}
+
+function isSvgSrc(src: string): boolean {
+  if (!src) return false;
+  const lower = src.toLowerCase();
+  return lower.endsWith(".svg") || lower.includes(".svg?") || lower.startsWith("data:image/svg+xml");
+}
+
+/** Build the server-side proxy URL that returns a recolored SVG. */
+function recoloredSvgUrl(src: string, color: string): string {
+  return `/api/media/svg-recolor?url=${encodeURIComponent(src)}&color=${encodeURIComponent(color)}`;
 }
 
 /* ─── Canvas Component ──────────────────────── */
@@ -43,6 +58,7 @@ function ImageElementComponent({ props, isEditing, width, height, onPropsChange 
   const cropOffsetX = (props.cropOffsetX as number) ?? DEFAULT_OFFSET; // fraction of block width
   const cropOffsetY = (props.cropOffsetY as number) ?? DEFAULT_OFFSET;
   const zoom = (props.zoom as number) || DEFAULT_ZOOM;
+  const svgColor = (props.svgColor as string) || "";
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const blockRef = useRef<HTMLDivElement>(null);
@@ -51,7 +67,6 @@ function ImageElementComponent({ props, isEditing, width, height, onPropsChange 
   const [nat, setNat] = useState<{ w: number; h: number } | null>(null);
   const [measured, setMeasured] = useState<{ w: number; h: number } | null>(null);
   const panRef = useRef<{ startX: number; startY: number; startOffsetX: number; startOffsetY: number } | null>(null);
-
   /* Measure the block's actual rendered (pre-transform) size so the cover-fit
    * math stays correct under any wrapping layout — flow with % widths, the
    * public renderer's `transform: scale()` outer wrapper, hydration mismatches,
@@ -263,7 +278,7 @@ function ImageElementComponent({ props, isEditing, width, height, onPropsChange 
       }}
     >
       <img
-        src={src}
+        src={isSvgSrc(src) && svgColor ? recoloredSvgUrl(src, svgColor) : src}
         alt={alt}
         draggable={false}
         onLoad={(e) => {
@@ -350,6 +365,8 @@ function ImagePropertyPanel({ props, onChange }: PropertyPanelProps) {
   const cropOffsetX = (props.cropOffsetX as number) ?? DEFAULT_OFFSET;
   const cropOffsetY = (props.cropOffsetY as number) ?? DEFAULT_OFFSET;
   const zoom = (props.zoom as number) || DEFAULT_ZOOM;
+  const svgColor = (props.svgColor as string) || "";
+  const isSvg = isSvgSrc(src);
 
   const [cropOpen, setCropOpen] = useState(false);
 
@@ -398,6 +415,34 @@ function ImagePropertyPanel({ props, onChange }: PropertyPanelProps) {
           <Crop size={12} />
           Crop & Position
         </button>
+      )}
+
+      {isSvg && (
+        <label className="block">
+          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">SVG Color</span>
+          <div className="mt-1 flex gap-2 items-center">
+            <HexColorPopover
+              value={svgColor}
+              onChange={(hex) => onChange({ svgColor: hex })}
+            />
+            <input
+              type="text"
+              className="flex-1 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-mono uppercase shadow-sm focus:border-blue-500 focus:outline-none"
+              value={svgColor || "#000000"}
+              onChange={(e) => onChange({ svgColor: e.target.value })}
+            />
+            {svgColor && (
+              <button
+                type="button"
+                onClick={() => onChange({ svgColor: "" })}
+                title="Remove color override"
+                className="text-xs text-gray-400 hover:text-gray-600 px-1"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        </label>
       )}
 
       <label className="block">
@@ -471,6 +516,7 @@ registerElement({
     cropOffsetY: DEFAULT_OFFSET,
     zoom: DEFAULT_ZOOM,
     borderRadius: 8,
+    svgColor: "",
   },
   defaultTransform: { width: 343, height: 260 },
   component: ImageElementComponent,

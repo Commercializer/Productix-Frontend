@@ -13,45 +13,45 @@ export default function SettingsPage() {
         <h2 className="text-xl font-bold text-(--ds-text-primary) mb-6">Account Settings</h2>
         
         {loading ? (
-          <div className="bg-white dark:bg-[#111] border border-(--ds-border) rounded-xl p-8 mb-6">
+          <div className="bg-(--ds-surface) border border-(--ds-border) rounded-xl p-8 mb-6">
             <div className="skeleton-row mb-6 h-[24px] w-1/3 rounded" />
             <div className="skeleton-row mb-6 h-[24px] w-1/2 rounded" />
             <div className="skeleton-row h-[24px] w-1/4 rounded" />
           </div>
         ) : settings ? (
           <div className="space-y-6">
-            <div className="bg-white dark:bg-[#111] border border-(--ds-border) rounded-xl p-8">
+            <div className="bg-(--ds-surface) border border-(--ds-border) rounded-xl p-8">
               <h3 className="text-lg font-semibold text-(--ds-text-primary) mb-6 tracking-tight">Organization Profile</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-[13px] font-medium text-(--ds-text-secondary) mb-2">Company Name</label>
-                  <div className="px-4 py-2.5 rounded-lg border border-(--ds-border) bg-black/2 dark:bg-white/2 text-[14px]">
+                  <div className="px-4 py-2.5 rounded-lg border border-(--ds-border) bg-(--ds-surface-2) text-[14px]">
                     {settings.name}
                   </div>
                 </div>
                 <div>
                   <label className="block text-[13px] font-medium text-(--ds-text-secondary) mb-2">Business Username</label>
-                  <div className="px-4 py-2.5 rounded-lg border border-(--ds-border) bg-black/2 dark:bg-white/2 text-[14px]">
+                  <div className="px-4 py-2.5 rounded-lg border border-(--ds-border) bg-(--ds-surface-2) text-[14px]">
                     {settings.businessUsername}
                   </div>
                 </div>
                 <div>
                   <label className="block text-[13px] font-medium text-(--ds-text-secondary) mb-2">Contact Email</label>
-                  <div className="px-4 py-2.5 rounded-lg border border-(--ds-border) bg-black/2 dark:bg-white/2 text-[14px]">
+                  <div className="px-4 py-2.5 rounded-lg border border-(--ds-border) bg-(--ds-surface-2) text-[14px]">
                     {settings.email}
                   </div>
                 </div>
                 <div>
                   <label className="block text-[13px] font-medium text-(--ds-text-secondary) mb-2">Joined Date</label>
-                  <div className="px-4 py-2.5 rounded-lg border border-(--ds-border) bg-black/2 dark:bg-white/2 text-[14px]">
+                  <div className="px-4 py-2.5 rounded-lg border border-(--ds-border) bg-(--ds-surface-2) text-[14px]">
                     {new Date(settings.createdAt).toLocaleDateString()}
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white dark:bg-[#111] border border-(--ds-border) rounded-xl p-8">
+            <div className="bg-(--ds-surface) border border-(--ds-border) rounded-xl p-8">
               <h3 className="text-lg font-semibold text-(--ds-text-primary) mb-6 tracking-tight">Subscription & Limits</h3>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -82,7 +82,7 @@ export default function SettingsPage() {
             
           </div>
         ) : (
-          <div className="bg-white dark:bg-[#111] border border-(--ds-border) rounded-xl p-8 text-center text-(--ds-text-secondary)">
+          <div className="bg-(--ds-surface) border border-(--ds-border) rounded-xl p-8 text-center text-(--ds-text-secondary)">
             Failed to load settings.
           </div>
         )}

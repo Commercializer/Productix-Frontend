@@ -8,6 +8,7 @@ import React, { useState } from "react";
 import { Smartphone, Monitor, TabletSmartphone, Minimize2, Sparkles } from "lucide-react";
 import { useCanvasStore } from "../engine/canvas-store";
 import { ImageUploadWidget } from "../media/image-upload-widget";
+import { HexColorPopover } from "../elements/hex-color-popover";
 import { useTranslation } from "../i18n";
 import type { CanvasEffect } from "@productix/types";
 import { CANVAS_EFFECTS } from "@productix/types";
@@ -64,7 +65,7 @@ export function ArtboardSettings() {
         <label style={{ display:"block" }}>
           <span style={{ fontSize:10,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:"0.08em" }}>{t("experience.background")}</span>
           <div style={{ marginTop:4,display:"flex",gap:8,alignItems:"center" }}>
-            <input type="color" style={{ height:32,width:32,cursor:"pointer",borderRadius:8,border:"1px solid #e5e7eb" }} value={ab.backgroundColor} onChange={(e) => updateArtboard(ab.id, { backgroundColor:e.target.value })} />
+            <HexColorPopover value={ab.backgroundColor || ""} onChange={(hex) => updateArtboard(ab.id, { backgroundColor: hex })} fallback="#ffffff" />
             <input type="text" style={{ flex:1,borderRadius:10,border:"1px solid #e5e7eb",background:"#fff",padding:"8px 12px",fontSize:12,color:"#1e1e2e",outline:"none" }} value={ab.backgroundColor} onChange={(e) => updateArtboard(ab.id, { backgroundColor:e.target.value })} />
           </div>
         </label>

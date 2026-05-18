@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Image from "next/image";
 import { loginAction } from "@/lib/auth/actions";
 
 export function LoginForm() {
@@ -32,8 +33,22 @@ export function LoginForm() {
     <div className="login-card">
       {/* Logo */}
       <div className="login-logo">
-        <div className="login-logo-icon">P</div>
-        <span className="login-logo-text">Productix</span>
+        <Image
+          src="/logo-light.png"
+          alt="Productix"
+          width={2060}
+          height={372}
+          className="block dark:hidden h-8 w-auto"
+          priority
+        />
+        <Image
+          src="/logo-dark.png"
+          alt="Productix"
+          width={2060}
+          height={372}
+          className="hidden dark:block h-8 w-auto"
+          priority
+        />
       </div>
 
       <div className="login-header">

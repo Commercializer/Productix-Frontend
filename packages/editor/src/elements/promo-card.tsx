@@ -9,6 +9,7 @@ import React from "react";
 import { Megaphone } from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
 import { ImageUploadWidget } from "../media/image-upload-widget";
+import { HexColorPopover } from "./hex-color-popover";
 
 function PromoCardComponent({ props, scaleFactor = 1 }: ElementRenderProps) {
   const title = (props.title as string) || "Special Offer";
@@ -103,15 +104,15 @@ function PromoCardPropertyPanel({ props, onChange }: PropertyPanelProps) {
       <label className="block">
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Gradient Start</span>
         <div className="mt-1 flex gap-2 items-center">
-          <input type="color" className="h-8 w-8 cursor-pointer rounded border border-gray-200" value={(props.gradientFrom as string) || "#1e40af"} onChange={(e) => onChange({ gradientFrom: e.target.value })} />
-          <input type="color" className="h-8 w-8 cursor-pointer rounded border border-gray-200" value={(props.gradientTo as string) || "#7c3aed"} onChange={(e) => onChange({ gradientTo: e.target.value })} />
+          <HexColorPopover value={(props.gradientFrom as string) || ""} onChange={(hex) => onChange({ gradientFrom: hex })} fallback="#1e40af" />
+          <HexColorPopover value={(props.gradientTo as string) || ""} onChange={(hex) => onChange({ gradientTo: hex })} fallback="#7c3aed" />
           <span className="text-xs text-gray-400">From / To</span>
         </div>
       </label>
       <label className="block">
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Text Color</span>
         <div className="mt-1 flex gap-2 items-center">
-          <input type="color" className="h-8 w-8 cursor-pointer rounded border border-gray-200" value={(props.textColor as string) || "#ffffff"} onChange={(e) => onChange({ textColor: e.target.value })} />
+          <HexColorPopover value={(props.textColor as string) || ""} onChange={(hex) => onChange({ textColor: hex })} fallback="#ffffff" />
         </div>
       </label>
       <label className="block">

@@ -7,6 +7,7 @@
 import React from "react";
 import { MousePointerClick } from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
+import { HexColorPopover } from "./hex-color-popover";
 
 /* ─── Component ─────────────────────────────── */
 
@@ -124,11 +125,10 @@ function ButtonPropertyPanel({ props, onChange }: PropertyPanelProps) {
       <label className="block">
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Background</span>
         <div className="mt-1 flex gap-2 items-center">
-          <input
-            type="color"
-            className="h-8 w-8 cursor-pointer rounded border border-gray-200"
-            value={(props.bgColor as string) || "#3b82f6"}
-            onChange={(e) => onChange({ bgColor: e.target.value })}
+          <HexColorPopover
+            value={(props.bgColor as string) || ""}
+            onChange={(hex) => onChange({ bgColor: hex })}
+            fallback="#3b82f6"
           />
           <input
             type="text"
@@ -141,11 +141,10 @@ function ButtonPropertyPanel({ props, onChange }: PropertyPanelProps) {
       <label className="block">
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Text Color</span>
         <div className="mt-1 flex gap-2 items-center">
-          <input
-            type="color"
-            className="h-8 w-8 cursor-pointer rounded border border-gray-200"
-            value={(props.textColor as string) || "#ffffff"}
-            onChange={(e) => onChange({ textColor: e.target.value })}
+          <HexColorPopover
+            value={(props.textColor as string) || ""}
+            onChange={(hex) => onChange({ textColor: hex })}
+            fallback="#ffffff"
           />
           <input
             type="text"
@@ -245,14 +244,13 @@ function ButtonPropertyPanel({ props, onChange }: PropertyPanelProps) {
             <label className="block">
               <span style={{ fontSize: 11, color: "#6b7280", fontWeight: 500 }}>Shadow Color</span>
               <div className="mt-1 flex gap-2 items-center">
-                <input
-                  type="color"
-                  className="h-7 w-7 cursor-pointer rounded border border-gray-200"
+                <HexColorPopover
                   value={rgbaToHex((props.shadowColor as string) || "rgba(0,0,0,0.25)")}
-                  onChange={(e) => {
+                  onChange={(hex) => {
                     const opacity = extractOpacity((props.shadowColor as string) || "rgba(0,0,0,0.25)");
-                    onChange({ shadowColor: hexToRgba(e.target.value, opacity) });
+                    onChange({ shadowColor: hexToRgba(hex, opacity) });
                   }}
+                  fallback="#000000"
                 />
                 <input
                   type="text"

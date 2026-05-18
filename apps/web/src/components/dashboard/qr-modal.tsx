@@ -8,13 +8,13 @@ interface QrModalProps {
   isOpen: boolean;
   onClose: () => void;
   productName: string;
-  slug: string;
+  shortCode: string;
 }
 
-export function QrModal({ isOpen, onClose, productName, slug }: QrModalProps) {
+export function QrModal({ isOpen, onClose, productName, shortCode }: QrModalProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [copied, setCopied] = useState(false);
-  const publicUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/p/${slug}`;
+  const publicUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/p/${shortCode}`;
 
   useEffect(() => {
     if (!isOpen || !canvasRef.current) return;
@@ -33,7 +33,7 @@ export function QrModal({ isOpen, onClose, productName, slug }: QrModalProps) {
   const handleDownload = () => {
     if (!canvasRef.current) return;
     const link = document.createElement("a");
-    link.download = `${slug}-qr-code.png`;
+    link.download = `${shortCode}-qr-code.png`;
     link.href = canvasRef.current.toDataURL("image/png");
     link.click();
   };

@@ -7,6 +7,7 @@
 import React from "react";
 import { Minus } from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
+import { HexColorPopover } from "./hex-color-popover";
 
 function DividerElementComponent({ props, scaleFactor = 1 }: ElementRenderProps) {
   const color = (props.color as string) || "#e5e7eb";
@@ -36,7 +37,7 @@ function DividerPropertyPanel({ props, onChange }: PropertyPanelProps) {
       <label className="block">
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Color</span>
         <div className="mt-1 flex gap-2 items-center">
-          <input type="color" className="h-8 w-8 cursor-pointer rounded border border-gray-200" value={(props.color as string) || "#e5e7eb"} onChange={(e) => onChange({ color: e.target.value })} />
+          <HexColorPopover value={(props.color as string) || ""} onChange={(hex) => onChange({ color: hex })} fallback="#e5e7eb" />
         </div>
       </label>
       <label className="block">

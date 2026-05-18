@@ -11,6 +11,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Sparkles, Copy, Check, X, AlertCircle, Wand2, ExternalLink } from "lucide-react";
 import { useCanvasStore } from "../engine/canvas-store";
 import { buildAIPrompt, importLayoutFromJson, type AIBrief } from "../utils/import-layout";
+import { HexColorPopover } from "../elements/hex-color-popover";
 
 interface ImportLayoutDialogProps {
   open: boolean;
@@ -350,12 +351,10 @@ function ColorField({ value, onChange, placeholder }: { value: string; onChange:
   const looksLikeHex = /^#[0-9a-fA-F]{6}$/.test(value);
   return (
     <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-      <input
-        type="color"
-        value={looksLikeHex ? value : "#ffffff"}
-        onChange={(e) => onChange(e.target.value)}
-        style={{ width: 32, height: 32, padding: 0, border: "1px solid #e2e8f0", borderRadius: 8, background: "#fff", cursor: "pointer", flexShrink: 0 }}
-        aria-label="Pick color"
+      <HexColorPopover
+        value={looksLikeHex ? value : ""}
+        onChange={(hex) => onChange(hex)}
+        fallback="#ffffff"
       />
       <input
         type="text"

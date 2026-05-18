@@ -7,6 +7,7 @@
 import React from "react";
 import { BarChart3 } from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
+import { HexColorPopover } from "./hex-color-popover";
 
 function StatCardComponent({ props, scaleFactor = 1 }: ElementRenderProps) {
   const value = (props.value as string) || "0";
@@ -85,14 +86,14 @@ function StatCardPropertyPanel({ props, onChange }: PropertyPanelProps) {
       <label className="block">
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Background</span>
         <div className="mt-1 flex gap-2 items-center">
-          <input type="color" className="h-8 w-8 cursor-pointer rounded border border-gray-200" value={(props.bgColor as string) || "#ffffff"} onChange={(e) => onChange({ bgColor: e.target.value })} />
+          <HexColorPopover value={(props.bgColor as string) || ""} onChange={(hex) => onChange({ bgColor: hex })} fallback="#ffffff" />
           <input type="text" className="flex-1 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none" value={(props.bgColor as string) || "#ffffff"} onChange={(e) => onChange({ bgColor: e.target.value })} />
         </div>
       </label>
       <label className="block">
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Value Color</span>
         <div className="mt-1 flex gap-2 items-center">
-          <input type="color" className="h-8 w-8 cursor-pointer rounded border border-gray-200" value={(props.valueColor as string) || "#1a1a2e"} onChange={(e) => onChange({ valueColor: e.target.value })} />
+          <HexColorPopover value={(props.valueColor as string) || ""} onChange={(hex) => onChange({ valueColor: hex })} fallback="#1a1a2e" />
         </div>
       </label>
       <label className="block">

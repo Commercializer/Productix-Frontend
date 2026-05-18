@@ -8,6 +8,27 @@ function isUUID(val: string): boolean {
   return UUID_RE.test(val);
 }
 
+const SHORT_CODE_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789";
+const SHORT_CODE_LEN = 8;
+const SHORT_CODE_RE = /^[a-z0-9]{8}$/;
+
+function randomShortCode(): string {
+  let out = "";
+  for (let i = 0; i < SHORT_CODE_LEN; i++) {
+    out += SHORT_CODE_ALPHABET[Math.floor(Math.random() * SHORT_CODE_ALPHABET.length)];
+  }
+  return out;
+}
+
+async function generateUniqueShortCode(): Promise<string> {
+  for (let attempt = 0; attempt < 16; attempt++) {
+    const candidate = randomShortCode();
+    const clash = await prisma.product.findFirst({ where: { shortCode: candidate }, select: { id: true } });
+    if (!clash) return candidate;
+  }
+  throw new Error("Failed to allocate unique short code");
+}
+
 // ═══════════════════════════════════════════════════════════════
 // LIST PROMPTIONS
 // ═══════════════════════════════════════════════════════════════
@@ -32,7 +53,7 @@ export async function getMyPromptionsAction() {
 
   const profiles = await prisma.productProfile.findMany({
     where: { product: { companyId: { in: companyIds } } },
-    include: { product: { select: { companyId: true, id: true } } },
+    include: { product: { select: { companyId: true, id: true, shortCode: true, slugVisible: true } } },
     orderBy: { updatedAt: 'desc' }
   });
 
@@ -46,12 +67,79 @@ export async function getMyPromptionsAction() {
       updatedAt: p.updatedAt.toISOString(),
       productId: p.product.id,
       companyId: p.product.companyId,
+      shortCode: p.product.shortCode,
+      slugVisible: p.product.slugVisible,
       isPublished: p.isPublished,
       publishedAt: p.publishedAt?.toISOString() ?? null,
       logoUrl: p.logoUrl,
       metaDescription: p.metaDescription,
     }))
   };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TOGGLE slug visibility — affects whether the public route
+// redirects /p/<shortCode> to /p/<slug>.
+// ═══════════════════════════════════════════════════════════════
+
+const SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/;
+
+/**
+ * Rename a product profile's slug. Anyone with read/write access to the company
+ * (admins and regular users) can rename — the slug only affects the pretty URL.
+ */
+export async function updateSlugAction(profileId: string, slug: string) {
+  if (!isUUID(profileId)) return { error: "Invalid profile ID" };
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const trimmed = slug.trim().toLowerCase();
+  if (!SLUG_RE.test(trimmed)) {
+    return { error: "Slug must be 1–64 chars, lowercase letters, numbers, or hyphens (no leading/trailing hyphen)." };
+  }
+  if (SHORT_CODE_RE.test(trimmed)) {
+    return { error: "Slug cannot look like an 8-char short code." };
+  }
+
+  const companyId = await getUserCompanyId(session.user.id);
+  if (!companyId) return { error: "No company found for user" };
+
+  const profile = await prisma.productProfile.findUnique({
+    where: { id: profileId },
+    select: { id: true, slug: true, product: { select: { companyId: true } } },
+  });
+  if (!profile || profile.product.companyId !== companyId) return { error: "Product not found" };
+
+  if (profile.slug === trimmed) return { success: true, slug: trimmed };
+
+  const clash = await prisma.productProfile.findUnique({ where: { slug: trimmed }, select: { id: true } });
+  if (clash && clash.id !== profileId) return { error: "That slug is already taken." };
+
+  try {
+    await prisma.productProfile.update({ where: { id: profileId }, data: { slug: trimmed } });
+    return { success: true, slug: trimmed };
+  } catch (error: any) {
+    return { error: error.message };
+  }
+}
+
+export async function setSlugVisibleAction(productId: string, visible: boolean) {
+  if (!isUUID(productId)) return { error: "Invalid product ID" };
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const companyId = await getUserCompanyId(session.user.id);
+  if (!companyId) return { error: "No company found for user" };
+
+  const product = await prisma.product.findFirst({ where: { id: productId, companyId }, select: { id: true } });
+  if (!product) return { error: "Product not found" };
+
+  try {
+    await prisma.product.update({ where: { id: productId }, data: { slugVisible: visible } });
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message };
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -127,6 +215,8 @@ export async function createPromptionAction(data: {
     if (!brand) return { error: "Selected brand not found" };
   }
 
+  const shortCode = await generateUniqueShortCode();
+
   // Create Product + ProductProfile in a transaction
   const result = await prisma.$transaction(async (tx) => {
     const product = await tx.product.create({
@@ -135,6 +225,7 @@ export async function createPromptionAction(data: {
         categoryId: data.categoryId && isUUID(data.categoryId) ? data.categoryId : null,
         subCategoryId: data.subCategoryId && isUUID(data.subCategoryId) ? data.subCategoryId : null,
         brandProfileId: data.brandProfileId && isUUID(data.brandProfileId) ? data.brandProfileId : null,
+        shortCode,
         isActive: true,
       },
     });
@@ -384,13 +475,13 @@ export async function publishPageAction(profileId: string) {
         data: {
           productId: profile.productId,
           qrType: "MASTER",
-          qrUrl: `/p/${profile.slug}`,
+          qrUrl: `/p/${profile.product.shortCode}`,
           isActive: true,
         },
       });
     }
 
-    return { success: true, slug: profile.slug };
+    return { success: true, slug: profile.slug, shortCode: profile.product.shortCode };
   } catch (error: any) {
     return { error: error.message };
   }
@@ -416,39 +507,34 @@ export async function unpublishPageAction(profileId: string) {
 // PUBLIC PAGE — Unauthenticated access for published pages
 // ═══════════════════════════════════════════════════════════════
 
-export async function getPublicPageBySlugAction(slug: string) {
-  const profile = await prisma.productProfile.findUnique({
-    where: { slug },
+const productProfileInclude = {
+  product: {
     include: {
-      product: {
-        include: {
-          company: {
-            select: {
-              name: true,
-              logoUrl: true,
-              businessUsername: true,
-              customDomain: true,
-            },
-          },
-          brandProfile: {
-            select: {
-              brandName: true,
-              brandLogoUrl: true,
-              themeColor: true,
-            },
-          },
+      company: {
+        select: {
+          name: true,
+          logoUrl: true,
+          businessUsername: true,
+          customDomain: true,
+        },
+      },
+      brandProfile: {
+        select: {
+          brandName: true,
+          brandLogoUrl: true,
+          themeColor: true,
         },
       },
     },
-  });
+  },
+} as const;
 
-  if (!profile || !profile.isPublished) {
-    return null;
-  }
-
+function publicProfileShape(profile: any) {
   return {
     id: profile.id,
     slug: profile.slug,
+    shortCode: profile.product.shortCode as string,
+    slugVisible: profile.product.slugVisible as boolean,
     productName: profile.productName,
     tagline: profile.tagline,
     description: profile.description,
@@ -471,6 +557,49 @@ export async function getPublicPageBySlugAction(slug: string) {
         }
       : null,
   };
+}
+
+export async function getPublicPageBySlugAction(slug: string) {
+  const profile = await prisma.productProfile.findUnique({
+    where: { slug },
+    include: productProfileInclude,
+  });
+  if (!profile || !profile.isPublished) return null;
+  return publicProfileShape(profile);
+}
+
+/**
+ * Resolve a public page from either a slug or an 8-char shortCode.
+ * Returns the page payload plus the resolved kind so the route can decide
+ * whether to redirect (shortCode + slugVisible=true) or render in place.
+ */
+export async function getPublicPageByHandleAction(handle: string) {
+  if (SHORT_CODE_RE.test(handle)) {
+    const product = await prisma.product.findFirst({
+      where: { shortCode: handle },
+      select: { id: true, defaultLanguageCode: true },
+    });
+    if (!product) return null;
+    const profile =
+      (await prisma.productProfile.findUnique({
+        where: { productId_languageCode: { productId: product.id, languageCode: product.defaultLanguageCode } },
+        include: productProfileInclude,
+      })) ??
+      (await prisma.productProfile.findFirst({
+        where: { productId: product.id },
+        include: productProfileInclude,
+        orderBy: { createdAt: "asc" },
+      }));
+    if (!profile || !profile.isPublished) return null;
+    return { kind: "shortCode" as const, page: publicProfileShape(profile) };
+  }
+
+  const profile = await prisma.productProfile.findUnique({
+    where: { slug: handle },
+    include: productProfileInclude,
+  });
+  if (!profile || !profile.isPublished) return null;
+  return { kind: "slug" as const, page: publicProfileShape(profile) };
 }
 
 // ═══════════════════════════════════════════════════════════════

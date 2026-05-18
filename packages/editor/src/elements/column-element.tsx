@@ -13,6 +13,7 @@
 import React from "react";
 import { Columns3 } from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
+import { HexColorPopover } from "./hex-color-popover";
 
 /* ─── Component ─────────────────────────────── */
 
@@ -119,11 +120,10 @@ function ColumnPropertyPanel({ props, onChange }: PropertyPanelProps) {
       <label className="block">
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Background</span>
         <div className="mt-1 flex gap-2 items-center">
-          <input
-            type="color"
-            className="h-8 w-8 cursor-pointer rounded border border-gray-200"
-            value={(props.bgColor as string) || "#ffffff"}
-            onChange={(e) => onChange({ bgColor: e.target.value })}
+          <HexColorPopover
+            value={(props.bgColor as string) || ""}
+            onChange={(hex) => onChange({ bgColor: hex })}
+            fallback="#ffffff"
           />
           <button
             type="button"
@@ -148,11 +148,10 @@ function ColumnPropertyPanel({ props, onChange }: PropertyPanelProps) {
       <label className="block">
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Border</span>
         <div className="mt-1 flex gap-2 items-center">
-          <input
-            type="color"
-            className="h-8 w-8 cursor-pointer rounded border border-gray-200"
-            value={(props.borderColor as string) || "#e5e7eb"}
-            onChange={(e) => onChange({ borderColor: e.target.value })}
+          <HexColorPopover
+            value={(props.borderColor as string) || ""}
+            onChange={(hex) => onChange({ borderColor: hex })}
+            fallback="#e5e7eb"
           />
           <input
             type="number"
