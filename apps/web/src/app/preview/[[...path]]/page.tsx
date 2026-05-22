@@ -21,6 +21,7 @@ export default function PreviewPage() {
   const contentLocale: ContentLocale = langParam && /^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,4})?$/.test(langParam) ? langParam : "en";
 
   const [doc, setDoc] = useState<CanvasDocument | null>(null);
+  const [productId, setProductId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     async function loadData() {
@@ -30,6 +31,7 @@ export default function PreviewPage() {
           const page = await getPreviewPageBySlugAction(slug);
           if (page && page.content && (page.content as any).version) {
             setDoc(page.content as unknown as CanvasDocument);
+            setProductId(page.productId);
             return;
           }
         } catch (error) {
@@ -97,7 +99,7 @@ export default function PreviewPage() {
 
       {/* Preview with viewport controls */}
       <div className="flex-1 min-h-0">
-        <PreviewRenderer document={doc} showControls className="h-full" contentLocale={contentLocale} />
+        <PreviewRenderer document={doc} showControls className="h-full" contentLocale={contentLocale} productId={productId} />
       </div>
     </div>
   );

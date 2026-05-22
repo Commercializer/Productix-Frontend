@@ -19,6 +19,7 @@ import { getArtboardPreviewWidth, isElementInFlow } from "../utils/responsive";
 import { getEffectiveFlexContainer, getEffectiveLayout, computeFlexContainerCSS, computeElementLayoutCSS } from "../engine/layout-engine";
 import { getLocalizedProps } from "../utils/localize-props";
 import { CanvasEffects } from "../engine/canvas-effects";
+import { PublicPageProvider } from "./public-page-context";
 
 // Import elements to trigger registration
 import "../elements";
@@ -50,6 +51,8 @@ export interface PreviewRendererProps {
   showControls?: boolean;
   /** Content locale — defaults to "en" */
   contentLocale?: ContentLocale;
+  /** Product this preview represents — required for feedback submissions. */
+  productId?: string;
 }
 
 /* ─── Preview Content (renders artboards) ──── */
@@ -209,6 +212,7 @@ export function PreviewRenderer({
   className,
   showControls = false,
   contentLocale: initialLocale,
+  productId,
 }: PreviewRendererProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [viewportIdx, setViewportIdx] = useState(0);
@@ -272,13 +276,16 @@ export function PreviewRenderer({
   if (!showControls) {
     // Simple mode — no controls, just render centered
     return (
-      <div className={className} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-        <PreviewContent doc={doc} zoom={1} breakpoint="desktop" contentLocale={contentLocale} />
-      </div>
+      <PublicPageProvider value={{ productId }}>
+        <div className={className} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <PreviewContent doc={doc} zoom={1} breakpoint="desktop" contentLocale={contentLocale} />
+        </div>
+      </PublicPageProvider>
     );
   }
 
   return (
+    <PublicPageProvider value={{ productId }}>
     <div className={`flex flex-col h-full ${className || ""}`}>
       {/* Viewport toolbar */}
       <div className="flex items-center justify-between px-4 py-2 bg-white border-b border-gray-200 flex-shrink-0">
@@ -383,5 +390,6 @@ export function PreviewRenderer({
         </div>
       </div>
     </div>
+    </PublicPageProvider>
   );
 }

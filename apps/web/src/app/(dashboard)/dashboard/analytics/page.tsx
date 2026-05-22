@@ -2,7 +2,7 @@
 
 import { useAnalytics } from "@/hooks/use-analytics";
 import { DashboardHeader } from "@/components/dashboard/header";
-import { AnalyticsCharts } from "@/components/dashboard/analytics-charts";
+import { AnalyticsCharts, ProductBreakdownGrid } from "@/components/dashboard/analytics-charts";
 
 export default function AnalyticsPage() {
   const { stats, loading } = useAnalytics();
@@ -41,6 +41,8 @@ export default function AnalyticsPage() {
         </div>
 
         <AnalyticsCharts stats={stats} />
+
+        <ProductBreakdownGrid stats={stats} />
 
       </section>
     </div>

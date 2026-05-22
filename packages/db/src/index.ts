@@ -24,6 +24,7 @@ export type {
   LinkedProduct,
   QrCode,
   QrScan,
+  PageView,
   FeedbackInquiry,
   FeedbackResponse,
   // Enums

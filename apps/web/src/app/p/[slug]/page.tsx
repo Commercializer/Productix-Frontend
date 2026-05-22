@@ -1,7 +1,9 @@
 import { cache } from "react";
+import { after } from "next/server";
 import type { Metadata, Viewport } from "next";
 import { redirect } from "next/navigation";
 import { getPublicPageByHandleAction } from "@/lib/dashboard/actions";
+import { readViewContext, trackPageView } from "@/lib/analytics/track-page-view";
 import { PublicPageClient } from "./client";
 
 // ═══════════════════════════════════════════════════════════════
@@ -145,6 +147,20 @@ export default async function PublicPage({ params }: PageProps) {
   if (page.slugVisible && handle === page.shortCode && page.slug !== handle) {
     redirect(`/p/${page.slug}`);
   }
+
+  // Record the view after the response is sent so we never delay render.
+  // headers() must be read here (request scope); the after() callback only
+  // touches the plain context object. Dedup is enforced by a unique
+  // (page, visitor, day) constraint in the DB, so refresh-spam can't inflate.
+  const viewContext = await readViewContext();
+  after(() =>
+    trackPageView({
+      productProfileId: page.id,
+      productId: page.productId,
+      companyId: page.companyId,
+      context: viewContext,
+    }),
+  );
 
   return <PublicPageClient page={page} />;
 }

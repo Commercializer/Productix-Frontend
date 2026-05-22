@@ -36,6 +36,7 @@ import { FloatingToolbar } from "../panels/floating-toolbar";
 import { ElementPanel } from "../panels/element-panel";
 import { LayerPanel } from "../panels/layer-panel";
 import { PropertiesPanel } from "../panels/properties-panel";
+import { FeedbackFormPreview } from "../elements/feedback-preview";
 import { ThemePanel } from "../panels/theme-panel";
 import { ArtboardSettings } from "../panels/artboard-settings";
 import { ContentLocaleTabs } from "../panels/content-locale-tabs";
@@ -472,6 +473,9 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug }
 
           <FloatingToolbar canvasRef={canvasRef} zoom={zoom} />
         </div>
+
+        {/* ── Feedback Form Preview — appears only when a Feedback block is selected ── */}
+        <FeedbackFormPreview />
 
         {/* ── Right Panel (Block Settings) ── */}
         {showRightPanel && (

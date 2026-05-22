@@ -375,7 +375,8 @@ model ProductProfile {
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product   Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  pageViews PageView[]
 
   @@unique([productId, languageCode])
   @@index([productId])
@@ -451,6 +452,35 @@ model QrScan {
   @@index([productId])
   @@index([scannedAt])
   @@map("qr_scans")
+}
+
+/// Public-page view events — deduped per (page, visitor, day) so a single
+/// visitor cannot inflate counts by refreshing. visitorHash is sha256 of
+/// (ip + user-agent + salt + day) so no raw PII lives in the row.
+model PageView {
+  id               String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productProfileId String      @map("product_profile_id") @db.Uuid
+  productId        String      @map("product_id") @db.Uuid
+  companyId        String      @map("company_id") @db.Uuid
+  visitorHash      String      @map("visitor_hash") @db.Char(64)
+  dayBucket        DateTime    @map("day_bucket") @db.Date
+  viewedAt         DateTime    @default(now()) @map("viewed_at") @db.Timestamptz
+  country          String?     @db.VarChar(100)
+  region           String?     @db.VarChar(100)
+  city             String?     @db.VarChar(100)
+  deviceType       DeviceType? @map("device_type")
+  browser          String?     @db.VarChar(100)
+  os               String?     @db.VarChar(100)
+  referrer         String?     @db.VarChar(500)
+  language         String?     @db.VarChar(10)
+
+  productProfile ProductProfile @relation(fields: [productProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([productProfileId, visitorHash, dayBucket], map: "page_views_dedupe_unique")
+  @@index([productProfileId, viewedAt])
+  @@index([productId, viewedAt])
+  @@index([companyId, viewedAt])
+  @@map("page_views")
 }
 
 // ═══════════════════════════════════════════════════════════════

@@ -7,6 +7,7 @@ export interface Message {
   id: string;
   name: string;
   email: string;
+  phoneNumber: string | null;
   type: "FEEDBACK" | "INQUIRY";
   feedbackType: string | null;
   status: "NEW" | "IN_PROGRESS" | "RESPONDED" | "CLOSED";

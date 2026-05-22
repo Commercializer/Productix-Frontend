@@ -22,6 +22,7 @@ export {
 export { EditRenderer } from "./renderer/edit-renderer";
 export { PreviewRenderer, type PreviewRendererProps } from "./renderer/preview-renderer";
 export { PublicRenderer, type PublicRendererProps } from "./renderer/public-renderer";
+export { usePublicPage, PublicPageProvider, type PublicPageContextValue } from "./renderer/public-page-context";
 
 // ── Elements ──
 export {

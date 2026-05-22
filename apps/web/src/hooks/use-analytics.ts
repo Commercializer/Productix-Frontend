@@ -24,6 +24,17 @@ export interface TopProduct {
   conversionRate: number;
 }
 
+export interface ProductBreakdown {
+  productId: string;
+  productName: string;
+  slug: string;
+  isPublished: boolean;
+  scans: number;
+  devices: { device: string; count: number }[];
+  countries: { country: string; count: number }[];
+  browsers: { browser: string; count: number }[];
+}
+
 export interface AnalyticsStats {
   totalProducts: number;
   publishedProducts: number;
@@ -40,6 +51,7 @@ export interface AnalyticsStats {
   topCountries: { country: string; count: number }[];
   feedbackByStatus: { status: string; count: number }[];
   topProducts: TopProduct[];
+  productBreakdowns: ProductBreakdown[];
 }
 
 export function useAnalytics() {

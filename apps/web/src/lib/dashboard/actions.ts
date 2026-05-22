@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@productix/db";
+import type { DeviceType } from "@productix/db";
 import { auth } from "@/auth";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -73,8 +74,70 @@ export async function getMyPromptionsAction() {
       publishedAt: p.publishedAt?.toISOString() ?? null,
       logoUrl: p.logoUrl,
       metaDescription: p.metaDescription,
+      redirectUrl: p.redirectUrl,
+      redirectEnabled: p.redirectEnabled,
     }))
   };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// REDIRECT LINK — when set + enabled, scanning the QR / hitting
+// the public page sends the visitor to the external URL instead
+// of rendering the showcase page.
+// ═══════════════════════════════════════════════════════════════
+
+const REDIRECT_URL_MAX = 500;
+
+export async function updateRedirectAction(
+  profileId: string,
+  redirectUrl: string | null,
+  redirectEnabled: boolean,
+) {
+  if (!isUUID(profileId)) return { error: "Invalid profile ID" };
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const companyId = await getUserCompanyId(session.user.id);
+  if (!companyId) return { error: "No company found for user" };
+
+  const profile = await prisma.productProfile.findUnique({
+    where: { id: profileId },
+    select: { id: true, product: { select: { companyId: true } } },
+  });
+  if (!profile || profile.product.companyId !== companyId) return { error: "Product not found" };
+
+  let normalized: string | null = null;
+  if (redirectUrl !== null) {
+    const trimmed = redirectUrl.trim();
+    if (trimmed.length > 0) {
+      const withScheme = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+      if (withScheme.length > REDIRECT_URL_MAX) {
+        return { error: `Redirect URL must be ${REDIRECT_URL_MAX} characters or fewer.` };
+      }
+      try {
+        const u = new URL(withScheme);
+        if (u.protocol !== "http:" && u.protocol !== "https:") {
+          return { error: "Redirect URL must use http or https." };
+        }
+        normalized = u.toString();
+      } catch {
+        return { error: "Enter a valid URL (e.g. https://example.com)." };
+      }
+    }
+  }
+
+  // Can't enable without a URL.
+  const effectiveEnabled = redirectEnabled && !!normalized;
+
+  try {
+    await prisma.productProfile.update({
+      where: { id: profileId },
+      data: { redirectUrl: normalized, redirectEnabled: effectiveEnabled },
+    });
+    return { success: true, redirectUrl: normalized, redirectEnabled: effectiveEnabled };
+  } catch (error: any) {
+    return { error: error.message };
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -532,6 +595,8 @@ const productProfileInclude = {
 function publicProfileShape(profile: any) {
   return {
     id: profile.id,
+    productId: profile.product.id as string,
+    companyId: profile.product.companyId as string,
     slug: profile.slug,
     shortCode: profile.product.shortCode as string,
     slugVisible: profile.product.slugVisible as boolean,
@@ -641,6 +706,7 @@ export async function getPreviewPageBySlugAction(slug: string) {
 
   return {
     id: profile.id,
+    productId: profile.product.id as string,
     slug: profile.slug,
     productName: profile.productName,
     tagline: profile.tagline,
@@ -741,69 +807,95 @@ export async function getCompanyAnalyticsAction() {
     const now = new Date();
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const productScope = { where: { product: { companyId } } } as const;
 
-    const [
-      productCount,
-      publishedCount,
-      scanCount,
-      feedbackCount,
-      scansLast7Days,
-      scansLast30Days,
-      feedbackLast30Days,
-      deviceRows,
-      sourceRows,
-      countryRows,
-      feedbackStatusRows,
-      recentScanRows,
-      recentFeedbackRows,
-      topProductsRaw,
-    ] = await Promise.all([
-      prisma.product.count({ where: { companyId } }),
-      prisma.productProfile.count({ where: { product: { companyId }, isPublished: true } }),
-      prisma.qrScan.count(productScope),
-      prisma.feedbackInquiry.count({ where: { companyId } }),
-      prisma.qrScan.count({ where: { product: { companyId }, scannedAt: { gte: sevenDaysAgo } } }),
-      prisma.qrScan.count({ where: { product: { companyId }, scannedAt: { gte: thirtyDaysAgo } } }),
-      prisma.feedbackInquiry.count({ where: { companyId, createdAt: { gte: thirtyDaysAgo } } }),
-      prisma.qrScan.groupBy({
-        by: ["deviceType"],
-        where: { product: { companyId } },
-        _count: { _all: true },
-      }),
-      prisma.qrScan.groupBy({
-        by: ["qrSource"],
-        where: { product: { companyId } },
-        _count: { _all: true },
-      }),
-      prisma.qrScan.groupBy({
-        by: ["country"],
-        where: { product: { companyId }, country: { not: null } },
-        _count: { _all: true },
-        orderBy: { _count: { country: "desc" } },
-        take: 5,
-      }),
-      prisma.feedbackInquiry.groupBy({
-        by: ["status"],
-        where: { companyId },
-        _count: { _all: true },
-      }),
-      prisma.qrScan.findMany({
-        where: { product: { companyId }, scannedAt: { gte: thirtyDaysAgo } },
-        select: { scannedAt: true },
-      }),
-      prisma.feedbackInquiry.findMany({
-        where: { companyId, createdAt: { gte: thirtyDaysAgo } },
-        select: { createdAt: true },
-      }),
-      prisma.qrScan.groupBy({
-        by: ["productId"],
-        where: { product: { companyId } },
-        _count: { _all: true },
-        orderBy: { _count: { productId: "desc" } },
-        take: 5,
-      }),
-    ]);
+    // Split into two batches so a failure in page-view queries (e.g. stale
+    // Prisma client in dev) can't blank out product/feedback counts.
+    const [productCount, publishedCount, feedbackCount, feedbackLast30Days, feedbackStatusRows, recentFeedbackRows] =
+      await Promise.all([
+        prisma.product.count({ where: { companyId } }),
+        prisma.productProfile.count({ where: { product: { companyId }, isPublished: true } }),
+        prisma.feedbackInquiry.count({ where: { companyId } }),
+        prisma.feedbackInquiry.count({ where: { companyId, createdAt: { gte: thirtyDaysAgo } } }),
+        prisma.feedbackInquiry.groupBy({
+          by: ["status"],
+          where: { companyId },
+          _count: { _all: true },
+        }),
+        prisma.feedbackInquiry.findMany({
+          where: { companyId, createdAt: { gte: thirtyDaysAgo } },
+          select: { createdAt: true },
+        }),
+      ]);
+
+    type ViewMetrics = {
+      scanCount: number;
+      scansLast7Days: number;
+      scansLast30Days: number;
+      deviceRows: Array<{ deviceType: string | null; _count: { _all: number } }>;
+      countryRows: Array<{ country: string | null; _count: { _all: number } }>;
+      recentViewRows: Array<{ viewedAt: Date; referrer: string | null }>;
+      topProductsRaw: Array<{ productId: string; _count: { _all: number } }>;
+    };
+
+    const emptyViewMetrics: ViewMetrics = {
+      scanCount: 0,
+      scansLast7Days: 0,
+      scansLast30Days: 0,
+      deviceRows: [],
+      countryRows: [],
+      recentViewRows: [],
+      topProductsRaw: [],
+    };
+
+    let viewMetrics: ViewMetrics = emptyViewMetrics;
+    try {
+      const [scanCount, scansLast7Days, scansLast30Days, deviceRows, countryRows, recentViewRows, topProductsRaw] =
+        await Promise.all([
+          prisma.pageView.count({ where: { companyId } }),
+          prisma.pageView.count({ where: { companyId, viewedAt: { gte: sevenDaysAgo } } }),
+          prisma.pageView.count({ where: { companyId, viewedAt: { gte: thirtyDaysAgo } } }),
+          prisma.pageView.groupBy({
+            by: ["deviceType"],
+            where: { companyId },
+            _count: { _all: true },
+          }),
+          prisma.pageView.groupBy({
+            by: ["country"],
+            where: { companyId, country: { not: null } },
+            _count: { _all: true },
+            orderBy: { _count: { country: "desc" } },
+            take: 5,
+          }),
+          prisma.pageView.findMany({
+            where: { companyId, viewedAt: { gte: thirtyDaysAgo } },
+            select: { viewedAt: true, referrer: true },
+          }),
+          prisma.pageView.groupBy({
+            by: ["productId"],
+            where: { companyId },
+            _count: { _all: true },
+            orderBy: { _count: { productId: "desc" } },
+            take: 5,
+          }),
+        ]);
+      viewMetrics = {
+        scanCount,
+        scansLast7Days,
+        scansLast30Days,
+        deviceRows,
+        countryRows,
+        recentViewRows,
+        topProductsRaw,
+      };
+    } catch (viewErr) {
+      // Page-view metrics unavailable (table missing, stale Prisma client in
+      // dev, etc.) — degrade gracefully to zeros instead of blanking the
+      // whole dashboard.
+      console.error("[getCompanyAnalyticsAction] page-view metrics failed", viewErr);
+    }
+
+    const { scanCount, scansLast7Days, scansLast30Days, deviceRows, countryRows, recentViewRows, topProductsRaw } =
+      viewMetrics;
 
     // Time-series: bucket scans + feedback by day for the last 30 days.
     const dayMs = 24 * 60 * 60 * 1000;
@@ -818,8 +910,8 @@ export async function getCompanyAnalyticsAction() {
       const key = dayKey(d);
       buckets.set(key, { date: key, scans: 0, feedback: 0 });
     }
-    for (const row of recentScanRows) {
-      const b = buckets.get(dayKey(row.scannedAt));
+    for (const row of recentViewRows) {
+      const b = buckets.get(dayKey(row.viewedAt));
       if (b) b.scans += 1;
     }
     for (const row of recentFeedbackRows) {
@@ -828,23 +920,58 @@ export async function getCompanyAnalyticsAction() {
     }
     const timeSeries = Array.from(buckets.values());
 
-    // Top products: hydrate with name + feedback counts.
+    // Source breakdown: bucket referrers into the same labels QrSource used.
+    // Direct visits (no referrer) bucket as ON_PACKAGE — historically that's
+    // how QR scans without a referrer were attributed.
+    const sourceCounts = new Map<string, number>();
+    for (const row of recentViewRows) {
+      const bucket = bucketReferrer(row.referrer);
+      sourceCounts.set(bucket, (sourceCounts.get(bucket) ?? 0) + 1);
+    }
+    const sourceRows = Array.from(sourceCounts, ([source, count]) => ({
+      source,
+      _count: { _all: count },
+    }));
+
+    // Top products: hydrate with name + feedback counts + per-product splits.
     const topProductIds = topProductsRaw.map((r) => r.productId);
-    const [topProductProfiles, topProductFeedback] = await Promise.all([
-      topProductIds.length
-        ? prisma.productProfile.findMany({
-            where: { productId: { in: topProductIds } },
-            select: { productId: true, productName: true, slug: true, isPublished: true, languageCode: true },
-          })
-        : Promise.resolve([]),
-      topProductIds.length
-        ? prisma.feedbackInquiry.groupBy({
-            by: ["productId"],
-            where: { companyId, productId: { in: topProductIds } },
-            _count: { _all: true },
-          })
-        : Promise.resolve([] as { productId: string | null; _count: { _all: number } }[]),
-    ]);
+    const [topProductProfiles, topProductFeedback, perProductDevice, perProductCountry, perProductBrowser] =
+      await Promise.all([
+        topProductIds.length
+          ? prisma.productProfile.findMany({
+              where: { productId: { in: topProductIds } },
+              select: { productId: true, productName: true, slug: true, isPublished: true, languageCode: true },
+            })
+          : Promise.resolve([]),
+        topProductIds.length
+          ? prisma.feedbackInquiry.groupBy({
+              by: ["productId"],
+              where: { companyId, productId: { in: topProductIds } },
+              _count: { _all: true },
+            })
+          : Promise.resolve([] as { productId: string | null; _count: { _all: number } }[]),
+        topProductIds.length
+          ? prisma.pageView.groupBy({
+              by: ["productId", "deviceType"],
+              where: { companyId, productId: { in: topProductIds } },
+              _count: { _all: true },
+            })
+          : Promise.resolve([] as Array<{ productId: string; deviceType: DeviceType | null; _count: { _all: number } }>),
+        topProductIds.length
+          ? prisma.pageView.groupBy({
+              by: ["productId", "country"],
+              where: { companyId, productId: { in: topProductIds }, country: { not: null } },
+              _count: { _all: true },
+            })
+          : Promise.resolve([] as Array<{ productId: string; country: string | null; _count: { _all: number } }>),
+        topProductIds.length
+          ? prisma.pageView.groupBy({
+              by: ["productId", "browser"],
+              where: { companyId, productId: { in: topProductIds }, browser: { not: null } },
+              _count: { _all: true },
+            })
+          : Promise.resolve([] as Array<{ productId: string; browser: string | null; _count: { _all: number } }>),
+      ]);
     const profileByProduct = new Map<string, { productName: string; slug: string; isPublished: boolean }>();
     for (const p of topProductProfiles) {
       // Prefer default language profile if multiple; first wins otherwise.
@@ -872,13 +999,45 @@ export async function getCompanyAnalyticsAction() {
       };
     });
 
+    // Per-product breakdown: for each top product, the top 3 devices / countries
+    // / browsers driving their views. Powers the per-product cards on the
+    // analytics page.
+    const productBreakdowns = topProductIds.map((pid) => {
+      const profile = profileByProduct.get(pid);
+      const scans = topProductsRaw.find((r) => r.productId === pid)?._count._all ?? 0;
+      const devices = perProductDevice
+        .filter((r) => r.productId === pid)
+        .map((r) => ({ device: r.deviceType ?? "UNKNOWN", count: r._count._all }))
+        .sort((a, b) => b.count - a.count);
+      const countries = perProductCountry
+        .filter((r) => r.productId === pid)
+        .map((r) => ({ country: r.country ?? "Unknown", count: r._count._all }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 3);
+      const browsers = perProductBrowser
+        .filter((r) => r.productId === pid)
+        .map((r) => ({ browser: r.browser ?? "Unknown", count: r._count._all }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 3);
+      return {
+        productId: pid,
+        productName: profile?.productName ?? "Untitled",
+        slug: profile?.slug ?? "",
+        isPublished: profile?.isPublished ?? false,
+        scans,
+        devices,
+        countries,
+        browsers,
+      };
+    });
+
     const deviceBreakdown = deviceRows.map((r) => ({
       device: r.deviceType ?? "UNKNOWN",
       count: r._count._all,
     }));
 
     const sourceBreakdown = sourceRows.map((r) => ({
-      source: r.qrSource ?? "UNKNOWN",
+      source: r.source,
       count: r._count._all,
     }));
 
@@ -912,6 +1071,7 @@ export async function getCompanyAnalyticsAction() {
         topCountries,
         feedbackByStatus,
         topProducts,
+        productBreakdowns,
       },
     };
   } catch (error: any) {
@@ -939,6 +1099,7 @@ export async function getCompanyMessagesAction() {
         id: m.id,
         name: m.name,
         email: m.email,
+        phoneNumber: m.phoneNumber,
         type: m.type,
         feedbackType: m.feedbackType,
         status: m.status,
@@ -984,4 +1145,24 @@ export async function getCompanySettingsAction() {
   } catch (error: any) {
     return { error: error.message };
   }
+}
+
+// Map a referrer URL onto the same source labels the QrSource enum used,
+// so the dashboard's existing SOURCE_LABEL mapping still renders nicely.
+// Empty/missing referrer counts as ON_PACKAGE (direct visit — likely a QR scan).
+function bucketReferrer(referrer: string | null): string {
+  if (!referrer) return "ON_PACKAGE";
+  let host: string;
+  try {
+    host = new URL(referrer).hostname.toLowerCase();
+  } catch {
+    return "OTHER";
+  }
+  if (host.includes("facebook.") || host === "fb.com" || host.endsWith(".fb.com")) return "FACEBOOK";
+  if (host.includes("instagram.")) return "INSTAGRAM";
+  if (host === "t.co" || host.includes("twitter.") || host === "x.com" || host.endsWith(".x.com")) return "TWITTER";
+  if (host.includes("linkedin.") || host === "lnkd.in") return "LINKEDIN";
+  if (host.includes("youtube.") || host === "youtu.be") return "YOUTUBE";
+  if (host.includes("tiktok.")) return "TIKTOK";
+  return "OTHER";
 }

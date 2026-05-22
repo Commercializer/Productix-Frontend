@@ -9,6 +9,8 @@ import { BrowserThemeWatcher } from "@/components/browser-theme-watcher";
 
 interface PublicPageData {
   id: string;
+  productId: string;
+  companyId: string;
   slug: string;
   productName: string;
   tagline: string | null;
@@ -244,7 +246,7 @@ export function PublicPageClient({ page }: PublicPageClientProps) {
       )}
 
       {/* Rendered page content */}
-      <PublicRenderer document={doc} contentLocale={contentLocale} />
+      <PublicRenderer document={doc} contentLocale={contentLocale} productId={page.productId} />
 
       {/* Powered-by footer badge */}
       <footer

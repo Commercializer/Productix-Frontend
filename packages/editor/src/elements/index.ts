@@ -22,6 +22,7 @@ import "./row-element";
 import "./column-element";
 import "./video-element";
 import "./audio-element";
+import "./feedback-element";
 
 // Re-export registry API for consumers
 export {

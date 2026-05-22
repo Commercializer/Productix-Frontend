@@ -31,6 +31,7 @@ import {
 } from "../engine/layout-engine";
 import { getLocalizedProps } from "../utils/localize-props";
 import { CanvasEffects } from "../engine/canvas-effects";
+import { PublicPageProvider } from "./public-page-context";
 
 // Import elements to trigger registration
 import "../elements";
@@ -40,6 +41,8 @@ export interface PublicRendererProps {
   className?: string;
   /** Content locale — defaults to "en" */
   contentLocale?: ContentLocale;
+  /** The Product this page represents — needed for feedback / inquiry submissions. */
+  productId?: string;
 }
 
 /** Detect the breakpoint from a pixel width */
@@ -50,7 +53,7 @@ function detectBreakpoint(width: number): Breakpoint {
   return "desktop";
 }
 
-export function PublicRenderer({ document: doc, className, contentLocale = "en" }: PublicRendererProps) {
+export function PublicRenderer({ document: doc, className, contentLocale = "en", productId }: PublicRendererProps) {
   const containerRef = useRef<HTMLElement>(null);
   // Default to 1440 to match SSR output and avoid hydration mismatch.
   // After mount, the ResizeObserver below switches to the real container width.
@@ -79,7 +82,7 @@ export function PublicRenderer({ document: doc, className, contentLocale = "en" 
   const responsiveCSS = useMemo(() => generateResponsiveStylesheet(doc), [doc]);
 
   return (
-    <>
+    <PublicPageProvider value={{ productId }}>
       {/* Inject responsive stylesheet */}
       <style dangerouslySetInnerHTML={{ __html: responsiveCSS }} />
 
@@ -234,6 +237,6 @@ export function PublicRenderer({ document: doc, className, contentLocale = "en" 
           );
         })}
       </main>
-    </>
+    </PublicPageProvider>
   );
 }

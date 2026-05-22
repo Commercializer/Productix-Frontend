@@ -8,7 +8,7 @@
 
 "use client";
 
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useCanvasStore } from "./canvas-store";
 import { ElementWrapper } from "./element-wrapper";
 import { CanvasEffects } from "./canvas-effects";
@@ -36,7 +36,28 @@ export function Artboard({ artboard }: ArtboardProps) {
 
   const previewWidth = getArtboardPreviewWidth(artboard.width, activeBreakpoint);
   const scaleRatio = previewWidth / artboard.width;
-  const visualHeight = Math.round(artboard.height * scaleRatio);
+
+  const resizeRef = useRef<{
+    startY: number;
+    startHeight: number;
+    combinedScale: number;
+    latestHeight: number;
+    rafId: number | null;
+  } | null>(null);
+  const [isResizing, setIsResizing] = useState(false);
+  const [hoverHandle, setHoverHandle] = useState(false);
+  // While dragging, render with this local height to avoid hitting the store
+  // (and forcing a global re-render) on every pointermove.
+  const [liveHeight, setLiveHeight] = useState<number | null>(null);
+
+  // Clean up any pending rAF if the component unmounts mid-drag.
+  useEffect(() => () => {
+    const s = resizeRef.current;
+    if (s?.rafId != null) cancelAnimationFrame(s.rafId);
+  }, []);
+
+  const effectiveHeight = liveHeight ?? artboard.height;
+  const visualHeight = Math.round(effectiveHeight * scaleRatio);
 
   const artboardElements = artboard.elements.map((id) => elements[id]).filter((el): el is NonNullable<typeof el> => !!el).sort((a, b) => a.zIndex - b.zIndex);
   const flowElements = artboardElements.filter((el) => isElementInFlow(el));
@@ -47,7 +68,7 @@ export function Artboard({ artboard }: ArtboardProps) {
   const hasFlowElements = flowElements.length > 0;
 
   const innerArtboard = (
-    <div style={{ position:"relative",width:artboard.width,height:artboard.height,backgroundColor:artboard.backgroundColor,backgroundImage:artboard.backgroundImage?`url(${artboard.backgroundImage})`:undefined,backgroundSize:"cover",backgroundPosition:"center",overflow:"visible" }} onClick={handleCanvasClick}>
+    <div style={{ position:"relative",width:artboard.width,height:effectiveHeight,backgroundColor:artboard.backgroundColor,backgroundImage:artboard.backgroundImage?`url(${artboard.backgroundImage})`:undefined,backgroundSize:"cover",backgroundPosition:"center",overflow:"visible" }} onClick={handleCanvasClick}>
       <div data-artboard-bg="true" style={{ position:"absolute",inset:0,zIndex:0 }} />
       {hasFlowElements && (
         <div data-artboard-bg="true" style={{ ...flexCSS,position:"relative",width:"100%",minHeight:"100%",zIndex:1 }}>
@@ -56,7 +77,7 @@ export function Artboard({ artboard }: ArtboardProps) {
       )}
       {absoluteElements.map((el) => <ElementWrapper key={el.id} element={el} effectiveTransform={el.transform} />)}
       {artboard.effect && artboard.effect !== "none" && (
-        <CanvasEffects effect={artboard.effect} width={artboard.width} height={artboard.height} />
+        <CanvasEffects effect={artboard.effect} width={artboard.width} height={effectiveHeight} />
       )}
       {snapGuides.map((guide, i) => guide.orientation === "horizontal"
         ? <div key={`guide-h-${i}`} style={{ position:"absolute",top:guide.position,left:0,width:"100%",height:0,borderTop:"1px dashed #0ea5e9",pointerEvents:"none",zIndex:99999 }} />
@@ -64,10 +85,6 @@ export function Artboard({ artboard }: ArtboardProps) {
       )}
     </div>
   );
-
-  const resizeRef = useRef<{ startY: number; startHeight: number; combinedScale: number } | null>(null);
-  const [isResizing, setIsResizing] = useState(false);
-  const [hoverHandle, setHoverHandle] = useState(false);
 
   const onHandlePointerDown = useCallback((e: React.PointerEvent) => {
     e.stopPropagation();
@@ -77,9 +94,14 @@ export function Artboard({ artboard }: ArtboardProps) {
       startY: e.clientY,
       startHeight: artboard.height,
       combinedScale: zoom * scaleRatio,
+      latestHeight: artboard.height,
+      rafId: null,
     };
     setIsResizing(true);
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    setLiveHeight(artboard.height);
+    // Capture on the stable handle element (currentTarget), not e.target which
+    // may be the visual pill child whose styles change mid-drag.
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch {}
   }, [pushHistory, artboard.height, zoom, scaleRatio]);
 
   const onHandlePointerMove = useCallback((e: React.PointerEvent) => {
@@ -88,15 +110,29 @@ export function Artboard({ artboard }: ArtboardProps) {
     const screenDelta = e.clientY - state.startY;
     const modelDelta = screenDelta / state.combinedScale;
     const next = Math.max(MIN_ARTBOARD_HEIGHT, Math.round(state.startHeight + modelDelta));
-    if (next !== artboard.height) updateArtboard(artboard.id, { height: next });
-  }, [artboard.height, artboard.id, updateArtboard]);
+    if (next === state.latestHeight) return;
+    state.latestHeight = next;
+    if (state.rafId == null) {
+      state.rafId = requestAnimationFrame(() => {
+        const s = resizeRef.current;
+        if (!s) return;
+        s.rafId = null;
+        setLiveHeight(s.latestHeight);
+      });
+    }
+  }, []);
 
   const onHandlePointerUp = useCallback((e: React.PointerEvent) => {
-    if (!resizeRef.current) return;
+    const state = resizeRef.current;
+    if (!state) return;
+    if (state.rafId != null) cancelAnimationFrame(state.rafId);
+    const finalHeight = state.latestHeight;
     resizeRef.current = null;
     setIsResizing(false);
-    try { (e.target as HTMLElement).releasePointerCapture(e.pointerId); } catch {}
-  }, []);
+    setLiveHeight(null);
+    try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {}
+    if (finalHeight !== artboard.height) updateArtboard(artboard.id, { height: finalHeight });
+  }, [artboard.height, artboard.id, updateArtboard]);
 
   const handleActive = isResizing || hoverHandle;
 
@@ -166,7 +202,7 @@ export function Artboard({ artboard }: ArtboardProps) {
             boxShadow: "0 6px 18px rgba(2,132,199,0.32), inset 0 1px 0 rgba(255,255,255,0.25)",
             pointerEvents: "none",
           }}>
-            H {artboard.height}px
+            H {effectiveHeight}px
           </div>
         )}
       </div>

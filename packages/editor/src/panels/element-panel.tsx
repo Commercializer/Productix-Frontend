@@ -13,7 +13,6 @@ import {
   LayoutGrid,
   MessageCircle,
   Rocket,
-  ChevronDown,
   Type,
   Heading,
   MousePointerClick,
@@ -41,6 +40,7 @@ import {
   Gamepad2,
   Ticket,
   Video,
+  MessageSquareHeart,
 } from "lucide-react";
 import { getAllElements, type ElementDefinition } from "../elements/registry";
 import { useCanvasStore } from "../engine/canvas-store";
@@ -137,6 +137,7 @@ const BLOCK_CONFIG: Record<string, { label: string; icon: React.ReactNode }> = {
   column:        { label: "Column",          icon: <Columns3 size={16} />          },
   video:         { label: "Video",           icon: <Video size={16} />            },
   audio:         { label: "Audio",           icon: <Music2 size={16} />            },
+  feedback:      { label: "Feedback Form",   icon: <MessageSquareHeart size={16} /> },
 };
 
 /* ─── Component ──────────────────────────────── */
@@ -147,7 +148,6 @@ export function ElementPanel() {
   const document = useCanvasStore((s) => s.document);
   const { t } = useTranslation();
 
-  const [expandedCat, setExpandedCat] = useState<string | null>(CATEGORY_ORDER[0]!);
   const [hoveredBlock, setHoveredBlock] = useState<string | null>(null);
   const [clickedBlock, setClickedBlock] = useState<string | null>(null);
 
@@ -214,39 +214,22 @@ export function ElementPanel() {
         scrollbarColor: "rgba(0,0,0,0.08) transparent",
       }}>
         {grouped.map(({ category, label, meta, items }) => {
-          const isExpanded = expandedCat === category;
           return (
-            <div key={category} style={{ marginBottom: 6 }}>
-              {/* Category Accordion Header */}
-              <button
-                type="button"
-                onClick={() => setExpandedCat(isExpanded ? null : category)}
+            <div key={category} style={{ marginBottom: 14 }}>
+              {/* Category Header (static, non-collapsible) */}
+              <div
                 style={{
-                  width: "100%",
                   display: "flex", alignItems: "center", gap: 10,
-                  padding: "10px 12px",
-                  borderRadius: 12,
-                  border: "none",
-                  background: isExpanded ? "rgba(255,255,255,0.95)" : "transparent",
-                  cursor: "pointer",
-                  transition: "all 0.2s cubic-bezier(0.4,0,0.2,1)",
-                  boxShadow: isExpanded ? "0 1px 4px rgba(0,0,0,0.04), 0 0 0 1px rgba(0,0,0,0.03)" : "none",
-                }}
-                onMouseEnter={(e) => {
-                  if (!isExpanded) e.currentTarget.style.background = "rgba(255,255,255,0.6)";
-                }}
-                onMouseLeave={(e) => {
-                  if (!isExpanded) e.currentTarget.style.background = "transparent";
+                  padding: "8px 12px 6px",
                 }}
               >
                 {/* Category icon chip */}
                 <div style={{
-                  width: 30, height: 30, borderRadius: 9,
-                  background: isExpanded ? meta.gradient : meta.iconBg,
+                  width: 26, height: 26, borderRadius: 8,
+                  background: meta.gradient,
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  color: isExpanded ? "#fff" : "#6b7280",
-                  transition: "all 0.25s cubic-bezier(0.4,0,0.2,1)",
-                  boxShadow: isExpanded ? `0 3px 10px ${meta.glow}` : "none",
+                  color: "#fff",
+                  boxShadow: `0 2px 8px ${meta.glow}`,
                 }}>
                   {meta.icon}
                 </div>
@@ -254,131 +237,113 @@ export function ElementPanel() {
                 <div style={{ flex: 1, textAlign: "left" }}>
                   <span style={{
                     fontSize: 11.5, fontWeight: 650, letterSpacing: "-0.01em",
-                    color: isExpanded ? "#1a1a2e" : "#6b7280",
-                    transition: "color 0.2s",
+                    color: "#1a1a2e",
                   }}>{label}</span>
                   <span style={{
                     display: "block", fontSize: 9.5, color: "#b0b3c0",
                     fontWeight: 500, marginTop: 1,
                   }}>{items.length} block{items.length !== 1 ? "s" : ""}</span>
                 </div>
+              </div>
 
-                {/* Chevron */}
-                <ChevronDown
-                  size={14}
-                  style={{
-                    color: "#b0b3c0",
-                    transition: "transform 0.25s cubic-bezier(0.4,0,0.2,1)",
-                    transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
-                  }}
-                />
-              </button>
-
-              {/* Block Grid (collapsible) */}
+              {/* Block grid — 2 columns */}
               <div style={{
-                maxHeight: isExpanded ? 1200 : 0,
-                overflow: "hidden",
-                transition: "max-height 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.2s",
-                opacity: isExpanded ? 1 : 0,
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 6,
+                padding: "4px 4px 0",
               }}>
-                <div style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: 6,
-                  padding: "8px 4px 4px",
-                }}>
-                  {items.map((def) => {
-                    const config = BLOCK_CONFIG[def.type];
-                    const isHovered = hoveredBlock === def.type;
-                    const isClicked = clickedBlock === def.type;
+                {items.map((def) => {
+                  const config = BLOCK_CONFIG[def.type];
+                  const isHovered = hoveredBlock === def.type;
+                  const isClicked = clickedBlock === def.type;
 
-                    return (
-                      <button
-                        key={def.type}
-                        type="button"
-                        onClick={() => handleAdd(def)}
-                        onMouseEnter={() => setHoveredBlock(def.type)}
-                        onMouseLeave={() => setHoveredBlock(null)}
-                        style={{
-                          position: "relative",
-                          display: "flex", flexDirection: "column",
-                          alignItems: "center", gap: 7,
-                          padding: "16px 8px 13px",
-                          borderRadius: 14,
-                          border: `1px solid ${isHovered ? "rgba(14,165,233,0.2)" : "rgba(0,0,0,0.04)"}`,
-                          background: isHovered
-                            ? "rgba(255,255,255,1)"
-                            : "rgba(255,255,255,0.6)",
-                          cursor: "pointer",
-                          transition: "all 0.2s cubic-bezier(0.4,0,0.2,1)",
-                          textAlign: "center",
-                          overflow: "hidden",
-                          boxShadow: isHovered
-                            ? "0 4px 16px rgba(14,165,233,0.1), 0 1px 3px rgba(0,0,0,0.04)"
-                            : "0 1px 2px rgba(0,0,0,0.02)",
-                          transform: isClicked
-                            ? "scale(0.94)"
-                            : isHovered ? "translateY(-2px)" : "translateY(0)",
-                        }}
-                      >
-                        {/* Glow on hover */}
-                        {isHovered && (
-                          <div style={{
-                            position: "absolute", top: -20, left: "50%",
-                            transform: "translateX(-50%)",
-                            width: 60, height: 60,
-                            borderRadius: "50%",
-                            background: meta.gradient,
-                            opacity: 0.06,
-                            filter: "blur(16px)",
-                            pointerEvents: "none",
-                          }} />
-                        )}
-
-                        {/* Icon container */}
+                  return (
+                    <button
+                      key={def.type}
+                      type="button"
+                      onClick={() => handleAdd(def)}
+                      onMouseEnter={() => setHoveredBlock(def.type)}
+                      onMouseLeave={() => setHoveredBlock(null)}
+                      style={{
+                        position: "relative",
+                        display: "flex", flexDirection: "column",
+                        alignItems: "center", gap: 7,
+                        padding: "14px 8px 11px",
+                        borderRadius: 12,
+                        border: `1px solid ${isHovered ? "rgba(14,165,233,0.2)" : "rgba(0,0,0,0.04)"}`,
+                        background: isHovered
+                          ? "rgba(255,255,255,1)"
+                          : "rgba(255,255,255,0.6)",
+                        cursor: "pointer",
+                        transition: "all 0.2s cubic-bezier(0.4,0,0.2,1)",
+                        textAlign: "center",
+                        overflow: "hidden",
+                        boxShadow: isHovered
+                          ? "0 4px 16px rgba(14,165,233,0.1), 0 1px 3px rgba(0,0,0,0.04)"
+                          : "0 1px 2px rgba(0,0,0,0.02)",
+                        transform: isClicked
+                          ? "scale(0.94)"
+                          : isHovered ? "translateY(-2px)" : "translateY(0)",
+                      }}
+                    >
+                      {/* Glow on hover */}
+                      {isHovered && (
                         <div style={{
-                          width: 36, height: 36,
-                          borderRadius: 10,
-                          background: isHovered ? meta.gradient : meta.iconBg,
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          transition: "all 0.2s cubic-bezier(0.4,0,0.2,1)",
-                          boxShadow: isHovered ? `0 3px 12px ${meta.glow}` : "none",
-                          position: "relative",
-                          zIndex: 1,
-                          color: isHovered ? "#fff" : "#6b7280",
-                        }}>
-                          {config?.icon || def.icon}
-                        </div>
+                          position: "absolute", top: -20, left: "50%",
+                          transform: "translateX(-50%)",
+                          width: 60, height: 60,
+                          borderRadius: "50%",
+                          background: meta.gradient,
+                          opacity: 0.06,
+                          filter: "blur(16px)",
+                          pointerEvents: "none",
+                        }} />
+                      )}
 
-                        {/* Label */}
-                        <span style={{
-                          fontSize: 10, fontWeight: 600,
-                          color: isHovered ? "#1a1a2e" : "#6b7280",
-                          lineHeight: 1.2,
-                          transition: "color 0.2s",
-                          position: "relative",
-                          zIndex: 1,
-                          letterSpacing: "-0.01em",
-                        }}>
-                          {config?.label || def.label}
-                        </span>
+                      {/* Icon container */}
+                      <div style={{
+                        width: 34, height: 34,
+                        borderRadius: 10,
+                        background: isHovered ? meta.gradient : meta.iconBg,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        transition: "all 0.2s cubic-bezier(0.4,0,0.2,1)",
+                        boxShadow: isHovered ? `0 3px 12px ${meta.glow}` : "none",
+                        position: "relative",
+                        zIndex: 1,
+                        color: isHovered ? "#fff" : "#6b7280",
+                      }}>
+                        {config?.icon || def.icon}
+                      </div>
 
-                        {/* Added feedback */}
-                        {isClicked && (
-                          <div style={{
-                            position: "absolute",
-                            inset: 0,
-                            background: meta.gradient,
-                            opacity: 0.08,
-                            borderRadius: 14,
-                            pointerEvents: "none",
-                            animation: "blockPulse 0.4s ease-out forwards",
-                          }} />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
+                      {/* Label */}
+                      <span style={{
+                        fontSize: 10, fontWeight: 600,
+                        color: isHovered ? "#1a1a2e" : "#6b7280",
+                        lineHeight: 1.2,
+                        transition: "color 0.2s",
+                        position: "relative",
+                        zIndex: 1,
+                        letterSpacing: "-0.01em",
+                      }}>
+                        {config?.label || def.label}
+                      </span>
+
+                      {/* Added feedback */}
+                      {isClicked && (
+                        <div style={{
+                          position: "absolute",
+                          inset: 0,
+                          background: meta.gradient,
+                          opacity: 0.08,
+                          borderRadius: 12,
+                          pointerEvents: "none",
+                          animation: "blockPulse 0.4s ease-out forwards",
+                        }} />
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           );
