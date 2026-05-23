@@ -298,6 +298,55 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug, 
   const documentJSON = JSON.stringify(document);
   const isDirty = documentJSON !== lastSavedJSON;
 
+  // Track latest dirty state for the popstate handler, which is registered
+  // once on mount and otherwise wouldn't see updates.
+  const isDirtyRef = useRef(isDirty);
+  useEffect(() => { isDirtyRef.current = isDirty; }, [isDirty]);
+
+  // Warn before refresh / tab close / hard navigation. Modern browsers ignore
+  // the custom message and show their own dialog when returnValue is set.
+  useEffect(() => {
+    if (!isDirty) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+      return "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
+
+  // Guard browser back/forward (Next.js client-side nav doesn't fire
+  // beforeunload). We push a sentinel history entry on mount; the first back
+  // press pops that sentinel and fires popstate while keeping the user on
+  // this page. If there are unsaved changes we confirm; otherwise we re-issue
+  // a real back to honor the navigation.
+  useEffect(() => {
+    const SENTINEL = { __productixGuard: true };
+    history.pushState(SENTINEL, "", window.location.href);
+
+    const onPopState = () => {
+      if (isDirtyRef.current) {
+        const ok = window.confirm(
+          "You have unsaved changes. Leave without saving?",
+        );
+        if (ok) {
+          // Allow nav: pop past the (now-consumed) sentinel.
+          history.back();
+        } else {
+          // Re-push sentinel so the next back press is also guarded.
+          history.pushState(SENTINEL, "", window.location.href);
+        }
+      } else {
+        // No unsaved work — honor the back press the user actually wanted.
+        history.back();
+      }
+    };
+
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
   const handleSave = useCallback(async () => {
     const doc = useCanvasStore.getState().document;
     setIsSaving(true);
@@ -452,23 +501,23 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug, 
                   }
                 }}
               />
-              <TopBtn
+              <PillBtn
                 onClick={() => importInputRef.current?.click()}
                 disabled={isImporting}
                 title="Import .productix file"
-              >
-                {isImporting ? <Loader2 size={14} style={{ animation: "spin 0.6s linear infinite" }} /> : <Upload size={14} />}
-              </TopBtn>
+                icon={isImporting ? <Loader2 size={14} style={{ animation: "spin 0.6s linear infinite" }} /> : <Upload size={14} />}
+                label={isImporting ? "Importing…" : "Import"}
+              />
             </>
           )}
           {onExportFile && (
-            <TopBtn
+            <PillBtn
               onClick={handleExportFile}
               disabled={isExporting}
               title="Export as encrypted .productix file"
-            >
-              {isExporting ? <Loader2 size={14} style={{ animation: "spin 0.6s linear infinite" }} /> : <Download size={14} />}
-            </TopBtn>
+              icon={isExporting ? <Loader2 size={14} style={{ animation: "spin 0.6s linear infinite" }} /> : <Download size={14} />}
+              label={isExporting ? "Exporting…" : "Export"}
+            />
           )}
           <a href={previewSlug?`/preview/${previewSlug}`:"#"} target={previewSlug?"_blank":undefined}
             onClick={(e) => { if (!previewSlug) { e.preventDefault(); alert("Please save first."); } }}
@@ -594,6 +643,17 @@ function TopBtn({ children, onClick, disabled, title, active }: { children: Reac
       onMouseEnter={(e) => { if (!disabled && !active) { e.currentTarget.style.background="#f1f5f9"; e.currentTarget.style.color="#0f172a"; } }}
       onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background="transparent"; e.currentTarget.style.color="#64748b"; } }}>
       {children}
+    </button>
+  );
+}
+
+function PillBtn({ onClick, disabled, title, icon, label }: { onClick: () => void; disabled?: boolean; title?: string; icon: React.ReactNode; label: string; }) {
+  return (
+    <button type="button" onClick={onClick} disabled={disabled} title={title}
+      onMouseEnter={(e) => { if (!disabled) { e.currentTarget.style.background="#f1f5f9"; e.currentTarget.style.color="#0f172a"; e.currentTarget.style.borderColor="rgba(15,23,42,0.12)"; } }}
+      onMouseLeave={(e) => { e.currentTarget.style.background="#ffffff"; e.currentTarget.style.color="#475569"; e.currentTarget.style.borderColor="rgba(15,23,42,0.08)"; }}
+      style={{ display:"inline-flex",alignItems:"center",justifyContent:"center",gap:6,height:36,padding:"0 14px",borderRadius:10,fontSize:12.5,fontWeight:600,letterSpacing:"0.01em",color:"#475569",background:"#ffffff",border:"1px solid rgba(15,23,42,0.08)",cursor:disabled?"wait":"pointer",opacity:disabled?0.7:1,transition:"all 0.15s",boxShadow:"0 1px 2px rgba(15,23,42,0.04)" }}>
+      {icon} {label}
     </button>
   );
 }
