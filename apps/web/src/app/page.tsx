@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { templates, PublicRenderer, PreviewRenderer } from "@productix/editor";
 import type { Template } from "@productix/types";
+import { useAuth } from "@/contexts/auth-context";
 import {
   ArrowRight,
   Sparkles,
@@ -74,6 +75,7 @@ export default function LandingPage() {
 
 function Header() {
   const [scrolled, setScrolled] = useState(false);
+  const { user, loading } = useAuth();
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
     onScroll();
@@ -123,19 +125,33 @@ function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Link
-            href="#sales"
-            className="hidden rounded-full px-4 py-2 text-[13.5px] font-medium text-black/65 transition-colors hover:text-black sm:inline-flex"
-          >
-            Talk to Sales
-          </Link>
-          <Link
-            href="#demo"
-            className="group relative inline-flex h-9 items-center gap-1.5 overflow-hidden rounded-full bg-black px-4 text-[13px] font-semibold text-white transition-all hover:shadow-[0_8px_30px_-8px_rgba(0,0,0,0.4)]"
-          >
-            <span className="relative z-10">Book Enterprise Demo</span>
-            <ArrowRight className="relative z-10 h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-          </Link>
+          {user ? (
+            <Link
+              href="/dashboard"
+              className="group relative inline-flex h-9 items-center gap-1.5 overflow-hidden rounded-full bg-black px-4 text-[13px] font-semibold text-white transition-all hover:shadow-[0_8px_30px_-8px_rgba(0,0,0,0.4)]"
+            >
+              <span className="relative z-10">Dashboard</span>
+              <ArrowRight className="relative z-10 h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className={`hidden rounded-full px-4 py-2 text-[13.5px] font-medium text-black/65 transition-colors hover:text-black sm:inline-flex ${
+                  loading ? "pointer-events-none opacity-0" : ""
+                }`}
+              >
+                Login
+              </Link>
+              <Link
+                href="#demo"
+                className="group relative inline-flex h-9 items-center gap-1.5 overflow-hidden rounded-full bg-black px-4 text-[13px] font-semibold text-white transition-all hover:shadow-[0_8px_30px_-8px_rgba(0,0,0,0.4)]"
+              >
+                <span className="relative z-10">Book Enterprise Demo</span>
+                <ArrowRight className="relative z-10 h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>
@@ -1574,8 +1590,9 @@ function VisionSection() {
             { icon: MessageSquareHeart, label: "Feedback", angle: 288, r: 150 },
           ].map((n, i) => {
             const rad = (n.angle * Math.PI) / 180;
-            const x = Math.cos(rad) * n.r;
-            const y = Math.sin(rad) * n.r;
+            const x = (Math.cos(rad) * n.r).toFixed(2);
+            const y = (Math.sin(rad) * n.r).toFixed(2);
+            const delay = (i * 0.3).toFixed(2);
             const Icon = n.icon;
             return (
               <div
@@ -1583,7 +1600,7 @@ function VisionSection() {
                 className="absolute left-1/2 top-1/2"
                 style={{
                   transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`,
-                  animation: `lp-float-y ${4 + (i % 3)}s ease-in-out ${i * 0.3}s infinite`,
+                  animation: `lp-float-y ${4 + (i % 3)}s ease-in-out ${delay}s infinite`,
                 }}
               >
                 <div className="flex flex-col items-center gap-1.5">

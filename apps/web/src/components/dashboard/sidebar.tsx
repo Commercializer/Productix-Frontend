@@ -21,7 +21,7 @@ const baseNavItems = [
   { href: "/dashboard", label: "Home", icon: <Home size={22} strokeWidth={1.25} /> },
   { href: "/dashboard/products", label: "Products", icon: <Package size={22} strokeWidth={1.25} /> },
   { href: "/dashboard/analytics", label: "Analytics", icon: <BarChart2 size={22} strokeWidth={1.25} /> },
-  { href: "/dashboard/messages", label: "Feedbacks", icon: <Mail size={22} strokeWidth={1.25} /> },
+  { href: "/dashboard/feedbacks", label: "Feedbacks", icon: <Mail size={22} strokeWidth={1.25} /> },
 ];
 
 const teamNavItem = {
