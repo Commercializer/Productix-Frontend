@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Theme Panel — Select predefined layouts
+ * Theme Panel - Select predefined layouts
  *
  * Users pick a theme to populate the artboard
  * with a complete, editable page layout.

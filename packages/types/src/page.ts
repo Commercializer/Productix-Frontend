@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Page Schema — The core content entity
+ * Page Schema - The core content entity
  * ──────────────────────────────────────────── */
 
 import type { CanvasDocument } from "./editor";
@@ -25,7 +25,7 @@ export interface Page {
   title: string;
   status: PageStatus;
   templateId?: string;
-  /** Canvas document — the full freeform editor content */
+  /** Canvas document - the full freeform editor content */
   content: CanvasDocument;
   meta: PageMeta;
   /** ISO-8601 timestamps */

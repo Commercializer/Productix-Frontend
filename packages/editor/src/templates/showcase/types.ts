@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Product Showcase — Brand Configuration Types
+ * Product Showcase - Brand Configuration Types
  *
  * Defines the shape of data needed to render a
  * complete mobile-first product showcase page.

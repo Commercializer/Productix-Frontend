@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Preview Renderer — Responsive preview with viewport controls
+ * Preview Renderer - Responsive preview with viewport controls
  *
  * Features:
  * - Device viewport presets (Desktop, Laptop, Tablet, Mobile)
@@ -18,6 +18,7 @@ import { getElementDefinition } from "../elements/registry";
 import { getArtboardPreviewWidth, isElementInFlow } from "../utils/responsive";
 import { getEffectiveFlexContainer, getEffectiveLayout, computeFlexContainerCSS, computeElementLayoutCSS } from "../engine/layout-engine";
 import { getLocalizedProps } from "../utils/localize-props";
+import { BlockLink } from "../utils/block-link";
 import { CanvasEffects } from "../engine/canvas-effects";
 import { PublicPageProvider } from "./public-page-context";
 
@@ -49,9 +50,9 @@ export interface PreviewRendererProps {
   className?: string;
   /** If true, render with built-in viewport controls toolbar */
   showControls?: boolean;
-  /** Content locale — defaults to "en" */
+  /** Content locale - defaults to "en" */
   contentLocale?: ContentLocale;
-  /** Product this preview represents — required for feedback submissions. */
+  /** Product this preview represents - required for feedback submissions. */
   productId?: string;
   /**
    * Breakpoint to render at in simple mode (when showControls is false).
@@ -157,20 +158,22 @@ function PreviewContent({
                             opacity: el.opacity,
                           }}
                         >
-                          <Component
-                            props={getLocalizedProps(el, contentLocale)}
-                            isEditing={false}
-                            width={effectiveLayout.widthValue}
-                            height={effectiveLayout.heightValue}
-                            onPropsChange={() => {}}
-                          />
+                          <BlockLink element={el}>
+                            <Component
+                              props={getLocalizedProps(el, contentLocale)}
+                              isEditing={false}
+                              width={effectiveLayout.widthValue}
+                              height={effectiveLayout.heightValue}
+                              onPropsChange={() => {}}
+                            />
+                          </BlockLink>
                         </div>
                       );
                     })}
                 </div>
               )}
 
-              {/* Absolute elements — always at desktop coordinates */}
+              {/* Absolute elements - always at desktop coordinates */}
               {absoluteElements
                 .sort((a, b) => a.zIndex - b.zIndex)
                 .map((el) => {
@@ -194,13 +197,15 @@ function PreviewContent({
                         opacity: el.opacity,
                       }}
                     >
-                      <Component
-                        props={getLocalizedProps(el, contentLocale)}
-                        isEditing={false}
-                        width={width}
-                        height={height}
-                        onPropsChange={() => {}}
-                      />
+                      <BlockLink element={el}>
+                        <Component
+                          props={getLocalizedProps(el, contentLocale)}
+                          isEditing={false}
+                          width={width}
+                          height={height}
+                          onPropsChange={() => {}}
+                        />
+                      </BlockLink>
                     </div>
                   );
                 })}
@@ -287,7 +292,7 @@ export function PreviewRenderer({
   }, [computeAutoFit]);
 
   if (!showControls) {
-    // Simple mode — no controls, just render at requested breakpoint.
+    // Simple mode - no controls, just render at requested breakpoint.
     return (
       <PublicPageProvider value={{ productId, portalRoot }}>
         <div
@@ -331,7 +336,7 @@ export function PreviewRenderer({
 
         {/* Language switcher for preview + Size indicator + zoom */}
         <div className="flex items-center gap-3 text-xs text-gray-400">
-          {/* Content language selector — only if more than 1 locale */}
+          {/* Content language selector - only if more than 1 locale */}
           {availableLocales.length > 1 && (
             <div style={{ display: "flex", gap: 2, background: "#f3f4f6", borderRadius: 6, padding: 2 }}>
               {availableLocales.map((loc) => {

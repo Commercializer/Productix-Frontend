@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Auth Types — Login, Session, and Admin ops
+ * Auth Types - Login, Session, and Admin ops
  * ──────────────────────────────────────────── */
 
 import type { UserRole } from "./user";

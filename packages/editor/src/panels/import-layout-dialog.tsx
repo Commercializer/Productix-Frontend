@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Import Layout Dialog — paste AI-generated JSON
+ * Import Layout Dialog - paste AI-generated JSON
  * (or any layout JSON) and load it onto the canvas.
  * Includes a "Copy AI prompt" button so users can
  * brief their LLM with the live element catalog.
@@ -58,7 +58,7 @@ const VIBE_OPTIONS = [
 // Claude is the only provider that reliably accepts a prompt this long via
 // URL. ChatGPT and Gemini have hard URL-length caps that our catalog-laden
 // prompt blows through (HTTP 431), so for those we offer a "copy + open"
-// flow — clipboard carries the prompt, user pastes with ⌘V / Ctrl+V.
+// flow - clipboard carries the prompt, user pastes with ⌘V / Ctrl+V.
 const AI_TARGETS = [
   { id: "claude", label: "Claude", url: (q: string) => `https://claude.ai/new?q=${encodeURIComponent(q)}`, mode: "prefill" as const },
   { id: "chatgpt", label: "ChatGPT", url: (_: string) => "https://chatgpt.com/", mode: "copy" as const },
@@ -105,7 +105,7 @@ export function ImportLayoutDialog({ open, onClose }: ImportLayoutDialogProps) {
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
     } catch {
-      setError("Couldn't copy to clipboard — select the prompt manually.");
+      setError("Couldn't copy to clipboard - select the prompt manually.");
     }
   };
 
@@ -119,7 +119,7 @@ export function ImportLayoutDialog({ open, onClose }: ImportLayoutDialogProps) {
         setTimeout(() => setCopied(false), 1800);
       },
       () => {
-        // Non-fatal — user can still hit "Copy AI prompt" manually.
+        // Non-fatal - user can still hit "Copy AI prompt" manually.
       },
     );
     window.open(target.url(prompt), "_blank", "noopener,noreferrer");
@@ -188,14 +188,14 @@ export function ImportLayoutDialog({ open, onClose }: ImportLayoutDialogProps) {
         </div>
 
         <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
-          {/* Step 1 — Brief */}
+          {/* Step 1 - Brief */}
           <section>
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
               <span style={{ fontSize: 10, fontWeight: 700, color: "#0284c7", letterSpacing: "0.06em", textTransform: "uppercase" }}>Step 1</span>
               <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>Tell us about the product</span>
             </div>
             <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 12px", lineHeight: 1.5 }}>
-              All fields are optional — anything you fill in gets baked into the prompt so the AI produces a more on-brand layout.
+              All fields are optional - anything you fill in gets baked into the prompt so the AI produces a more on-brand layout.
             </p>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
@@ -217,7 +217,7 @@ export function ImportLayoutDialog({ open, onClose }: ImportLayoutDialogProps) {
                   }}
                   style={inputStyle}
                 >
-                  <option value="">— pick one —</option>
+                  <option value="">- pick one -</option>
                   {CATEGORY_OPTIONS.map((c) => (<option key={c} value={c}>{c}</option>))}
                 </select>
                 {customCategoryMode && (
@@ -236,7 +236,7 @@ export function ImportLayoutDialog({ open, onClose }: ImportLayoutDialogProps) {
               </Field>
               <Field label="Vibe / style">
                 <select value={brief.vibe ?? ""} onChange={(e) => setField("vibe", e.target.value)} style={inputStyle}>
-                  <option value="">— pick one —</option>
+                  <option value="">- pick one -</option>
                   {VIBE_OPTIONS.map((v) => (<option key={v} value={v}>{v}</option>))}
                 </select>
               </Field>
@@ -261,7 +261,7 @@ export function ImportLayoutDialog({ open, onClose }: ImportLayoutDialogProps) {
             </div>
           </section>
 
-          {/* Step 2 — Send to AI */}
+          {/* Step 2 - Send to AI */}
           <section>
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
               <span style={{ fontSize: 10, fontWeight: 700, color: "#0284c7", letterSpacing: "0.06em", textTransform: "uppercase" }}>Step 2</span>
@@ -269,7 +269,7 @@ export function ImportLayoutDialog({ open, onClose }: ImportLayoutDialogProps) {
             </div>
             <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 10px", lineHeight: 1.5 }}>
               We've built a prompt that includes your brief plus the live element schema for this editor.
-              Click an AI below — we'll open it and copy the prompt to your clipboard, ready to paste (⌘V / Ctrl+V).
+              Click an AI below - we'll open it and copy the prompt to your clipboard, ready to paste (⌘V / Ctrl+V).
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               <button type="button" onClick={handleCopyPrompt}
@@ -284,7 +284,7 @@ export function ImportLayoutDialog({ open, onClose }: ImportLayoutDialogProps) {
                   title={
                     t.mode === "prefill"
                       ? `Opens ${t.label} with the prompt prefilled`
-                      : `Copies the prompt and opens ${t.label} — paste with ⌘V / Ctrl+V`
+                      : `Copies the prompt and opens ${t.label} - paste with ⌘V / Ctrl+V`
                   }
                 >
                   {t.mode === "prefill" ? <ExternalLink size={13} /> : <Copy size={13} />}
@@ -294,14 +294,14 @@ export function ImportLayoutDialog({ open, onClose }: ImportLayoutDialogProps) {
             </div>
           </section>
 
-          {/* Step 3 — Paste JSON */}
+          {/* Step 3 - Paste JSON */}
           <section>
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
               <span style={{ fontSize: 10, fontWeight: 700, color: "#0284c7", letterSpacing: "0.06em", textTransform: "uppercase" }}>Step 3</span>
               <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>Paste the JSON</span>
             </div>
             <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 8px", lineHeight: 1.5 }}>
-              Paste the AI's JSON output here. Importing replaces the current page — undo (⌘Z) restores it.
+              Paste the AI's JSON output here. Importing replaces the current page - undo (⌘Z) restores it.
             </p>
             <textarea
               value={json}

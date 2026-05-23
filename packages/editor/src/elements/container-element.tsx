@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Container Element — Section / area / banner with
+ * Container Element - Section / area / banner with
  * optional background image, gradient, and overlay.
  *
  * Ideal for banner regions, hero backgrounds, and

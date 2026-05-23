@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Row Element — Horizontal flex container
+ * Row Element - Horizontal flex container
  *
  * A responsive row that:
  * - Displays children in a horizontal row on desktop
@@ -63,7 +63,7 @@ function RowElementComponent({ props, scaleFactor = 1 }: ElementRenderProps) {
           opacity: 0.6,
         }}
       >
-        ↔ Row — {gap}px gap — {wrap}
+        ↔ Row - {gap}px gap - {wrap}
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Localize Props — Merge base English props with
+ * Localize Props - Merge base English props with
  * locale-specific overrides for multilingual content
  * ──────────────────────────────────────────── */
 

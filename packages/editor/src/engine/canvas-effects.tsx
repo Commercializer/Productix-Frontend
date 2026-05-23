@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Canvas Effects — Particle overlay animations
+ * Canvas Effects - Particle overlay animations
  *
  * Pure CSS + React canvas effects that render as
  * absolutely-positioned overlays inside artboards.

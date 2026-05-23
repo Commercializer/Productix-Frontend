@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Button Element — CTA button with styling
+ * Button Element - CTA button with styling
  * ──────────────────────────────────────────── */
 
 "use client";
@@ -72,7 +72,7 @@ function ButtonElementComponent({ props, isEditing, scaleFactor = 1 }: ElementRe
 
   const url = props.url as string;
 
-  // In the editor canvas, never render as <a> — the browser's native
+  // In the editor canvas, never render as <a> - the browser's native
   // link-drag behavior fights with our pointer-capture drag and makes
   // buttons feel un-draggable / glitchy. Anchor is only for live pages.
   if (!isEditing && url && !isInsideEditor()) {

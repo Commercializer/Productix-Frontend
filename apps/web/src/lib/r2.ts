@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Cloudflare R2 Client — S3-compatible object storage
+ * Cloudflare R2 Client - S3-compatible object storage
  *
  * Uses the AWS SDK v3 S3 client with R2-specific
  * configuration. All media (images + audio) flows

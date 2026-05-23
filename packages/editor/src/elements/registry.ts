@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Element Registry — Register & lookup element types
+ * Element Registry - Register & lookup element types
  * ──────────────────────────────────────────── */
 
 import type { Transform } from "@productix/types";

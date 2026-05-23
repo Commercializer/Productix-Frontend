@@ -94,7 +94,7 @@ export function usePromptions() {
 
   const setSlugVisible = useCallback(
     async (productId: string, visible: boolean) => {
-      // Optimistic update — the row updates instantly and rolls back on error.
+      // Optimistic update - the row updates instantly and rolls back on error.
       setPromptions((prev) => prev.map((p) => (p.productId === productId ? { ...p, slugVisible: visible } : p)));
       const result = await setSlugVisibleAction(productId, visible);
       if (result.error) {

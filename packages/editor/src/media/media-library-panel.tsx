@@ -9,7 +9,7 @@ import {
 } from "./media-store";
 
 /* ─────────────────────────────────────────────
- * MediaLibraryPanel — Browseable uploaded media
+ * MediaLibraryPanel - Browseable uploaded media
  *
  * Opens as a modal overlay. Shows all uploaded
  * images and audio in a grid, allows selection
@@ -50,7 +50,7 @@ export function MediaLibraryPanel({
       for (const item of allItems) {
         if ((item.mediaType || "image") === "image") {
           if (item.url) {
-            // R2 URL — use directly as thumbnail
+            // R2 URL - use directly as thumbnail
             map.set(item.id, item.url);
           } else if (item.thumbnailBlob) {
             map.set(item.id, createMediaObjectUrl(item.thumbnailBlob));

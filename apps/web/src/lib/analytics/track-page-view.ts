@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────
-// Public page-view tracking — server-side, dedup-by-DB, no Redis.
+// Public page-view tracking - server-side, dedup-by-DB, no Redis.
 //
 // One row per (page, visitor, UTC day). A "visitor" is sha256 of
 // ip + user-agent + secret salt + day, so the same person refreshing
@@ -11,16 +11,16 @@
 // Never trust an x-forwarded-for that doesn't come through your proxy.
 //
 // Two-phase API:
-//   1. `readViewContext()` runs inside the request — `headers()` is request-
+//   1. `readViewContext()` runs inside the request - `headers()` is request-
 //      scoped so it MUST be called before the response is sent.
-//   2. `trackPageView(...)` runs inside `after()` — does the hashing and
+//   2. `trackPageView(...)` runs inside `after()` - does the hashing and
 //      DB insert. Cannot touch `headers()` because the request is gone.
 // ─────────────────────────────────────────────────────────────
 
 import { headers } from "next/headers";
 import { createHash } from "crypto";
 import { prisma } from "@productix/db";
-import type { DeviceType } from "@productix/db";
+import type { DeviceType, QrScanType } from "@productix/db";
 
 const HASH_SALT =
   process.env.ANALYTICS_HASH_SALT ?? "productix-default-salt-change-in-env";
@@ -59,6 +59,7 @@ interface TrackArgs {
   productId: string;
   companyId: string;
   context: ViewContext;
+  qrScanType?: QrScanType;
 }
 
 export async function trackPageView({
@@ -66,11 +67,12 @@ export async function trackPageView({
   productId,
   companyId,
   context,
+  qrScanType,
 }: TrackArgs): Promise<void> {
   try {
     const { ip, userAgent, referrer, language, country, region, city } = context;
 
-    // Skip obvious bots — they shouldn't count as views.
+    // Skip obvious bots - they shouldn't count as views.
     if (isLikelyBot(userAgent)) return;
 
     const dayBucket = new Date();
@@ -102,6 +104,7 @@ export async function trackPageView({
           os,
           referrer,
           language,
+          qrScanType,
         },
       ],
       skipDuplicates: true,
@@ -117,7 +120,7 @@ export async function trackPageView({
 // ─────────────────────────────────────────────────────────────
 
 function pickIp(h: Headers): string {
-  // Trust the first hop only — your edge sets this. Anything further left
+  // Trust the first hop only - your edge sets this. Anything further left
   // in x-forwarded-for is attacker-controllable.
   const fwd = h.get("x-forwarded-for");
   if (fwd) {
@@ -153,7 +156,7 @@ interface UaResult {
   os: string | null;
 }
 
-// Minimal UA parser — covers the buckets we actually store. Skip ua-parser-js
+// Minimal UA parser - covers the buckets we actually store. Skip ua-parser-js
 // to avoid the dependency; if we ever need fine-grained UA data, swap this out.
 function parseUserAgent(ua: string): UaResult {
   if (!ua) return { deviceType: null, browser: null, os: null };

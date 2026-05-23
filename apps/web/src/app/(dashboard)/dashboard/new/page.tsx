@@ -188,7 +188,7 @@ export default function NewPromptionPage() {
                 onCreate={handleCreateCategory}
                 loading={loadingLookups}
                 placeholder="Select a category"
-                emptyHint="No categories yet — type to add one"
+                emptyHint="No categories yet - type to add one"
                 icon={<Layers size={16} />}
               />
             </div>
@@ -206,7 +206,7 @@ export default function NewPromptionPage() {
                 loading={loadingSubs}
                 disabled={!categoryId}
                 placeholder={categoryId ? "Select a sub-category" : "Pick a category first"}
-                emptyHint="No sub-categories yet — type to add one"
+                emptyHint="No sub-categories yet - type to add one"
                 icon={<Tag size={16} />}
               />
             </div>
@@ -223,7 +223,7 @@ export default function NewPromptionPage() {
                 onCreate={handleCreateBrand}
                 loading={loadingLookups}
                 placeholder="Select a brand"
-                emptyHint="No brands yet — type to add one"
+                emptyHint="No brands yet - type to add one"
                 icon={<Building2 size={16} />}
               />
             </div>

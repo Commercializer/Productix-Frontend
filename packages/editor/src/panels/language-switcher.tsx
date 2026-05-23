@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Language Switcher — Dropdown selector for
+ * Language Switcher - Dropdown selector for
  * English, Sinhala, Tamil
  * ──────────────────────────────────────────── */
 

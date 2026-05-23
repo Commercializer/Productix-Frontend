@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Column Element — Flex item for use within Rows
+ * Column Element - Flex item for use within Rows
  *
  * A responsive column that:
  * - Takes a configurable width (%, auto)
@@ -63,7 +63,7 @@ function ColumnElementComponent({ props, scaleFactor = 1 }: ElementRenderProps) 
           opacity: 0.5,
         }}
       >
-        ↕ Col — {widthPercent}%
+        ↕ Col - {widthPercent}%
       </div>
     </div>
   );

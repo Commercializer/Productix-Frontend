@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Block Settings Panel — Light theme
+ * Block Settings Panel - Light theme
  *
  * Multilingual content editing: when a non-EN
  * locale is active, the panel shows the localized
@@ -9,7 +9,7 @@
 "use client";
 
 import React from "react";
-import { MousePointer, ArrowUp, ArrowDown, Copy, Trash2, Globe } from "lucide-react";
+import { MousePointer, ArrowUp, ArrowDown, Copy, Trash2, Globe, Link as LinkIcon } from "lucide-react";
 import { useCanvasStore } from "../engine/canvas-store";
 import { getElementDefinition } from "../elements/registry";
 import { useTranslation } from "../i18n";
@@ -173,6 +173,42 @@ export function PropertiesPanel() {
               <span style={{ fontSize:11,color:"#9ca3af",width:32,textAlign:"right" }}>{Math.round(el.opacity*100)}%</span>
             </div>
           </label>
+        </div>
+        <div style={{ height:1,background:"#f0f0f0" }} />
+        <div>
+          <h3 style={{ fontSize:10,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:10,display:"flex",alignItems:"center",gap:6 }}>
+            <LinkIcon size={11} /> Link
+          </h3>
+          <label style={{ display:"block" }}>
+            <span style={{ fontSize:11,color:"#6b7280",fontWeight:500 }}>URL (optional)</span>
+            <input
+              type="text"
+              placeholder="https://example.com"
+              value={el.link || ""}
+              onChange={(e) => updateElement(el.id, { link: e.target.value })}
+              style={{ marginTop:4,width:"100%",borderRadius:8,border:"1px solid #e5e7eb",background:"#fff",padding:"8px 10px",fontSize:12,outline:"none" }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = "#0ea5e9"; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = "#e5e7eb"; }}
+            />
+          </label>
+          {el.link && (
+            <label style={{ display:"block",marginTop:8 }}>
+              <span style={{ fontSize:11,color:"#6b7280",fontWeight:500 }}>Opens in</span>
+              <select
+                value={el.linkTarget || "_blank"}
+                onChange={(e) => updateElement(el.id, { linkTarget: e.target.value as "_self" | "_blank" })}
+                style={{ marginTop:4,width:"100%",borderRadius:8,border:"1px solid #e5e7eb",background:"#fff",padding:"8px 10px",fontSize:12,outline:"none",cursor:"pointer" }}
+              >
+                <option value="_blank">New tab</option>
+                <option value="_self">Same tab</option>
+              </select>
+            </label>
+          )}
+          {el.type === "button" && el.link && (
+            <p style={{ fontSize:10,color:"#9ca3af",marginTop:6,lineHeight:1.4 }}>
+              Tip: buttons already have a URL field above. This block-level link is ignored on buttons to avoid duplicate links.
+            </p>
+          )}
         </div>
         <div style={{ height:1,background:"#f0f0f0" }} />
         <div>

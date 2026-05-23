@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Video Element — Add video from link option
+ * Video Element - Add video from link option
  *
  * Same pointer-event overlay pattern as the audio element:
  * in the editor, a transparent div covers the native <video>
@@ -150,7 +150,7 @@ function VideoElementComponent({ props }: ElementRenderProps) {
           }}
         />
       )}
-      {/* Editor overlay — blocks native controls from stealing pointer events */}
+      {/* Editor overlay - blocks native controls from stealing pointer events */}
       {inEditor && (
         <div
           style={{

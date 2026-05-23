@@ -123,7 +123,7 @@ export function CreateCompanyModal({ onClose, onSuccess }: CreateCompanyModalPro
                 required
               >
                 {tenants.length === 0 ? (
-                  <option value="">No tenants yet — create a new one</option>
+                  <option value="">No tenants yet - create a new one</option>
                 ) : (
                   tenants.map((t) => (
                     <option key={t.id} value={t.id}>{t.name}</option>

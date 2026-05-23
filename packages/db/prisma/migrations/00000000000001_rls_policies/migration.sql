@@ -1,10 +1,10 @@
 -- ═══════════════════════════════════════════════════════════════
--- Productix — Row-Level Security Policies & Auth Trigger
+-- Productix - Row-Level Security Policies & Auth Trigger
 -- Applied AFTER Prisma migration creates the tables.
 -- ═══════════════════════════════════════════════════════════════
 
 -- ─────────────────────────────────────────────────────────────
--- 1. HELPER FUNCTIONS (SECURITY DEFINER — runs with owner privs)
+-- 1. HELPER FUNCTIONS (SECURITY DEFINER - runs with owner privs)
 -- ─────────────────────────────────────────────────────────────
 
 -- Get current authenticated user's role
@@ -65,7 +65,7 @@ AS $$
 $$;
 
 -- ─────────────────────────────────────────────────────────────
--- 2. AUTH TRIGGER — Sync auth.users → public.users
+-- 2. AUTH TRIGGER - Sync auth.users → public.users
 -- ─────────────────────────────────────────────────────────────
 
 CREATE OR REPLACE FUNCTION public.handle_new_user()
@@ -119,7 +119,7 @@ ALTER TABLE public.feedback_inquiries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.feedback_responses ENABLE ROW LEVEL SECURITY;
 
 -- ─────────────────────────────────────────────────────────────
--- 4. RLS POLICIES — users
+-- 4. RLS POLICIES - users
 -- ─────────────────────────────────────────────────────────────
 
 -- Super admin: full access
@@ -166,7 +166,7 @@ CREATE POLICY "users_update_own"
   WITH CHECK (auth.uid() = id);
 
 -- ─────────────────────────────────────────────────────────────
--- 5. RLS POLICIES — tenants
+-- 5. RLS POLICIES - tenants
 -- ─────────────────────────────────────────────────────────────
 
 -- Super admin: full access
@@ -187,7 +187,7 @@ CREATE POLICY "tenants_update_own_admin"
   WITH CHECK (id IN (SELECT public.get_admin_tenant_ids()));
 
 -- ─────────────────────────────────────────────────────────────
--- 6. RLS POLICIES — tenant_admins
+-- 6. RLS POLICIES - tenant_admins
 -- ─────────────────────────────────────────────────────────────
 
 CREATE POLICY "tenant_admins_super_admin_all"
@@ -204,7 +204,7 @@ CREATE POLICY "tenant_admins_select_same_tenant"
   USING (tenant_id IN (SELECT public.get_admin_tenant_ids()));
 
 -- ─────────────────────────────────────────────────────────────
--- 7. RLS POLICIES — companies
+-- 7. RLS POLICIES - companies
 -- ─────────────────────────────────────────────────────────────
 
 -- Super admin: full access
@@ -225,7 +225,7 @@ CREATE POLICY "companies_select_member"
   USING (id IN (SELECT public.get_user_company_ids()));
 
 -- ─────────────────────────────────────────────────────────────
--- 8. RLS POLICIES — company_admins
+-- 8. RLS POLICIES - company_admins
 -- ─────────────────────────────────────────────────────────────
 
 CREATE POLICY "company_admins_super_admin_all"
@@ -251,7 +251,7 @@ CREATE POLICY "company_admins_select_same_company"
   USING (company_id IN (SELECT public.get_user_company_ids()));
 
 -- ─────────────────────────────────────────────────────────────
--- 9. RLS POLICIES — company_users
+-- 9. RLS POLICIES - company_users
 -- ─────────────────────────────────────────────────────────────
 
 CREATE POLICY "company_users_super_admin_all"
@@ -286,7 +286,7 @@ CREATE POLICY "company_users_manage_company_admin"
   );
 
 -- ─────────────────────────────────────────────────────────────
--- 10. RLS POLICIES — company_social_accounts
+-- 10. RLS POLICIES - company_social_accounts
 -- ─────────────────────────────────────────────────────────────
 
 CREATE POLICY "company_socials_super_admin_all"
@@ -317,7 +317,7 @@ CREATE POLICY "company_socials_select_member"
   USING (company_id IN (SELECT public.get_user_company_ids()));
 
 -- ─────────────────────────────────────────────────────────────
--- 11. RLS POLICIES — brand_profiles
+-- 11. RLS POLICIES - brand_profiles
 -- ─────────────────────────────────────────────────────────────
 
 CREATE POLICY "brand_profiles_super_admin_all"
@@ -348,7 +348,7 @@ CREATE POLICY "brand_profiles_select_member"
   USING (company_id IN (SELECT public.get_user_company_ids()));
 
 -- ─────────────────────────────────────────────────────────────
--- 12. RLS POLICIES — brand_profile_social_accounts
+-- 12. RLS POLICIES - brand_profile_social_accounts
 -- ─────────────────────────────────────────────────────────────
 
 CREATE POLICY "brand_socials_super_admin_all"
@@ -385,7 +385,7 @@ CREATE POLICY "brand_socials_company_admin_all"
   );
 
 -- ─────────────────────────────────────────────────────────────
--- 13. RLS POLICIES — products
+-- 13. RLS POLICIES - products
 -- ─────────────────────────────────────────────────────────────
 
 CREATE POLICY "products_super_admin_all"
@@ -416,7 +416,7 @@ CREATE POLICY "products_select_member"
   USING (company_id IN (SELECT public.get_user_company_ids()));
 
 -- ─────────────────────────────────────────────────────────────
--- 14. RLS POLICIES — product_profiles
+-- 14. RLS POLICIES - product_profiles
 -- ─────────────────────────────────────────────────────────────
 
 CREATE POLICY "product_profiles_super_admin_all"
@@ -462,7 +462,7 @@ CREATE POLICY "product_profiles_public_select_by_slug"
   );
 
 -- ─────────────────────────────────────────────────────────────
--- 15. RLS POLICIES — linked_products
+-- 15. RLS POLICIES - linked_products
 -- ─────────────────────────────────────────────────────────────
 
 CREATE POLICY "linked_products_super_admin_all"
@@ -499,7 +499,7 @@ CREATE POLICY "linked_products_company_admin_all"
   );
 
 -- ─────────────────────────────────────────────────────────────
--- 16. RLS POLICIES — qr_codes
+-- 16. RLS POLICIES - qr_codes
 -- ─────────────────────────────────────────────────────────────
 
 CREATE POLICY "qr_codes_super_admin_all"
@@ -551,7 +551,7 @@ CREATE POLICY "qr_codes_select_member"
   );
 
 -- ─────────────────────────────────────────────────────────────
--- 17. RLS POLICIES — qr_scans
+-- 17. RLS POLICIES - qr_scans
 -- ─────────────────────────────────────────────────────────────
 
 -- Allow anonymous inserts (public QR scans)
@@ -582,7 +582,7 @@ CREATE POLICY "qr_scans_company_member_select"
   );
 
 -- ─────────────────────────────────────────────────────────────
--- 18. RLS POLICIES — feedback_inquiries
+-- 18. RLS POLICIES - feedback_inquiries
 -- ─────────────────────────────────────────────────────────────
 
 -- Allow anonymous inserts (public feedback form)
@@ -618,7 +618,7 @@ CREATE POLICY "feedback_update_company_admin"
   );
 
 -- ─────────────────────────────────────────────────────────────
--- 19. RLS POLICIES — feedback_responses
+-- 19. RLS POLICIES - feedback_responses
 -- ─────────────────────────────────────────────────────────────
 
 CREATE POLICY "feedback_responses_super_admin_all"

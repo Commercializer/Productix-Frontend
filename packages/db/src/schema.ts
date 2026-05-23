@@ -1,5 +1,5 @@
 /**
- * Database schema definitions — legacy TypeScript interfaces.
+ * Database schema definitions - legacy TypeScript interfaces.
  *
  * @deprecated These interfaces are superseded by Prisma-generated types.
  * Import from `@prisma/client` instead:
@@ -18,9 +18,9 @@ export interface DbPage {
   title: string;
   status: PageStatus;
   templateId: string | null;
-  /** JSON column — stores the full CanvasDocument payload */
+  /** JSON column - stores the full CanvasDocument payload */
   content: string;
-  /** JSON column — stores SEO metadata */
+  /** JSON column - stores SEO metadata */
   meta: string;
   version: number;
   locale: string | null;

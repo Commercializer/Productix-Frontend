@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Snap Engine — Alignment guides during drag/resize
+ * Snap Engine - Alignment guides during drag/resize
  * ──────────────────────────────────────────── */
 
 import type { Transform } from "@productix/types";
@@ -33,10 +33,10 @@ function getSnapPoints(others: Transform[]): { hLines: number[]; vLines: number[
 
 /**
  * Compute snap-adjusted position and guide lines for a dragged element.
- * @param moving — The element being dragged (current position)
- * @param others — All other visible elements' transforms
- * @param artboardWidth — Artboard width for edge snapping
- * @param artboardHeight — Artboard height for edge snapping
+ * @param moving - The element being dragged (current position)
+ * @param others - All other visible elements' transforms
+ * @param artboardWidth - Artboard width for edge snapping
+ * @param artboardHeight - Artboard height for edge snapping
  */
 export function computeSnap(
   moving: Transform,

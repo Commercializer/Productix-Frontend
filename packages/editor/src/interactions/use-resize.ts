@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * useResize — Pointer-based resize interaction hook
+ * useResize - Pointer-based resize interaction hook
  *
  * Same architecture as useDrag: stores latest pointer
  * position in a ref to avoid stale event objects
@@ -65,7 +65,7 @@ export function useResize() {
       const scaleRatio = previewW / abW;
       const combinedScale = state.zoom * scaleRatio;
 
-      // Always use native transform — that's what the artboard renders
+      // Always use native transform - that's what the artboard renders
       resizeRef.current = {
         startX: e.clientX,
         startY: e.clientY,
@@ -164,7 +164,7 @@ export function useResize() {
         }
       }
 
-      // Always write to the base transform — the artboard renders
+      // Always write to the base transform - the artboard renders
       // from el.transform regardless of breakpoint.
       state.updateElementTransform(rs.elementId, {
         x: newX,

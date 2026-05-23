@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Image Element — Upload, crop, pan & zoom inside block
+ * Image Element - Upload, crop, pan & zoom inside block
  *
  * Rendering model:
  *   - Block defines a viewport (overflow: hidden).
@@ -81,7 +81,7 @@ function ImageElementComponent({ props, isEditing, width, height, onPropsChange 
   const [measured, setMeasured] = useState<{ w: number; h: number } | null>(null);
   const panRef = useRef<{ startX: number; startY: number; startOffsetX: number; startOffsetY: number } | null>(null);
   /* Measure the block's actual rendered (pre-transform) size so the cover-fit
-   * math stays correct under any wrapping layout — flow with % widths, the
+   * math stays correct under any wrapping layout - flow with % widths, the
    * public renderer's `transform: scale()` outer wrapper, hydration mismatches,
    * etc. Falls back to the width/height props until the observer fires. */
   useEffect(() => {
@@ -98,7 +98,7 @@ function ImageElementComponent({ props, isEditing, width, height, onPropsChange 
     return () => observer.disconnect();
   }, []);
 
-  /* Resolve natural image dimensions independently of the JSX <img>'s onLoad —
+  /* Resolve natural image dimensions independently of the JSX <img>'s onLoad -
    * which can miss the load when the image is already cached (e.g. served from
    * SSR before hydration). Without this, `nat` stays null and the cover-fit
    * math falls back to stretch-fit, making images appear squashed. */
@@ -557,7 +557,7 @@ function ImagePropertyPanel({ props, onChange }: PropertyPanelProps) {
   const handleCropConfirm = (result: { cropRect: { x: number; y: number; w: number; h: number } }) => {
     onChange({
       cropRect: result.cropRect,
-      // Clear legacy crop/pan/zoom — the new cropRect supersedes them.
+      // Clear legacy crop/pan/zoom - the new cropRect supersedes them.
       cropOffsetX: DEFAULT_OFFSET,
       cropOffsetY: DEFAULT_OFFSET,
       zoom: DEFAULT_ZOOM,

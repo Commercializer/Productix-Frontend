@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Feedback Form Preview — Live, non-interactive
+ * Feedback Form Preview - Live, non-interactive
  * preview shown next to the canvas while the
  * author is editing a Feedback element.
  * ──────────────────────────────────────────── */

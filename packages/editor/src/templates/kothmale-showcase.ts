@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Kothmale Fresh Milk Template — Mobile-first canvas
+ * Kothmale Fresh Milk Template - Mobile-first canvas
  * ──────────────────────────────────────────── */
 
 import type { CanvasDocument, Template } from "@productix/types";
@@ -74,8 +74,10 @@ const doc: CanvasDocument = {
       "locked": true,
       "visible": true,
       "opacity": 0.6,
-      "transform": { "x": 0, "y": 0, "width": 488, "height": 244,
-        "rotation": 0 },
+      "transform": {
+        "x": 0, "y": 0, "width": 488, "height": 244,
+        "rotation": 0
+      },
       "props": {
         "bgGradientFrom": "#f0f9ff",
         "bgGradientTo": "#bae6fd"
@@ -88,8 +90,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 339, "y": 11, "width": 65, "height": 18,
-        "rotation": 0 },
+      "transform": {
+        "x": 339, "y": 11, "width": 65, "height": 18,
+        "rotation": 0
+      },
       "props": {
         "text": "English ▾",
         "bgColor": "rgba(0,0,0,0.08)",
@@ -106,8 +110,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 95, "y": 24, "width": 237, "height": 202,
-        "rotation": 0 },
+      "transform": {
+        "x": 95, "y": 24, "width": 237, "height": 202,
+        "rotation": 0
+      },
       "props": {
         "src": "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=800&q=90",
         "alt": "Kothmale Fresh Milk",
@@ -122,8 +128,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 24, "y": 261, "width": 30, "height": 30,
-        "rotation": 0 },
+      "transform": {
+        "x": 24, "y": 261, "width": 30, "height": 30,
+        "rotation": 0
+      },
       "props": {
         "icon": "🥛",
         "fontSize": 16,
@@ -138,8 +146,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 56, "y": 266, "width": 119, "height": 21,
-        "rotation": 0 },
+      "transform": {
+        "x": 56, "y": 266, "width": 119, "height": 21,
+        "rotation": 0
+      },
       "props": {
         "text": "Kothmale",
         "variant": "heading",
@@ -157,8 +167,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 24, "y": 297, "width": 380, "height": 24,
-        "rotation": 0 },
+      "transform": {
+        "x": 24, "y": 297, "width": 380, "height": 24,
+        "rotation": 0
+      },
       "props": {
         "text": "Kothmale Fresh Milk",
         "variant": "heading",
@@ -176,8 +188,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 24, "y": 333, "width": 78, "height": 24,
-        "rotation": 0 },
+      "transform": {
+        "x": 24, "y": 333, "width": 78, "height": 24,
+        "rotation": 0
+      },
       "props": {
         "text": "200 ml",
         "variant": "outline",
@@ -195,8 +209,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 110, "y": 333, "width": 78, "height": 24,
-        "rotation": 0 },
+      "transform": {
+        "x": 110, "y": 333, "width": 78, "height": 24,
+        "rotation": 0
+      },
       "props": {
         "text": "500 ml",
         "variant": "filled",
@@ -214,8 +230,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 196, "y": 333, "width": 78, "height": 24,
-        "rotation": 0 },
+      "transform": {
+        "x": 196, "y": 333, "width": 78, "height": 24,
+        "rotation": 0
+      },
       "props": {
         "text": "1 L",
         "variant": "outline",
@@ -233,8 +251,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 24, "y": 368, "width": 357, "height": 35,
-        "rotation": 0 },
+      "transform": {
+        "x": 24, "y": 368, "width": 357, "height": 35,
+        "rotation": 0
+      },
       "props": {
         "text": "Pure, farm-fresh goodness from the lush green hills of Sri Lanka. Rich in calcium and essential vitamins for your daily nutrition.",
         "variant": "paragraph",
@@ -251,8 +271,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 24, "y": 416, "width": 380, "height": 30,
-        "rotation": 0 },
+      "transform": {
+        "x": 24, "y": 416, "width": 380, "height": 30,
+        "rotation": 0
+      },
       "props": {
         "text": "💬  Feedback / Inquiry",
         "variant": "filled",
@@ -270,8 +292,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 107, "y": 469, "width": 215, "height": 35,
-        "rotation": 0 },
+      "transform": {
+        "x": 107, "y": 469, "width": 215, "height": 35,
+        "rotation": 0
+      },
       "props": {
         "platforms": [
           "twitter",
@@ -293,8 +317,10 @@ const doc: CanvasDocument = {
       "locked": true,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 18, "y": 529, "width": 393, "height": 124,
-        "rotation": 0 },
+      "transform": {
+        "x": 18, "y": 529, "width": 393, "height": 124,
+        "rotation": 0
+      },
       "props": {
         "bgColor": "#f0f9ff",
         "borderRadius": 8,
@@ -311,8 +337,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 35, "y": 541, "width": 357, "height": 18,
-        "rotation": 0 },
+      "transform": {
+        "x": 35, "y": 541, "width": 357, "height": 18,
+        "rotation": 0
+      },
       "props": {
         "text": "About Kothmale Fresh Milk",
         "variant": "heading",
@@ -330,8 +358,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 35, "y": 564, "width": 357, "height": 59,
-        "rotation": 0 },
+      "transform": {
+        "x": 35, "y": 564, "width": 357, "height": 59,
+        "rotation": 0
+      },
       "props": {
         "text": "Kothmale is Sri Lanka's beloved dairy brand, delivering pure, farm-fresh milk straight from the lush green pastures of the central highlands. Every pack is sourced from trusted local dairy farmers, pasteurized under strict conditions, and packed with the natural goodness of calcium, vitamins, and protein.",
         "variant": "paragraph",
@@ -348,8 +378,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 35, "y": 629, "width": 357, "height": 18,
-        "rotation": 0 },
+      "transform": {
+        "x": 35, "y": 629, "width": 357, "height": 18,
+        "rotation": 0
+      },
       "props": {
         "text": "Read more ▾",
         "variant": "outline",
@@ -367,8 +399,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 24, "y": 683, "width": 178, "height": 15,
-        "rotation": 0 },
+      "transform": {
+        "x": 24, "y": 683, "width": 178, "height": 15,
+        "rotation": 0
+      },
       "props": {
         "text": "Goodness Inside",
         "variant": "heading",
@@ -386,8 +420,10 @@ const doc: CanvasDocument = {
       "locked": true,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 18, "y": 704, "width": 250, "height": 30,
-        "rotation": 0 },
+      "transform": {
+        "x": 18, "y": 704, "width": 250, "height": 30,
+        "rotation": 0
+      },
       "props": {
         "bgColor": "#ffffff",
         "borderRadius": 5,
@@ -404,8 +440,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 30, "y": 709, "width": 18, "height": 18,
-        "rotation": 0 },
+      "transform": {
+        "x": 30, "y": 709, "width": 18, "height": 18,
+        "rotation": 0
+      },
       "props": {
         "icon": "🐄",
         "fontSize": 8,
@@ -420,8 +458,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 54, "y": 712, "width": 178, "height": 15,
-        "rotation": 0 },
+      "transform": {
+        "x": 54, "y": 712, "width": 178, "height": 15,
+        "rotation": 0
+      },
       "props": {
         "text": "Farm fresh daily",
         "variant": "paragraph",
@@ -439,8 +479,10 @@ const doc: CanvasDocument = {
       "locked": true,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 18, "y": 739, "width": 250, "height": 30,
-        "rotation": 0 },
+      "transform": {
+        "x": 18, "y": 739, "width": 250, "height": 30,
+        "rotation": 0
+      },
       "props": {
         "bgColor": "#ffffff",
         "borderRadius": 5,
@@ -457,8 +499,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 30, "y": 746, "width": 18, "height": 18,
-        "rotation": 0 },
+      "transform": {
+        "x": 30, "y": 746, "width": 18, "height": 18,
+        "rotation": 0
+      },
       "props": {
         "icon": "💪",
         "fontSize": 8,
@@ -473,8 +517,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 54, "y": 747, "width": 178, "height": 15,
-        "rotation": 0 },
+      "transform": {
+        "x": 54, "y": 747, "width": 178, "height": 15,
+        "rotation": 0
+      },
       "props": {
         "text": "Calcium & vitamins",
         "variant": "paragraph",
@@ -492,8 +538,10 @@ const doc: CanvasDocument = {
       "locked": true,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 18, "y": 775, "width": 250, "height": 30,
-        "rotation": 0 },
+      "transform": {
+        "x": 18, "y": 775, "width": 250, "height": 30,
+        "rotation": 0
+      },
       "props": {
         "bgColor": "#ffffff",
         "borderRadius": 5,
@@ -510,8 +558,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 30, "y": 781, "width": 18, "height": 18,
-        "rotation": 0 },
+      "transform": {
+        "x": 30, "y": 781, "width": 18, "height": 18,
+        "rotation": 0
+      },
       "props": {
         "icon": "🌿",
         "fontSize": 8,
@@ -526,8 +576,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 54, "y": 782, "width": 178, "height": 15,
-        "rotation": 0 },
+      "transform": {
+        "x": 54, "y": 782, "width": 178, "height": 15,
+        "rotation": 0
+      },
       "props": {
         "text": "100% natural, no preservatives",
         "variant": "paragraph",
@@ -545,8 +597,10 @@ const doc: CanvasDocument = {
       "locked": true,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 280, "y": 704, "width": 131, "height": 101,
-        "rotation": 0 },
+      "transform": {
+        "x": 280, "y": 704, "width": 131, "height": 101,
+        "rotation": 0
+      },
       "props": {
         "bgColor": "#ffffff",
         "borderRadius": 6,
@@ -563,8 +617,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 297, "y": 731, "width": 95, "height": 15,
-        "rotation": 0 },
+      "transform": {
+        "x": 297, "y": 731, "width": 95, "height": 15,
+        "rotation": 0
+      },
       "props": {
         "text": "🍳 Recipes booklet",
         "variant": "heading",
@@ -582,8 +638,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 297, "y": 752, "width": 95, "height": 24,
-        "rotation": 0 },
+      "transform": {
+        "x": 297, "y": 752, "width": 95, "height": 24,
+        "rotation": 0
+      },
       "props": {
         "text": "25 recipes\n2.5 MB",
         "variant": "paragraph",
@@ -600,8 +658,10 @@ const doc: CanvasDocument = {
       "locked": true,
       "visible": true,
       "opacity": 0.5,
-      "transform": { "x": 0, "y": 826, "width": 488, "height": 148,
-        "rotation": 0 },
+      "transform": {
+        "x": 0, "y": 826, "width": 488, "height": 148,
+        "rotation": 0
+      },
       "props": {
         "bgGradientFrom": "transparent",
         "bgGradientTo": "#0c4a6e"
@@ -614,8 +674,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 24, "y": 927, "width": 326, "height": 35,
-        "rotation": 0 },
+      "transform": {
+        "x": 24, "y": 927, "width": 326, "height": 35,
+        "rotation": 0
+      },
       "props": {
         "text": "Start every morning with farm-fresh goodness",
         "variant": "heading",
@@ -633,8 +695,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 24, "y": 986, "width": 267, "height": 18,
-        "rotation": 0 },
+      "transform": {
+        "x": 24, "y": 986, "width": 267, "height": 18,
+        "rotation": 0
+      },
       "props": {
         "text": "More Kothmale Products",
         "variant": "heading",
@@ -652,8 +716,10 @@ const doc: CanvasDocument = {
       "locked": true,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 18, "y": 1013, "width": 184, "height": 124,
-        "rotation": 0 },
+      "transform": {
+        "x": 18, "y": 1013, "width": 184, "height": 124,
+        "rotation": 0
+      },
       "props": {
         "bgColor": "#fef3c7",
         "borderRadius": 7,
@@ -670,8 +736,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 54, "y": 1018, "width": 113, "height": 72,
-        "rotation": 0 },
+      "transform": {
+        "x": 54, "y": 1018, "width": 113, "height": 72,
+        "rotation": 0
+      },
       "props": {
         "src": "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400&q=80",
         "alt": "Chocolate Milk",
@@ -686,8 +754,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 30, "y": 1096, "width": 161, "height": 11,
-        "rotation": 0 },
+      "transform": {
+        "x": 30, "y": 1096, "width": 161, "height": 11,
+        "rotation": 0
+      },
       "props": {
         "text": "Chocolate Milk",
         "variant": "heading",
@@ -705,8 +775,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 30, "y": 1111, "width": 161, "height": 11,
-        "rotation": 0 },
+      "transform": {
+        "x": 30, "y": 1111, "width": 161, "height": 11,
+        "rotation": 0
+      },
       "props": {
         "text": "Rich cocoa flavor",
         "variant": "paragraph",
@@ -723,8 +795,10 @@ const doc: CanvasDocument = {
       "locked": true,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 215, "y": 1013, "width": 184, "height": 124,
-        "rotation": 0 },
+      "transform": {
+        "x": 215, "y": 1013, "width": 184, "height": 124,
+        "rotation": 0
+      },
       "props": {
         "bgColor": "#ecfdf5",
         "borderRadius": 7,
@@ -741,8 +815,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 250, "y": 1018, "width": 113, "height": 72,
-        "rotation": 0 },
+      "transform": {
+        "x": 250, "y": 1018, "width": 113, "height": 72,
+        "rotation": 0
+      },
       "props": {
         "src": "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400&q=80",
         "alt": "Curd",
@@ -757,8 +833,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 226, "y": 1096, "width": 161, "height": 11,
-        "rotation": 0 },
+      "transform": {
+        "x": 226, "y": 1096, "width": 161, "height": 11,
+        "rotation": 0
+      },
       "props": {
         "text": "Traditional Curd",
         "variant": "heading",
@@ -776,8 +854,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 226, "y": 1111, "width": 161, "height": 11,
-        "rotation": 0 },
+      "transform": {
+        "x": 226, "y": 1111, "width": 161, "height": 11,
+        "rotation": 0
+      },
       "props": {
         "text": "Sri Lankan tradition",
         "variant": "paragraph",
@@ -794,8 +874,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 18, "y": 1150, "width": 393, "height": 24,
-        "rotation": 0 },
+      "transform": {
+        "x": 18, "y": 1150, "width": 393, "height": 24,
+        "rotation": 0
+      },
       "props": {
         "text": "View all",
         "variant": "outline",
@@ -813,8 +895,10 @@ const doc: CanvasDocument = {
       "locked": true,
       "visible": true,
       "opacity": 0.88,
-      "transform": { "x": 0, "y": 1181, "width": 488, "height": 148,
-        "rotation": 0 },
+      "transform": {
+        "x": 0, "y": 1181, "width": 488, "height": 148,
+        "rotation": 0
+      },
       "props": {
         "bgGradientFrom": "#0284c7",
         "bgGradientTo": "#22c55e"
@@ -827,8 +911,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 30, "y": 1205, "width": 369, "height": 48,
-        "rotation": 0 },
+      "transform": {
+        "x": 30, "y": 1205, "width": 369, "height": 48,
+        "rotation": 0
+      },
       "props": {
         "text": "Pure Goodness from the Hills of Sri Lanka",
         "variant": "heading",
@@ -846,8 +932,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 0.7,
-      "transform": { "x": 119, "y": 1265, "width": 191, "height": 11,
-        "rotation": 0 },
+      "transform": {
+        "x": 119, "y": 1265, "width": 191, "height": 11,
+        "rotation": 0
+      },
       "props": {
         "text": "Milco (Pvt) Ltd",
         "variant": "paragraph",
@@ -864,8 +952,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 0.8,
-      "transform": { "x": 193, "y": 1283, "width": 24, "height": 24,
-        "rotation": 0 },
+      "transform": {
+        "x": 193, "y": 1283, "width": 24, "height": 24,
+        "rotation": 0
+      },
       "props": {
         "icon": "🥛",
         "fontSize": 13,
@@ -880,8 +970,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 0.6,
-      "transform": { "x": 143, "y": 1309, "width": 143, "height": 11,
-        "rotation": 0 },
+      "transform": {
+        "x": 143, "y": 1309, "width": 143, "height": 11,
+        "rotation": 0
+      },
       "props": {
         "text": "🔗 kothmale.lk",
         "variant": "paragraph",

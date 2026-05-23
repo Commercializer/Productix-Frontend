@@ -13,7 +13,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 /**
  * Edit a specific promption.
  * Redirects to the editor with the profile ID.
- * Only redirects if `id` is a valid UUID — prevents sidebar links
+ * Only redirects if `id` is a valid UUID - prevents sidebar links
  * like /dashboard/products from being caught here.
  */
 export default function EditPromptionPage({ params }: PageProps) {

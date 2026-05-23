@@ -17,25 +17,25 @@ export default function AnalyticsPage() {
           <div className="bg-(--ds-surface) border border-(--ds-border) rounded-xl p-5 shadow-xs">
             <p className="text-[13px] text-(--ds-text-secondary) font-medium mb-1">Total Products</p>
             <h2 className="text-3xl font-bold text-(--ds-text-primary)">
-              {loading ? "—" : stats?.totalProducts ?? 0}
+              {loading ? "-" : stats?.totalProducts ?? 0}
             </h2>
           </div>
           <div className="bg-(--ds-surface) border border-(--ds-border) rounded-xl p-5 shadow-xs">
             <p className="text-[13px] text-(--ds-text-secondary) font-medium mb-1">Published</p>
             <h2 className="text-3xl font-bold text-green-600 dark:text-green-500">
-              {loading ? "—" : stats?.publishedProducts ?? 0}
+              {loading ? "-" : stats?.publishedProducts ?? 0}
             </h2>
           </div>
           <div className="bg-(--ds-surface) border border-(--ds-border) rounded-xl p-5 shadow-xs">
             <p className="text-[13px] text-(--ds-text-secondary) font-medium mb-1">Total QR Scans</p>
             <h2 className="text-3xl font-bold text-primary">
-              {loading ? "—" : (stats?.totalQrLeads ?? 0).toLocaleString()}
+              {loading ? "-" : (stats?.totalQrLeads ?? 0).toLocaleString()}
             </h2>
           </div>
           <div className="bg-(--ds-surface) border border-(--ds-border) rounded-xl p-5 shadow-xs">
             <p className="text-[13px] text-(--ds-text-secondary) font-medium mb-1">Total Support Threads</p>
             <h2 className="text-3xl font-bold text-(--ds-text-primary)">
-              {loading ? "—" : stats?.feedbackCount ?? 0}
+              {loading ? "-" : stats?.feedbackCount ?? 0}
             </h2>
           </div>
         </div>

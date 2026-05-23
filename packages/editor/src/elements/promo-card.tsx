@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Promo Card Element — Featured promotional card
+ * Promo Card Element - Featured promotional card
  * with background image upload support.
  * ──────────────────────────────────────────── */
 

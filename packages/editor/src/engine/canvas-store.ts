@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Canvas Store — Zustand + Immer state management
+ * Canvas Store - Zustand + Immer state management
  *
  * Flat element map with O(1) lookups.
  * Immer for immutable updates.
@@ -171,7 +171,7 @@ export const useCanvasStore = create<CanvasState>()(
     document: createEmptyDocument(),
     selectedIds: [],
     hoveredId: null,
-    zoom: 1,
+    zoom: 0.75,
     panX: 0,
     panY: 0,
     snapGuides: [],
@@ -245,7 +245,7 @@ export const useCanvasStore = create<CanvasState>()(
         const targetAb = artboardId
           ? s.document.artboards.find((a) => a.id === artboardId)
           : s.document.artboards.find((a) => a.id === s.activeArtboardId) ||
-            s.document.artboards[0];
+          s.document.artboards[0];
 
         if (!targetAb) return;
 
@@ -736,10 +736,10 @@ export const useCanvasStore = create<CanvasState>()(
       const state = get();
       const el = state.document.elements[elementId];
       if (!el?.groupId) return [elementId];
-      
+
       const topLevelId = getTopLevelEntityId(state, elementId);
       const leafIds = getLeafMemberIds(state, topLevelId);
-      
+
       return leafIds.filter((id) => !!state.document.elements[id]);
     },
 

@@ -2,7 +2,7 @@
  * Interaction Constants
  * ──────────────────────────────────────────── */
 
-/** Snap threshold in pixels — how close a guide must be to snap */
+/** Snap threshold in pixels - how close a guide must be to snap */
 export const SNAP_THRESHOLD = 6;
 
 /** Grid size for optional grid snapping */
@@ -27,7 +27,7 @@ export const NUDGE_DISTANCE = 1;
 export const NUDGE_DISTANCE_LARGE = 10;
 
 /** Default zoom level */
-export const DEFAULT_ZOOM = 1;
+export const DEFAULT_ZOOM = 0.75;
 
 /** Zoom range */
 export const MIN_ZOOM = 0.25;

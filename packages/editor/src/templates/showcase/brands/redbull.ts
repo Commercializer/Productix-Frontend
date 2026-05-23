@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Red Bull — Energy Drink Showcase Config
+ * Red Bull - Energy Drink Showcase Config
  *
  * Theme: Dynamic, sporty, high-energy
  * Colors: Dark navy, electric blue, silver
@@ -53,7 +53,7 @@ export const redbullConfig: BrandConfig = {
 
   /* ── About ── */
   aboutTitle: "About Red Bull Energy Drink",
-  aboutText: "Red Bull Energy Drink is appreciated worldwide by top athletes, busy professionals, college students and travelers on long journeys. It vitalizes body and mind. Red Bull gives you wiiings whenever you need them — whether at work, during sports, while studying, playing video games, or during leisure activities. Red Bull is the world's #1 energy drink, available in 172 countries.",
+  aboutText: "Red Bull Energy Drink is appreciated worldwide by top athletes, busy professionals, college students and travelers on long journeys. It vitalizes body and mind. Red Bull gives you wiiings whenever you need them - whether at work, during sports, while studying, playing video games, or during leisure activities. Red Bull is the world's #1 energy drink, available in 172 countries.",
 
   /* ── Features ── */
   featuresTitle: "Benefits",

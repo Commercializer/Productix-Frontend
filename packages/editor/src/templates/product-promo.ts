@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Product Launch Template — Mobile-first canvas
+ * Product Launch Template - Mobile-first canvas
  * ──────────────────────────────────────────── */
 
 import type { CanvasDocument, Template } from "@productix/types";
@@ -52,8 +52,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 0.7,
-      "transform": { "x": 0, "y": 0, "width": 488, "height": 267,
-        "rotation": 0 },
+      "transform": {
+        "x": 0, "y": 0, "width": 488, "height": 267,
+        "rotation": 0
+      },
       "props": {
         "bgColor": "#0f172a",
         "borderRadius": 0
@@ -66,8 +68,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 35, "y": 59, "width": 48, "height": 9,
-        "rotation": 0 },
+      "transform": {
+        "x": 35, "y": 59, "width": 48, "height": 9,
+        "rotation": 0
+      },
       "props": {
         "text": "✨ Now Available",
         "bgColor": "rgba(59,130,246,0.3)",
@@ -84,8 +88,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 35, "y": 78, "width": 178, "height": 35,
-        "rotation": 0 },
+      "transform": {
+        "x": 35, "y": 78, "width": 178, "height": 35,
+        "rotation": 0
+      },
       "props": {
         "text": "The Future of Visual Design Starts Here",
         "variant": "heading",
@@ -103,10 +109,12 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 0.85,
-      "transform": { "x": 35, "y": 119, "width": 148, "height": 21,
-        "rotation": 0 },
+      "transform": {
+        "x": 35, "y": 119, "width": 148, "height": 21,
+        "rotation": 0
+      },
       "props": {
-        "text": "Create stunning, responsive pages in minutes — no code required. The most powerful visual editor for modern teams.",
+        "text": "Create stunning, responsive pages in minutes - no code required. The most powerful visual editor for modern teams.",
         "variant": "paragraph",
         "fontSize": 4,
         "color": "#cbd5e1",
@@ -121,8 +129,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 35, "y": 148, "width": 59, "height": 15,
-        "rotation": 0 },
+      "transform": {
+        "x": 35, "y": 148, "width": 59, "height": 15,
+        "rotation": 0
+      },
       "props": {
         "text": "Start Building Free",
         "variant": "filled",
@@ -140,8 +150,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 102, "y": 148, "width": 48, "height": 15,
-        "rotation": 0 },
+      "transform": {
+        "x": 102, "y": 148, "width": 48, "height": 15,
+        "rotation": 0
+      },
       "props": {
         "text": "Watch Demo",
         "variant": "outline",
@@ -159,8 +171,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 256, "y": 178, "width": 48, "height": 48,
-        "rotation": 0 },
+      "transform": {
+        "x": 256, "y": 178, "width": 48, "height": 48,
+        "rotation": 0
+      },
       "props": {
         "value": "10K+",
         "label": "Active Users",
@@ -180,8 +194,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 309, "y": 178, "width": 48, "height": 48,
-        "rotation": 0 },
+      "transform": {
+        "x": 309, "y": 178, "width": 48, "height": 48,
+        "rotation": 0
+      },
       "props": {
         "value": "99.9%",
         "label": "Uptime",
@@ -201,8 +217,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 363, "y": 178, "width": 48, "height": 48,
-        "rotation": 0 },
+      "transform": {
+        "x": 363, "y": 178, "width": 48, "height": 48,
+        "rotation": 0
+      },
       "props": {
         "value": "4.9★",
         "label": "Rating",
@@ -222,8 +240,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 110, "y": 285, "width": 208, "height": 15,
-        "rotation": 0 },
+      "transform": {
+        "x": 110, "y": 285, "width": 208, "height": 15,
+        "rotation": 0
+      },
       "props": {
         "text": "Everything You Need to Build Amazing Pages",
         "variant": "heading",
@@ -241,8 +261,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 119, "y": 303, "width": 191, "height": 11,
-        "rotation": 0 },
+      "transform": {
+        "x": 119, "y": 303, "width": 191, "height": 11,
+        "rotation": 0
+      },
       "props": {
         "text": "Powerful features designed for modern content creators and marketing teams.",
         "variant": "paragraph",
@@ -259,8 +281,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 35, "y": 326, "width": 107, "height": 83,
-        "rotation": 0 },
+      "transform": {
+        "x": 35, "y": 326, "width": 107, "height": 83,
+        "rotation": 0
+      },
       "props": {
         "bgColor": "#f8fafc",
         "borderRadius": 5,
@@ -277,8 +301,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 161, "y": 326, "width": 107, "height": 83,
-        "rotation": 0 },
+      "transform": {
+        "x": 161, "y": 326, "width": 107, "height": 83,
+        "rotation": 0
+      },
       "props": {
         "bgColor": "#f8fafc",
         "borderRadius": 5,
@@ -295,8 +321,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 285, "y": 326, "width": 107, "height": 83,
-        "rotation": 0 },
+      "transform": {
+        "x": 285, "y": 326, "width": 107, "height": 83,
+        "rotation": 0
+      },
       "props": {
         "bgColor": "#f8fafc",
         "borderRadius": 5,
@@ -313,8 +341,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 50, "y": 335, "width": 17, "height": 17,
-        "rotation": 0 },
+      "transform": {
+        "x": 50, "y": 335, "width": 17, "height": 17,
+        "rotation": 0
+      },
       "props": {
         "icon": "⚡",
         "fontSize": 9,
@@ -329,8 +359,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 175, "y": 335, "width": 17, "height": 17,
-        "rotation": 0 },
+      "transform": {
+        "x": 175, "y": 335, "width": 17, "height": 17,
+        "rotation": 0
+      },
       "props": {
         "icon": "🎯",
         "fontSize": 9,
@@ -345,8 +377,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 300, "y": 335, "width": 17, "height": 17,
-        "rotation": 0 },
+      "transform": {
+        "x": 300, "y": 335, "width": 17, "height": 17,
+        "rotation": 0
+      },
       "props": {
         "icon": "📱",
         "fontSize": 9,
@@ -361,8 +395,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 46, "y": 357, "width": 89, "height": 41,
-        "rotation": 0 },
+      "transform": {
+        "x": 46, "y": 357, "width": 89, "height": 41,
+        "rotation": 0
+      },
       "props": {
         "text": "Blazing Fast\n\nBuilt on cutting-edge technology. Your pages load in milliseconds, not seconds.",
         "variant": "paragraph",
@@ -379,8 +415,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 170, "y": 357, "width": 89, "height": 41,
-        "rotation": 0 },
+      "transform": {
+        "x": 170, "y": 357, "width": 89, "height": 41,
+        "rotation": 0
+      },
       "props": {
         "text": "Visual Drag & Drop\n\nIntuitive visual editor that anyone can use. No design skills required.",
         "variant": "paragraph",
@@ -397,8 +435,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 294, "y": 357, "width": 89, "height": 41,
-        "rotation": 0 },
+      "transform": {
+        "x": 294, "y": 357, "width": 89, "height": 41,
+        "rotation": 0
+      },
       "props": {
         "text": "Fully Responsive\n\nEvery page looks perfect on desktop, tablet, and mobile devices.",
         "variant": "paragraph",
@@ -415,8 +455,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 110, "y": 499, "width": 208, "height": 15,
-        "rotation": 0 },
+      "transform": {
+        "x": 110, "y": 499, "width": 208, "height": 15,
+        "rotation": 0
+      },
       "props": {
         "text": "Ready to Build Something Amazing?",
         "variant": "heading",
@@ -434,8 +476,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 0.85,
-      "transform": { "x": 124, "y": 520, "width": 178, "height": 11,
-        "rotation": 0 },
+      "transform": {
+        "x": 124, "y": 520, "width": 178, "height": 11,
+        "rotation": 0
+      },
       "props": {
         "text": "Join thousands of teams already building better pages. Start free, upgrade anytime.",
         "variant": "paragraph",
@@ -452,8 +496,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 176, "y": 541, "width": 78, "height": 16,
-        "rotation": 0 },
+      "transform": {
+        "x": 176, "y": 541, "width": 78, "height": 16,
+        "rotation": 0
+      },
       "props": {
         "text": "Start Free Trial →",
         "variant": "filled",
@@ -471,8 +517,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 0.7,
-      "transform": { "x": 178, "y": 567, "width": 72, "height": 15,
-        "rotation": 0 },
+      "transform": {
+        "x": 178, "y": 567, "width": 72, "height": 15,
+        "rotation": 0
+      },
       "props": {
         "platforms": [
           "twitter",

@@ -1,4 +1,15 @@
-// QR "Social" source — scans of /s/<code> resolve to the same showcase page
-// as /p/<code>. The distinct prefix lets us differentiate QR generation
-// surfaces (social-share QRs) at the URL level for analytics or A/B testing.
-export { default, generateMetadata, generateViewport } from "../../p/[slug]/page";
+// QR "Social" source - scans of /s/<code> resolve to the same showcase page
+// as /p/<code> but are tagged as SOCIAL in analytics so dashboards can split
+// out social-share QR generation surfaces.
+import { renderPublicPage } from "../../p/[slug]/page";
+
+export { generateMetadata, generateViewport } from "../../p/[slug]/page";
+
+interface PageProps {
+  params: Promise<{ slug: string }>;
+}
+
+export default async function PublicPageSocial({ params }: PageProps) {
+  const { slug: handle } = await params;
+  return renderPublicPage(handle, "SOCIAL", "s");
+}

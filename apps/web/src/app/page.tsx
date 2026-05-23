@@ -33,7 +33,7 @@ import {
 } from "lucide-react";
 
 /* ────────────────────────────────────────────────────────────
- * Productix — Product Experience Infrastructure
+ * Productix - Product Experience Infrastructure
  * Light editorial surfaces · near-black ink · pastel auroras ·
  * futuristic connected-packaging mockups for cinematic contrast.
  * ──────────────────────────────────────────────────────────── */
@@ -205,7 +205,7 @@ function Hero() {
 
           <p className="mt-7 max-w-xl text-[17px] leading-[1.55] text-black/55 text-pretty">
             Productix transforms physical products into connected digital
-            experiences — through dynamic product engagement, consumer
+            experiences - through dynamic product engagement, consumer
             intelligence, packaging analytics, and activation infrastructure.
             Built for FMCG and packaged-product brands operating at scale.
           </p>
@@ -525,7 +525,7 @@ function ProblemSection() {
           </h2>
           <p className="mx-auto mt-8 max-w-2xl text-[16.5px] leading-[1.6] text-black/55 text-pretty">
             Modern brands spend millions on product packaging, retail
-            visibility, and consumer marketing — yet most physical products
+            visibility, and consumer marketing - yet most physical products
             remain disconnected from measurable digital engagement.
           </p>
         </div>
@@ -593,7 +593,7 @@ function WhatProductixDoes() {
           <p className="mx-auto mt-7 max-w-2xl text-[16px] leading-[1.6] text-black/55 text-pretty">
             Productix provides the infrastructure to create, manage, and
             optimize mobile-first product experiences connected directly to
-            physical products through QR-enabled packaging — centralizing
+            physical products through QR-enabled packaging - centralizing
             storytelling, multilingual delivery, analytics, campaigns, and
             feedback within a single enterprise platform.
           </p>
@@ -813,7 +813,7 @@ function CoreCapabilityGrid() {
                 {[
                   { t: "Loved the citrus note 🍊", a: "Madrid · ES" },
                   { t: "Bottle cap a bit stiff.", a: "Berlin · DE" },
-                  { t: "5★ — packaging is gorgeous", a: "Tokyo · JP" },
+                  { t: "5★ - packaging is gorgeous", a: "Tokyo · JP" },
                 ].map((c) => (
                   <div
                     key={c.a}
@@ -865,7 +865,7 @@ function CoreCapabilityGrid() {
                   <Megaphone className="h-3.5 w-3.5" /> 06 · Activation
                 </div>
                 <h4 className="mt-3 text-[20px] font-medium leading-tight tracking-[-0.01em]">
-                  Promotions, loyalty, and limited drops — from the package.
+                  Promotions, loyalty, and limited drops - from the package.
                 </h4>
               </div>
               <div className="mt-auto grid grid-cols-3 gap-1.5">
@@ -936,7 +936,7 @@ function LiveStudioShowcase() {
           </h3>
           <p className="mt-4 text-[15.5px] leading-relaxed text-black/55">
             Brand, marketing, and product teams compose mobile-first
-            experiences — overlap, animate, translate, ship — without
+            experiences - overlap, animate, translate, ship - without
             engineering dependency.
           </p>
         </div>
@@ -1315,7 +1315,7 @@ function BusinessOutcomes() {
             Business outcomes
           </span>
           <h3 className="mt-3 text-[clamp(1.9rem,4vw,2.8rem)] font-medium leading-tight tracking-[-0.02em] text-white">
-            Beyond QR codes —{" "}
+            Beyond QR codes -{" "}
             <span className="bg-gradient-to-r from-sky-400 via-blue-400 to-sky-400 bg-clip-text text-transparent">
               built for measurable business impact.
             </span>
@@ -1544,7 +1544,7 @@ function VisionSection() {
           </ul>
         </div>
 
-        {/* Right — orbiting connected layer visualization */}
+        {/* Right - orbiting connected layer visualization */}
         <div className="relative mx-auto h-[420px] w-full max-w-lg lg:h-[480px]">
           <div className="absolute inset-0 -z-10 rounded-[3rem] bg-gradient-to-br from-sky-400/20 via-blue-400/15 to-sky-400/20 blur-3xl" />
 

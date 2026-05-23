@@ -1,11 +1,11 @@
 // ─────────────────────────────────────────────
-// @productix/db — Database package exports
+// @productix/db - Database package exports
 // ─────────────────────────────────────────────
 
 // Prisma client singleton
 export { prisma } from "./client";
 
-// Legacy schema types (deprecated — use @prisma/client types instead)
+// Legacy schema types (deprecated - use @prisma/client types instead)
 export type { DbPage, DbUser, DbTenant, DbTemplate } from "./schema";
 
 // Re-export Prisma generated types for convenience
@@ -35,6 +35,7 @@ export type {
   SocialPlatform,
   QrType,
   QrSource,
+  QrScanType,
   DeviceType,
   FeedbackInquiryType,
   FeedbackType,

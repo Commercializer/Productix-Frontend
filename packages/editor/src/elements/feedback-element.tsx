@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Feedback Element — A button that opens a
+ * Feedback Element - A button that opens a
  * native-app-style bottom sheet for visitors to
  * submit feedback against the current product.
  * ──────────────────────────────────────────── */

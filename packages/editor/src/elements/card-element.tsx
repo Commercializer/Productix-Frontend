@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Card Element — Container with background, shadow, border
+ * Card Element - Container with background, shadow, border
  *
  * Now supports background images via the reusable
  * ImageUploadWidget (drag-drop, file picker, library).
@@ -167,14 +167,13 @@ function CardPropertyPanel({ props, onChange }: PropertyPanelProps) {
       <label className="block">
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Border Radius</span>
         <input
-          type="range"
-          className="mt-1 w-full"
+          type="number"
+          className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
           value={(props.borderRadius as number) || 16}
           onChange={(e) => onChange({ borderRadius: Number(e.target.value) })}
           min={0}
-          max={50}
+          max={999}
         />
-        <span className="text-xs text-gray-400">{(props.borderRadius as number) || 16}px</span>
       </label>
       <label className="block">
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Shadow</span>

@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * POST /api/media/delete — Delete media from R2
+ * POST /api/media/delete - Delete media from R2
  *
  * Accepts JSON { key: string } and deletes the
  * corresponding object from the R2 bucket.

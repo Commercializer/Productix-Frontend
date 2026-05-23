@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Layout Engine — Responsive CSS generation
+ * Layout Engine - Responsive CSS generation
  *
  * Core computation engine that converts the
  * document data model into responsive CSS styles.
@@ -310,7 +310,7 @@ export function generateResponsiveStylesheet(doc: CanvasDocument): string {
           }
         }
       } else {
-        // Absolute-mode element — convert to percentage-based positioning for responsiveness
+        // Absolute-mode element - convert to percentage-based positioning for responsiveness
         const t = el.transform;
         const pctX = (t.x / ab.width) * 100;
         const pctY = (t.y / ab.height) * 100;

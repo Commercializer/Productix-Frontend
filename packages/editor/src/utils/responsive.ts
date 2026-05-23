@@ -1,12 +1,12 @@
 /* ─────────────────────────────────────────────
- * Responsive Utilities — Breakpoint-aware transforms
+ * Responsive Utilities - Breakpoint-aware transforms
  *
  * KEY DESIGN: Single-ratio scaling.
  *
  * Everything scales by the WIDTH RATIO only.
  * X, Y, width, height all use the same ratio.
  * This means the design is proportionally scaled
- * — exactly like a responsive website that shrinks
+ * - exactly like a responsive website that shrinks
  * uniformly. No separate per-breakpoint designs,
  * no manual overrides needed.
  *
@@ -22,7 +22,7 @@ import { BREAKPOINT_WIDTHS } from "@productix/types";
  *
  * All properties (x, y, width, height) scale by the same
  * ratio so the design looks like a proportionally shrunk
- * version of the desktop layout — like a responsive website.
+ * version of the desktop layout - like a responsive website.
  */
 export function autoScaleTransform(
   base: Transform,
@@ -68,7 +68,7 @@ export function autoScaleTransformByWidth(
  * Compute the effective transform for an element at
  * the given breakpoint.
  *
- * Uses UNIFORM width-ratio scaling — the entire design
+ * Uses UNIFORM width-ratio scaling - the entire design
  * shrinks/grows proportionally. No separate per-breakpoint
  * designs. Design once on desktop, it scales to every screen.
  *
@@ -130,7 +130,7 @@ export function getArtboardPreviewWidth(
  *
  * Uses PROPORTIONAL height: the desktop design's aspect ratio
  * is maintained at every breakpoint. This ensures elements
- * stay in the same relative positions — no vertical stretching.
+ * stay in the same relative positions - no vertical stretching.
  *
  * Desktop 1440×900 → Mobile 428×? → 428/1440 × 900 = 267px
  * The content is a scaled-down version of the desktop design.
@@ -145,7 +145,7 @@ export function getArtboardPreviewHeight(
   const targetWidth = BREAKPOINT_WIDTHS[breakpoint];
   const ratio = targetWidth / artboardWidth;
 
-  // Maintain aspect ratio — the entire design scales uniformly
+  // Maintain aspect ratio - the entire design scales uniformly
   return Math.round(artboardHeight * ratio);
 }
 

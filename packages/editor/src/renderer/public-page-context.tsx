@@ -7,7 +7,7 @@ export interface PublicPageContextValue {
   /**
    * Optional element to portal overlays (feedback sheet, etc.) into.
    * When set, overlays render with `position: absolute` inside this
-   * element instead of `position: fixed` on the document body — letting
+   * element instead of `position: fixed` on the document body - letting
    * them behave like a real mobile simulator inside a phone mockup.
    * The element should be `position: relative` (or similar).
    */

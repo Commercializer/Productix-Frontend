@@ -25,7 +25,7 @@ export default function DashboardPage() {
 
   const fmt = (n: number) => n.toLocaleString();
   const pct = (n: number) => `${n.toFixed(n < 10 ? 2 : 1)}%`;
-  const placeholder = loading ? "—" : null;
+  const placeholder = loading ? "-" : null;
 
   const totalProducts = stats?.totalProducts ?? 0;
   const publishedProducts = stats?.publishedProducts ?? 0;

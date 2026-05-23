@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * i18n Store — Lightweight language state manager
+ * i18n Store - Lightweight language state manager
  *
  * Uses Zustand for a tiny global locale store.
  * Persists selection to localStorage.
@@ -37,7 +37,7 @@ export const useI18nStore = create<I18nState>((set) => ({
   },
 }));
 
-/* ─── Hook — t() function ─────────────────── */
+/* ─── Hook - t() function ─────────────────── */
 
 /**
  * Returns the translation function `t(key)` for the

@@ -1,6 +1,6 @@
 -- ─────────────────────────────────────────────────────────────
 -- Add Category + SubCategory tables, and link from Product.
--- Idempotent — safe to re-run.
+-- Idempotent - safe to re-run.
 -- Run in Supabase SQL editor (or `psql $DIRECT_URL -f <this-file>`).
 -- ─────────────────────────────────────────────────────────────
 
@@ -39,7 +39,7 @@ CREATE INDEX IF NOT EXISTS "sub_categories_company_id_idx"
 CREATE INDEX IF NOT EXISTS "sub_categories_category_id_idx"
     ON "sub_categories"("category_id");
 
--- AlterTable: products — add category_id, sub_category_id
+-- AlterTable: products - add category_id, sub_category_id
 ALTER TABLE "products" ADD COLUMN IF NOT EXISTS "category_id" UUID;
 ALTER TABLE "products" ADD COLUMN IF NOT EXISTS "sub_category_id" UUID;
 

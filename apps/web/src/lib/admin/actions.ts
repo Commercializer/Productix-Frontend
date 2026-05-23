@@ -167,7 +167,7 @@ export async function createUserAction(data: {
 }) {
   try {
     const passwordHash = await bcrypt.hash(data.password, 10);
-    
+
     // We use nested writes or rely on the default Role enum via Prisma
     const user = await prisma.user.create({
       data: {
@@ -225,7 +225,7 @@ export async function resetUserPasswordAction(
 ) {
   try {
     const passwordHash = await bcrypt.hash(newPassword, 10);
-    
+
     await prisma.user.update({
       where: { id: userId },
       data: { passwordHash }
@@ -258,7 +258,7 @@ export async function listAllPromptionsAction(search?: string) {
     id: p.id,
     slug: p.slug,
     title: p.productName,
-    companyName: p.product?.company?.name ?? "—",
+    companyName: p.product?.company?.name ?? "-",
     businessUsername: p.product?.company?.businessUsername ?? "",
     updatedAt: p.updatedAt.toISOString(),
     createdAt: p.createdAt.toISOString(),

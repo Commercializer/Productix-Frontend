@@ -6,7 +6,7 @@ import { validateFile } from "./media-store";
 import { MediaLibraryPanel } from "./media-library-panel";
 
 /* ─────────────────────────────────────────────
- * MediaUploadField — Puck Custom Field Renderer
+ * MediaUploadField - Puck Custom Field Renderer
  *
  * Renders inside the Puck sidebar for any image
  * URL field. Provides:

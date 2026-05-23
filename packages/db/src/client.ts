@@ -1,5 +1,5 @@
 /**
- * Prisma client singleton — safe for serverless environments.
+ * Prisma client singleton - safe for serverless environments.
  *
  * Uses the connection pooler (DATABASE_URL) for queries.
  * Prevents multiple Prisma instances during hot-reload in development.

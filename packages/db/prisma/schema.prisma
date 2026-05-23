@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────
-// Productix — Prisma Schema
+// Productix - Prisma Schema
 // Multi-tenant product management platform with QR & analytics
 // ─────────────────────────────────────────────────────────────
 
@@ -69,6 +69,16 @@ enum QrSource {
   EMAIL
   SMS
   OTHER
+}
+
+/// Which QR generation surface a scan came in through.
+/// Distinct from referrer (a social-share QR posted on Facebook resolves to
+/// SOCIAL even though the referrer is facebook.com), and distinct from
+/// QrSource which tracks how a Qr row was generated/distributed.
+enum QrScanType {
+  ON_PACK
+  LINK
+  SOCIAL
 }
 
 enum DeviceType {
@@ -249,7 +259,7 @@ model CompanySocialAccount {
 // PRODUCT & BRAND PROFILE MANAGEMENT
 // ═══════════════════════════════════════════════════════════════
 
-/// Brand profiles within a company — provides branding context for products.
+/// Brand profiles within a company - provides branding context for products.
 model BrandProfile {
   id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   companyId    String   @map("company_id") @db.Uuid
@@ -318,7 +328,7 @@ model SubCategory {
   @@map("sub_categories")
 }
 
-/// Core product entity — belongs to a company, optionally under a brand profile.
+/// Core product entity - belongs to a company, optionally under a brand profile.
 model Product {
   id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   brandProfileId      String?  @map("brand_profile_id") @db.Uuid
@@ -352,7 +362,7 @@ model Product {
   @@map("products")
 }
 
-/// Localized product profile — one per language per product.
+/// Localized product profile - one per language per product.
 model ProductProfile {
   id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   productId       String    @map("product_id") @db.Uuid
@@ -402,7 +412,7 @@ model LinkedProduct {
 // QR CODE SYSTEM
 // ═══════════════════════════════════════════════════════════════
 
-/// QR codes linked to products — supports master, batch, and serial types.
+/// QR codes linked to products - supports master, batch, and serial types.
 model QrCode {
   id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   productId      String    @map("product_id") @db.Uuid
@@ -431,7 +441,7 @@ model QrCode {
 // ANALYTICS & TRACKING
 // ═══════════════════════════════════════════════════════════════
 
-/// QR scan events — tracks every scan with geo + device metadata.
+/// QR scan events - tracks every scan with geo + device metadata.
 model QrScan {
   id         String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   qrCodeId   String      @map("qr_code_id") @db.Uuid
@@ -454,7 +464,7 @@ model QrScan {
   @@map("qr_scans")
 }
 
-/// Public-page view events — deduped per (page, visitor, day) so a single
+/// Public-page view events - deduped per (page, visitor, day) so a single
 /// visitor cannot inflate counts by refreshing. visitorHash is sha256 of
 /// (ip + user-agent + salt + day) so no raw PII lives in the row.
 model PageView {
@@ -473,6 +483,7 @@ model PageView {
   os               String?     @db.VarChar(100)
   referrer         String?     @db.VarChar(500)
   language         String?     @db.VarChar(10)
+  qrScanType       QrScanType? @map("qr_scan_type")
 
   productProfile ProductProfile @relation(fields: [productProfileId], references: [id], onDelete: Cascade)
 
@@ -487,7 +498,7 @@ model PageView {
 // FEEDBACK & INQUIRY SYSTEM
 // ═══════════════════════════════════════════════════════════════
 
-/// Customer feedback and inquiries — can be submitted anonymously.
+/// Customer feedback and inquiries - can be submitted anonymously.
 model FeedbackInquiry {
   id           String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   companyId    String              @map("company_id") @db.Uuid

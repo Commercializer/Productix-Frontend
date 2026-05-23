@@ -1,4 +1,15 @@
-// QR "Link" source — scans of /l/<code> resolve to the same showcase page as
-// /p/<code>. The distinct prefix lets us differentiate QR generation surfaces
-// (link-style QRs) at the URL level for analytics or A/B testing later.
-export { default, generateMetadata, generateViewport } from "../../p/[slug]/page";
+// QR "Link" source - scans of /l/<code> resolve to the same showcase page as
+// /p/<code> but are tagged as LINK in analytics so dashboards can split out
+// link-style QR generation surfaces.
+import { renderPublicPage } from "../../p/[slug]/page";
+
+export { generateMetadata, generateViewport } from "../../p/[slug]/page";
+
+interface PageProps {
+  params: Promise<{ slug: string }>;
+}
+
+export default async function PublicPageLink({ params }: PageProps) {
+  const { slug: handle } = await params;
+  return renderPublicPage(handle, "LINK", "l");
+}

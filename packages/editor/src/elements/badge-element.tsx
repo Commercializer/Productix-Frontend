@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Badge Element — Chip / tag / label
+ * Badge Element - Chip / tag / label
  * ──────────────────────────────────────────── */
 
 "use client";
@@ -75,6 +75,17 @@ function BadgePropertyPanel({ props, onChange }: PropertyPanelProps) {
       <label className="block">
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Font Size</span>
         <input type="number" className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none" value={(props.fontSize as number) || 13} onChange={(e) => onChange({ fontSize: Number(e.target.value) })} min={8} max={48} />
+      </label>
+      <label className="block">
+        <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Border Radius</span>
+        <input
+          type="number"
+          className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
+          value={(props.borderRadius as number) ?? 999}
+          onChange={(e) => onChange({ borderRadius: Number(e.target.value) })}
+          min={0}
+          max={999}
+        />
       </label>
     </div>
   );

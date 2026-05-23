@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Coca-Cola — Classic Red Showcase Config
+ * Coca-Cola - Classic Red Showcase Config
  *
  * Theme: Bold, nostalgic, iconic, classic
  * Colors: Coca-Cola red, white, dark
@@ -11,7 +11,7 @@ export const cocacolaConfig: BrandConfig = {
   /* ── Identity ── */
   brandName: "Coca-Cola",
   productName: "Coca-Cola Original Taste",
-  tagline: "Taste the feeling. The world's most iconic beverage — unchanged and unmatched since 1886.",
+  tagline: "Taste the feeling. The world's most iconic beverage - unchanged and unmatched since 1886.",
   logoIcon: "🥤",
   logoText: "Coca-Cola",
 
@@ -54,7 +54,7 @@ export const cocacolaConfig: BrandConfig = {
 
   /* ── About ── */
   aboutTitle: "About Coca-Cola",
-  aboutText: "Coca-Cola, introduced in 1886, is the world's favorite sparkling beverage. Made with a secret formula that has remained largely unchanged for over a century, Coca-Cola delivers a unique, refreshing taste that has made it a cultural icon. Available in more than 200 countries, Coca-Cola is more than a drink — it's a symbol of happiness, togetherness, and timeless moments shared between friends and family.",
+  aboutText: "Coca-Cola, introduced in 1886, is the world's favorite sparkling beverage. Made with a secret formula that has remained largely unchanged for over a century, Coca-Cola delivers a unique, refreshing taste that has made it a cultural icon. Available in more than 200 countries, Coca-Cola is more than a drink - it's a symbol of happiness, togetherness, and timeless moments shared between friends and family.",
 
   /* ── Features ── */
   featuresTitle: "What Makes It Special",

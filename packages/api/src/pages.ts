@@ -11,7 +11,7 @@ import type { ApiClient } from "./client";
 /**
  * Page API operations.
  *
- * Scaffolded typed methods for page CRUD. Currently stubs —
+ * Scaffolded typed methods for page CRUD. Currently stubs -
  * will be connected to real API routes in phase 2.
  */
 export function createPageApi(client: ApiClient) {

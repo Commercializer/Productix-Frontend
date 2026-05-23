@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Editor Types — Responsive Canvas Data Model
+ * Editor Types - Responsive Canvas Data Model
  * ──────────────────────────────────────────── */
 
 // ─── Content Locale System ─────────────────────
@@ -17,7 +17,7 @@ export interface ContentLocaleMeta {
   label: string;
   /** Native-name label (e.g. "Español") */
   nativeLabel: string;
-  /** Emoji flag — defaults to 🌐 for languages without a clear region */
+  /** Emoji flag - defaults to 🌐 for languages without a clear region */
   flag: string;
   /** Whether this language is right-to-left */
   rtl?: boolean;
@@ -237,9 +237,9 @@ export interface LayoutProps {
   heightValue: number;
   /** Height unit */
   heightUnit: SizeUnit;
-  /** Min-width in px — triggers wrapping when flex item shrinks below this */
+  /** Min-width in px - triggers wrapping when flex item shrinks below this */
   minWidth?: number;
-  /** Max-width in px — prevents element from growing beyond this */
+  /** Max-width in px - prevents element from growing beyond this */
   maxWidth?: number;
   /** Margin [top, right, bottom, left] in px */
   margin: [number, number, number, number];
@@ -303,13 +303,13 @@ export interface ElementNode {
   id: string;
   /** Registered element type key (e.g. "text", "image", "card") */
   type: string;
-  /** Base transform (desktop / design-time values) — used in absolute mode */
+  /** Base transform (desktop / design-time values) - used in absolute mode */
   transform: Transform;
   zIndex: number;
   locked: boolean;
   visible: boolean;
   opacity: number;
-  /** Element-type-specific props (text content, image src, colors, etc.) — always English / default */
+  /** Element-type-specific props (text content, image src, colors, etc.) - always English / default */
   props: Record<string, unknown>;
   /**
    * Per-locale content overrides.
@@ -318,12 +318,12 @@ export interface ElementNode {
    * Only text-like properties should be overridden (text, title, subtitle, ctaText, label, value).
    */
   i18nProps?: Partial<Record<ContentLocale, Record<string, unknown>>>;
-  /** Child element IDs — used by group/container/row/column elements */
+  /** Child element IDs - used by group/container/row/column elements */
   children?: string[];
   /** Parent group ID (if element belongs to a group) */
   parentId?: string;
   /**
-   * Block group ID — when set, this element belongs to a named group.
+   * Block group ID - when set, this element belongs to a named group.
    * All elements sharing the same groupId move together when any member is dragged.
    */
   groupId?: string;
@@ -344,6 +344,17 @@ export interface ElementNode {
    * Missing breakpoints inherit from the base layout props.
    */
   responsiveLayout?: Partial<Record<Breakpoint, Partial<LayoutProps>>>;
+  /**
+   * Optional URL — when set, clicking the rendered block on the
+   * published / preview page navigates to this URL. Works for any
+   * block type (image, card, text, …). When empty, the block
+   * behaves normally with no click navigation.
+   */
+  link?: string;
+  /**
+   * Where the link opens. Defaults to "_blank" (new tab) when omitted.
+   */
+  linkTarget?: "_self" | "_blank";
 }
 
 // ─── Canvas Effects ────────────────────────────
@@ -362,15 +373,15 @@ export type CanvasEffect =
 
 /** All canvas effects with display metadata */
 export const CANVAS_EFFECTS: { value: CanvasEffect; label: string; emoji: string; description: string }[] = [
-  { value: "none",      label: "None",           emoji: "🚫", description: "No effect" },
-  { value: "snowfall",  label: "Snowfall",       emoji: "❄️", description: "Gentle falling snow" },
-  { value: "confetti",  label: "Win / Confetti",  emoji: "🎊", description: "Celebration confetti burst" },
-  { value: "halloween", label: "Halloween",      emoji: "🎃", description: "Spooky bats & pumpkins" },
-  { value: "avurudu",   label: "Avurudu",        emoji: "🪷", description: "Sinhala & Tamil New Year" },
-  { value: "wesak",     label: "Wesak",          emoji: "🪷", description: "Vesak lanterns & light" },
-  { value: "fireworks", label: "Fireworks",      emoji: "🎆", description: "Festive fireworks burst" },
-  { value: "hearts",    label: "Hearts",         emoji: "💕", description: "Floating hearts" },
-  { value: "sparkle",   label: "Sparkle",        emoji: "✨", description: "Twinkling sparkles" },
+  { value: "none", label: "None", emoji: "🚫", description: "No effect" },
+  { value: "snowfall", label: "Snowfall", emoji: "❄️", description: "Gentle falling snow" },
+  { value: "confetti", label: "Win / Confetti", emoji: "🎊", description: "Celebration confetti burst" },
+  { value: "halloween", label: "Halloween", emoji: "🎃", description: "Spooky bats & pumpkins" },
+  { value: "avurudu", label: "Avurudu", emoji: "🪷", description: "Sinhala & Tamil New Year" },
+  { value: "wesak", label: "Wesak", emoji: "🪷", description: "Vesak lanterns & light" },
+  { value: "fireworks", label: "Fireworks", emoji: "🎆", description: "Festive fireworks burst" },
+  { value: "hearts", label: "Hearts", emoji: "💕", description: "Floating hearts" },
+  { value: "sparkle", label: "Sparkle", emoji: "✨", description: "Twinkling sparkles" },
 ];
 
 // ─── Artboard ──────────────────────────────────
@@ -409,7 +420,7 @@ export interface BlockGroup {
   locked: boolean;
 }
 
-/** Top-level canvas document — the full page data */
+/** Top-level canvas document - the full page data */
 export interface CanvasDocument {
   /** Schema version for future migrations */
   version: number;
@@ -426,7 +437,7 @@ export interface CanvasDocument {
    * those translations are available for this page.
    */
   availableLocales?: ContentLocale[];
-  /** Block groups — groups of elements that move/act together */
+  /** Block groups - groups of elements that move/act together */
   groups?: Record<string, BlockGroup>;
 }
 

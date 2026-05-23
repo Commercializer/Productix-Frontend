@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Geometry Utilities — Bounding box, intersection, alignment
+ * Geometry Utilities - Bounding box, intersection, alignment
  * ──────────────────────────────────────────── */
 
 import type { Transform } from "@productix/types";

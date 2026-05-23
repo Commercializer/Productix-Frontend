@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Brand Introduction Template — Mobile-first canvas
+ * Brand Introduction Template - Mobile-first canvas
  * ──────────────────────────────────────────── */
 
 import type { CanvasDocument, Template } from "@productix/types";
@@ -41,8 +41,10 @@ const doc: CanvasDocument = {
       "locked": true,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 0, "y": 0, "width": 488, "height": 214,
-        "rotation": 0 },
+      "transform": {
+        "x": 0, "y": 0, "width": 488, "height": 214,
+        "rotation": 0
+      },
       "props": {
         "bgGradientFrom": "#f8fafc",
         "bgGradientTo": "#e0e7ff"
@@ -55,8 +57,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 196, "y": 35, "width": 24, "height": 24,
-        "rotation": 0 },
+      "transform": {
+        "x": 196, "y": 35, "width": 24, "height": 24,
+        "rotation": 0
+      },
       "props": {
         "icon": "💎",
         "fontSize": 13,
@@ -72,8 +76,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 110, "y": 65, "width": 208, "height": 18,
-        "rotation": 0 },
+      "transform": {
+        "x": 110, "y": 65, "width": 208, "height": 18,
+        "rotation": 0
+      },
       "props": {
         "text": "Acme Industries",
         "variant": "heading",
@@ -91,8 +97,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 0.8,
-      "transform": { "x": 119, "y": 89, "width": 191, "height": 18,
-        "rotation": 0 },
+      "transform": {
+        "x": 119, "y": 89, "width": 191, "height": 18,
+        "rotation": 0
+      },
       "props": {
         "text": "Building the future of digital experiences. Trusted by the world's most innovative companies.",
         "variant": "paragraph",
@@ -109,8 +117,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 176, "y": 116, "width": 78, "height": 16,
-        "rotation": 0 },
+      "transform": {
+        "x": 176, "y": 116, "width": 78, "height": 16,
+        "rotation": 0
+      },
       "props": {
         "text": "Explore Our Work →",
         "variant": "filled",
@@ -128,8 +138,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 187, "y": 24, "width": 54, "height": 8,
-        "rotation": 0 },
+      "transform": {
+        "x": 187, "y": 24, "width": 54, "height": 8,
+        "rotation": 0
+      },
       "props": {
         "text": "Since 2010",
         "icon": "🏢",
@@ -147,8 +159,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 102, "y": 143, "width": 226, "height": 65,
-        "rotation": 0 },
+      "transform": {
+        "x": 102, "y": 143, "width": 226, "height": 65,
+        "rotation": 0
+      },
       "props": {
         "src": "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=80",
         "alt": "Modern office",
@@ -163,8 +177,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 35, "y": 232, "width": 178, "height": 15,
-        "rotation": 0 },
+      "transform": {
+        "x": 35, "y": 232, "width": 178, "height": 15,
+        "rotation": 0
+      },
       "props": {
         "text": "Our Impact in Numbers",
         "variant": "heading",
@@ -182,8 +198,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 35, "y": 250, "width": 178, "height": 18,
-        "rotation": 0 },
+      "transform": {
+        "x": 35, "y": 250, "width": 178, "height": 18,
+        "rotation": 0
+      },
       "props": {
         "text": "For over a decade, we've been pushing boundaries and delivering exceptional results for our clients worldwide.",
         "variant": "paragraph",
@@ -200,8 +218,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 35, "y": 279, "width": 83, "height": 54,
-        "rotation": 0 },
+      "transform": {
+        "x": 35, "y": 279, "width": 83, "height": 54,
+        "rotation": 0
+      },
       "props": {
         "value": "500+",
         "label": "Clients",
@@ -220,8 +240,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 124, "y": 279, "width": 83, "height": 54,
-        "rotation": 0 },
+      "transform": {
+        "x": 124, "y": 279, "width": 83, "height": 54,
+        "rotation": 0
+      },
       "props": {
         "value": "$2.4B",
         "label": "Revenue Generated",
@@ -240,8 +262,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 215, "y": 279, "width": 83, "height": 54,
-        "rotation": 0 },
+      "transform": {
+        "x": 215, "y": 279, "width": 83, "height": 54,
+        "rotation": 0
+      },
       "props": {
         "value": "15+",
         "label": "Years",
@@ -260,8 +284,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 304, "y": 279, "width": 83, "height": 54,
-        "rotation": 0 },
+      "transform": {
+        "x": 304, "y": 279, "width": 83, "height": 54,
+        "rotation": 0
+      },
       "props": {
         "value": "99.9%",
         "label": "Satisfaction",
@@ -280,8 +306,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 35, "y": 270, "width": 357, "height": 6,
-        "rotation": 0 },
+      "transform": {
+        "x": 35, "y": 270, "width": 357, "height": 6,
+        "rotation": 0
+      },
       "props": {
         "color": "#e2e8f0",
         "thickness": 1,

@@ -2,12 +2,13 @@ import { cache } from "react";
 import { after } from "next/server";
 import type { Metadata, Viewport } from "next";
 import { redirect } from "next/navigation";
+import type { QrScanType } from "@productix/db";
 import { getPublicPageByHandleAction } from "@/lib/dashboard/actions";
 import { readViewContext, trackPageView } from "@/lib/analytics/track-page-view";
 import { PublicPageClient } from "./client";
 
 // ═══════════════════════════════════════════════════════════════
-// Dynamic SEO Metadata — unique per product page
+// Dynamic SEO Metadata - unique per product page
 // ═══════════════════════════════════════════════════════════════
 
 interface PageProps {
@@ -57,7 +58,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
-  const title = `${page.productName}${page.tagline ? ` — ${page.tagline}` : ""} | ${page.company.name}`;
+  const title = `${page.productName}${page.tagline ? ` - ${page.tagline}` : ""} | ${page.company.name}`;
   const description =
     page.metaDescription ||
     page.description ||
@@ -140,8 +141,7 @@ export async function generateViewport({ params }: PageProps): Promise<Viewport>
 // Page Component (Server Component)
 // ═══════════════════════════════════════════════════════════════
 
-export default async function PublicPage({ params }: PageProps) {
-  const { slug: handle } = await params;
+export async function renderPublicPage(handle: string, qrScanType: QrScanType, urlPrefix: "p" | "l" | "s") {
   const page = await getPage(handle);
 
   if (!page) {
@@ -161,17 +161,18 @@ export default async function PublicPage({ params }: PageProps) {
       productId: page.productId,
       companyId: page.companyId,
       context: viewContext,
+      qrScanType,
     }),
   );
 
-  // External redirect takes precedence — when set, scans bypass the showcase.
+  // External redirect takes precedence - when set, scans bypass the showcase.
   if (page.redirectEnabled && page.redirectUrl) {
     redirect(page.redirectUrl);
   }
 
   // If the visitor arrived via the 8-char short code and the product opted to
   // show pretty URLs, swap them to the slug. Skip when the slug is still the
-  // placeholder UUID — that isn't a real URL, so we render the shortCode in
+  // placeholder UUID - that isn't a real URL, so we render the shortCode in
   // place instead of redirecting to /p/<uuid>.
   if (
     page.slugVisible &&
@@ -179,10 +180,15 @@ export default async function PublicPage({ params }: PageProps) {
     page.slug !== handle &&
     isCustomSlug(page.slug)
   ) {
-    redirect(`/p/${page.slug}`);
+    redirect(`/${urlPrefix}/${page.slug}`);
   }
 
   return <PublicPageClient page={page} />;
+}
+
+export default async function PublicPage({ params }: PageProps) {
+  const { slug: handle } = await params;
+  return renderPublicPage(handle, "ON_PACK", "p");
 }
 
 // ═══════════════════════════════════════════════════════════════

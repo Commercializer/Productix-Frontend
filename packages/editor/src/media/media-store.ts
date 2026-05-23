@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Media Store — Cloud R2 + IndexedDB cache
+ * Media Store - Cloud R2 + IndexedDB cache
  *
  * Primary storage: Cloudflare R2 (via API routes)
  * Local cache: IndexedDB for thumbnails + metadata
@@ -10,7 +10,7 @@
  *   3. Cache metadata + thumbnail locally in IndexedDB
  *
  * On publish/save, element props store the R2 URL
- * directly — no blob: or data: URLs in persisted data.
+ * directly - no blob: or data: URLs in persisted data.
  * ──────────────────────────────────────────── */
 
 const DB_NAME = "productix-media";
@@ -60,14 +60,14 @@ export interface MediaItem {
   /** Duration in seconds (audio only) */
   duration: number;
   createdAt: string;
-  /** Public R2 URL — the canonical reference for element props */
+  /** Public R2 URL - the canonical reference for element props */
   url: string;
-  /** R2 object key — for deletion */
+  /** R2 object key - for deletion */
   r2Key: string;
   /** Local thumbnail blob (images only, for library UI) */
   thumbnailBlob: Blob | null;
   /**
-   * @deprecated Legacy field — kept for backward compat with old items.
+   * @deprecated Legacy field - kept for backward compat with old items.
    * New items store the R2 url instead of a blob.
    */
   blob?: Blob;
@@ -306,7 +306,7 @@ export async function addMedia(file: File): Promise<MediaItem> {
       height = dims.height;
       thumbnailBlob = thumb;
     } catch {
-      // Non-fatal — continue without dimensions/thumbnail
+      // Non-fatal - continue without dimensions/thumbnail
     }
   }
 
@@ -331,7 +331,7 @@ export async function addMedia(file: File): Promise<MediaItem> {
     await req(txStore(db, "readwrite").put(item));
     db.close();
   } catch {
-    // IndexedDB may not be available — R2 upload already succeeded
+    // IndexedDB may not be available - R2 upload already succeeded
   }
 
   return item;

@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Kothmale Fresh Milk — Sri Lankan Dairy Config
+ * Kothmale Fresh Milk - Sri Lankan Dairy Config
  *
  * Theme: Clean, white, natural, dairy freshness
  * Colors: White, sky blue, green, cream

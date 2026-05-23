@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * POST /api/feedback/upload — Public image upload
+ * POST /api/feedback/upload - Public image upload
  *
  * Unauthenticated upload used by image-type custom
  * fields on the public Feedback sheet. Accepts a

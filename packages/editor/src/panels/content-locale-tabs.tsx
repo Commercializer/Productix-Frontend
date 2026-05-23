@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Content Language Tabs — Multilingual authoring
+ * Content Language Tabs - Multilingual authoring
  *
  * Shows the currently-active content locales as pill
  * tabs, with a "+" button that opens a searchable
@@ -35,7 +35,7 @@ export function ContentLocaleTabs() {
   const overflowRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
-  // Build active list — always English first
+  // Build active list - always English first
   const active = useMemo<ContentLocale[]>(() => {
     const base: ContentLocale[] = ["en"];
     if (availableLocales) {
@@ -473,7 +473,7 @@ function LocaleTab({
       <button
         type="button"
         onClick={onClick}
-        title={`${meta.label} (${code.toUpperCase()})${active ? " — editing" : ""}`}
+        title={`${meta.label} (${code.toUpperCase()})${active ? " - editing" : ""}`}
         style={{
           display: "flex",
           alignItems: "center",

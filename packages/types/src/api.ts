@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * API Contracts — Request/Response shapes
+ * API Contracts - Request/Response shapes
  * ──────────────────────────────────────────── */
 
 /** Standard API response envelope */

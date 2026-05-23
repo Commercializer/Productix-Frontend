@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Sprite — Fresh Lemon-Lime Showcase Config
+ * Sprite - Fresh Lemon-Lime Showcase Config
  *
  * Theme: Fresh, green, bubbly, refreshing
  * Colors: Vibrant green, yellow-green, white

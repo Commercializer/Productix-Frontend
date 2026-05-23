@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Translations — English, Sinhala, Tamil
+ * Translations - English, Sinhala, Tamil
  *
  * Product Experience Builder terminology
  * ──────────────────────────────────────────── */
@@ -42,7 +42,7 @@ export interface TranslationStrings {
   "device.tablet": string;
   "device.mobile": string;
 
-  // Left panel tabs — product experience naming
+  // Left panel tabs - product experience naming
   "tab.add": string;
   "tab.layers": string;
   "tab.canvas": string;
@@ -183,7 +183,7 @@ const en: TranslationStrings = {
   "toolbar.generateQR": "Generate QR Experience",
   "toolbar.fitToView": "Fit to View",
   "toolbar.centerCanvas": "Center Canvas",
-  "toolbar.panMode": "Pan mode — drag to move canvas",
+  "toolbar.panMode": "Pan mode - drag to move canvas",
   "toolbar.scanPreview": "Scan Preview",
   "toolbar.mobileView": "Mobile",
   "toolbar.desktopView": "Desktop",
@@ -247,8 +247,8 @@ const en: TranslationStrings = {
   "properties.unlock": "Unlock",
   "properties.delete": "Delete",
   "properties.resetToAuto": "Reset to Auto",
-  "properties.overrideActive": "Custom override active — values differ from auto-scale",
-  "properties.autoScaled": "Auto-scaled from desktop — edit to create a custom override",
+  "properties.overrideActive": "Custom override active - values differ from auto-scale",
+  "properties.autoScaled": "Auto-scaled from desktop - edit to create a custom override",
   "properties.mode": "Mode",
   "blockSettings.title": "Block Settings",
   "blockSettings.noSelection": "No block selected",
@@ -325,7 +325,7 @@ const si: TranslationStrings = {
   "toolbar.generateQR": "QR අත්දැකීම සාදන්න",
   "toolbar.fitToView": "දර්ශනයට ගැළපෙන්න",
   "toolbar.centerCanvas": "කැන්වසය මැද කරන්න",
-  "toolbar.panMode": "සැරිසැරීමේ ආකාරය — කැන්වසය ගෙනයන්න අදින්න",
+  "toolbar.panMode": "සැරිසැරීමේ ආකාරය - කැන්වසය ගෙනයන්න අදින්න",
   "toolbar.scanPreview": "ස්කෑන් පෙරදසුන",
   "toolbar.mobileView": "ජංගම",
   "toolbar.desktopView": "ඩෙස්ක්ටොප්",
@@ -389,8 +389,8 @@ const si: TranslationStrings = {
   "properties.unlock": "අගුළු හරින්න",
   "properties.delete": "මකන්න",
   "properties.resetToAuto": "ස්වයං වෙත නැවත සකසන්න",
-  "properties.overrideActive": "අභිරුචි ප්‍රතිස්ථාපනය සක්‍රියයි — අගයන් ස්වයං-පරිමාණයට වෙනස්ය",
-  "properties.autoScaled": "ඩෙස්ක්ටොප් එකෙන් ස්වයංක්‍රීයව පරිමාණය — අභිරුචි සෑදීමට සංස්කරණය කරන්න",
+  "properties.overrideActive": "අභිරුචි ප්‍රතිස්ථාපනය සක්‍රියයි - අගයන් ස්වයං-පරිමාණයට වෙනස්ය",
+  "properties.autoScaled": "ඩෙස්ක්ටොප් එකෙන් ස්වයංක්‍රීයව පරිමාණය - අභිරුචි සෑදීමට සංස්කරණය කරන්න",
   "properties.mode": "ආකාරය",
   "blockSettings.title": "කොටස් සැකසුම්",
   "blockSettings.noSelection": "කොටසක් තෝරා නැත",
@@ -467,7 +467,7 @@ const ta: TranslationStrings = {
   "toolbar.generateQR": "QR அனுபவத்தை உருவாக்கு",
   "toolbar.fitToView": "காட்சிக்கு பொருத்து",
   "toolbar.centerCanvas": "கேன்வாசை நடுவில் வை",
-  "toolbar.panMode": "நகர்வு முறை — கேன்வாசை நகர்த்த இழுக்கவும்",
+  "toolbar.panMode": "நகர்வு முறை - கேன்வாசை நகர்த்த இழுக்கவும்",
   "toolbar.scanPreview": "ஸ்கேன் முன்னோட்டம்",
   "toolbar.mobileView": "மொபைல்",
   "toolbar.desktopView": "டெஸ்க்டாப்",
@@ -531,8 +531,8 @@ const ta: TranslationStrings = {
   "properties.unlock": "திற",
   "properties.delete": "நீக்கு",
   "properties.resetToAuto": "தானியங்கிக்கு மீட்டமை",
-  "properties.overrideActive": "தனிப்பயன் மீறல் செயலில் — மதிப்புகள் தானியங்கி-அளவிலிருந்து வேறுபடுகின்றன",
-  "properties.autoScaled": "டெஸ்க்டாப்பிலிருந்து தானியங்கி அளவு — தனிப்பயன் மீறலை உருவாக்க திருத்தவும்",
+  "properties.overrideActive": "தனிப்பயன் மீறல் செயலில் - மதிப்புகள் தானியங்கி-அளவிலிருந்து வேறுபடுகின்றன",
+  "properties.autoScaled": "டெஸ்க்டாப்பிலிருந்து தானியங்கி அளவு - தனிப்பயன் மீறலை உருவாக்க திருத்தவும்",
   "properties.mode": "முறை",
   "blockSettings.title": "தொகுதி அமைப்புகள்",
   "blockSettings.noSelection": "தொகுதி தேர்ந்தெடுக்கப்படவில்லை",

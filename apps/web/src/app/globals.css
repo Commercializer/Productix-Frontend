@@ -81,7 +81,7 @@
 }
 
 /* ─────────────────────────────────────────────
- * Landing Page — Cinematic Motion System
+ * Landing Page - Cinematic Motion System
  * Pure CSS animations, scoped to .lp- prefix
  * ──────────────────────────────────────────── */
 
@@ -333,7 +333,7 @@
 }
 
 @utility text-gradient {
-  /* Gradient text — brand */
+  /* Gradient text - brand */
   background: var(--brand-gradient);
   -webkit-background-clip: text;
   background-clip: text;
@@ -355,7 +355,7 @@
 }
 
 /* ─────────────────────────────────────────────
- * Design Token System — Light & Dark
+ * Design Token System - Light & Dark
  * ──────────────────────────────────────────── */
 
 @layer base {
@@ -456,7 +456,7 @@
 }
 
 /* ─────────────────────────────────────────────
- * Editor — Block Settings (Properties Panel)
+ * Editor - Block Settings (Properties Panel)
  * Force dark text on inputs/selects/buttons so
  * values stay readable when the document theme
  * (e.g. system dark mode) sets a light foreground.
@@ -480,7 +480,7 @@
 }
 
 /* ─────────────────────────────────────────────
- * Design System — Dashboard & Admin Panel
+ * Design System - Dashboard & Admin Panel
  * Dark mode, Google Sans Flex font, reference-matched
  * ──────────────────────────────────────────── */
 
@@ -1320,7 +1320,7 @@
 }
 
 /* ─────────────────────────────────────────────
- * Admin Sidebar — Dedicated Component Styles
+ * Admin Sidebar - Dedicated Component Styles
  * Collapsed by default (64px), expandable to 240px
  * Mobile: hamburger slide-out drawer
  * ──────────────────────────────────────────── */

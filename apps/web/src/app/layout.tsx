@@ -11,11 +11,11 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: {
     default:
-      "Productix — Product Experience Infrastructure for Modern Consumer Brands",
+      "Productix - Product Experience Infrastructure for Modern Consumer Brands",
     template: "%s | Productix",
   },
   description:
-    "Productix transforms physical products into connected digital experiences through dynamic product engagement, consumer intelligence, packaging analytics, and activation infrastructure — built for FMCG and packaged-product brands at enterprise scale.",
+    "Productix transforms physical products into connected digital experiences through dynamic product engagement, consumer intelligence, packaging analytics, and activation infrastructure - built for FMCG and packaged-product brands at enterprise scale.",
   keywords: [
     "product experience infrastructure",
     "connected packaging",
@@ -50,6 +50,7 @@ export default function RootLayout({
         <link href={getGoogleFontsHref()} rel="stylesheet" />
       </head>
       <body
+        suppressHydrationWarning
         className={cn(
           fontSans.variable,
           fontMono.variable,

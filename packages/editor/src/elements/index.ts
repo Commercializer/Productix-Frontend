@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Elements — Barrel export + registration
+ * Elements - Barrel export + registration
  *
  * Importing this file registers all element types
  * in the global registry.

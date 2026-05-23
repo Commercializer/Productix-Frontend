@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Stat Card Element — Metric display
+ * Stat Card Element - Metric display
  * ──────────────────────────────────────────── */
 
 "use client";

@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * POST /api/media/upload — Upload media to R2
+ * POST /api/media/upload - Upload media to R2
  *
  * Accepts multipart/form-data with a single "file"
  * field. Returns the public R2 URL + key.

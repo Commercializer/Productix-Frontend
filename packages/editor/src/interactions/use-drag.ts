@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * useDrag — Pointer-based drag interaction hook
+ * useDrag - Pointer-based drag interaction hook
  *
  * Uses window-level event listeners after pointer
  * capture so drags work reliably even when the
@@ -83,7 +83,7 @@ export function useDrag() {
         useCanvasStore.setState({ selectedIds: [...groupMemberIds] });
       }
 
-      // Always use the native transform — that's what the artboard renders
+      // Always use the native transform - that's what the artboard renders
       dragRef.current = {
         startX: e.clientX,
         startY: e.clientY,
@@ -151,7 +151,7 @@ export function useDrag() {
       const snapDx = snap.x - newX;
       const snapDy = snap.y - newY;
 
-      // Always write to the base transform — the artboard renders
+      // Always write to the base transform - the artboard renders
       // from el.transform regardless of breakpoint.
       // Move all group siblings by the same delta
       for (const sibling of drag.groupSiblings) {

@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@productix/db";
-import type { DeviceType } from "@productix/db";
+import type { DeviceType, QrScanType } from "@productix/db";
 import { auth } from "@/auth";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -81,7 +81,7 @@ export async function getMyPromptionsAction() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// REDIRECT LINK — when set + enabled, scanning the QR / hitting
+// REDIRECT LINK - when set + enabled, scanning the QR / hitting
 // the public page sends the visitor to the external URL instead
 // of rendering the showcase page.
 // ═══════════════════════════════════════════════════════════════
@@ -141,7 +141,7 @@ export async function updateRedirectAction(
 }
 
 // ═══════════════════════════════════════════════════════════════
-// TOGGLE slug visibility — affects whether the public route
+// TOGGLE slug visibility - affects whether the public route
 // redirects /p/<shortCode> to /p/<slug>.
 // ═══════════════════════════════════════════════════════════════
 
@@ -149,7 +149,7 @@ const SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/;
 
 /**
  * Rename a product profile's slug. Anyone with read/write access to the company
- * (admins and regular users) can rename — the slug only affects the pretty URL.
+ * (admins and regular users) can rename - the slug only affects the pretty URL.
  */
 export async function updateSlugAction(profileId: string, slug: string) {
   if (!isUUID(profileId)) return { error: "Invalid profile ID" };
@@ -456,6 +456,59 @@ export async function createBrandProfileAction(brandName: string) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// EXPORT / IMPORT (.productix encrypted project file)
+// ═══════════════════════════════════════════════════════════════
+
+export async function exportProductixFileAction(profileId: string) {
+  if (!isUUID(profileId)) return { error: "Invalid profile ID" };
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const profile = await prisma.productProfile.findUnique({
+    where: { id: profileId },
+    select: { id: true, slug: true, productName: true, content: true },
+  });
+  if (!profile) return { error: "Page not found" };
+
+  try {
+    const { encryptProductixFile } = await import("@/lib/share/productix-file");
+    const fileContent = encryptProductixFile(profile.content ?? {}, {
+      productName: profile.productName,
+      slug: profile.slug,
+      exportedAt: new Date().toISOString(),
+    });
+    const safeSlug = (profile.slug || "page").replace(/[^a-z0-9_-]/gi, "-").slice(0, 64);
+    return {
+      success: true,
+      filename: `${safeSlug}.productix`,
+      fileContent,
+    };
+  } catch (error: any) {
+    return { error: error?.message ?? "Failed to export" };
+  }
+}
+
+export async function importProductixFileAction(fileContent: string) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  if (typeof fileContent !== "string" || fileContent.length === 0) {
+    return { error: "Empty file" };
+  }
+  if (fileContent.length > 25 * 1024 * 1024) {
+    return { error: "File too large" };
+  }
+
+  try {
+    const { decryptProductixFile } = await import("@/lib/share/productix-file");
+    const document = decryptProductixFile<Record<string, unknown>>(fileContent);
+    return { success: true, document };
+  } catch (error: any) {
+    return { error: error?.message ?? "Failed to import" };
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
 // SAVE PAGE CONTENT (from editor → DB)
 // ═══════════════════════════════════════════════════════════════
 
@@ -567,7 +620,7 @@ export async function unpublishPageAction(profileId: string) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// PUBLIC PAGE — Unauthenticated access for published pages
+// PUBLIC PAGE - Unauthenticated access for published pages
 // ═══════════════════════════════════════════════════════════════
 
 const productProfileInclude = {
@@ -618,10 +671,10 @@ function publicProfileShape(profile: any) {
     },
     brand: profile.product.brandProfile
       ? {
-          name: profile.product.brandProfile.brandName,
-          logoUrl: profile.product.brandProfile.brandLogoUrl,
-          themeColor: profile.product.brandProfile.themeColor,
-        }
+        name: profile.product.brandProfile.brandName,
+        logoUrl: profile.product.brandProfile.brandLogoUrl,
+        themeColor: profile.product.brandProfile.themeColor,
+      }
       : null,
   };
 }
@@ -670,7 +723,7 @@ export async function getPublicPageByHandleAction(handle: string) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// PREVIEW PAGE — Authenticated access for previewing pages
+// PREVIEW PAGE - Authenticated access for previewing pages
 // ═══════════════════════════════════════════════════════════════
 
 export async function getPreviewPageBySlugAction(slug: string) {
@@ -727,10 +780,10 @@ export async function getPreviewPageBySlugAction(slug: string) {
     },
     brand: profile.product.brandProfile
       ? {
-          name: profile.product.brandProfile.brandName,
-          logoUrl: profile.product.brandProfile.brandLogoUrl,
-          themeColor: profile.product.brandProfile.themeColor,
-        }
+        name: profile.product.brandProfile.brandName,
+        logoUrl: profile.product.brandProfile.brandLogoUrl,
+        themeColor: profile.product.brandProfile.themeColor,
+      }
       : null,
   };
 }
@@ -782,7 +835,7 @@ export async function uploadImageAction(formData: FormData) {
 
   const file = formData.get("file") as File | null;
   if (!file) return { error: "No file provided" };
-  
+
   if (!file.type.startsWith("image/")) return { error: "File must be an image" };
 
   try {
@@ -903,7 +956,7 @@ export async function getCompanyAnalyticsAction() {
       };
     } catch (viewErr) {
       // Page-view metrics unavailable (table missing, stale Prisma client in
-      // dev, etc.) — degrade gracefully to zeros instead of blanking the
+      // dev, etc.) - degrade gracefully to zeros instead of blanking the
       // whole dashboard.
       console.error("[getCompanyAnalyticsAction] page-view metrics failed", viewErr);
     }
@@ -935,7 +988,7 @@ export async function getCompanyAnalyticsAction() {
     const timeSeries = Array.from(buckets.values());
 
     // Source breakdown: bucket referrers into the same labels QrSource used.
-    // Direct visits (no referrer) bucket as ON_PACKAGE — historically that's
+    // Direct visits (no referrer) bucket as ON_PACKAGE - historically that's
     // how QR scans without a referrer were attributed.
     const sourceCounts = new Map<string, number>();
     for (const row of recentViewRows) {
@@ -953,37 +1006,37 @@ export async function getCompanyAnalyticsAction() {
       await Promise.all([
         topProductIds.length
           ? prisma.productProfile.findMany({
-              where: { productId: { in: topProductIds } },
-              select: { productId: true, productName: true, slug: true, isPublished: true, languageCode: true },
-            })
+            where: { productId: { in: topProductIds } },
+            select: { productId: true, productName: true, slug: true, isPublished: true, languageCode: true },
+          })
           : Promise.resolve([]),
         topProductIds.length
           ? prisma.feedbackInquiry.groupBy({
-              by: ["productId"],
-              where: { companyId, productId: { in: topProductIds } },
-              _count: { _all: true },
-            })
+            by: ["productId"],
+            where: { companyId, productId: { in: topProductIds } },
+            _count: { _all: true },
+          })
           : Promise.resolve([] as { productId: string | null; _count: { _all: number } }[]),
         topProductIds.length
           ? prisma.pageView.groupBy({
-              by: ["productId", "deviceType"],
-              where: { companyId, productId: { in: topProductIds } },
-              _count: { _all: true },
-            })
+            by: ["productId", "deviceType"],
+            where: { companyId, productId: { in: topProductIds } },
+            _count: { _all: true },
+          })
           : Promise.resolve([] as Array<{ productId: string; deviceType: DeviceType | null; _count: { _all: number } }>),
         topProductIds.length
           ? prisma.pageView.groupBy({
-              by: ["productId", "country"],
-              where: { companyId, productId: { in: topProductIds }, country: { not: null } },
-              _count: { _all: true },
-            })
+            by: ["productId", "country"],
+            where: { companyId, productId: { in: topProductIds }, country: { not: null } },
+            _count: { _all: true },
+          })
           : Promise.resolve([] as Array<{ productId: string; country: string | null; _count: { _all: number } }>),
         topProductIds.length
           ? prisma.pageView.groupBy({
-              by: ["productId", "browser"],
-              where: { companyId, productId: { in: topProductIds }, browser: { not: null } },
-              _count: { _all: true },
-            })
+            by: ["productId", "browser"],
+            where: { companyId, productId: { in: topProductIds }, browser: { not: null } },
+            _count: { _all: true },
+          })
           : Promise.resolve([] as Array<{ productId: string; browser: string | null; _count: { _all: number } }>),
       ]);
     const profileByProduct = new Map<string, { productName: string; slug: string; isPublished: boolean }>();
@@ -1093,6 +1146,229 @@ export async function getCompanyAnalyticsAction() {
   }
 }
 
+export type ProductAnalyticsRange = "weekly" | "monthly" | "yearly" | "lifetime";
+
+export async function getProductAnalyticsAction(
+  productId: string,
+  range: ProductAnalyticsRange,
+) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const companyId = await getUserCompanyId(session.user.id);
+  if (!companyId) return { error: "No company found for user" };
+  if (!isUUID(productId)) return { error: "Invalid product id" };
+
+  const product = await prisma.product.findFirst({
+    where: { id: productId, companyId },
+    select: { id: true, createdAt: true },
+  });
+  if (!product) return { error: "Product not found" };
+
+  try {
+    const now = new Date();
+    let startDate: Date;
+    let bucket: "day" | "month";
+
+    if (range === "weekly") {
+      startDate = new Date(now);
+      startDate.setUTCHours(0, 0, 0, 0);
+      startDate.setUTCDate(startDate.getUTCDate() - 6);
+      bucket = "day";
+    } else if (range === "monthly") {
+      startDate = new Date(now);
+      startDate.setUTCHours(0, 0, 0, 0);
+      startDate.setUTCDate(startDate.getUTCDate() - 29);
+      bucket = "day";
+    } else if (range === "yearly") {
+      startDate = new Date(now);
+      startDate.setUTCHours(0, 0, 0, 0);
+      startDate.setUTCDate(1);
+      startDate.setUTCMonth(startDate.getUTCMonth() - 11);
+      bucket = "month";
+    } else {
+      const [firstView, firstFeedback] = await Promise.all([
+        prisma.pageView.findFirst({
+          where: { companyId, productId },
+          select: { viewedAt: true },
+          orderBy: { viewedAt: "asc" },
+        }).catch(() => null),
+        prisma.feedbackInquiry.findFirst({
+          where: { companyId, productId },
+          select: { createdAt: true },
+          orderBy: { createdAt: "asc" },
+        }),
+      ]);
+      const candidates = [firstView?.viewedAt, firstFeedback?.createdAt, product.createdAt].filter(
+        (d): d is Date => !!d,
+      );
+      const earliest = candidates.length
+        ? candidates.reduce((a, b) => (a < b ? a : b))
+        : new Date(now);
+      startDate = new Date(earliest);
+      startDate.setUTCDate(1);
+      startDate.setUTCHours(0, 0, 0, 0);
+      bucket = "month";
+    }
+
+    type RangeView = {
+      viewedAt: Date;
+      deviceType: DeviceType | null;
+      country: string | null;
+      browser: string | null;
+      referrer: string | null;
+      qrScanType: QrScanType | null;
+    };
+    let viewRows: RangeView[] = [];
+    try {
+      viewRows = await prisma.pageView.findMany({
+        where: { companyId, productId, viewedAt: { gte: startDate } },
+        select: {
+          viewedAt: true,
+          deviceType: true,
+          country: true,
+          browser: true,
+          referrer: true,
+          qrScanType: true,
+        },
+      });
+    } catch (viewErr) {
+      console.error("[getProductAnalyticsAction] page-view query failed", viewErr);
+    }
+
+    const feedbackRows = await prisma.feedbackInquiry.findMany({
+      where: { companyId, productId, createdAt: { gte: startDate } },
+      select: { createdAt: true },
+    });
+
+    let totalScans = 0;
+    try {
+      totalScans = await prisma.pageView.count({ where: { companyId, productId } });
+    } catch (viewErr) {
+      console.error("[getProductAnalyticsAction] page-view count failed", viewErr);
+    }
+    const totalFeedback = await prisma.feedbackInquiry.count({
+      where: { companyId, productId },
+    });
+
+    const buckets = new Map<string, { date: string; scans: number; feedback: number }>();
+    if (bucket === "day") {
+      const dayMs = 24 * 60 * 60 * 1000;
+      const startMs = startDate.getTime();
+      const todayKey = (() => {
+        const x = new Date(now);
+        x.setUTCHours(0, 0, 0, 0);
+        return x.getTime();
+      })();
+      const totalDays = Math.max(1, Math.round((todayKey - startMs) / dayMs) + 1);
+      for (let i = 0; i < totalDays; i++) {
+        const d = new Date(startMs + i * dayMs);
+        const key = d.toISOString().slice(0, 10);
+        buckets.set(key, { date: key, scans: 0, feedback: 0 });
+      }
+      for (const row of viewRows) {
+        const x = new Date(row.viewedAt);
+        x.setUTCHours(0, 0, 0, 0);
+        const b = buckets.get(x.toISOString().slice(0, 10));
+        if (b) b.scans += 1;
+      }
+      for (const row of feedbackRows) {
+        const x = new Date(row.createdAt);
+        x.setUTCHours(0, 0, 0, 0);
+        const b = buckets.get(x.toISOString().slice(0, 10));
+        if (b) b.feedback += 1;
+      }
+    } else {
+      const startY = startDate.getUTCFullYear();
+      const startM = startDate.getUTCMonth();
+      const nowY = now.getUTCFullYear();
+      const nowM = now.getUTCMonth();
+      const months = Math.max(1, (nowY - startY) * 12 + (nowM - startM) + 1);
+      for (let i = 0; i < months; i++) {
+        const d = new Date(Date.UTC(startY, startM + i, 1));
+        const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+        buckets.set(key, { date: key, scans: 0, feedback: 0 });
+      }
+      const monthKey = (d: Date) =>
+        `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+      for (const row of viewRows) {
+        const b = buckets.get(monthKey(new Date(row.viewedAt)));
+        if (b) b.scans += 1;
+      }
+      for (const row of feedbackRows) {
+        const b = buckets.get(monthKey(new Date(row.createdAt)));
+        if (b) b.feedback += 1;
+      }
+    }
+
+    const timeSeries = Array.from(buckets.values());
+    const rangeScans = timeSeries.reduce((sum, b) => sum + b.scans, 0);
+    const rangeFeedback = timeSeries.reduce((sum, b) => sum + b.feedback, 0);
+
+    const tallyTop = (
+      rows: RangeView[],
+      pick: (r: RangeView) => string | null,
+      fallback: string,
+      limit?: number,
+    ) => {
+      const counts = new Map<string, number>();
+      for (const row of rows) {
+        const key = pick(row) ?? fallback;
+        counts.set(key, (counts.get(key) ?? 0) + 1);
+      }
+      const sorted = Array.from(counts, ([key, count]) => ({ key, count })).sort(
+        (a, b) => b.count - a.count,
+      );
+      return limit ? sorted.slice(0, limit) : sorted;
+    };
+
+    const devices = tallyTop(viewRows, (r) => r.deviceType, "UNKNOWN").map((d) => ({
+      device: d.key,
+      count: d.count,
+    }));
+    const countries = tallyTop(viewRows, (r) => r.country, "Unknown", 10).map((c) => ({
+      country: c.key,
+      count: c.count,
+    }));
+    const browsers = tallyTop(viewRows, (r) => r.browser, "Unknown", 10).map((b) => ({
+      browser: b.key,
+      count: b.count,
+    }));
+    const sources = tallyTop(viewRows, (r) => bucketReferrer(r.referrer), "OTHER").map((s) => ({
+      source: s.key,
+      count: s.count,
+    }));
+    // QR scan type - which QR surface (On Pack / Link / Social) the scan came
+    // through. Distinct from `sources` above (which buckets HTTP referrer);
+    // historical rows pre-migration land in UNTAGGED.
+    const qrScanTypes = tallyTop(viewRows, (r) => r.qrScanType, "UNTAGGED").map((q) => ({
+      qrScanType: q.key,
+      count: q.count,
+    }));
+
+    return {
+      success: true,
+      data: {
+        bucket,
+        range,
+        timeSeries,
+        rangeScans,
+        rangeFeedback,
+        rangeConversion: rangeScans > 0 ? (rangeFeedback / rangeScans) * 100 : 0,
+        totalScans,
+        totalFeedback,
+        devices,
+        countries,
+        browsers,
+        sources,
+        qrScanTypes,
+      },
+    };
+  } catch (error: any) {
+    return { error: error.message };
+  }
+}
+
 export async function getCompanyMessagesAction() {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
@@ -1163,7 +1439,7 @@ export async function getCompanySettingsAction() {
 
 // Map a referrer URL onto the same source labels the QrSource enum used,
 // so the dashboard's existing SOURCE_LABEL mapping still renders nicely.
-// Empty/missing referrer counts as ON_PACKAGE (direct visit — likely a QR scan).
+// Empty/missing referrer counts as ON_PACKAGE (direct visit - likely a QR scan).
 function bucketReferrer(referrer: string | null): string {
   if (!referrer) return "ON_PACKAGE";
   let host: string;

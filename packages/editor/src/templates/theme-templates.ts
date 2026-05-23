@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Theme Templates — Predefined artboard layouts
+ * Theme Templates - Predefined artboard layouts
  *
  * Each theme is a function that returns element
  * descriptors positioned on a 428×926 mobile canvas.
@@ -20,7 +20,7 @@ export interface ThemeTemplate {
 }
 
 /* ────────────────────────────────────────────
- * 1 ▸ DEFAULT — Classic product showcase
+ * 1 ▸ DEFAULT - Classic product showcase
  * ──────────────────────────────────────────── */
 
 const DEFAULT_THEME: ThemeTemplate = {
@@ -81,7 +81,7 @@ const DEFAULT_THEME: ThemeTemplate = {
 };
 
 /* ────────────────────────────────────────────
- * 2 ▸ MINIMAL — Clean whitespace-driven layout
+ * 2 ▸ MINIMAL - Clean whitespace-driven layout
  * ──────────────────────────────────────────── */
 
 const MINIMAL_THEME: ThemeTemplate = {
@@ -120,7 +120,7 @@ const MINIMAL_THEME: ThemeTemplate = {
       props: { text: "$79", variant: "heading", fontSize: 28, fontWeight: "700", color: "#1a1a2e", textAlign: "center", lineHeight: 1.2, fontFamily: "var(--font-sans)" },
       transform: { x: 156, y: 593, width: 114, height: 46 },
     },
-    // CTA — outline style
+    // CTA - outline style
     {
       type: "button",
       props: { text: "Learn More", url: "#", variant: "outline", bgColor: "#1a1a2e", textColor: "#ffffff", borderRadius: 999, fontSize: 13, fontWeight: "600" },
@@ -142,7 +142,7 @@ const MINIMAL_THEME: ThemeTemplate = {
 };
 
 /* ────────────────────────────────────────────
- * 3 ▸ COMPACT — Dense, info-rich layout
+ * 3 ▸ COMPACT - Dense, info-rich layout
  * ──────────────────────────────────────────── */
 
 const COMPACT_THEME: ThemeTemplate = {
@@ -233,7 +233,7 @@ const COMPACT_THEME: ThemeTemplate = {
 };
 
 /* ────────────────────────────────────────────
- * 4 ▸ VIVID — Bold, dark, high-contrast
+ * 4 ▸ VIVID - Bold, dark, high-contrast
  * ──────────────────────────────────────────── */
 
 const VIVID_THEME: ThemeTemplate = {
@@ -272,7 +272,7 @@ const VIVID_THEME: ThemeTemplate = {
       props: { text: "$99", variant: "heading", fontSize: 36, fontWeight: "800", color: "#a78bfa", textAlign: "left", lineHeight: 1.2, fontFamily: "var(--font-sans)" },
       transform: { x: 27, y: 652, width: 137, height: 55 },
     },
-    // CTA — gradient-feel
+    // CTA - gradient-feel
     {
       type: "button",
       props: { text: "Get Yours Now", url: "#", variant: "filled", bgColor: "#7c3aed", textColor: "#ffffff", borderRadius: 14, fontSize: 15, fontWeight: "700" },
@@ -294,7 +294,7 @@ const VIVID_THEME: ThemeTemplate = {
 };
 
 /* ────────────────────────────────────────────
- * 5 ▸ ELEGANT — Sophisticated luxury feel
+ * 5 ▸ ELEGANT - Sophisticated luxury feel
  * ──────────────────────────────────────────── */
 
 const ELEGANT_THEME: ThemeTemplate = {
@@ -361,7 +361,7 @@ const ELEGANT_THEME: ThemeTemplate = {
 };
 
 /* ────────────────────────────────────────────
- * 6 ▸ GRADIENT — Modern gradient card
+ * 6 ▸ GRADIENT - Modern gradient card
  * ──────────────────────────────────────────── */
 
 const GRADIENT_THEME: ThemeTemplate = {

@@ -21,7 +21,7 @@ export default function AdminHomePage() {
         const data = await getDashboardStatsAction();
         setStats(data);
       } catch {
-        // Stats failed — show zeros
+        // Stats failed - show zeros
         setStats({ totalUsers: 0, totalPromptions: 0, activeUsers: 0, publishedPromptions: 0 });
       }
     });
@@ -40,7 +40,7 @@ export default function AdminHomePage() {
       <div className="stats-grid">
         <StatsCard
           label="Total Products"
-          value={isPending || !stats ? "—" : stats.totalUsers}
+          value={isPending || !stats ? "-" : stats.totalUsers}
           color="blue"
           icon={
             <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -50,7 +50,7 @@ export default function AdminHomePage() {
         />
         <StatsCard
           label="Total QR Leads"
-          value={isPending || !stats ? "—" : stats.totalPromptions}
+          value={isPending || !stats ? "-" : stats.totalPromptions}
           color="green"
           icon={
             <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -60,7 +60,7 @@ export default function AdminHomePage() {
         />
         <StatsCard
           label="Avg. Visitor Duration"
-          value={isPending || !stats ? "—" : `${stats.activeUsers}`}
+          value={isPending || !stats ? "-" : `${stats.activeUsers}`}
           color="purple"
           trend="Last 7 days"
           icon={
@@ -71,7 +71,7 @@ export default function AdminHomePage() {
         />
         <StatsCard
           label="Total Conversion"
-          value={isPending || !stats ? "—" : `${stats.publishedPromptions}`}
+          value={isPending || !stats ? "-" : `${stats.publishedPromptions}`}
           color="orange"
           icon={
             <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>

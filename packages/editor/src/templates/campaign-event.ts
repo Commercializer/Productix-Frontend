@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Event Announcement Template — Mobile-first canvas
+ * Event Announcement Template - Mobile-first canvas
  * ──────────────────────────────────────────── */
 
 import type { CanvasDocument, Template } from "@productix/types";
@@ -39,8 +39,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 0.65,
-      "transform": { "x": 0, "y": 0, "width": 488, "height": 237,
-        "rotation": 0 },
+      "transform": {
+        "x": 0, "y": 0, "width": 488, "height": 237,
+        "rotation": 0
+      },
       "props": {
         "bgGradientFrom": "#0f172a",
         "bgGradientTo": "#312e81"
@@ -53,8 +55,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 154, "y": 41, "width": 54, "height": 9,
-        "rotation": 0 },
+      "transform": {
+        "x": 154, "y": 41, "width": 54, "height": 9,
+        "rotation": 0
+      },
       "props": {
         "text": "🎉 Coming Soon",
         "bgColor": "rgba(251,191,36,0.25)",
@@ -71,8 +75,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 80, "y": 59, "width": 267, "height": 30,
-        "rotation": 0 },
+      "transform": {
+        "x": 80, "y": 59, "width": 267, "height": 30,
+        "rotation": 0
+      },
       "props": {
         "text": "The Biggest Design Conference of 2026",
         "variant": "heading",
@@ -90,8 +96,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 0.85,
-      "transform": { "x": 110, "y": 95, "width": 208, "height": 18,
-        "rotation": 0 },
+      "transform": {
+        "x": 110, "y": 95, "width": 208, "height": 18,
+        "rotation": 0
+      },
       "props": {
         "text": "Join 5,000+ designers and developers for three days of inspiration, learning, and connection.",
         "variant": "paragraph",
@@ -108,8 +116,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 167, "y": 124, "width": 95, "height": 35,
-        "rotation": 0 },
+      "transform": {
+        "x": 167, "y": 124, "width": 95, "height": 35,
+        "rotation": 0
+      },
       "props": {
         "title": "June 15–17, 2026",
         "subtitle": "San Francisco, CA",
@@ -127,8 +137,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 152, "y": 172, "width": 59, "height": 16,
-        "rotation": 0 },
+      "transform": {
+        "x": 152, "y": 172, "width": 59, "height": 16,
+        "rotation": 0
+      },
       "props": {
         "text": "Register Now",
         "variant": "filled",
@@ -146,8 +158,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 217, "y": 172, "width": 59, "height": 16,
-        "rotation": 0 },
+      "transform": {
+        "x": 217, "y": 172, "width": 59, "height": 16,
+        "rotation": 0
+      },
       "props": {
         "text": "View Speakers",
         "variant": "outline",
@@ -165,8 +179,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 35, "y": 255, "width": 148, "height": 15,
-        "rotation": 0 },
+      "transform": {
+        "x": 35, "y": 255, "width": 148, "height": 15,
+        "rotation": 0
+      },
       "props": {
         "text": "Why Attend?",
         "variant": "heading",
@@ -184,8 +200,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 35, "y": 274, "width": 148, "height": 35,
-        "rotation": 0 },
+      "transform": {
+        "x": 35, "y": 274, "width": 148, "height": 35,
+        "rotation": 0
+      },
       "props": {
         "text": "Get hands-on with the latest tools, learn from industry experts, and network with the best in the business. Three days of workshops, keynotes, and unforgettable experiences.",
         "variant": "paragraph",
@@ -202,8 +220,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 237, "y": 250, "width": 148, "height": 101,
-        "rotation": 0 },
+      "transform": {
+        "x": 237, "y": 250, "width": 148, "height": 101,
+        "rotation": 0
+      },
       "props": {
         "title": "Early Bird Pricing",
         "subtitle": "Save 40% when you register before May 1st. Includes full access to all sessions and workshops.",
@@ -222,8 +242,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 35, "y": 344, "width": 72, "height": 15,
-        "rotation": 0 },
+      "transform": {
+        "x": 35, "y": 344, "width": 72, "height": 15,
+        "rotation": 0
+      },
       "props": {
         "platforms": [
           "twitter",

@@ -1,12 +1,12 @@
 /* ─────────────────────────────────────────────
- * Public Renderer — Production-ready responsive output
+ * Public Renderer - Production-ready responsive output
  *
  * RESPONSIVE APPROACH: CSS transform: scale()
  *
  * The published page uses CSS to scale the entire
  * design based on the viewport width. The design is
  * rendered at its desktop coordinates and uniformly
- * scaled — exactly like the editor preview.
+ * scaled - exactly like the editor preview.
  *
  * This means:
  * - Design once on desktop → works everywhere
@@ -30,6 +30,7 @@ import {
   generateResponsiveStylesheet,
 } from "../engine/layout-engine";
 import { getLocalizedProps } from "../utils/localize-props";
+import { BlockLink } from "../utils/block-link";
 import { CanvasEffects } from "../engine/canvas-effects";
 import { PublicPageProvider } from "./public-page-context";
 
@@ -39,9 +40,9 @@ import "../elements";
 export interface PublicRendererProps {
   document: CanvasDocument;
   className?: string;
-  /** Content locale — defaults to "en" */
+  /** Content locale - defaults to "en" */
   contentLocale?: ContentLocale;
-  /** The Product this page represents — needed for feedback / inquiry submissions. */
+  /** The Product this page represents - needed for feedback / inquiry submissions. */
   productId?: string;
 }
 
@@ -145,7 +146,7 @@ export function PublicRenderer({ document: doc, className, contentLocale = "en",
                   backgroundPosition: "center",
                 }}
               >
-                {/* Flow elements — rendered in flex container */}
+                {/* Flow elements - rendered in flex container */}
                 {hasFlow && (
                   <div
                     style={{
@@ -179,20 +180,22 @@ export function PublicRenderer({ document: doc, className, contentLocale = "en",
                               maxWidth: "100%",
                             }}
                           >
-                            <Component
-                              props={getLocalizedProps(el, contentLocale)}
-                              isEditing={false}
-                              width={effectiveLayout.widthValue}
-                              height={effectiveLayout.heightValue}
-                              onPropsChange={() => {}}
-                            />
+                            <BlockLink element={el}>
+                              <Component
+                                props={getLocalizedProps(el, contentLocale)}
+                                isEditing={false}
+                                width={effectiveLayout.widthValue}
+                                height={effectiveLayout.heightValue}
+                                onPropsChange={() => {}}
+                              />
+                            </BlockLink>
                           </div>
                         );
                       })}
                   </div>
                 )}
 
-                {/* Absolute elements — desktop coordinates, CSS-scaled */}
+                {/* Absolute elements - desktop coordinates, CSS-scaled */}
                 {absoluteElements
                   .sort((a, b) => a.zIndex - b.zIndex)
                   .map((el) => {
@@ -217,13 +220,15 @@ export function PublicRenderer({ document: doc, className, contentLocale = "en",
                           opacity: el.opacity,
                         }}
                       >
-                        <Component
-                          props={getLocalizedProps(el, contentLocale)}
-                          isEditing={false}
-                          width={width}
-                          height={height}
-                          onPropsChange={() => {}}
-                        />
+                        <BlockLink element={el}>
+                          <Component
+                            props={getLocalizedProps(el, contentLocale)}
+                            isEditing={false}
+                            width={width}
+                            height={height}
+                            onPropsChange={() => {}}
+                          />
+                        </BlockLink>
                       </div>
                     );
                   })}

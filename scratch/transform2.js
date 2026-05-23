@@ -106,7 +106,7 @@ function transformFile(filename) {
   const metaCode = metaMatch ? metaMatch[0] : `meta: ${JSON.stringify(template.meta, null, 2)},`;
 
   const newCode = `/* ─────────────────────────────────────────────
- * ${template.meta.name} Template — Mobile-first canvas
+ * ${template.meta.name} Template - Mobile-first canvas
  * ──────────────────────────────────────────── */
 
 import type { CanvasDocument, Template } from "@productix/types";

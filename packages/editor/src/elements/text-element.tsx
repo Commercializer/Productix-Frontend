@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Text Element — Heading / Paragraph / Text
+ * Text Element - Heading / Paragraph / Text
  * ──────────────────────────────────────────── */
 
 "use client";
@@ -31,7 +31,7 @@ function TextElementComponent({ props, isEditing, scaleFactor = 1, onPropsChange
   const scaledFontSize = Math.round(actualFontSize * scaleFactor);
   const scaledPadding = Math.round(4 * scaleFactor);
 
-  // The contentEditable div has NO React children — we manage its content
+  // The contentEditable div has NO React children - we manage its content
   // imperatively via this effect. Rendering {text} as a JSX child would let
   // React reconcile and clobber the user's in-progress typing on any
   // re-render. Skip while focused so we never wipe the caret.
@@ -44,7 +44,7 @@ function TextElementComponent({ props, isEditing, scaleFactor = 1, onPropsChange
     }
   }, [text]);
 
-  // Commit on every input so edits stick even if blur never fires — e.g. when
+  // Commit on every input so edits stick even if blur never fires - e.g. when
   // clicking another element flips isEditing to false and contentEditable
   // from true to false on a still-focused node, which some browsers do not
   // treat as a blur.
@@ -67,7 +67,7 @@ function TextElementComponent({ props, isEditing, scaleFactor = 1, onPropsChange
   // Intercept Enter / Shift+Enter so the browser inserts a literal "\n"
   // text node instead of a <br> or wrapping <div>. With whiteSpace:
   // pre-wrap, the \n renders as a real line break, and on blur we get
-  // a clean string with embedded newlines back from innerText — no
+  // a clean string with embedded newlines back from innerText - no
   // browser-specific DOM structure to interpret.
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === "Enter") {

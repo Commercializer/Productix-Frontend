@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Divider Element — Line / shape separator
+ * Divider Element - Line / shape separator
  * ──────────────────────────────────────────── */
 
 "use client";

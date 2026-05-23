@@ -16,9 +16,9 @@ export interface SeoSettingsValues {
 interface SeoSettingsPanelProps {
   profileId: string;
   initial: SeoSettingsValues;
-  /** Public URL of the page — used for the social previews. */
+  /** Public URL of the page - used for the social previews. */
   publicUrl: string;
-  /** Public domain — used as the source line in social previews. */
+  /** Public domain - used as the source line in social previews. */
   domain: string;
   /** Called when the user saves; parent can refresh the mockup with new values. */
   onSaved?: (values: SeoSettingsValues) => void;

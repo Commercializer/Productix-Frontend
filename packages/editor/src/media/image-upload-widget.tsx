@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * ImageUploadWidget — Reusable drag-drop image picker
+ * ImageUploadWidget - Reusable drag-drop image picker
  *
  * A compact, self-contained widget that can be embedded
  * in ANY property panel or settings section. Provides:
@@ -77,7 +77,7 @@ export function ImageUploadWidget({
       setError(null);
 
       try {
-        // Upload to R2 via media-store — returns a permanent cloud URL
+        // Upload to R2 via media-store - returns a permanent cloud URL
         let url: string;
         try {
           const { addMedia } = await import("./media-store");

@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Story Blocks Panel — Premium glassmorphic design
+ * Story Blocks Panel - Premium glassmorphic design
  * ──────────────────────────────────────────── */
 
 "use client";
@@ -246,7 +246,7 @@ export function ElementPanel() {
                 </div>
               </div>
 
-              {/* Block grid — 2 columns */}
+              {/* Block grid - 2 columns */}
               <div style={{
                 display: "grid",
                 gridTemplateColumns: "1fr 1fr",

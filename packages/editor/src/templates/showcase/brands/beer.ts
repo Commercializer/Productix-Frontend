@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Premium Beer — Dark Luxury Showcase Config
+ * Premium Beer - Dark Luxury Showcase Config
  *
  * Theme: Premium, mature, sophisticated, dark mode
  * Colors: Dark black, gold, amber, cream

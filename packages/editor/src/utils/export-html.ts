@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Export HTML — Standalone responsive page export
+ * Export HTML - Standalone responsive page export
  *
  * Generates production-ready HTML/CSS that works
  * independently in any browser without React.
@@ -67,7 +67,7 @@ function elementToHtml(el: ElementNode, isFlowMode: boolean): string {
       if (cropRect) {
         // Cropped region is stretched to fill the block. Static HTML can't
         // know the source image's intrinsic size, so objectFit on top of the
-        // crop is approximated as "fill" — the canvas editor honors objectFit
+        // crop is approximated as "fill" - the canvas editor honors objectFit
         // precisely.
         const cw = Math.max(0.0001, cropRect.w);
         const ch = Math.max(0.0001, cropRect.h);

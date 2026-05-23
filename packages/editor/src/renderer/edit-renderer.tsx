@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Edit Renderer — Product Experience Builder
+ * Edit Renderer - Product Experience Builder
  *
  * Mobile-first editor with centered iPhone preview,
  * floating Story Blocks drawer, and contextual
@@ -27,6 +27,8 @@ import {
   HelpCircle,
   ChevronDown,
   Sparkles,
+  Download,
+  Upload,
 } from "lucide-react";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
@@ -57,6 +59,12 @@ interface EditRendererProps {
   onSave?: (document: CanvasDocument) => Promise<void> | void;
   onPublish?: (document: CanvasDocument) => Promise<void> | void;
   previewSlug?: string;
+  /** Export the current document as an encrypted .productix file. Receives the
+   *  document and should trigger a download. If omitted the button is hidden. */
+  onExportFile?: (document: CanvasDocument) => Promise<void> | void;
+  /** Import an encrypted .productix file. Receives the file's text content,
+   *  returns the decrypted CanvasDocument (or throws). If omitted button hidden. */
+  onImportFile?: (fileContent: string) => Promise<CanvasDocument>;
 }
 
 const CANVAS_H_PADDING = 120;
@@ -78,7 +86,7 @@ function computeFitZoom(
   return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, Math.min(viewportWidth / totalW, viewportHeight / totalH, 1)));
 }
 
-export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug }: EditRendererProps) {
+export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug, onExportFile, onImportFile }: EditRendererProps) {
   const loadDocument = useCanvasStore((s) => s.loadDocument);
   const document = useCanvasStore((s) => s.document);
   const zoom = useCanvasStore((s) => s.zoom);
@@ -107,6 +115,9 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug }
   const { t } = useTranslation();
 
   const [activeTool, setActiveTool] = useState<"pointer" | "hand">("pointer");
+  const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   const {
     isSpaceHeld, isPanning, panCursor,
@@ -147,11 +158,10 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug }
 
   useEffect(() => {
     if (hasAutoFit.current || document.artboards.length === 0 || !canvasRef.current) return;
-    const rect = canvasRef.current.getBoundingClientRect();
-    setZoom(computeFitZoom(document.artboards, rect.width, rect.height, activeBreakpoint));
+    setZoom(0.75);
     hasAutoFit.current = true;
     setTimeout(centerCanvas, 50);
-  }, [document.artboards, setZoom, activeBreakpoint, centerCanvas]);
+  }, [document.artboards, setZoom, centerCanvas]);
 
   const startTour = useCallback(() => {
     const driverObj = driver({
@@ -298,6 +308,37 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug }
     } finally { setIsSaving(false); }
   }, [onSave, onPublish]);
 
+  const handleExportFile = useCallback(async () => {
+    if (!onExportFile || isExporting) return;
+    const doc = useCanvasStore.getState().document;
+    setIsExporting(true);
+    try {
+      await onExportFile(doc);
+    } finally {
+      setIsExporting(false);
+    }
+  }, [onExportFile, isExporting]);
+
+  const handleImportFile = useCallback(
+    async (file: File) => {
+      if (!onImportFile || isImporting) return;
+      setIsImporting(true);
+      try {
+        const text = await file.text();
+        const doc = await onImportFile(text);
+        loadDocument(doc);
+        setLastSavedJSON("");
+      } catch (err) {
+        // Re-throw so wrapper page can show a notification — keeps the
+        // editor package free of toast styling assumptions.
+        throw err;
+      } finally {
+        setIsImporting(false);
+      }
+    },
+    [onImportFile, isImporting, loadDocument],
+  );
+
   const previewWidths = document.artboards.map((a) => getArtboardPreviewWidth(a.width, activeBreakpoint));
   const previewHeights = document.artboards.map((a) => getArtboardPreviewHeight(a.width, a.height, activeBreakpoint));
   const maxArtboardW = Math.max(0, ...previewWidths) + 24;
@@ -392,6 +433,43 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug }
         </div>
 
         <div id="tour-publish" style={{ display:"flex",alignItems:"center",gap:8 }}>
+          {onImportFile && (
+            <>
+              <input
+                ref={importInputRef}
+                type="file"
+                accept=".productix,application/json"
+                style={{ display: "none" }}
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  // Reset so picking the same file twice still fires onChange.
+                  e.target.value = "";
+                  if (!file) return;
+                  try {
+                    await handleImportFile(file);
+                  } catch (err: any) {
+                    alert(`Import failed: ${err?.message ?? "unknown error"}`);
+                  }
+                }}
+              />
+              <TopBtn
+                onClick={() => importInputRef.current?.click()}
+                disabled={isImporting}
+                title="Import .productix file"
+              >
+                {isImporting ? <Loader2 size={14} style={{ animation: "spin 0.6s linear infinite" }} /> : <Upload size={14} />}
+              </TopBtn>
+            </>
+          )}
+          {onExportFile && (
+            <TopBtn
+              onClick={handleExportFile}
+              disabled={isExporting}
+              title="Export as encrypted .productix file"
+            >
+              {isExporting ? <Loader2 size={14} style={{ animation: "spin 0.6s linear infinite" }} /> : <Download size={14} />}
+            </TopBtn>
+          )}
           <a href={previewSlug?`/preview/${previewSlug}`:"#"} target={previewSlug?"_blank":undefined}
             onClick={(e) => { if (!previewSlug) { e.preventDefault(); alert("Please save first."); } }}
             onMouseEnter={(e) => { e.currentTarget.style.background="#f1f5f9"; e.currentTarget.style.color="#0f172a"; e.currentTarget.style.borderColor="rgba(15,23,42,0.12)"; }}
@@ -474,7 +552,7 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug }
           <FloatingToolbar canvasRef={canvasRef} zoom={zoom} />
         </div>
 
-        {/* ── Feedback Form Preview — appears only when a Feedback block is selected ── */}
+        {/* ── Feedback Form Preview - appears only when a Feedback block is selected ── */}
         <FeedbackFormPreview />
 
         {/* ── Right Panel (Block Settings) ── */}

@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Sprite Showcase Template — Mobile-first canvas
+ * Sprite Showcase Template - Mobile-first canvas
  * ──────────────────────────────────────────── */
 
 import type { CanvasDocument, Template } from "@productix/types";
@@ -75,8 +75,10 @@ const doc: CanvasDocument = {
       "locked": true,
       "visible": true,
       "opacity": 0.65,
-      "transform": { "x": 0, "y": 0, "width": 488, "height": 244,
-        "rotation": 0 },
+      "transform": {
+        "x": 0, "y": 0, "width": 488, "height": 244,
+        "rotation": 0
+      },
       "props": {
         "bgGradientFrom": "#065f46",
         "bgGradientTo": "#059669"
@@ -89,8 +91,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 339, "y": 11, "width": 65, "height": 18,
-        "rotation": 0 },
+      "transform": {
+        "x": 339, "y": 11, "width": 65, "height": 18,
+        "rotation": 0
+      },
       "props": {
         "text": "English ▾",
         "bgColor": "rgba(255,255,255,0.15)",
@@ -107,8 +111,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 80, "y": 30, "width": 267, "height": 196,
-        "rotation": 0 },
+      "transform": {
+        "x": 80, "y": 30, "width": 267, "height": 196,
+        "rotation": 0
+      },
       "props": {
         "src": "https://images.unsplash.com/photo-1625772299848-391b6a87d7b3?w=800&q=90",
         "alt": "Sprite Bottle",
@@ -123,8 +129,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 24, "y": 261, "width": 30, "height": 30,
-        "rotation": 0 },
+      "transform": {
+        "x": 24, "y": 261, "width": 30, "height": 30,
+        "rotation": 0
+      },
       "props": {
         "icon": "🍋",
         "fontSize": 16,
@@ -139,8 +147,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 56, "y": 266, "width": 119, "height": 21,
-        "rotation": 0 },
+      "transform": {
+        "x": 56, "y": 266, "width": 119, "height": 21,
+        "rotation": 0
+      },
       "props": {
         "text": "Sprite",
         "variant": "heading",
@@ -158,8 +168,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 24, "y": 297, "width": 380, "height": 24,
-        "rotation": 0 },
+      "transform": {
+        "x": 24, "y": 297, "width": 380, "height": 24,
+        "rotation": 0
+      },
       "props": {
         "text": "Sprite Lemon-Lime",
         "variant": "heading",
@@ -177,8 +189,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 24, "y": 333, "width": 72, "height": 24,
-        "rotation": 0 },
+      "transform": {
+        "x": 24, "y": 333, "width": 72, "height": 24,
+        "rotation": 0
+      },
       "props": {
         "text": "250 ml",
         "variant": "outline",
@@ -196,8 +210,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 104, "y": 333, "width": 72, "height": 24,
-        "rotation": 0 },
+      "transform": {
+        "x": 104, "y": 333, "width": 72, "height": 24,
+        "rotation": 0
+      },
       "props": {
         "text": "330 ml",
         "variant": "filled",
@@ -215,8 +231,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 184, "y": 333, "width": 72, "height": 24,
-        "rotation": 0 },
+      "transform": {
+        "x": 184, "y": 333, "width": 72, "height": 24,
+        "rotation": 0
+      },
       "props": {
         "text": "500 ml",
         "variant": "outline",
@@ -234,8 +252,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 265, "y": 333, "width": 72, "height": 24,
-        "rotation": 0 },
+      "transform": {
+        "x": 265, "y": 333, "width": 72, "height": 24,
+        "rotation": 0
+      },
       "props": {
         "text": "1.5 L",
         "variant": "outline",
@@ -253,8 +273,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 24, "y": 368, "width": 357, "height": 35,
-        "rotation": 0 },
+      "transform": {
+        "x": 24, "y": 368, "width": 357, "height": 35,
+        "rotation": 0
+      },
       "props": {
         "text": "Obey your thirst. Crisp, clean, and refreshingly honest. The iconic lemon-lime soda since 1961.",
         "variant": "paragraph",
@@ -271,8 +293,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 24, "y": 416, "width": 380, "height": 30,
-        "rotation": 0 },
+      "transform": {
+        "x": 24, "y": 416, "width": 380, "height": 30,
+        "rotation": 0
+      },
       "props": {
         "text": "💬  Feedback / Inquiry",
         "variant": "filled",
@@ -290,8 +314,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 107, "y": 469, "width": 215, "height": 35,
-        "rotation": 0 },
+      "transform": {
+        "x": 107, "y": 469, "width": 215, "height": 35,
+        "rotation": 0
+      },
       "props": {
         "platforms": [
           "twitter",
@@ -313,8 +339,10 @@ const doc: CanvasDocument = {
       "locked": true,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 18, "y": 529, "width": 393, "height": 124,
-        "rotation": 0 },
+      "transform": {
+        "x": 18, "y": 529, "width": 393, "height": 124,
+        "rotation": 0
+      },
       "props": {
         "bgColor": "#f0fdf4",
         "borderRadius": 8,
@@ -331,8 +359,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 35, "y": 541, "width": 357, "height": 18,
-        "rotation": 0 },
+      "transform": {
+        "x": 35, "y": 541, "width": 357, "height": 18,
+        "rotation": 0
+      },
       "props": {
         "text": "About Sprite",
         "variant": "heading",
@@ -350,8 +380,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 35, "y": 564, "width": 357, "height": 59,
-        "rotation": 0 },
+      "transform": {
+        "x": 35, "y": 564, "width": 357, "height": 59,
+        "rotation": 0
+      },
       "props": {
         "text": "Sprite is a colorless, caffeine-free, lemon and lime-flavored soft drink created by The Coca-Cola Company. First developed in 1959, Sprite was introduced as a competitor to 7 Up in 1961. Today, Sprite is sold in over 190 countries and is one of the world's best-selling soft drinks.",
         "variant": "paragraph",
@@ -368,8 +400,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 35, "y": 629, "width": 357, "height": 18,
-        "rotation": 0 },
+      "transform": {
+        "x": 35, "y": 629, "width": 357, "height": 18,
+        "rotation": 0
+      },
       "props": {
         "text": "Read more ▾",
         "variant": "outline",
@@ -387,8 +421,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 24, "y": 683, "width": 178, "height": 15,
-        "rotation": 0 },
+      "transform": {
+        "x": 24, "y": 683, "width": 178, "height": 15,
+        "rotation": 0
+      },
       "props": {
         "text": "Why Sprite?",
         "variant": "heading",
@@ -406,8 +442,10 @@ const doc: CanvasDocument = {
       "locked": true,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 18, "y": 704, "width": 250, "height": 30,
-        "rotation": 0 },
+      "transform": {
+        "x": 18, "y": 704, "width": 250, "height": 30,
+        "rotation": 0
+      },
       "props": {
         "bgColor": "#ffffff",
         "borderRadius": 5,
@@ -424,8 +462,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 30, "y": 709, "width": 18, "height": 18,
-        "rotation": 0 },
+      "transform": {
+        "x": 30, "y": 709, "width": 18, "height": 18,
+        "rotation": 0
+      },
       "props": {
         "icon": "🍃",
         "fontSize": 8,
@@ -440,8 +480,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 54, "y": 712, "width": 178, "height": 15,
-        "rotation": 0 },
+      "transform": {
+        "x": 54, "y": 712, "width": 178, "height": 15,
+        "rotation": 0
+      },
       "props": {
         "text": "Refreshingly crisp",
         "variant": "paragraph",
@@ -459,8 +501,10 @@ const doc: CanvasDocument = {
       "locked": true,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 18, "y": 739, "width": 250, "height": 30,
-        "rotation": 0 },
+      "transform": {
+        "x": 18, "y": 739, "width": 250, "height": 30,
+        "rotation": 0
+      },
       "props": {
         "bgColor": "#ffffff",
         "borderRadius": 5,
@@ -477,8 +521,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 30, "y": 746, "width": 18, "height": 18,
-        "rotation": 0 },
+      "transform": {
+        "x": 30, "y": 746, "width": 18, "height": 18,
+        "rotation": 0
+      },
       "props": {
         "icon": "💧",
         "fontSize": 8,
@@ -493,8 +539,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 54, "y": 747, "width": 178, "height": 15,
-        "rotation": 0 },
+      "transform": {
+        "x": 54, "y": 747, "width": 178, "height": 15,
+        "rotation": 0
+      },
       "props": {
         "text": "Zero caffeine",
         "variant": "paragraph",
@@ -512,8 +560,10 @@ const doc: CanvasDocument = {
       "locked": true,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 18, "y": 775, "width": 250, "height": 30,
-        "rotation": 0 },
+      "transform": {
+        "x": 18, "y": 775, "width": 250, "height": 30,
+        "rotation": 0
+      },
       "props": {
         "bgColor": "#ffffff",
         "borderRadius": 5,
@@ -530,8 +580,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 30, "y": 781, "width": 18, "height": 18,
-        "rotation": 0 },
+      "transform": {
+        "x": 30, "y": 781, "width": 18, "height": 18,
+        "rotation": 0
+      },
       "props": {
         "icon": "✨",
         "fontSize": 8,
@@ -546,8 +598,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 54, "y": 782, "width": 178, "height": 15,
-        "rotation": 0 },
+      "transform": {
+        "x": 54, "y": 782, "width": 178, "height": 15,
+        "rotation": 0
+      },
       "props": {
         "text": "Thirst-quenching",
         "variant": "paragraph",
@@ -565,8 +619,10 @@ const doc: CanvasDocument = {
       "locked": true,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 280, "y": 704, "width": 131, "height": 101,
-        "rotation": 0 },
+      "transform": {
+        "x": 280, "y": 704, "width": 131, "height": 101,
+        "rotation": 0
+      },
       "props": {
         "bgColor": "#ffffff",
         "borderRadius": 6,
@@ -583,8 +639,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 297, "y": 731, "width": 95, "height": 15,
-        "rotation": 0 },
+      "transform": {
+        "x": 297, "y": 731, "width": 95, "height": 15,
+        "rotation": 0
+      },
       "props": {
         "text": "🍹 Mocktail recipes",
         "variant": "heading",
@@ -602,8 +660,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 297, "y": 752, "width": 95, "height": 24,
-        "rotation": 0 },
+      "transform": {
+        "x": 297, "y": 752, "width": 95, "height": 24,
+        "rotation": 0
+      },
       "props": {
         "text": "15 recipes\n2.1 MB",
         "variant": "paragraph",
@@ -620,8 +680,10 @@ const doc: CanvasDocument = {
       "locked": true,
       "visible": true,
       "opacity": 0.5,
-      "transform": { "x": 0, "y": 826, "width": 488, "height": 148,
-        "rotation": 0 },
+      "transform": {
+        "x": 0, "y": 826, "width": 488, "height": 148,
+        "rotation": 0
+      },
       "props": {
         "bgGradientFrom": "transparent",
         "bgGradientTo": "#065f46"
@@ -634,8 +696,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 24, "y": 939, "width": 267, "height": 24,
-        "rotation": 0 },
+      "transform": {
+        "x": 24, "y": 939, "width": 267, "height": 24,
+        "rotation": 0
+      },
       "props": {
         "text": "Stay cool, stay refreshed",
         "variant": "heading",
@@ -653,8 +717,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 24, "y": 986, "width": 237, "height": 18,
-        "rotation": 0 },
+      "transform": {
+        "x": 24, "y": 986, "width": 237, "height": 18,
+        "rotation": 0
+      },
       "props": {
         "text": "More from Sprite",
         "variant": "heading",
@@ -672,8 +738,10 @@ const doc: CanvasDocument = {
       "locked": true,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 18, "y": 1013, "width": 184, "height": 124,
-        "rotation": 0 },
+      "transform": {
+        "x": 18, "y": 1013, "width": 184, "height": 124,
+        "rotation": 0
+      },
       "props": {
         "bgColor": "#d1fae5",
         "borderRadius": 7,
@@ -690,8 +758,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 54, "y": 1018, "width": 113, "height": 72,
-        "rotation": 0 },
+      "transform": {
+        "x": 54, "y": 1018, "width": 113, "height": 72,
+        "rotation": 0
+      },
       "props": {
         "src": "https://images.unsplash.com/photo-1625772299848-391b6a87d7b3?w=400&q=80",
         "alt": "Sprite Zero",
@@ -706,8 +776,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 30, "y": 1096, "width": 161, "height": 11,
-        "rotation": 0 },
+      "transform": {
+        "x": 30, "y": 1096, "width": 161, "height": 11,
+        "rotation": 0
+      },
       "props": {
         "text": "Sprite Zero Sugar",
         "variant": "heading",
@@ -725,8 +797,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 30, "y": 1111, "width": 161, "height": 11,
-        "rotation": 0 },
+      "transform": {
+        "x": 30, "y": 1111, "width": 161, "height": 11,
+        "rotation": 0
+      },
       "props": {
         "text": "Zero sugar, same taste",
         "variant": "paragraph",
@@ -743,8 +817,10 @@ const doc: CanvasDocument = {
       "locked": true,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 215, "y": 1013, "width": 184, "height": 124,
-        "rotation": 0 },
+      "transform": {
+        "x": 215, "y": 1013, "width": 184, "height": 124,
+        "rotation": 0
+      },
       "props": {
         "bgColor": "#fef3c7",
         "borderRadius": 7,
@@ -761,8 +837,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 250, "y": 1018, "width": 113, "height": 72,
-        "rotation": 0 },
+      "transform": {
+        "x": 250, "y": 1018, "width": 113, "height": 72,
+        "rotation": 0
+      },
       "props": {
         "src": "https://images.unsplash.com/photo-1625772299848-391b6a87d7b3?w=400&q=80",
         "alt": "Sprite Lymonade",
@@ -777,8 +855,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 226, "y": 1096, "width": 161, "height": 11,
-        "rotation": 0 },
+      "transform": {
+        "x": 226, "y": 1096, "width": 161, "height": 11,
+        "rotation": 0
+      },
       "props": {
         "text": "Sprite Lymonade",
         "variant": "heading",
@@ -796,8 +876,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 226, "y": 1111, "width": 161, "height": 11,
-        "rotation": 0 },
+      "transform": {
+        "x": 226, "y": 1111, "width": 161, "height": 11,
+        "rotation": 0
+      },
       "props": {
         "text": "Lemonade twist",
         "variant": "paragraph",
@@ -814,8 +896,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 18, "y": 1150, "width": 393, "height": 24,
-        "rotation": 0 },
+      "transform": {
+        "x": 18, "y": 1150, "width": 393, "height": 24,
+        "rotation": 0
+      },
       "props": {
         "text": "View all",
         "variant": "outline",
@@ -833,8 +917,10 @@ const doc: CanvasDocument = {
       "locked": true,
       "visible": true,
       "opacity": 0.92,
-      "transform": { "x": 0, "y": 1181, "width": 488, "height": 148,
-        "rotation": 0 },
+      "transform": {
+        "x": 0, "y": 1181, "width": 488, "height": 148,
+        "rotation": 0
+      },
       "props": {
         "bgGradientFrom": "#059669",
         "bgGradientTo": "#10b981"
@@ -847,8 +933,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 35, "y": 1212, "width": 357, "height": 41,
-        "rotation": 0 },
+      "transform": {
+        "x": 35, "y": 1212, "width": 357, "height": 41,
+        "rotation": 0
+      },
       "props": {
         "text": "Obey Your Thirst",
         "variant": "heading",
@@ -866,8 +954,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 0.7,
-      "transform": { "x": 119, "y": 1262, "width": 191, "height": 11,
-        "rotation": 0 },
+      "transform": {
+        "x": 119, "y": 1262, "width": 191, "height": 11,
+        "rotation": 0
+      },
       "props": {
         "text": "The Coca-Cola Company",
         "variant": "paragraph",
@@ -884,8 +974,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 0.8,
-      "transform": { "x": 193, "y": 1280, "width": 24, "height": 24,
-        "rotation": 0 },
+      "transform": {
+        "x": 193, "y": 1280, "width": 24, "height": 24,
+        "rotation": 0
+      },
       "props": {
         "icon": "🍋",
         "fontSize": 13,
@@ -900,8 +992,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 0.6,
-      "transform": { "x": 148, "y": 1309, "width": 131, "height": 11,
-        "rotation": 0 },
+      "transform": {
+        "x": 148, "y": 1309, "width": 131, "height": 11,
+        "rotation": 0
+      },
       "props": {
         "text": "🔗 sprite.com",
         "variant": "paragraph",

@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * ProductShowcase — Reusable mobile-first product
+ * ProductShowcase - Reusable mobile-first product
  * showcase component. Feed it a BrandConfig and
  * it renders a complete, premium product detail page.
  *
@@ -490,7 +490,7 @@ export function ProductShowcase({ config, className = "" }: ProductShowcaseProps
       </section>
 
       {/* ═══════════════════════════════════════════
-       * 8. OTHER PRODUCTS — Horizontal Scroll
+       * 8. OTHER PRODUCTS - Horizontal Scroll
        * ═══════════════════════════════════════════ */}
       <section className="px-5 pb-4">
         <h3

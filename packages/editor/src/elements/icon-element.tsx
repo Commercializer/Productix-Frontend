@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Icon Element — Universal SVG icon library (Lucide)
+ * Icon Element - Universal SVG icon library (Lucide)
  * ──────────────────────────────────────────── */
 
 "use client";
@@ -402,7 +402,7 @@ function IconPropertyPanel({ props, onChange }: PropertyPanelProps) {
         />
       </label>
 
-      {/* Grayscale toggle — only for emojis */}
+      {/* Grayscale toggle - only for emojis */}
       {isEmoji((props.icon as string) || "") && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 4 }}>
           <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Black & White</span>

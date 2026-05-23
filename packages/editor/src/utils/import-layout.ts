@@ -1,10 +1,10 @@
 /* ─────────────────────────────────────────────
- * Import Layout — Convert AI/external JSON into
+ * Import Layout - Convert AI/external JSON into
  * a CanvasDocument the editor can load.
  *
  * The shape we accept is intentionally flatter than
  * CanvasDocument so it is easy to hand-author or
- * AI-generate — IDs, zIndex, defaults, etc. are
+ * AI-generate - IDs, zIndex, defaults, etc. are
  * filled in here.
  * ──────────────────────────────────────────── */
 
@@ -88,12 +88,12 @@ export function importLayoutFromJson(raw: string): ImportResult | ImportFailure 
 
   input.elements.forEach((raw, idx) => {
     if (!raw || typeof raw !== "object" || typeof raw.type !== "string") {
-      warnings.push(`Element #${idx + 1} skipped — missing "type"`);
+      warnings.push(`Element #${idx + 1} skipped - missing "type"`);
       return;
     }
     const def = getElementDefinition(raw.type);
     if (!def) {
-      warnings.push(`Element #${idx + 1} skipped — unknown type "${raw.type}"`);
+      warnings.push(`Element #${idx + 1} skipped - unknown type "${raw.type}"`);
       return;
     }
     const mergedProps = { ...def.defaultProps, ...(raw.props ?? {}) };
@@ -154,7 +154,7 @@ function formatBrief(brief?: AIBrief): string {
   if (brief.ctaText) lines.push(`- Primary call-to-action text: "${brief.ctaText}"`);
   if (brief.extraNotes) lines.push(`- Extra notes: ${brief.extraNotes}`);
   if (lines.length === 0) return "";
-  return `\n# DESIGN BRIEF (from the user — honour these)\n${lines.join("\n")}\n`;
+  return `\n# DESIGN BRIEF (from the user - honour these)\n${lines.join("\n")}\n`;
 }
 
 /**
@@ -179,7 +179,7 @@ export function buildAIPrompt(brief?: AIBrief): string {
       const h = d.defaultTransform.height ?? 80;
       return `### ${d.label}  (type: "${d.type}", category: ${d.category})
 default size: ${w} × ${h}
-props (defaults shown — override any you need):
+props (defaults shown - override any you need):
 {
 ${propsList}
 }`;
@@ -189,7 +189,7 @@ ${propsList}
   const briefSection = formatBrief(brief);
 
   return `You are designing a single mobile product showcase page for the Productix page builder.
-Return STRICT JSON ONLY — no prose, no markdown fences, no commentary. The user pastes your output into the importer.
+Return STRICT JSON ONLY - no prose, no markdown fences, no commentary. The user pastes your output into the importer.
 
 # CANVAS
 - Mobile-first artboard. Default size 428 × 926 px (you may pick any width 320–1440, height 400–8000).
@@ -237,7 +237,7 @@ ${catalog}
 1. Output JSON only. No \`\`\`json fences. No leading or trailing text.
 2. Only use \`type\` values from the catalog above. Unknown types will be dropped.
 3. Every element MUST have x, y, width, height (numbers).
-4. Use real placeholder image URLs (e.g. https://placehold.co/<w>x<h>) for image/video src — do NOT invent unreachable URLs.
+4. Use real placeholder image URLs (e.g. https://placehold.co/<w>x<h>) for image/video src - do NOT invent unreachable URLs.
 5. Compose 6–14 elements for a typical mobile showcase page.
 ${briefSection}
 Now design the page based on the brief above${brief ? "" : " I give next"}.`;

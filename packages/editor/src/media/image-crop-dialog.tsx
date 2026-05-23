@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * ImageCropDialog — Free-style rectangular crop
+ * ImageCropDialog - Free-style rectangular crop
  *
  * Model:
  *   - Show the full source image fit inside a viewport.
@@ -33,8 +33,8 @@ interface ImageCropDialogProps {
   onCancel: () => void;
 }
 
-const VIEWPORT_TARGET = 560; // px — longest side of viewport
-const MIN_HANDLE_PX = 12;    // px — minimum crop dimension in viewport pixels
+const VIEWPORT_TARGET = 560; // px - longest side of viewport
+const MIN_HANDLE_PX = 12;    // px - minimum crop dimension in viewport pixels
 
 type Handle = "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w" | "move";
 

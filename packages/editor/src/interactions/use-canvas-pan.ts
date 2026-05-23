@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * useCanvasPan — Canvas pan interaction hook
+ * useCanvasPan - Canvas pan interaction hook
  *
  * Implements canvas panning via native scroll:
  *  - Spacebar + drag  (hold Space, then drag)
@@ -86,7 +86,7 @@ export function useCanvasPan(containerRef: React.RefObject<HTMLDivElement | null
         !isSpaceHeld &&
         activeTool === "hand" &&
         ((e.target as HTMLElement).dataset.canvasBg === "true" ||
-         e.target === container);
+          e.target === container);
 
       if (!isMiddleClick && !isSpaceDrag && !isBackgroundDrag) return;
 
@@ -134,7 +134,7 @@ export function useCanvasPan(containerRef: React.RefObject<HTMLDivElement | null
       try {
         (e.target as HTMLElement).releasePointerCapture(e.pointerId);
       } catch {
-        // Ignore — already released
+        // Ignore - already released
       }
 
       panRef.current = null;

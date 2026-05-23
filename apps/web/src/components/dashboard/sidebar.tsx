@@ -107,7 +107,7 @@ export function DashboardSidebar() {
         )}
       </div>
 
-      {/* Collapse toggle — sits on the right divider line */}
+      {/* Collapse toggle - sits on the right divider line */}
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}

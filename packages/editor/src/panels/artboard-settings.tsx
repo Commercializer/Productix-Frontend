@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Experience Canvas Settings — Light theme
+ * Experience Canvas Settings - Light theme
  * ──────────────────────────────────────────── */
 
 "use client";

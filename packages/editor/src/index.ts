@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * @productix/editor — Public API
+ * @productix/editor - Public API
  * ──────────────────────────────────────────── */
 
 // ── Engine ──

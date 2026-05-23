@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Audio Element — Upload audio or link option
+ * Audio Element - Upload audio or link option
  *
  * In the EDITOR, native <audio> controls consume pointer
  * events, preventing the ElementWrapper from handling
@@ -23,7 +23,7 @@ import { registerElement, type ElementRenderProps, type PropertyPanelProps } fro
 /** Returns true when running inside the editor canvas */
 function isInsideEditor(): boolean {
   if (typeof window === "undefined") return false;
-  // The canvas-store exists only in the editor — check for it
+  // The canvas-store exists only in the editor - check for it
   try {
     return !!(window as unknown as Record<string, unknown>).__productixEditor;
   } catch {
@@ -90,7 +90,7 @@ function AudioElementComponent({ props }: ElementRenderProps) {
           minHeight: 40,
         }}
       />
-      {/* Editor overlay — blocks native controls from stealing pointer events
+      {/* Editor overlay - blocks native controls from stealing pointer events
           so the ElementWrapper can handle selection / dragging.
           On the public page this overlay is NOT rendered and the controls work normally. */}
       {inEditor && (

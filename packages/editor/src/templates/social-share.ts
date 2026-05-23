@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Social Share Template — Mobile-first canvas
+ * Social Share Template - Mobile-first canvas
  * ──────────────────────────────────────────── */
 
 import type { CanvasDocument, Template } from "@productix/types";
@@ -37,8 +37,10 @@ const doc: CanvasDocument = {
       "locked": true,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 0, "y": 0, "width": 321, "height": 320,
-        "rotation": 0 },
+      "transform": {
+        "x": 0, "y": 0, "width": 321, "height": 320,
+        "rotation": 0
+      },
       "props": {
         "bgGradientFrom": "#1e1b4b",
         "bgGradientTo": "#4c1d95"
@@ -51,8 +53,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 24, "y": 59, "width": 274, "height": 59,
-        "rotation": 0 },
+      "transform": {
+        "x": 24, "y": 59, "width": 274, "height": 59,
+        "rotation": 0
+      },
       "props": {
         "text": "The Future of Visual Design is Freeform",
         "variant": "heading",
@@ -70,8 +74,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 0.75,
-      "transform": { "x": 24, "y": 128, "width": 208, "height": 24,
-        "rotation": 0 },
+      "transform": {
+        "x": 24, "y": 128, "width": 208, "height": 24,
+        "rotation": 0
+      },
       "props": {
         "text": "Build stunning pages with drag-and-drop. No code required. Try it free today.",
         "variant": "paragraph",
@@ -88,8 +94,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 24, "y": 41, "width": 35, "height": 9,
-        "rotation": 0 },
+      "transform": {
+        "x": 24, "y": 41, "width": 35, "height": 9,
+        "rotation": 0
+      },
       "props": {
         "text": "NEW",
         "icon": "✨",
@@ -107,8 +115,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 63, "y": 41, "width": 48, "height": 9,
-        "rotation": 0 },
+      "transform": {
+        "x": 63, "y": 41, "width": 48, "height": 9,
+        "rotation": 0
+      },
       "props": {
         "text": "#VisualEditor",
         "bgColor": "rgba(59,130,246,0.2)",
@@ -125,8 +135,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 24, "y": 166, "width": 72, "height": 17,
-        "rotation": 0 },
+      "transform": {
+        "x": 24, "y": 166, "width": 72, "height": 17,
+        "rotation": 0
+      },
       "props": {
         "text": "Try It Free →",
         "variant": "filled",
@@ -144,8 +156,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 0.3,
-      "transform": { "x": 24, "y": 237, "width": 274, "height": 6,
-        "rotation": 0 },
+      "transform": {
+        "x": 24, "y": 237, "width": 274, "height": 6,
+        "rotation": 0
+      },
       "props": {
         "color": "#6d28d9",
         "thickness": 1,
@@ -160,8 +174,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 24, "y": 252, "width": 17, "height": 17,
-        "rotation": 0 },
+      "transform": {
+        "x": 24, "y": 252, "width": 17, "height": 17,
+        "rotation": 0
+      },
       "props": {
         "icon": "💎",
         "fontSize": 8,
@@ -176,8 +192,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 1,
-      "transform": { "x": 45, "y": 253, "width": 89, "height": 8,
-        "rotation": 0 },
+      "transform": {
+        "x": 45, "y": 253, "width": 89, "height": 8,
+        "rotation": 0
+      },
       "props": {
         "text": "Productix",
         "variant": "paragraph",
@@ -195,8 +213,10 @@ const doc: CanvasDocument = {
       "locked": false,
       "visible": true,
       "opacity": 0.6,
-      "transform": { "x": 45, "y": 261, "width": 89, "height": 6,
-        "rotation": 0 },
+      "transform": {
+        "x": 45, "y": 261, "width": 89, "height": 6,
+        "rotation": 0
+      },
       "props": {
         "text": "@productix · productix.com",
         "variant": "paragraph",

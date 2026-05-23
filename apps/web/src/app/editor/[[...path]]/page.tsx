@@ -8,6 +8,8 @@ import {
   getPageContentAction,
   savePageContentAction,
   publishPageAction,
+  exportProductixFileAction,
+  importProductixFileAction,
 } from "@/lib/dashboard/actions";
 
 export default function EditorPage() {
@@ -37,7 +39,7 @@ export default function EditorPage() {
             return;
           }
         }
-        // Profile exists but no saved content yet — start with empty or template
+        // Profile exists but no saved content yet - start with empty or template
         if (result && "productName" in result) {
           setPageInfo({ slug: result.slug!, productName: result.productName! });
         }
@@ -78,10 +80,56 @@ export default function EditorPage() {
             : `✗ Save failed: ${result.error}`
         );
       } catch {
-        showNotification("✗ Save failed — check your connection");
+        showNotification("✗ Save failed - check your connection");
       }
     },
     [profileId]
+  );
+
+  const handleExportFile = useCallback(
+    async (doc: CanvasDocument) => {
+      if (!profileId) return;
+      try {
+        // Save first so the export reflects what's currently in the editor,
+        // then ask the server to encrypt the latest content from the DB.
+        await savePageContentAction(
+          profileId,
+          doc as unknown as Record<string, unknown>
+        );
+        const result = await exportProductixFileAction(profileId);
+        if (!result.success || !result.fileContent) {
+          showNotification(`✗ Export failed: ${"error" in result ? result.error : "unknown error"}`);
+          return;
+        }
+        const blob = new Blob([result.fileContent], { type: "application/octet-stream" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = result.filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        showNotification("✓ Exported .productix file");
+      } catch (err: any) {
+        showNotification(`✗ Export failed: ${err?.message ?? "check your connection"}`);
+      }
+    },
+    [profileId]
+  );
+
+  const handleImportFile = useCallback(
+    async (fileContent: string): Promise<CanvasDocument> => {
+      const result = await importProductixFileAction(fileContent);
+      if (!result.success || !result.document) {
+        const message = "error" in result && result.error ? result.error : "Invalid .productix file";
+        showNotification(`✗ Import failed: ${message}`);
+        throw new Error(message);
+      }
+      showNotification("✓ Imported — remember to Save to apply to this page");
+      return result.document as unknown as CanvasDocument;
+    },
+    []
   );
 
   const handlePublish = useCallback(
@@ -102,7 +150,7 @@ export default function EditorPage() {
             : `✗ Publish failed: ${result.error}`
         );
       } catch {
-        showNotification("✗ Publish failed — check your connection");
+        showNotification("✗ Publish failed - check your connection");
       }
     },
     [profileId]
@@ -142,6 +190,8 @@ export default function EditorPage() {
       initialDocument={initialDoc}
       onSave={handleSave}
       onPublish={handlePublish}
+      onExportFile={handleExportFile}
+      onImportFile={handleImportFile}
       previewSlug={pageInfo?.slug}
     />
   );

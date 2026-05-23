@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * User Types — Role-Based Access Control
+ * User Types - Role-Based Access Control
  * ──────────────────────────────────────────── */
 
 /** 4-tier role hierarchy for multi-tenant access control */

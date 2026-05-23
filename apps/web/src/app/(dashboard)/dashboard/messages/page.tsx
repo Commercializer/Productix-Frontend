@@ -57,7 +57,7 @@ function slugForFilename(s: string): string {
 }
 
 function formatDateForFilename(iso: string): string {
-  // YYYY-MM-DD in the viewer's local timezone — matches what the table shows.
+  // YYYY-MM-DD in the viewer's local timezone - matches what the table shows.
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "unknown-date";
   const y = d.getFullYear();
@@ -77,7 +77,7 @@ function buildAttachmentFilename(
 ): string {
   const product = slugForFilename(productName || "product") || "product";
   const customer = slugForFilename(customerName || "");
-  // Phones often contain spaces, parens, dashes — keep just the digits (plus a leading +)
+  // Phones often contain spaces, parens, dashes - keep just the digits (plus a leading +)
   // so the filename is compact and consistent.
   const phoneDigits = phone ? phone.replace(/[^\d+]/g, "").replace(/^\+/, "p").slice(0, 20) : "";
   const date = formatDateForFilename(createdAt);
@@ -95,7 +95,7 @@ function downloadHref(url: string, filename: string): string {
 
 async function triggerDownload(url: string, filename: string) {
   // The proxy sets Content-Disposition: attachment, so navigating to it in the
-  // current tab would still download cleanly — but using a temporary <a download>
+  // current tab would still download cleanly - but using a temporary <a download>
   // keeps the dashboard tab in place and gives the browser the filename hint up front.
   const a = document.createElement("a");
   a.href = downloadHref(url, filename);
@@ -318,7 +318,7 @@ export default function MessagesPage() {
                             {msg.phoneNumber}
                           </a>
                         ) : (
-                          <span className="text-(--ds-text-secondary)/60">—</span>
+                          <span className="text-(--ds-text-secondary)/60">-</span>
                         )}
                       </td>
                       <td className="p-4">
@@ -468,7 +468,7 @@ function FeedbackModal({ message, onClose }: { message: Message | null; onClose:
                   {message.email}
                 </a>
               ) : (
-                <span className="text-(--ds-text-secondary)/60">—</span>
+                <span className="text-(--ds-text-secondary)/60">-</span>
               )}
             </DetailRow>
             <DetailRow icon={<Phone size={15} />} label="Phone">
@@ -477,7 +477,7 @@ function FeedbackModal({ message, onClose }: { message: Message | null; onClose:
                   {message.phoneNumber}
                 </a>
               ) : (
-                <span className="text-(--ds-text-secondary)/60">—</span>
+                <span className="text-(--ds-text-secondary)/60">-</span>
               )}
             </DetailRow>
             <DetailRow icon={<PackageIcon size={15} />} label="Product">
@@ -504,7 +504,7 @@ function FeedbackModal({ message, onClose }: { message: Message | null; onClose:
                 ) : parsed.images.length === 0 ? (
                   <span className="text-(--ds-text-secondary)/60">No message provided.</span>
                 ) : (
-                  <span className="text-(--ds-text-secondary)/60">No written message — see attachments below.</span>
+                  <span className="text-(--ds-text-secondary)/60">No written message - see attachments below.</span>
                 )}
               </div>
             </div>
@@ -589,7 +589,7 @@ function MessagePreview({ description }: { description: string }) {
   return (
     <div className="flex items-center gap-2 min-w-0">
       <span className="truncate flex-1" title={preview}>
-        {preview || <span className="text-(--ds-text-secondary)/60">—</span>}
+        {preview || <span className="text-(--ds-text-secondary)/60">-</span>}
       </span>
       {parsed.images.length > 0 && (
         <span

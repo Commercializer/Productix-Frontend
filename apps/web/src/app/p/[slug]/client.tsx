@@ -41,7 +41,7 @@ export function PublicPageClient({ page }: PublicPageClientProps) {
   const searchParams = useSearchParams();
   const doc = page.content as unknown as CanvasDocument;
 
-  // Read ?lang= from URL — accepts any valid BCP-47 short tag
+  // Read ?lang= from URL - accepts any valid BCP-47 short tag
   const langParam = searchParams.get("lang");
   const initialLocale: ContentLocale =
     langParam && /^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,4})?$/.test(langParam) ? langParam : "en";
@@ -65,7 +65,7 @@ export function PublicPageClient({ page }: PublicPageClientProps) {
   // Check if we have valid canvas content
   const hasCanvasContent = doc && doc.version && doc.artboards && doc.artboards.length > 0;
 
-  // Background color for the page chrome — match the first artboard so wide-viewport
+  // Background color for the page chrome - match the first artboard so wide-viewport
   // gutters (where the artboard is centered) and any sub-pixel scaling gaps don't
   // reveal a different page background and look like "tiny white lines" on the sides.
   const pageBackground = (hasCanvasContent && doc.artboards[0]?.backgroundColor) || "#fff";
@@ -98,7 +98,7 @@ export function PublicPageClient({ page }: PublicPageClientProps) {
 
       {/* Keep browser chrome (Android Chrome address bar, etc.) in sync with the page bg. */}
       <BrowserThemeWatcher color={pageBackground} />
-      {/* Language dropdown — top right floating */}
+      {/* Language dropdown - top right floating */}
       {showLanguageSwitcher && (
         <div
           ref={langDropdownRef}
@@ -272,23 +272,12 @@ export function PublicPageClient({ page }: PublicPageClientProps) {
             letterSpacing: "0.01em",
           }}
         >
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 16,
-              height: 16,
-              borderRadius: 4,
-              background: "#0284c7",
-              color: "white",
-              fontSize: 8,
-              fontWeight: 700,
-            }}
-          >
-            PX
-          </span>
-          Powered by Productix
+          Powered by
+          <img
+            src="/logo-light.png"
+            alt="Productix"
+            style={{ height: 12, width: "auto", display: "block" }}
+          />
         </a>
       </footer>
     </div>

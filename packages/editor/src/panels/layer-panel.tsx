@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Block Order Panel — Light theme
+ * Block Order Panel - Light theme
  *
  * Shows all elements sorted by z-index with
  * group hierarchy. Grouped elements are visually

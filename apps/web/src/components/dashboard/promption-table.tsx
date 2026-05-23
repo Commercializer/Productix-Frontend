@@ -725,7 +725,7 @@ function RedirectEditModal({
                 className="w-full h-[42px] px-3 rounded-lg border border-[#e2e8f0] dark:border-[#334155] bg-transparent text-[13px] text-[#0f172a] dark:text-white placeholder-[#94a3b8] outline-hidden focus:border-[#93c5fd]"
               />
               <p className="mt-1.5 text-[11px] text-[#94a3b8]">
-                Leave blank to remove the redirect. http:// or https:// — we&apos;ll add https if you skip it.
+                Leave blank to remove the redirect. http:// or https:// - we&apos;ll add https if you skip it.
               </p>
             </div>
 

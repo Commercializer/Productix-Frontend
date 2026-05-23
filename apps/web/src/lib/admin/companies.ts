@@ -89,7 +89,7 @@ export async function createCompanyAction(input: CreateCompanyInput) {
 
   try {
     const result = await prisma.$transaction(async (tx) => {
-      // Resolve tenant — either reuse an existing one or create on the fly.
+      // Resolve tenant - either reuse an existing one or create on the fly.
       let tenantId = input.tenantId;
       if (!tenantId) {
         const tenant = await tx.tenant.create({

@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Element Wrapper — Transform + selection handles
+ * Element Wrapper - Transform + selection handles
  *
  * Wraps each canvas element with:
  * - Absolute positioning via transform data (absolute mode)
@@ -29,7 +29,7 @@ interface ElementWrapperProps {
   element: ElementNode;
   /** Pre-computed transform for the active breakpoint (absolute mode) */
   effectiveTransform: Transform;
-  /** Pre-computed layout for the active breakpoint (flow mode) — optional */
+  /** Pre-computed layout for the active breakpoint (flow mode) - optional */
   effectiveLayout?: LayoutProps;
 }
 
@@ -139,7 +139,7 @@ export const ElementWrapper = memo(function ElementWrapper({
     [isFlow, effectiveLayout]
   );
 
-  // Group color — derive from groupId hash for visual distinction
+  // Group color - derive from groupId hash for visual distinction
   const groupColor = useMemo(() => {
     if (!element.groupId) return null;
     const GROUP_COLORS = ["#8b5cf6", "#ec4899", "#f59e0b", "#06b6d4", "#84cc16", "#f97316"];
@@ -153,7 +153,7 @@ export const ElementWrapper = memo(function ElementWrapper({
   // Build element style
   const elementStyle: React.CSSProperties = isFlow && flowCSS
     ? {
-        // Flow mode — participate in flex container
+        // Flow mode - participate in flex container
         ...flowCSS,
         zIndex: element.zIndex,
         opacity: element.opacity,
@@ -169,7 +169,7 @@ export const ElementWrapper = memo(function ElementWrapper({
         transition: "width 0.2s ease, margin 0.2s ease, padding 0.2s ease",
       }
     : {
-        // Absolute mode — pixel positioning
+        // Absolute mode - pixel positioning
         position: "absolute" as const,
         left: x,
         top: y,
@@ -218,7 +218,7 @@ export const ElementWrapper = memo(function ElementWrapper({
         onPropsChange={handlePropsChange}
       />
 
-      {/* Resize handles — only in absolute mode */}
+      {/* Resize handles - only in absolute mode */}
       {isSelected && !element.locked && !isEditing && !isFlow && (
         <>
           {HANDLE_POSITIONS.map(({ key, style }) => (
@@ -306,6 +306,36 @@ export const ElementWrapper = memo(function ElementWrapper({
           }}
         >
           ⊞ {groupInfo.name}
+        </div>
+      )}
+
+      {/* Link indicator - shows a chip on selected blocks with a link set */}
+      {isSelected && element.link && element.type !== "button" && (
+        <div
+          style={{
+            position: "absolute",
+            top: -20,
+            left: showOverrideIndicator || isFlow ? 70 : 0,
+            fontSize: 9,
+            background: "#0ea5e9",
+            color: "#fff",
+            borderRadius: 4,
+            padding: "1px 6px",
+            fontWeight: 600,
+            pointerEvents: "none",
+            textTransform: "uppercase",
+            letterSpacing: "0.05em",
+            display: "flex",
+            alignItems: "center",
+            gap: 3,
+            maxWidth: 140,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+          title={element.link}
+        >
+          🔗 linked
         </div>
       )}
 

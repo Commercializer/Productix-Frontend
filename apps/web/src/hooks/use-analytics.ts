@@ -33,6 +33,7 @@ export interface ProductBreakdown {
   devices: { device: string; count: number }[];
   countries: { country: string; count: number }[];
   browsers: { browser: string; count: number }[];
+  qrScans: { qrScanType: string; count: number }[];
 }
 
 export interface AnalyticsStats {
@@ -48,6 +49,7 @@ export interface AnalyticsStats {
   timeSeries: TimeSeriesPoint[];
   deviceBreakdown: { device: string; count: number }[];
   sourceBreakdown: { source: string; count: number }[];
+  qrScanBreakdown: { qrScanType: string; count: number }[];
   topCountries: { country: string; count: number }[];
   feedbackByStatus: { status: string; count: number }[];
   topProducts: TopProduct[];

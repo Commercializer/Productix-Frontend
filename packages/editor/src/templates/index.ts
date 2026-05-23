@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Templates Index — All freeform canvas templates
+ * Templates Index - All freeform canvas templates
  * ──────────────────────────────────────────── */
 
 import type { Template } from "@productix/types";

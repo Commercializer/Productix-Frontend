@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Artboard — Clean canvas (no phone frame)
+ * Artboard - Clean canvas (no phone frame)
  *
  * Shows the artboard as a clean mobile-sized card
  * with subtle shadow and rounded corners.
@@ -151,7 +151,7 @@ export function Artboard({ artboard }: ArtboardProps) {
         </div>
       </div>
 
-      {/* Bottom resize handle — drag to expand artboard height */}
+      {/* Bottom resize handle - drag to expand artboard height */}
       <div
         onPointerDown={onHandlePointerDown}
         onPointerMove={onHandlePointerMove}

@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Brands Index — All brand configurations
+ * Brands Index - All brand configurations
  * ──────────────────────────────────────────── */
 
 export { redbullConfig } from "./redbull";

@@ -15,11 +15,11 @@ interface MobileMockupProps {
   /**
    * If true (default), the mockup scales down to fit its parent height while
    * keeping the aspect ratio. The inner content still renders at full screen
-   * size — only the visual frame shrinks.
+   * size - only the visual frame shrinks.
    */
   autoFit?: boolean;
   /**
-   * Receives the screen element — the in-mockup container that overlays
+   * Receives the screen element - the in-mockup container that overlays
    * (e.g. feedback sheets) should portal into so they stay inside the phone.
    */
   onScreenRef?: (el: HTMLDivElement | null) => void;

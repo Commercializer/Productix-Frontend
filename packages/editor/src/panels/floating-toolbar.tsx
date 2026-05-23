@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Floating Toolbar — Light theme
+ * Floating Toolbar - Light theme
  *
  * Shows contextual actions above the selected
  * element(s). Supports single and multi-selection.

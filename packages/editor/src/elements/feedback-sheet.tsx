@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Feedback Bottom Sheet — Native-app style modal
+ * Feedback Bottom Sheet - Native-app style modal
  *
  * Slides up from the bottom of the screen with a
  * dimmed backdrop. Used by the Feedback element on
@@ -69,7 +69,7 @@ export interface FeedbackSheetProps {
   /**
    * Optional element to portal the sheet into. When set, the sheet renders
    * with `position: absolute` inside this element instead of `position: fixed`
-   * on the body — useful for previews inside a phone mockup. The host element
+   * on the body - useful for previews inside a phone mockup. The host element
    * should be `position: relative`.
    */
   portalRoot?: HTMLElement | null;
@@ -135,7 +135,7 @@ export function FeedbackSheet({ open, onClose, productId, labels, accentColor = 
     }
   }, [open]);
 
-  // Lock body scroll while open — only when the sheet is fullscreen.
+  // Lock body scroll while open - only when the sheet is fullscreen.
   // When contained inside a portal root (phone mockup preview), we don't
   // want to freeze the outer dashboard page.
   useEffect(() => {
@@ -160,7 +160,7 @@ export function FeedbackSheet({ open, onClose, productId, labels, accentColor = 
   if (typeof window === "undefined") return null;
 
   // Each visible field (except email) is required to submit. Email stays
-  // optional even when shown — common pattern for contact forms.
+  // optional even when shown - common pattern for contact forms.
   const requiredFilled =
     (!visible.name || name.trim().length > 0) &&
     (!visible.phone || phone.trim().length > 0) &&

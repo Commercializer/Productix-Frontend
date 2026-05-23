@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Font Picker — custom dropdown that previews
+ * Font Picker - custom dropdown that previews
  * each option in its own typeface.
  *
  * Uses a fixed-position popover anchored to the

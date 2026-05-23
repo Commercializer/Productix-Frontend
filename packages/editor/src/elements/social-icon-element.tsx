@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * Social Icon Element — Single draggable social
+ * Social Icon Element - Single draggable social
  * media icon (Facebook, Instagram, X/Twitter,
  * LinkedIn, YouTube, TikTok, GitHub, WhatsApp,
  * Snapchat, Pinterest, Threads)
@@ -238,18 +238,14 @@ function SocialIconPropertyPanel({ props, onChange }: PropertyPanelProps) {
       {/* Border Radius */}
       <label className="block">
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Corner Radius</span>
-        <div className="mt-1 flex gap-2 items-center">
-          <input
-            type="range"
-            className="flex-1"
-            style={{ accentColor: "#0ea5e9" }}
-            value={(props.borderRadius as number) ?? 999}
-            onChange={(e) => onChange({ borderRadius: Number(e.target.value) })}
-            min={0}
-            max={999}
-          />
-          <span className="text-xs text-gray-400 w-8 text-right">{(props.borderRadius as number) ?? 999}</span>
-        </div>
+        <input
+          type="number"
+          className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
+          value={(props.borderRadius as number) ?? 999}
+          onChange={(e) => onChange({ borderRadius: Number(e.target.value) })}
+          min={0}
+          max={999}
+        />
       </label>
 
       {/* Icon Scale */}
@@ -272,7 +268,7 @@ function SocialIconPropertyPanel({ props, onChange }: PropertyPanelProps) {
   );
 }
 
-/* ─── Registration — one per platform ────────── */
+/* ─── Registration - one per platform ────────── */
 
 Object.entries(PLATFORMS).forEach(([key, config]) => {
   const Icon = config.icon;

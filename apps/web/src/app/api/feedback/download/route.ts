@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * GET /api/feedback/download — Authenticated
+ * GET /api/feedback/download - Authenticated
  * download proxy for feedback image attachments.
  *
  * Browsers ignore the `download` attribute on cross-

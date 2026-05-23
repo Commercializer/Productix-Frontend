@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
- * POST /api/feedback — Public feedback submission
+ * POST /api/feedback - Public feedback submission
  *
  * Accepts JSON { productId, name, phone, email?, details }.
  * Looks up the product to derive the owning companyId,
