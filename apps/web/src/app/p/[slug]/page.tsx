@@ -15,6 +15,11 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
+// Profiles are seeded with a UUID slug until the user picks a pretty one; treat
+// that placeholder as "no slug set" so we never redirect visitors to it.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const isCustomSlug = (slug: string) => !UUID_RE.test(slug);
+
 // Dedupe the DB call across generateMetadata, generateViewport, and the page.
 const getPage = cache(async (handle: string) => {
   const result = await getPublicPageByHandleAction(handle);
@@ -59,8 +64,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     `${page.productName} by ${page.company.name}`;
 
   const iconUrl = page.logoUrl || page.brand?.logoUrl || page.company.logoUrl || undefined;
-  // Canonical/og URL follows the same rule as the route: slug when visible, shortCode otherwise.
-  const canonicalPath = `/p/${page.slugVisible ? page.slug : page.shortCode}`;
+  // Canonical/og URL follows the same rule as the route: slug when visible AND
+  // the user has set a real slug; otherwise fall back to the shortCode so we
+  // never canonicalize to the placeholder UUID.
+  const canonicalPath = `/p/${page.slugVisible && isCustomSlug(page.slug) ? page.slug : page.shortCode}`;
 
   return {
     title,
@@ -141,17 +148,12 @@ export default async function PublicPage({ params }: PageProps) {
     return <NotFoundView />;
   }
 
-  // If the visitor arrived via the 8-char short code and the product opted to
-  // show pretty URLs, swap them to the slug. When slugVisible is off the
-  // short-code URL is rendered in place so the visitor never sees the slug.
-  if (page.slugVisible && handle === page.shortCode && page.slug !== handle) {
-    redirect(`/p/${page.slug}`);
-  }
-
   // Record the view after the response is sent so we never delay render.
   // headers() must be read here (request scope); the after() callback only
   // touches the plain context object. Dedup is enforced by a unique
   // (page, visitor, day) constraint in the DB, so refresh-spam can't inflate.
+  // Tracking is scheduled before any redirect so external-redirect scans
+  // still show up in analytics.
   const viewContext = await readViewContext();
   after(() =>
     trackPageView({
@@ -161,6 +163,24 @@ export default async function PublicPage({ params }: PageProps) {
       context: viewContext,
     }),
   );
+
+  // External redirect takes precedence — when set, scans bypass the showcase.
+  if (page.redirectEnabled && page.redirectUrl) {
+    redirect(page.redirectUrl);
+  }
+
+  // If the visitor arrived via the 8-char short code and the product opted to
+  // show pretty URLs, swap them to the slug. Skip when the slug is still the
+  // placeholder UUID — that isn't a real URL, so we render the shortCode in
+  // place instead of redirecting to /p/<uuid>.
+  if (
+    page.slugVisible &&
+    handle === page.shortCode &&
+    page.slug !== handle &&
+    isCustomSlug(page.slug)
+  ) {
+    redirect(`/p/${page.slug}`);
+  }
 
   return <PublicPageClient page={page} />;
 }

@@ -11,7 +11,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { X, ImagePlus, Loader2 } from "lucide-react";
 
 export interface FeedbackSheetLabels {
   title: string;
@@ -42,8 +42,16 @@ export interface CustomField {
   id: string;
   label: string;
   placeholder?: string;
-  type: "text" | "textarea" | "tel" | "email" | "number";
+  type: "text" | "textarea" | "tel" | "email" | "number" | "image";
   required: boolean;
+}
+
+export interface FeedbackSubmitStyle {
+  bgColor?: string;
+  textColor?: string;
+  borderRadius?: number;
+  fontSize?: number;
+  fontWeight?: string;
 }
 
 export interface FeedbackSheetProps {
@@ -56,6 +64,15 @@ export interface FeedbackSheetProps {
   fields?: Partial<FeedbackSheetFields>;
   /** Author-defined custom fields rendered after the built-ins. */
   customFields?: CustomField[];
+  /** Optional style overrides for the submit button. Falls back to accentColor / sensible defaults. */
+  submitStyle?: FeedbackSubmitStyle;
+  /**
+   * Optional element to portal the sheet into. When set, the sheet renders
+   * with `position: absolute` inside this element instead of `position: fixed`
+   * on the body — useful for previews inside a phone mockup. The host element
+   * should be `position: relative`.
+   */
+  portalRoot?: HTMLElement | null;
 }
 
 const DEFAULT_FIELDS: FeedbackSheetFields = { name: true, phone: true, email: true, details: true };
@@ -82,7 +99,13 @@ export function getDefaultFeedbackLabels(): FeedbackSheetLabels {
   return { ...DEFAULT_LABELS };
 }
 
-export function FeedbackSheet({ open, onClose, productId, labels, accentColor = "#0ea5e9", fields, customFields }: FeedbackSheetProps) {
+export function FeedbackSheet({ open, onClose, productId, labels, accentColor = "#0ea5e9", fields, customFields, submitStyle, portalRoot }: FeedbackSheetProps) {
+  const contained = !!portalRoot;
+  const submitBg = submitStyle?.bgColor ?? accentColor;
+  const submitText = submitStyle?.textColor ?? "#ffffff";
+  const submitRadius = submitStyle?.borderRadius ?? 14;
+  const submitFontSize = submitStyle?.fontSize ?? 15;
+  const submitFontWeight = submitStyle?.fontWeight ?? "600";
   const visible: FeedbackSheetFields = { ...DEFAULT_FIELDS, ...fields };
   const extras = customFields ?? [];
   const [name, setName] = useState("");
@@ -112,15 +135,17 @@ export function FeedbackSheet({ open, onClose, productId, labels, accentColor = 
     }
   }, [open]);
 
-  // Lock body scroll while open
+  // Lock body scroll while open — only when the sheet is fullscreen.
+  // When contained inside a portal root (phone mockup preview), we don't
+  // want to freeze the outer dashboard page.
   useEffect(() => {
-    if (!open) return;
+    if (!open || contained) return;
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = prevOverflow;
     };
-  }, [open]);
+  }, [open, contained]);
 
   // Close on Escape
   useEffect(() => {
@@ -216,9 +241,9 @@ export function FeedbackSheet({ open, onClose, productId, labels, accentColor = 
     <div
       aria-hidden={!open}
       style={{
-        position: "fixed",
+        position: contained ? "absolute" : "fixed",
         inset: 0,
-        zIndex: 2147483600,
+        zIndex: contained ? 100 : 2147483600,
         pointerEvents: open ? "auto" : "none",
         fontFamily: "var(--font-sans), system-ui, -apple-system, Segoe UI, Roboto, sans-serif",
       }}
@@ -325,12 +350,12 @@ export function FeedbackSheet({ open, onClose, productId, labels, accentColor = 
                   marginTop: 22,
                   width: "100%",
                   padding: "14px 18px",
-                  borderRadius: 14,
+                  borderRadius: submitRadius,
                   border: "none",
-                  background: accentColor,
-                  color: "#fff",
-                  fontSize: 15,
-                  fontWeight: 600,
+                  background: submitBg,
+                  color: submitText,
+                  fontSize: submitFontSize,
+                  fontWeight: submitFontWeight,
                   cursor: "pointer",
                 }}
               >
@@ -415,6 +440,19 @@ export function FeedbackSheet({ open, onClose, productId, labels, accentColor = 
                     </div>
                   );
                 }
+                if (f.type === "image") {
+                  return (
+                    <div key={f.id}>
+                      {labelNode}
+                      <ImageUploadField
+                        value={value}
+                        onChange={onValueChange}
+                        accentColor={accentColor}
+                        placeholder={f.placeholder}
+                      />
+                    </div>
+                  );
+                }
                 return (
                   <div key={f.id}>
                     {labelNode}
@@ -443,12 +481,12 @@ export function FeedbackSheet({ open, onClose, productId, labels, accentColor = 
                   marginTop: 4,
                   width: "100%",
                   padding: "14px 18px",
-                  borderRadius: 14,
+                  borderRadius: submitRadius,
                   border: "none",
-                  background: canSubmit ? accentColor : "#cbd5e1",
-                  color: "#fff",
-                  fontSize: 15,
-                  fontWeight: 600,
+                  background: canSubmit ? submitBg : "#cbd5e1",
+                  color: submitText,
+                  fontSize: submitFontSize,
+                  fontWeight: submitFontWeight,
                   cursor: canSubmit ? "pointer" : "not-allowed",
                   transition: "background 0.15s ease, transform 0.1s ease",
                 }}
@@ -462,5 +500,167 @@ export function FeedbackSheet({ open, onClose, productId, labels, accentColor = 
     </div>
   );
 
-  return createPortal(content, document.body);
+  return createPortal(content, portalRoot ?? document.body);
+}
+
+/* ─── Image upload field ────────────────────── */
+
+interface ImageUploadFieldProps {
+  value: string;
+  onChange: (url: string) => void;
+  accentColor: string;
+  placeholder?: string;
+}
+
+function ImageUploadField({ value, onChange, accentColor, placeholder }: ImageUploadFieldProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSelect = async (file: File) => {
+    setError(null);
+    if (!file.type.startsWith("image/")) {
+      setError("Please choose an image file.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Image must be 5MB or smaller.");
+      return;
+    }
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/feedback/upload", { method: "POST", body: fd });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error || "Upload failed");
+      if (typeof body?.url !== "string") throw new Error("Upload failed");
+      onChange(body.url);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  if (value) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          padding: 10,
+          borderRadius: 12,
+          border: "1px solid #e5e7eb",
+          background: "#fff",
+        }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={value}
+          alt="Uploaded"
+          style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 8, background: "#f1f5f9", flexShrink: 0 }}
+        />
+        <div style={{ flex: 1, minWidth: 0, fontSize: 12.5, color: "#475569" }}>
+          <div style={{ fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            Image uploaded
+          </div>
+          <a
+            href={value}
+            target="_blank"
+            rel="noreferrer"
+            style={{ color: accentColor, textDecoration: "none", fontSize: 11.5 }}
+          >
+            View
+          </a>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            onChange("");
+            if (inputRef.current) inputRef.current.value = "";
+          }}
+          style={{
+            flexShrink: 0,
+            width: 32,
+            height: 32,
+            borderRadius: 8,
+            border: "1px solid #fecaca",
+            background: "#fef2f2",
+            color: "#b91c1c",
+            cursor: "pointer",
+            fontSize: 14,
+            lineHeight: 1,
+          }}
+          aria-label="Remove image"
+        >
+          ×
+        </button>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          style={{ display: "none" }}
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) void handleSelect(f);
+          }}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        disabled={uploading}
+        style={{
+          width: "100%",
+          padding: "18px 14px",
+          borderRadius: 12,
+          border: `1.5px dashed ${uploading ? "#cbd5e1" : "#e5e7eb"}`,
+          background: uploading ? "#f8fafc" : "#fafafa",
+          color: "#475569",
+          cursor: uploading ? "wait" : "pointer",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 8,
+          fontFamily: "inherit",
+          fontSize: 13,
+          transition: "border-color 0.15s ease, background 0.15s ease",
+        }}
+      >
+        {uploading ? (
+          <>
+            <Loader2 size={22} style={{ animation: "spin 1s linear infinite", color: accentColor }} />
+            <span style={{ color: "#64748b" }}>Uploading…</span>
+          </>
+        ) : (
+          <>
+            <ImagePlus size={22} style={{ color: accentColor }} />
+            <span style={{ fontWeight: 600, color: "#0f172a" }}>{placeholder || "Choose an image"}</span>
+            <span style={{ fontSize: 11, color: "#94a3b8" }}>JPG, PNG, GIF, WebP or SVG · up to 5MB</span>
+          </>
+        )}
+      </button>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: "none" }}
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) void handleSelect(f);
+        }}
+      />
+      {error && (
+        <div style={{ marginTop: 6, fontSize: 12, color: "#b91c1c" }}>{error}</div>
+      )}
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
 }

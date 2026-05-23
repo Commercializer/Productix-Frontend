@@ -7,7 +7,7 @@ import { DashboardHeader } from "@/components/dashboard/header";
 
 export default function ProductsPage() {
   const { isCompanyUser } = useAuth();
-  const { promptions, loading, deletePromption, publishPromption, unpublishPromption, setSlugVisible, updateSlug } = usePromptions();
+  const { promptions, loading, deletePromption, publishPromption, unpublishPromption, setSlugVisible, updateSlug, updateRedirect } = usePromptions();
 
   return (
     <div className="page-content bg-(--ds-bg)">
@@ -28,6 +28,7 @@ export default function ProductsPage() {
             onUnpublish={unpublishPromption}
             onSetSlugVisible={setSlugVisible}
             onRenameSlug={updateSlug}
+            onUpdateRedirect={updateRedirect}
             readOnly={isCompanyUser}
           />
         )}

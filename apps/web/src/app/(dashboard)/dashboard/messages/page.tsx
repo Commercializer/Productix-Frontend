@@ -1,19 +1,272 @@
 "use client";
 
-import { useState } from "react";
-import { X, Mail, Phone, Package as PackageIcon, Calendar, Tag } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { X, Mail, Phone, Package as PackageIcon, Calendar, Tag, Filter, Image as ImageIcon, ExternalLink, Download } from "lucide-react";
 import { useMessages, type Message } from "@/hooks/use-messages";
 import { DashboardHeader } from "@/components/dashboard/header";
+
+const URL_RE = /(https?:\/\/[^\s<>"')]+)/g;
+const IMAGE_URL_RE = /\.(jpe?g|png|gif|webp|svg)(\?.*)?$/i;
+
+function isImageUrl(url: string): boolean {
+  if (IMAGE_URL_RE.test(url)) return true;
+  // Anything uploaded via the public feedback upload route lives here.
+  return /\/feedback-uploads\//i.test(url);
+}
+
+interface ParsedDescription {
+  text: string;
+  images: string[];
+  links: string[];
+}
+
+function parseDescription(description: string): ParsedDescription {
+  const images: string[] = [];
+  const links: string[] = [];
+  // Strip image URLs (and any "Label: " prefix on the same line they occupy) from the visible text,
+  // but keep non-image URLs inline so they remain in context.
+  const lines = description.split("\n");
+  const cleaned: string[] = [];
+  for (const line of lines) {
+    const urls = line.match(URL_RE) ?? [];
+    const imageUrlsOnLine = urls.filter(isImageUrl);
+    if (imageUrlsOnLine.length > 0) {
+      for (const u of imageUrlsOnLine) if (!images.includes(u)) images.push(u);
+      // Drop the whole line if it's just "Label: <imageUrl>" with nothing else.
+      let remaining = line;
+      for (const u of imageUrlsOnLine) remaining = remaining.split(u).join("").trim();
+      const stripped = remaining.replace(/^[^:]+:\s*$/, "").trim();
+      if (stripped.length > 0) cleaned.push(stripped);
+    } else {
+      cleaned.push(line);
+      for (const u of urls) if (!isImageUrl(u) && !links.includes(u)) links.push(u);
+    }
+  }
+  return { text: cleaned.join("\n").replace(/\n{3,}/g, "\n\n").trim(), images, links };
+}
+
+function slugForFilename(s: string): string {
+  return s
+    .normalize("NFKD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .toLowerCase()
+    .slice(0, 60);
+}
+
+function formatDateForFilename(iso: string): string {
+  // YYYY-MM-DD in the viewer's local timezone — matches what the table shows.
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "unknown-date";
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function buildAttachmentFilename(
+  productName: string,
+  customerName: string,
+  phone: string | null,
+  createdAt: string,
+  url: string,
+  index: number,
+  total: number,
+): string {
+  const product = slugForFilename(productName || "product") || "product";
+  const customer = slugForFilename(customerName || "");
+  // Phones often contain spaces, parens, dashes — keep just the digits (plus a leading +)
+  // so the filename is compact and consistent.
+  const phoneDigits = phone ? phone.replace(/[^\d+]/g, "").replace(/^\+/, "p").slice(0, 20) : "";
+  const date = formatDateForFilename(createdAt);
+  const extMatch = url.match(/\.([a-zA-Z0-9]{1,5})(?:\?.*)?$/);
+  const ext = (extMatch?.[1] ?? "jpg").toLowerCase();
+  const suffix = total > 1 ? `-${index + 1}` : "";
+  const parts = [product, customer, phoneDigits, date].filter((p) => p.length > 0);
+  return `${parts.join("-")}${suffix}.${ext}`;
+}
+
+function downloadHref(url: string, filename: string): string {
+  const params = new URLSearchParams({ url, filename });
+  return `/api/feedback/download?${params.toString()}`;
+}
+
+async function triggerDownload(url: string, filename: string) {
+  // The proxy sets Content-Disposition: attachment, so navigating to it in the
+  // current tab would still download cleanly — but using a temporary <a download>
+  // keeps the dashboard tab in place and gives the browser the filename hint up front.
+  const a = document.createElement("a");
+  a.href = downloadHref(url, filename);
+  a.download = filename;
+  a.rel = "noopener";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+function renderTextWithLinks(text: string): React.ReactNode[] {
+  if (!text) return [];
+  const nodes: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let m: RegExpExecArray | null;
+  const re = new RegExp(URL_RE.source, "g");
+  let key = 0;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > lastIndex) nodes.push(text.slice(lastIndex, m.index));
+    nodes.push(
+      <a
+        key={`l-${key++}`}
+        href={m[1]}
+        target="_blank"
+        rel="noreferrer"
+        className="text-primary underline decoration-primary/30 hover:decoration-primary break-all"
+      >
+        {m[1]}
+      </a>
+    );
+    lastIndex = m.index + m[0].length;
+  }
+  if (lastIndex < text.length) nodes.push(text.slice(lastIndex));
+  return nodes;
+}
+
+type TypeFilter = "ALL" | "FEEDBACK" | "INQUIRY";
+type DateFilter = "ALL" | "TODAY" | "7D" | "30D" | "CUSTOM";
 
 export default function MessagesPage() {
   const { messages, loading } = useMessages();
   const [selected, setSelected] = useState<Message | null>(null);
+  const [productFilter, setProductFilter] = useState<string>("ALL");
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("ALL");
+  const [dateFilter, setDateFilter] = useState<DateFilter>("ALL");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+
+  const productOptions = useMemo(() => {
+    const set = new Set<string>();
+    messages.forEach((m) => {
+      if (m.productName) set.add(m.productName);
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [messages]);
+
+  const filtered = useMemo(() => {
+    const now = Date.now();
+    const dayMs = 24 * 60 * 60 * 1000;
+    return messages.filter((m) => {
+      if (productFilter !== "ALL" && m.productName !== productFilter) return false;
+      if (typeFilter !== "ALL" && m.type !== typeFilter) return false;
+      if (dateFilter !== "ALL") {
+        const created = new Date(m.createdAt).getTime();
+        if (dateFilter === "TODAY") {
+          const start = new Date();
+          start.setHours(0, 0, 0, 0);
+          if (created < start.getTime()) return false;
+        } else if (dateFilter === "7D" && now - created > 7 * dayMs) {
+          return false;
+        } else if (dateFilter === "30D" && now - created > 30 * dayMs) {
+          return false;
+        } else if (dateFilter === "CUSTOM") {
+          if (dateFrom) {
+            const from = new Date(dateFrom);
+            from.setHours(0, 0, 0, 0);
+            if (created < from.getTime()) return false;
+          }
+          if (dateTo) {
+            const to = new Date(dateTo);
+            to.setHours(23, 59, 59, 999);
+            if (created > to.getTime()) return false;
+          }
+        }
+      }
+      return true;
+    });
+  }, [messages, productFilter, typeFilter, dateFilter, dateFrom, dateTo]);
+
+  const hasActiveFilter =
+    productFilter !== "ALL" || typeFilter !== "ALL" || dateFilter !== "ALL";
+
+  const clearFilters = () => {
+    setProductFilter("ALL");
+    setTypeFilter("ALL");
+    setDateFilter("ALL");
+    setDateFrom("");
+    setDateTo("");
+  };
 
   return (
     <div className="page-content bg-(--ds-bg)">
       <DashboardHeader />
       <section className="section mt-0!">
-        <h2 className="text-xl font-bold text-(--ds-text-primary) mb-6">Customer Feedbacks</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+          <h2 className="text-xl font-bold text-(--ds-text-primary)">Customer Feedbacks</h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="hidden sm:flex items-center gap-1.5 text-[12px] text-(--ds-text-secondary)">
+              <Filter size={14} />
+              <span>Filter</span>
+            </div>
+            <FilterSelect
+              value={productFilter}
+              onChange={setProductFilter}
+              options={[
+                { value: "ALL", label: "All products" },
+                ...productOptions.map((p) => ({ value: p, label: p })),
+              ]}
+            />
+            <FilterSelect
+              value={typeFilter}
+              onChange={(v) => setTypeFilter(v as TypeFilter)}
+              options={[
+                { value: "ALL", label: "All types" },
+                { value: "FEEDBACK", label: "Feedback" },
+                { value: "INQUIRY", label: "Inquiry" },
+              ]}
+            />
+            <FilterSelect
+              value={dateFilter}
+              onChange={(v) => setDateFilter(v as DateFilter)}
+              options={[
+                { value: "ALL", label: "Any date" },
+                { value: "TODAY", label: "Today" },
+                { value: "7D", label: "Last 7 days" },
+                { value: "30D", label: "Last 30 days" },
+                { value: "CUSTOM", label: "Custom range" },
+              ]}
+            />
+            {dateFilter === "CUSTOM" && (
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="date"
+                  value={dateFrom}
+                  max={dateTo || undefined}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="h-[34px] px-2.5 rounded-lg border border-(--ds-border) bg-(--ds-surface) text-[13px] text-(--ds-text-primary) focus:outline-hidden focus:ring-2 focus:ring-[#0284c7]/20 focus:border-[#0284c7] transition-colors"
+                  aria-label="From date"
+                />
+                <span className="text-[12px] text-(--ds-text-secondary)">to</span>
+                <input
+                  type="date"
+                  value={dateTo}
+                  min={dateFrom || undefined}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="h-[34px] px-2.5 rounded-lg border border-(--ds-border) bg-(--ds-surface) text-[13px] text-(--ds-text-primary) focus:outline-hidden focus:ring-2 focus:ring-[#0284c7]/20 focus:border-[#0284c7] transition-colors"
+                  aria-label="To date"
+                />
+              </div>
+            )}
+            {hasActiveFilter && (
+              <button
+                onClick={clearFilters}
+                className="h-[34px] px-2.5 rounded-lg text-[12px] text-(--ds-text-secondary) hover:text-(--ds-text-primary) hover:bg-(--ds-surface-2) transition-colors flex items-center gap-1"
+              >
+                <X size={13} />
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
 
         <div className="bg-(--ds-surface) border border-(--ds-border) rounded-xl overflow-hidden">
           {loading ? (
@@ -22,9 +275,11 @@ export default function MessagesPage() {
                 <div key={i} className="skeleton-row mb-4 h-[40px] rounded-lg" />
               ))}
             </div>
-          ) : messages.length === 0 ? (
+          ) : filtered.length === 0 ? (
             <div className="p-8 text-center text-(--ds-text-secondary)">
-              No feedbacks found.
+              {messages.length === 0
+                ? "No feedbacks found."
+                : "No feedbacks match the current filters."}
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -41,7 +296,7 @@ export default function MessagesPage() {
                   </tr>
                 </thead>
                 <tbody className="text-[14px]">
-                  {messages.map((msg) => (
+                  {filtered.map((msg) => (
                     <tr
                       key={msg.id}
                       onClick={() => setSelected(msg)}
@@ -81,8 +336,8 @@ export default function MessagesPage() {
                           {msg.status}
                         </span>
                       </td>
-                      <td className="p-4 text-(--ds-text-secondary) max-w-[200px] truncate" title={msg.description}>
-                        {msg.description}
+                      <td className="p-4 text-(--ds-text-secondary) max-w-[240px]">
+                        <MessagePreview description={msg.description} />
                       </td>
                       <td className="p-4 text-(--ds-text-secondary) text-right whitespace-nowrap">
                         {new Date(msg.createdAt).toLocaleDateString()}
@@ -101,7 +356,62 @@ export default function MessagesPage() {
   );
 }
 
+function FilterSelect({
+  value,
+  onChange,
+  options,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+}) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="h-[34px] pl-3 pr-8 rounded-lg border border-(--ds-border) bg-(--ds-surface) text-[13px] text-(--ds-text-primary) focus:outline-hidden focus:ring-2 focus:ring-[#0284c7]/20 focus:border-[#0284c7] transition-colors appearance-none bg-no-repeat bg-[right_0.6rem_center] bg-[length:0.7rem] cursor-pointer"
+      style={{
+        backgroundImage:
+          "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\")",
+      }}
+    >
+      {options.map((opt) => (
+        <option key={opt.value} value={opt.value}>
+          {opt.label}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 function FeedbackModal({ message, onClose }: { message: Message | null; onClose: () => void }) {
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const parsed = useMemo(
+    () => (message ? parseDescription(message.description ?? "") : { text: "", images: [], links: [] }),
+    [message]
+  );
+
+  const attachments = useMemo(() => {
+    if (!message) return [] as Array<{ url: string; filename: string }>;
+    return parsed.images.map((url, i) => ({
+      url,
+      filename: buildAttachmentFilename(
+        message.productName,
+        message.name,
+        message.phoneNumber,
+        message.createdAt,
+        url,
+        i,
+        parsed.images.length,
+      ),
+    }));
+  }, [message, parsed.images]);
+
+  // Reset lightbox whenever the parent modal closes.
+  useEffect(() => {
+    if (!message) setLightboxIndex(null);
+  }, [message]);
+
   if (!message) return null;
 
   const statusClasses =
@@ -189,12 +499,69 @@ function FeedbackModal({ message, onClose }: { message: Message | null; onClose:
                 Message
               </div>
               <div className="rounded-xl bg-(--ds-surface-2) border border-(--ds-border) p-4 text-[14px] text-(--ds-text-primary) whitespace-pre-wrap break-words">
-                {message.description || <span className="text-(--ds-text-secondary)/60">No message provided.</span>}
+                {parsed.text ? (
+                  renderTextWithLinks(parsed.text)
+                ) : parsed.images.length === 0 ? (
+                  <span className="text-(--ds-text-secondary)/60">No message provided.</span>
+                ) : (
+                  <span className="text-(--ds-text-secondary)/60">No written message — see attachments below.</span>
+                )}
               </div>
             </div>
+
+            {attachments.length > 0 && (
+              <div className="pt-1">
+                <div className="text-[11px] uppercase tracking-wider text-(--ds-text-secondary) font-medium mb-2 flex items-center gap-1.5">
+                  <ImageIcon size={12} />
+                  Attachments ({attachments.length})
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {attachments.map((att, i) => (
+                    <div
+                      key={att.url}
+                      className="group relative aspect-square overflow-hidden rounded-lg border border-(--ds-border) bg-(--ds-surface-2) hover:border-primary/40 transition-colors"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setLightboxIndex(i)}
+                        className="absolute inset-0 w-full h-full"
+                        aria-label="View image"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={att.url}
+                          alt={att.filename}
+                          className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform"
+                        />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          void triggerDownload(att.url, att.filename);
+                        }}
+                        title={`Download ${att.filename}`}
+                        aria-label={`Download ${att.filename}`}
+                        className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-black/55 hover:bg-black/75 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm"
+                      >
+                        <Download size={13} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {lightboxIndex !== null && attachments[lightboxIndex] && (
+        <ImageLightbox
+          url={attachments[lightboxIndex].url}
+          filename={attachments[lightboxIndex].filename}
+          onClose={() => setLightboxIndex(null)}
+        />
+      )}
 
       <style jsx global>{`
         @keyframes fadeIn {
@@ -213,6 +580,92 @@ function FeedbackModal({ message, onClose }: { message: Message | null; onClose:
         }
       `}</style>
     </>
+  );
+}
+
+function MessagePreview({ description }: { description: string }) {
+  const parsed = useMemo(() => parseDescription(description ?? ""), [description]);
+  const preview = parsed.text || (parsed.images.length > 0 ? "(image attached)" : "");
+  return (
+    <div className="flex items-center gap-2 min-w-0">
+      <span className="truncate flex-1" title={preview}>
+        {preview || <span className="text-(--ds-text-secondary)/60">—</span>}
+      </span>
+      {parsed.images.length > 0 && (
+        <span
+          className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-medium"
+          title={`${parsed.images.length} image attachment${parsed.images.length === 1 ? "" : "s"}`}
+        >
+          <ImageIcon size={11} />
+          {parsed.images.length}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function ImageLightbox({ url, filename, onClose }: { url: string; filename: string; onClose: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-9999 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4"
+      onClick={onClose}
+      style={{ animation: "fadeIn 0.18s ease" }}
+    >
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label="Close"
+        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+      >
+        <X size={18} />
+      </button>
+      <div
+        className="absolute top-4 left-4 flex items-center gap-2"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={() => void triggerDownload(url, filename)}
+          title={`Download ${filename}`}
+          className="px-3 h-10 rounded-full bg-white text-black hover:bg-white/90 text-[13px] font-semibold flex items-center gap-1.5 transition-colors shadow-md"
+        >
+          <Download size={14} />
+          Download
+        </button>
+        <a
+          href={url}
+          target="_blank"
+          rel="noreferrer"
+          className="px-3 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white text-[13px] font-medium flex items-center gap-1.5 transition-colors"
+        >
+          <ExternalLink size={14} />
+          Open original
+        </a>
+      </div>
+      <div
+        className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-black/55 text-white/85 text-[12px] font-medium backdrop-blur-sm max-w-[80vw] truncate"
+        title={filename}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {filename}
+      </div>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={url}
+        alt={filename}
+        onClick={(e) => e.stopPropagation()}
+        className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+        style={{ animation: "slideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1)" }}
+      />
+    </div>
   );
 }
 

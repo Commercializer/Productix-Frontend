@@ -10,7 +10,7 @@ import React, { useState } from "react";
 import { MessageSquareHeart } from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
 import { HexColorPopover } from "./hex-color-popover";
-import { FeedbackSheet, getDefaultFeedbackLabels, type CustomField, type FeedbackSheetFields, type FeedbackSheetLabels } from "./feedback-sheet";
+import { FeedbackSheet, getDefaultFeedbackLabels, type CustomField, type FeedbackSheetFields, type FeedbackSheetLabels, type FeedbackSubmitStyle } from "./feedback-sheet";
 import { usePublicPage } from "../renderer/public-page-context";
 
 function isInsideEditor(): boolean {
@@ -53,7 +53,7 @@ function FeedbackElementComponent({ props, isEditing, scaleFactor = 1 }: Element
   const variant = (props.variant as string) || "filled";
 
   const [open, setOpen] = useState(false);
-  const { productId } = usePublicPage();
+  const { productId, portalRoot } = usePublicPage();
 
   const fields: FeedbackSheetFields = {
     name: props.showNameField !== false,
@@ -62,6 +62,14 @@ function FeedbackElementComponent({ props, isEditing, scaleFactor = 1 }: Element
     details: props.showDetailsField !== false,
   };
   const customFields: CustomField[] = Array.isArray(props.customFields) ? (props.customFields as CustomField[]) : [];
+
+  const submitStyle: FeedbackSubmitStyle = {
+    bgColor: (props.submitBgColor as string) || undefined,
+    textColor: (props.submitTextColor as string) || undefined,
+    borderRadius: typeof props.submitBorderRadius === "number" ? (props.submitBorderRadius as number) : undefined,
+    fontSize: typeof props.submitFontSize === "number" ? (props.submitFontSize as number) : undefined,
+    fontWeight: (props.submitFontWeight as string) || undefined,
+  };
 
   const scaledFontSize = Math.round(fontSize * scaleFactor);
   const scaledPadH = Math.round(18 * scaleFactor);
@@ -114,6 +122,8 @@ function FeedbackElementComponent({ props, isEditing, scaleFactor = 1 }: Element
           accentColor={bgColor}
           fields={fields}
           customFields={customFields}
+          submitStyle={submitStyle}
+          portalRoot={portalRoot ?? null}
         />
       )}
     </>
@@ -188,7 +198,7 @@ function FieldToggle({
 }
 
 function FeedbackPropertyPanel({ props, onChange }: PropertyPanelProps) {
-  const [section, setSection] = useState<"style" | "fields" | "form">("style");
+  const [section, setSection] = useState<"style" | "fields" | "form" | "submit">("style");
 
   const labelCls = "text-xs font-medium text-gray-500 uppercase tracking-wide";
   const inputCls = "mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none";
@@ -212,14 +222,14 @@ function FeedbackPropertyPanel({ props, onChange }: PropertyPanelProps) {
     onChange({ customFields: [...customFields, next] });
   };
 
-  const tabLabel = (s: "style" | "fields" | "form") =>
-    s === "style" ? "Button" : s === "fields" ? "Fields" : "Copy";
+  const tabLabel = (s: "style" | "fields" | "form" | "submit") =>
+    s === "style" ? "Button" : s === "fields" ? "Fields" : s === "form" ? "Copy" : "Submit";
 
   return (
     <div className="space-y-3">
       {/* Tabs */}
       <div style={{ display: "flex", gap: 4, padding: 3, background: "#f3f4f6", borderRadius: 8 }}>
-        {(["style", "fields", "form"] as const).map((s) => (
+        {(["style", "fields", "form", "submit"] as const).map((s) => (
           <button
             key={s}
             type="button"
@@ -401,6 +411,7 @@ function FeedbackPropertyPanel({ props, onChange }: PropertyPanelProps) {
                       <option value="tel">Phone</option>
                       <option value="email">Email</option>
                       <option value="number">Number</option>
+                      <option value="image">Image upload</option>
                     </select>
                     <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#374151", cursor: "pointer", paddingLeft: 4 }}>
                       <input
@@ -438,6 +449,84 @@ function FeedbackPropertyPanel({ props, onChange }: PropertyPanelProps) {
           </label>
         </>
       )}
+
+      {section === "submit" && (
+        <>
+          <div style={{ padding: "10px 12px", borderRadius: 8, background: "#f8fafc", border: "1px solid #e2e8f0", fontSize: 11.5, color: "#64748b", lineHeight: 1.4 }}>
+            Style the <strong>Send feedback</strong> button inside the popup. Leave colors blank to inherit from the trigger button.
+          </div>
+          <label className="block">
+            <span className={labelCls}>Background color</span>
+            <div className="mt-1 flex gap-2 items-center">
+              <HexColorPopover
+                value={(props.submitBgColor as string) || ""}
+                onChange={(hex) => onChange({ submitBgColor: hex })}
+                fallback={(props.bgColor as string) || "#0ea5e9"}
+              />
+              <input
+                type="text"
+                className="flex-1 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
+                value={(props.submitBgColor as string) || ""}
+                onChange={(e) => onChange({ submitBgColor: e.target.value })}
+                placeholder={(props.bgColor as string) || "#0ea5e9"}
+              />
+            </div>
+          </label>
+          <label className="block">
+            <span className={labelCls}>Text color</span>
+            <div className="mt-1 flex gap-2 items-center">
+              <HexColorPopover
+                value={(props.submitTextColor as string) || ""}
+                onChange={(hex) => onChange({ submitTextColor: hex })}
+                fallback="#ffffff"
+              />
+              <input
+                type="text"
+                className="flex-1 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
+                value={(props.submitTextColor as string) || ""}
+                onChange={(e) => onChange({ submitTextColor: e.target.value })}
+                placeholder="#ffffff"
+              />
+            </div>
+          </label>
+          <label className="block">
+            <span className={labelCls}>Border radius</span>
+            <input
+              type="number"
+              className={inputCls}
+              value={typeof props.submitBorderRadius === "number" ? (props.submitBorderRadius as number) : 14}
+              onChange={(e) => onChange({ submitBorderRadius: Number(e.target.value) })}
+              min={0}
+              max={999}
+            />
+          </label>
+          <label className="block">
+            <span className={labelCls}>Font size</span>
+            <input
+              type="number"
+              className={inputCls}
+              value={typeof props.submitFontSize === "number" ? (props.submitFontSize as number) : 15}
+              onChange={(e) => onChange({ submitFontSize: Number(e.target.value) })}
+              min={8}
+              max={48}
+            />
+          </label>
+          <label className="block">
+            <span className={labelCls}>Font weight</span>
+            <select
+              className={inputCls}
+              value={(props.submitFontWeight as string) || "600"}
+              onChange={(e) => onChange({ submitFontWeight: e.target.value })}
+            >
+              <option value="400">Regular (400)</option>
+              <option value="500">Medium (500)</option>
+              <option value="600">Semibold (600)</option>
+              <option value="700">Bold (700)</option>
+              <option value="800">Extrabold (800)</option>
+            </select>
+          </label>
+        </>
+      )}
     </div>
   );
 }
@@ -466,6 +555,11 @@ registerElement({
     showEmailField: true,
     showDetailsField: true,
     customFields: [],
+    submitBgColor: "",
+    submitTextColor: "",
+    submitBorderRadius: 14,
+    submitFontSize: 15,
+    submitFontWeight: "600",
   },
   defaultTransform: { width: 220, height: 52 },
   component: FeedbackElementComponent,

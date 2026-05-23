@@ -13,6 +13,7 @@ import {
   Legend,
 } from "recharts";
 import { AnalyticsStats } from "@/hooks/use-analytics";
+import { formatCountry } from "@/lib/format-country";
 
 const SOURCE_LABEL: Record<string, string> = {
   ON_PACKAGE: "On Package",
@@ -132,7 +133,7 @@ export function AnalyticsCharts({ stats }: { stats: AnalyticsStats | null }) {
                   return (
                     <li key={c.country} className="space-y-1">
                       <div className="flex items-center justify-between text-[12px]">
-                        <span className="font-medium text-(--ds-text-primary)">{c.country}</span>
+                        <span className="font-medium text-(--ds-text-primary)">{formatCountry(c.country)}</span>
                         <span className="text-[#64748B] tabular-nums">{c.count.toLocaleString()}</span>
                       </div>
                       <div className="h-1.5 rounded-full bg-(--ds-border) overflow-hidden">
@@ -175,7 +176,7 @@ export function ProductBreakdownGrid({ stats }: { stats: AnalyticsStats | null }
             </header>
 
             <BreakdownRow label="Devices" items={p.devices.map((d) => ({ key: DEVICE_LABEL[d.device] ?? d.device, count: d.count }))} />
-            <BreakdownRow label="Countries" items={p.countries.map((c) => ({ key: c.country, count: c.count }))} />
+            <BreakdownRow label="Countries" items={p.countries.map((c) => ({ key: formatCountry(c.country), count: c.count }))} />
             <BreakdownRow label="Browsers" items={p.browsers.map((b) => ({ key: b.browser, count: b.count }))} />
           </article>
         ))}

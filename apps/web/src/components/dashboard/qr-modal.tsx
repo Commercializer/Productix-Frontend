@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { X, Download, Copy, Check, ExternalLink } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { X, Download, Copy, Check, ExternalLink, Package, Link2, Share2 } from "lucide-react";
 import QRCode from "qrcode";
 
 interface QrModalProps {
@@ -11,10 +11,29 @@ interface QrModalProps {
   shortCode: string;
 }
 
+type QrType = "onpack" | "link" | "social";
+
+const QR_TYPES: ReadonlyArray<{
+  id: QrType;
+  label: string;
+  prefix: string;
+  Icon: typeof Package;
+}> = [
+  { id: "onpack", label: "On Pack", prefix: "/p", Icon: Package },
+  { id: "link", label: "Link", prefix: "/l", Icon: Link2 },
+  { id: "social", label: "Social", prefix: "/s", Icon: Share2 },
+];
+
 export function QrModal({ isOpen, onClose, productName, shortCode }: QrModalProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [copied, setCopied] = useState(false);
-  const publicUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/p/${shortCode}`;
+  const [qrType, setQrType] = useState<QrType>("onpack");
+
+  const prefix = useMemo(
+    () => QR_TYPES.find((t) => t.id === qrType)?.prefix ?? "/p",
+    [qrType],
+  );
+  const publicUrl = `${typeof window !== "undefined" ? window.location.origin : ""}${prefix}/${shortCode}`;
 
   useEffect(() => {
     if (!isOpen || !canvasRef.current) return;
@@ -30,12 +49,37 @@ export function QrModal({ isOpen, onClose, productName, shortCode }: QrModalProp
     });
   }, [isOpen, publicUrl]);
 
-  const handleDownload = () => {
+  // Reset to default type whenever the modal is reopened so each session starts
+  // on On Pack rather than whatever the user picked last time.
+  useEffect(() => {
+    if (isOpen) setQrType("onpack");
+  }, [isOpen]);
+
+  const handleDownloadPng = () => {
     if (!canvasRef.current) return;
     const link = document.createElement("a");
-    link.download = `${shortCode}-qr-code.png`;
+    link.download = `${shortCode}-${qrType}-qr.png`;
     link.href = canvasRef.current.toDataURL("image/png");
     link.click();
+  };
+
+  const handleDownloadSvg = async () => {
+    const svgString = await QRCode.toString(publicUrl, {
+      type: "svg",
+      margin: 2,
+      color: {
+        dark: "#0f172a",
+        light: "#ffffff",
+      },
+      errorCorrectionLevel: "H",
+    });
+    const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.download = `${shortCode}-${qrType}-qr.svg`;
+    link.href = url;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   const handleCopy = async () => {
@@ -61,7 +105,7 @@ export function QrModal({ isOpen, onClose, productName, shortCode }: QrModalProp
         onClick={onClose}
       >
         <div
-          className="relative w-full max-w-[400px] rounded-2xl bg-white dark:bg-[#1e293b] shadow-2xl border border-[#e2e8f0] dark:border-[#334155] overflow-hidden"
+          className="relative w-full max-w-[420px] rounded-2xl bg-white dark:bg-[#1e293b] shadow-2xl border border-[#e2e8f0] dark:border-[#334155] overflow-hidden"
           onClick={(e) => e.stopPropagation()}
           style={{ animation: "slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)" }}
         >
@@ -83,8 +127,32 @@ export function QrModal({ isOpen, onClose, productName, shortCode }: QrModalProp
             </button>
           </div>
 
+          {/* QR Type Tabs */}
+          <div className="px-6 pt-2">
+            <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-[#f1f5f9] dark:bg-[#0f172a] border border-[#e2e8f0] dark:border-[#334155]">
+              {QR_TYPES.map(({ id, label, Icon }) => {
+                const active = qrType === id;
+                return (
+                  <button
+                    key={id}
+                    onClick={() => setQrType(id)}
+                    className={`h-9 px-2 rounded-lg text-[12px] font-medium flex items-center justify-center gap-1.5 transition-all ${
+                      active
+                        ? "bg-white dark:bg-[#1e293b] text-[#0f172a] dark:text-white shadow-xs border border-[#e2e8f0] dark:border-[#334155]"
+                        : "text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-white"
+                    }`}
+                    aria-pressed={active}
+                  >
+                    <Icon size={14} strokeWidth={2.2} />
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* QR Canvas */}
-          <div className="px-6 py-6 flex flex-col items-center">
+          <div className="px-6 py-5 flex flex-col items-center">
             <div className="p-4 rounded-xl bg-white border border-[#e2e8f0] shadow-xs">
               <canvas ref={canvasRef} />
             </div>
@@ -109,22 +177,31 @@ export function QrModal({ isOpen, onClose, productName, shortCode }: QrModalProp
           </div>
 
           {/* Actions */}
-          <div className="px-6 pb-6 flex gap-3">
-            <button
-              onClick={handleDownload}
-              className="flex-1 h-[42px] rounded-xl bg-[#0f172a] dark:bg-white text-white dark:text-[#0f172a] font-semibold text-[13px] flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
-            >
-              <Download size={15} />
-              Download PNG
-            </button>
+          <div className="px-6 pb-6 flex flex-col gap-2.5">
+            <div className="flex gap-2.5">
+              <button
+                onClick={handleDownloadPng}
+                className="flex-1 h-[42px] rounded-xl bg-[#0f172a] dark:bg-white text-white dark:text-[#0f172a] font-semibold text-[13px] flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+              >
+                <Download size={15} />
+                PNG
+              </button>
+              <button
+                onClick={handleDownloadSvg}
+                className="flex-1 h-[42px] rounded-xl border border-[#e2e8f0] dark:border-[#334155] text-[#0f172a] dark:text-white font-semibold text-[13px] flex items-center justify-center gap-2 hover:bg-[#f8fafc] dark:hover:bg-[#334155] transition-colors"
+              >
+                <Download size={15} />
+                SVG
+              </button>
+            </div>
             <a
               href={publicUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="h-[42px] px-5 rounded-xl border border-[#e2e8f0] dark:border-[#334155] text-[#0f172a] dark:text-white font-semibold text-[13px] flex items-center justify-center gap-2 hover:bg-[#f8fafc] dark:hover:bg-[#334155] transition-colors"
+              className="h-[40px] rounded-xl text-[#64748b] dark:text-[#94a3b8] font-medium text-[12px] flex items-center justify-center gap-2 hover:text-[#0f172a] dark:hover:text-white transition-colors"
             >
-              <ExternalLink size={15} />
-              Visit
+              <ExternalLink size={14} />
+              Visit link
             </a>
           </div>
         </div>

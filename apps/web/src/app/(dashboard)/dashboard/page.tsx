@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useAnalytics } from "@/hooks/use-analytics";
 import { DashboardHeader } from "@/components/dashboard/header";
 import { AnalyticsCharts } from "@/components/dashboard/analytics-charts";
+import { formatCountry } from "@/lib/format-country";
 
 const DEVICE_LABEL: Record<string, string> = {
   MOBILE: "Mobile",
@@ -221,7 +222,7 @@ export default function DashboardPage() {
             <ul className="space-y-3">
               {topCountries.map((c) => (
                 <li key={c.country} className="flex items-center justify-between text-[13px]">
-                  <span className="text-(--ds-text-primary) font-medium">{c.country}</span>
+                  <span className="text-(--ds-text-primary) font-medium">{formatCountry(c.country)}</span>
                   <span className="text-[#64748B] tabular-nums">{fmt(c.count)}</span>
                 </li>
               ))}

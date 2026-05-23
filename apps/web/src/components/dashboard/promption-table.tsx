@@ -25,6 +25,7 @@ import {
   Link2,
   Hash,
   X,
+  CornerUpRight,
 } from "lucide-react";
 import type { Promption } from "@/hooks/use-promptions";
 import { QrModal } from "./qr-modal";
@@ -36,6 +37,11 @@ interface PromptionTableProps {
   onUnpublish?: (id: string) => Promise<{ success?: boolean; error?: string }>;
   onSetSlugVisible?: (productId: string, visible: boolean) => Promise<{ success?: boolean; error?: string }>;
   onRenameSlug?: (profileId: string, slug: string) => Promise<{ success?: boolean; error?: string; slug?: string }>;
+  onUpdateRedirect?: (
+    profileId: string,
+    redirectUrl: string | null,
+    redirectEnabled: boolean,
+  ) => Promise<{ success?: boolean; error?: string; redirectUrl?: string | null; redirectEnabled?: boolean }>;
   readOnly?: boolean;
 }
 
@@ -54,12 +60,19 @@ export function PromptionTable({
   onUnpublish,
   onSetSlugVisible,
   onRenameSlug,
+  onUpdateRedirect,
   readOnly = false,
 }: PromptionTableProps) {
   const [search, setSearch] = useState("");
   const [selectedIDs, setSelectedIDs] = useState<Set<string>>(new Set());
   const [qrModal, setQrModal] = useState<{ name: string; shortCode: string } | null>(null);
   const [slugEditor, setSlugEditor] = useState<{ profileId: string; currentSlug: string } | null>(null);
+  const [redirectEditor, setRedirectEditor] = useState<{
+    profileId: string;
+    productName: string;
+    currentUrl: string | null;
+    currentEnabled: boolean;
+  } | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -424,6 +437,30 @@ export function PromptionTable({
                                     </button>
                                   )}
 
+                                  {onUpdateRedirect && (
+                                    <button
+                                      onClick={() => {
+                                        setActiveMenu(null);
+                                        setRedirectEditor({
+                                          profileId: p.id,
+                                          productName: p.productName,
+                                          currentUrl: p.redirectUrl,
+                                          currentEnabled: p.redirectEnabled,
+                                        });
+                                      }}
+                                      className="w-full px-3 py-2 text-left text-[13px] hover:bg-[#f8fafc] dark:hover:bg-[#334155] flex items-center justify-between gap-2 transition-colors text-(--ds-text-primary)"
+                                      title="When on, scans redirect to this URL instead of showing the showcase page."
+                                    >
+                                      <span className="flex items-center gap-2">
+                                        <CornerUpRight size={15} className="text-[#64748b]" />
+                                        Redirect link
+                                      </span>
+                                      {p.redirectEnabled && p.redirectUrl && (
+                                        <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                      )}
+                                    </button>
+                                  )}
+
                                   {onSetSlugVisible && (
                                     <button
                                       onClick={() => handleToggleSlug(p)}
@@ -489,6 +526,18 @@ export function PromptionTable({
           currentSlug={slugEditor.currentSlug}
           onClose={() => setSlugEditor(null)}
           onSave={onRenameSlug}
+        />
+      )}
+
+      {/* Redirect Edit Modal */}
+      {redirectEditor && onUpdateRedirect && (
+        <RedirectEditModal
+          profileId={redirectEditor.profileId}
+          productName={redirectEditor.productName}
+          currentUrl={redirectEditor.currentUrl}
+          currentEnabled={redirectEditor.currentEnabled}
+          onClose={() => setRedirectEditor(null)}
+          onSave={onUpdateRedirect}
         />
       )}
     </div>
@@ -582,6 +631,139 @@ function SlugEditModal({ profileId, currentSlug, onClose, onSave }: SlugEditModa
             <button
               onClick={handleSave}
               disabled={saving || value.trim() === currentSlug || !value.trim()}
+              className="flex-1 h-[42px] rounded-xl bg-[#0f172a] dark:bg-white text-white dark:text-[#0f172a] font-semibold text-[13px] hover:opacity-90 transition-opacity disabled:opacity-50"
+            >
+              {saving ? "Saving…" : "Save"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </>,
+    document.body
+  );
+}
+
+interface RedirectEditModalProps {
+  profileId: string;
+  productName: string;
+  currentUrl: string | null;
+  currentEnabled: boolean;
+  onClose: () => void;
+  onSave: (
+    profileId: string,
+    redirectUrl: string | null,
+    redirectEnabled: boolean,
+  ) => Promise<{ success?: boolean; error?: string; redirectUrl?: string | null; redirectEnabled?: boolean }>;
+}
+
+function RedirectEditModal({
+  profileId,
+  productName,
+  currentUrl,
+  currentEnabled,
+  onClose,
+  onSave,
+}: RedirectEditModalProps) {
+  const [url, setUrl] = useState(currentUrl ?? "");
+  const [enabled, setEnabled] = useState(currentEnabled);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+
+  const dirty = url.trim() !== (currentUrl ?? "") || enabled !== currentEnabled;
+
+  const handleSave = async () => {
+    setError(null);
+    setSaving(true);
+    const trimmed = url.trim();
+    const result = await onSave(profileId, trimmed ? trimmed : null, enabled);
+    setSaving(false);
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
+    onClose();
+  };
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <>
+      <div className="fixed inset-0 z-[9998] bg-black/40 backdrop-blur-xs" onClick={onClose} />
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" onClick={onClose}>
+        <div
+          className="relative w-full max-w-[460px] rounded-2xl bg-white dark:bg-[#1e293b] shadow-2xl border border-[#e2e8f0] dark:border-[#334155] overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between px-6 pt-6 pb-2">
+            <div>
+              <h3 className="text-lg font-bold text-[#0f172a] dark:text-white">Redirect link</h3>
+              <p className="text-[13px] text-[#64748b] dark:text-[#94a3b8] mt-0.5">
+                Send visitors of <span className="font-medium text-(--ds-text-primary)">{productName}</span> straight to another URL when they scan.
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-white hover:bg-[#f1f5f9] dark:hover:bg-[#334155] transition-colors"
+            >
+              <X size={18} />
+            </button>
+          </div>
+          <div className="px-6 py-4 space-y-4">
+            <div>
+              <label className="block text-[12px] font-medium text-[#64748b] dark:text-[#94a3b8] mb-1.5">
+                Destination URL
+              </label>
+              <input
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                placeholder="https://example.com/promo"
+                autoFocus
+                inputMode="url"
+                className="w-full h-[42px] px-3 rounded-lg border border-[#e2e8f0] dark:border-[#334155] bg-transparent text-[13px] text-[#0f172a] dark:text-white placeholder-[#94a3b8] outline-hidden focus:border-[#93c5fd]"
+              />
+              <p className="mt-1.5 text-[11px] text-[#94a3b8]">
+                Leave blank to remove the redirect. http:// or https:// — we&apos;ll add https if you skip it.
+              </p>
+            </div>
+
+            <label className="flex items-center justify-between gap-3 cursor-pointer">
+              <span className="flex flex-col">
+                <span className="text-[13px] font-medium text-(--ds-text-primary)">Enable redirect</span>
+                <span className="text-[11px] text-[#94a3b8]">When on, scans skip the showcase page.</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setEnabled((v) => !v)}
+                className={`inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                  enabled ? "bg-(--ds-accent)" : "bg-[#cbd5e1] dark:bg-[#475569]"
+                }`}
+                aria-pressed={enabled}
+              >
+                <span
+                  className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${
+                    enabled ? "translate-x-4.5" : "translate-x-0.5"
+                  }`}
+                />
+              </button>
+            </label>
+
+            {error && (
+              <p className="text-[12px] text-red-600 dark:text-red-400">{error}</p>
+            )}
+          </div>
+          <div className="px-6 pb-6 flex gap-3">
+            <button
+              onClick={onClose}
+              className="flex-1 h-[42px] rounded-xl border border-[#e2e8f0] dark:border-[#334155] text-[#0f172a] dark:text-white font-semibold text-[13px] hover:bg-[#f8fafc] dark:hover:bg-[#334155] transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving || !dirty}
               className="flex-1 h-[42px] rounded-xl bg-[#0f172a] dark:bg-white text-white dark:text-[#0f172a] font-semibold text-[13px] hover:opacity-90 transition-opacity disabled:opacity-50"
             >
               {saving ? "Saving…" : "Save"}

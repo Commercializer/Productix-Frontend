@@ -8,6 +8,7 @@ import {
   unpublishPageAction,
   setSlugVisibleAction,
   updateSlugAction,
+  updateRedirectAction,
 } from "@/lib/dashboard/actions";
 
 export interface Promption {
@@ -25,6 +26,8 @@ export interface Promption {
   publishedAt: string | null;
   logoUrl: string | null;
   metaDescription: string | null;
+  redirectUrl: string | null;
+  redirectEnabled: boolean;
 }
 
 export function usePromptions() {
@@ -115,6 +118,22 @@ export function usePromptions() {
     []
   );
 
+  const updateRedirect = useCallback(
+    async (profileId: string, redirectUrl: string | null, redirectEnabled: boolean) => {
+      const result = await updateRedirectAction(profileId, redirectUrl, redirectEnabled);
+      if (result.error) return { error: result.error };
+      setPromptions((prev) =>
+        prev.map((p) =>
+          p.id === profileId
+            ? { ...p, redirectUrl: result.redirectUrl ?? null, redirectEnabled: !!result.redirectEnabled }
+            : p
+        )
+      );
+      return { success: true, redirectUrl: result.redirectUrl ?? null, redirectEnabled: !!result.redirectEnabled };
+    },
+    []
+  );
+
   return {
     promptions,
     loading,
@@ -125,5 +144,6 @@ export function usePromptions() {
     unpublishPromption,
     setSlugVisible,
     updateSlug,
+    updateRedirect,
   };
 }

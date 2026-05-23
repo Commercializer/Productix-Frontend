@@ -608,6 +608,8 @@ function publicProfileShape(profile: any) {
     content: profile.content,
     metaDescription: profile.metaDescription,
     ogImageUrl: profile.ogImageUrl,
+    redirectUrl: profile.redirectUrl as string | null,
+    redirectEnabled: profile.redirectEnabled as boolean,
     publishedAt: profile.publishedAt?.toISOString() ?? null,
     company: {
       name: profile.product.company.name,
@@ -721,6 +723,7 @@ export async function getPreviewPageBySlugAction(slug: string) {
       name: profile.product.company.name,
       logoUrl: profile.product.company.logoUrl,
       businessUsername: profile.product.company.businessUsername,
+      customDomain: (profile.product.company as any).customDomain ?? null,
     },
     brand: profile.product.brandProfile
       ? {
@@ -738,19 +741,30 @@ export async function getPreviewPageBySlugAction(slug: string) {
 
 export async function updatePageMetaAction(
   profileId: string,
-  meta: { metaDescription?: string; ogImageUrl?: string; tagline?: string }
+  meta: {
+    metaDescription?: string | null;
+    ogImageUrl?: string | null;
+    tagline?: string | null;
+    productName?: string;
+    logoUrl?: string | null;
+  }
 ) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
 
   try {
+    const data: Record<string, unknown> = {};
+    if (meta.metaDescription !== undefined) data.metaDescription = meta.metaDescription;
+    if (meta.ogImageUrl !== undefined) data.ogImageUrl = meta.ogImageUrl;
+    if (meta.tagline !== undefined) data.tagline = meta.tagline;
+    if (meta.logoUrl !== undefined) data.logoUrl = meta.logoUrl;
+    if (meta.productName !== undefined && meta.productName.trim().length > 0) {
+      data.productName = meta.productName.trim();
+    }
+
     await prisma.productProfile.update({
       where: { id: profileId },
-      data: {
-        metaDescription: meta.metaDescription,
-        ogImageUrl: meta.ogImageUrl,
-        tagline: meta.tagline,
-      },
+      data,
     });
     return { success: true };
   } catch (error: any) {

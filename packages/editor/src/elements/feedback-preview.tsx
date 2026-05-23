@@ -7,7 +7,7 @@
 "use client";
 
 import React from "react";
-import { Eye } from "lucide-react";
+import { Eye, ImagePlus } from "lucide-react";
 import { useCanvasStore } from "../engine/canvas-store";
 import { getDefaultFeedbackLabels, type CustomField, type FeedbackSheetFields, type FeedbackSheetLabels } from "./feedback-sheet";
 
@@ -48,6 +48,14 @@ export function FeedbackFormPreview() {
   const props = el.props;
   const labels = resolveLabels(props);
   const accent = (props.bgColor as string) || "#0ea5e9";
+  const submitBg = (props.submitBgColor as string) || accent;
+  const submitText = (props.submitTextColor as string) || "#ffffff";
+  const submitRadius = typeof props.submitBorderRadius === "number" ? (props.submitBorderRadius as number) : 14;
+  const submitFontSize = typeof props.submitFontSize === "number" ? (props.submitFontSize as number) : 15;
+  const submitFontWeight = (props.submitFontWeight as string) || "600";
+  // Scale the configured submit font size down to match the mini-preview's typography.
+  const submitPreviewFontSize = Math.max(11, Math.round((submitFontSize / 15) * 13));
+  const submitPreviewRadius = Math.max(4, Math.round((submitRadius / 14) * 12));
   const fields: FeedbackSheetFields = {
     name: props.showNameField !== false,
     phone: props.showPhoneField !== false,
@@ -184,7 +192,27 @@ export function FeedbackFormPreview() {
                     {f.label || "Untitled field"}
                     {!f.required && <span style={{ color: "#cbd5e1", fontWeight: 400, marginLeft: 4 }}>(optional)</span>}
                   </label>
-                  <div style={{ ...inputStyle, minHeight: f.type === "textarea" ? 56 : undefined }}>{f.placeholder || (f.type === "textarea" ? "Long answer" : "Short answer")}</div>
+                  {f.type === "image" ? (
+                    <div
+                      style={{
+                        ...inputStyle,
+                        border: "1.5px dashed #e5e7eb",
+                        background: "#fafafa",
+                        padding: "12px",
+                        minHeight: 56,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 4,
+                      }}
+                    >
+                      <ImagePlus size={16} style={{ color: accent }} />
+                      <span style={{ fontSize: 11, color: "#94a3b8" }}>{f.placeholder || "Choose an image"}</span>
+                    </div>
+                  ) : (
+                    <div style={{ ...inputStyle, minHeight: f.type === "textarea" ? 56 : undefined }}>{f.placeholder || (f.type === "textarea" ? "Long answer" : "Short answer")}</div>
+                  )}
                 </div>
               ))}
 
@@ -193,11 +221,11 @@ export function FeedbackFormPreview() {
                 style={{
                   marginTop: 4,
                   padding: "10px 14px",
-                  borderRadius: 12,
-                  background: accent,
-                  color: "#fff",
-                  fontSize: 13,
-                  fontWeight: 600,
+                  borderRadius: submitPreviewRadius,
+                  background: submitBg,
+                  color: submitText,
+                  fontSize: submitPreviewFontSize,
+                  fontWeight: submitFontWeight,
                   textAlign: "center",
                   letterSpacing: "0.01em",
                 }}

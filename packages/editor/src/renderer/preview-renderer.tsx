@@ -53,6 +53,17 @@ export interface PreviewRendererProps {
   contentLocale?: ContentLocale;
   /** Product this preview represents — required for feedback submissions. */
   productId?: string;
+  /**
+   * Breakpoint to render at in simple mode (when showControls is false).
+   * Defaults to "desktop". Set to "mobile" to render inside a phone mockup.
+   */
+  breakpoint?: Breakpoint;
+  /**
+   * Optional element that overlays inside the rendered page (e.g. feedback
+   * sheet) should portal into. Lets the simulator contain modals inside the
+   * phone screen instead of covering the whole viewport.
+   */
+  portalRoot?: HTMLElement | null;
 }
 
 /* ─── Preview Content (renders artboards) ──── */
@@ -213,6 +224,8 @@ export function PreviewRenderer({
   showControls = false,
   contentLocale: initialLocale,
   productId,
+  breakpoint: simpleBreakpoint = "desktop",
+  portalRoot,
 }: PreviewRendererProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [viewportIdx, setViewportIdx] = useState(0);
@@ -274,18 +287,26 @@ export function PreviewRenderer({
   }, [computeAutoFit]);
 
   if (!showControls) {
-    // Simple mode — no controls, just render centered
+    // Simple mode — no controls, just render at requested breakpoint.
     return (
-      <PublicPageProvider value={{ productId }}>
-        <div className={className} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <PreviewContent doc={doc} zoom={1} breakpoint="desktop" contentLocale={contentLocale} />
+      <PublicPageProvider value={{ productId, portalRoot }}>
+        <div
+          className={className}
+          style={{ display: "flex", flexDirection: "column", alignItems: "stretch" }}
+        >
+          <PreviewContent
+            doc={doc}
+            zoom={1}
+            breakpoint={simpleBreakpoint}
+            contentLocale={contentLocale}
+          />
         </div>
       </PublicPageProvider>
     );
   }
 
   return (
-    <PublicPageProvider value={{ productId }}>
+    <PublicPageProvider value={{ productId, portalRoot }}>
     <div className={`flex flex-col h-full ${className || ""}`}>
       {/* Viewport toolbar */}
       <div className="flex items-center justify-between px-4 py-2 bg-white border-b border-gray-200 flex-shrink-0">
