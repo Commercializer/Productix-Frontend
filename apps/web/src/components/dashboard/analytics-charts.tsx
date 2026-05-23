@@ -79,7 +79,7 @@ export function AnalyticsCharts({ stats }: { stats: AnalyticsStats | null }) {
               No engagement data yet.
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} initialDimension={{ width: 1, height: 1 }}>
               <AreaChart data={timeSeries} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorScans" x1="0" y1="0" x2="0" y2="1">
@@ -148,7 +148,7 @@ export function AnalyticsCharts({ stats }: { stats: AnalyticsStats | null }) {
               {sourceData.length === 0 ? (
                 <div className="h-full flex items-center justify-center text-[13px] text-[#64748B]">No source data yet.</div>
               ) : (
-                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} initialDimension={{ width: 1, height: 1 }}>
                   <BarChart data={sourceData} margin={{ top: 4, right: 10, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--ds-border)" />
                     <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#64748B" }} dy={6} interval={0} />

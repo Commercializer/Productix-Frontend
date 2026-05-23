@@ -1002,7 +1002,7 @@ export async function getCompanyAnalyticsAction() {
 
     // Top products: hydrate with name + feedback counts + per-product splits.
     const topProductIds = topProductsRaw.map((r) => r.productId);
-    const [topProductProfiles, topProductFeedback, perProductDevice, perProductCountry, perProductBrowser] =
+    const [topProductProfiles, topProductFeedback, perProductDevice, perProductCountry, perProductBrowser, perProductQrScanType] =
       await Promise.all([
         topProductIds.length
           ? prisma.productProfile.findMany({
@@ -1038,6 +1038,13 @@ export async function getCompanyAnalyticsAction() {
             _count: { _all: true },
           })
           : Promise.resolve([] as Array<{ productId: string; browser: string | null; _count: { _all: number } }>),
+        topProductIds.length
+          ? prisma.pageView.groupBy({
+            by: ["productId", "qrScanType"],
+            where: { companyId, productId: { in: topProductIds } },
+            _count: { _all: true },
+          })
+          : Promise.resolve([] as Array<{ productId: string; qrScanType: QrScanType | null; _count: { _all: number } }>),
       ]);
     const profileByProduct = new Map<string, { productName: string; slug: string; isPublished: boolean }>();
     for (const p of topProductProfiles) {
@@ -1086,6 +1093,10 @@ export async function getCompanyAnalyticsAction() {
         .map((r) => ({ browser: r.browser ?? "Unknown", count: r._count._all }))
         .sort((a, b) => b.count - a.count)
         .slice(0, 3);
+      const qrScans = perProductQrScanType
+        .filter((r) => r.productId === pid)
+        .map((r) => ({ qrScanType: r.qrScanType ?? "UNTAGGED", count: r._count._all }))
+        .sort((a, b) => b.count - a.count);
       return {
         productId: pid,
         productName: profile?.productName ?? "Untitled",
@@ -1095,6 +1106,7 @@ export async function getCompanyAnalyticsAction() {
         devices,
         countries,
         browsers,
+        qrScans,
       };
     });
 
