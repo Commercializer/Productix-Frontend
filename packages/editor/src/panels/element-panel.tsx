@@ -41,6 +41,7 @@ import {
   Ticket,
   Video,
   MessageSquareHeart,
+  Search,
 } from "lucide-react";
 import { getAllElements, type ElementDefinition } from "../elements/registry";
 import { useCanvasStore } from "../engine/canvas-store";
@@ -150,6 +151,7 @@ const BLOCK_CONFIG: Record<string, { label: string; icon: React.ReactNode }> = {
   video:         { label: "Video",           icon: <Video size={16} />            },
   audio:         { label: "Audio",           icon: <Music2 size={16} />            },
   feedback:      { label: "Feedback Form",   icon: <MessageSquareHeart size={16} /> },
+  search:        { label: "Page Search",     icon: <Search size={16} />            },
 };
 
 /* ─── Component ──────────────────────────────── */

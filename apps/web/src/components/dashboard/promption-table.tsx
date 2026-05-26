@@ -301,7 +301,7 @@ export function PromptionTable({
                               onClick={() =>
                                 setNameEditor({ profileId: p.id, currentName: p.productName })
                               }
-                              className="w-5 h-5 flex items-center justify-center text-(--ds-text-secondary) bg-[#f1f5f9] dark:bg-[#0f172a] sm:dark:bg-[#1e293b] rounded border border-[#e2e8f0] dark:border-[#334155] hover:border-[#bae6fd] hover:text-[#0284c7] hover:bg-[#f0f9ff] dark:hover:bg-[#334155] transition-all shrink-0"
+                              className="w-5 h-5 flex items-center justify-center text-(--ds-text-secondary) hover:text-[#0284c7] transition-colors shrink-0"
                               title="Rename"
                               aria-label={`Rename ${p.productName}`}
                             >

@@ -209,14 +209,22 @@ export async function updateProductNameAction(profileId: string, productName: st
 
   const profile = await prisma.productProfile.findUnique({
     where: { id: profileId },
-    select: { id: true, productName: true, product: { select: { companyId: true } } },
+    select: { id: true, productName: true, content: true, product: { select: { companyId: true } } },
   });
   if (!profile || profile.product.companyId !== companyId) return { error: "Product not found" };
 
   if (profile.productName === trimmed) return { success: true, productName: trimmed };
 
+  // Keep the editor's pageTitle inside the saved canvas content in sync with
+  // the dashboard's productName so both surfaces show the same label.
+  const currentContent = profile.content as Record<string, unknown> | null;
+  const updateData: { productName: string; content?: Record<string, unknown> } = { productName: trimmed };
+  if (currentContent && typeof currentContent === "object" && !Array.isArray(currentContent)) {
+    updateData.content = { ...currentContent, pageTitle: trimmed };
+  }
+
   try {
-    await prisma.productProfile.update({ where: { id: profileId }, data: { productName: trimmed } });
+    await prisma.productProfile.update({ where: { id: profileId }, data: updateData as any });
     return { success: true, productName: trimmed };
   } catch (error: any) {
     return { error: error.message };
@@ -554,10 +562,19 @@ export async function savePageContentAction(profileId: string, content: Record<s
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
 
+  // Mirror the canvas pageTitle into the dashboard's productName column so a
+  // rename in the editor's top bar shows up on the products list. Skip if
+  // empty (defensive: don't let an accidental clear wipe the canonical name)
+  // or if it exceeds the column constraint.
+  const rawTitle = typeof content?.pageTitle === "string" ? content.pageTitle.trim() : "";
+  const syncName = rawTitle.length > 0 && rawTitle.length <= PRODUCT_NAME_MAX ? rawTitle : null;
+
   try {
     await prisma.productProfile.update({
       where: { id: profileId },
-      data: { content: content as any },
+      data: syncName
+        ? { content: content as any, productName: syncName }
+        : { content: content as any },
     });
     return { success: true };
   } catch (error: any) {
@@ -587,11 +604,22 @@ export async function getPageContentAction(profileId: string) {
 
   if (!profile) return { error: "Profile not found" };
 
+  // Defensive: if a legacy record was saved before the title-sync was wired,
+  // the editor's pageTitle inside content can disagree with productName.
+  // Normalize on read so the editor always boots with the canonical name.
+  let content = profile.content;
+  if (content && typeof content === "object" && !Array.isArray(content)) {
+    const contentObj = content as Record<string, unknown>;
+    if (contentObj.pageTitle !== profile.productName) {
+      content = { ...contentObj, pageTitle: profile.productName } as typeof profile.content;
+    }
+  }
+
   return {
     id: profile.id,
     slug: profile.slug,
     productName: profile.productName,
-    content: profile.content,
+    content,
     isPublished: profile.isPublished,
   };
 }
