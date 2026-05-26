@@ -17,6 +17,7 @@ export function PageSearchOverlay({ targetRef }: PageSearchOverlayProps) {
   const [activeIdx, setActiveIdx] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const shouldScrollRef = useRef(false);
 
   // Remove all highlight wrappers, restore original text.
   const clearHighlights = useCallback(() => {
@@ -112,9 +113,10 @@ export function PageSearchOverlay({ targetRef }: PageSearchOverlayProps) {
       }
     });
     const active = matches[activeIdx];
-    if (active) {
+    if (active && shouldScrollRef.current) {
       active.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
     }
+    shouldScrollRef.current = false;
   }, [matches, activeIdx]);
 
   // Focus input on open, clear everything on close.
@@ -157,11 +159,13 @@ export function PageSearchOverlay({ targetRef }: PageSearchOverlayProps) {
 
   const goNext = useCallback(() => {
     if (matches.length === 0) return;
+    shouldScrollRef.current = true;
     setActiveIdx((i) => (i + 1) % matches.length);
   }, [matches.length]);
 
   const goPrev = useCallback(() => {
     if (matches.length === 0) return;
+    shouldScrollRef.current = true;
     setActiveIdx((i) => (i - 1 + matches.length) % matches.length);
   }, [matches.length]);
 
