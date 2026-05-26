@@ -129,6 +129,7 @@ const BLOCK_CONFIG: Record<string, { label: string; icon: React.ReactNode }> = {
   "social-website":   { label: "Website",    icon: <Globe size={16} />             },
   "social-email":     { label: "Email",      icon: <Mail size={16} />              },
   "social-phone":     { label: "Phone",      icon: <Phone size={16} />             },
+  "whatsapp-button":  { label: "WhatsApp Chat", icon: <MessageCircle size={16} />   },
   "stat-card":   { label: "Key Stat",        icon: <BarChart3 size={16} />         },
   "promo-card":  { label: "Highlight Card",  icon: <Megaphone size={16} />         },
   divider:       { label: "Divider",         icon: <Minus size={16} />             },

@@ -23,6 +23,7 @@ const BLOCK_LABELS: Record<string, string> = {
   "social-linkedin":"LinkedIn", "social-youtube":"YouTube", "social-tiktok":"TikTok",
   "social-github":"GitHub", "social-whatsapp":"WhatsApp", "social-threads":"Threads",
   "social-website":"Website", "social-email":"Email", "social-phone":"Phone",
+  "whatsapp-button":"WhatsApp Chat",
   "stat-card":"Key Stat", "promo-card":"Highlight Card", divider:"Divider",
   container:"Section Block", row:"Content Row", column:"Column",
 };

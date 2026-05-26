@@ -942,7 +942,6 @@ export async function getCompanyAnalyticsAction() {
             where: { companyId },
             _count: { _all: true },
             orderBy: { _count: { productId: "desc" } },
-            take: 5,
           }),
         ]);
       viewMetrics = {
@@ -1058,7 +1057,7 @@ export async function getCompanyAnalyticsAction() {
     for (const row of topProductFeedback) {
       if (row.productId) feedbackByProduct.set(row.productId, row._count._all);
     }
-    const topProducts = topProductsRaw.map((r) => {
+    const topProducts = topProductsRaw.slice(0, 5).map((r) => {
       const profile = profileByProduct.get(r.productId);
       const scans = r._count._all;
       const fb = feedbackByProduct.get(r.productId) ?? 0;

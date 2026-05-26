@@ -39,6 +39,7 @@ function AudioElementComponent({ props }: ElementRenderProps) {
   const autoPlay = (props.autoPlay as boolean) || false;
   const loop = (props.loop as boolean) || false;
   const muted = (props.muted as boolean) || false;
+  const showControls = props.showControls === true;
   const inEditor = isInsideEditor();
 
   if (!src) {
@@ -80,16 +81,38 @@ function AudioElementComponent({ props }: ElementRenderProps) {
     >
       <audio
         src={src}
-        controls={true}
+        controls={showControls}
         autoPlay={autoPlay}
         loop={loop}
         muted={muted}
         style={{
           width: "100%",
           height: "100%",
-          minHeight: 40,
+          minHeight: showControls ? 40 : 0,
+          display: showControls ? "block" : "none",
         }}
       />
+      {/* When controls are hidden the <audio> is invisible — show a placeholder
+          in the editor so the block is still selectable. The live page shows
+          nothing (the audio still plays if autoplay is on). */}
+      {!showControls && inEditor && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+            width: "100%",
+            height: "100%",
+            fontSize: 11,
+            fontWeight: 500,
+            color: "#9ca3af",
+          }}
+        >
+          <Music2 size={14} />
+          <span>Audio (controls hidden)</span>
+        </div>
+      )}
       {/* Editor overlay - blocks native controls from stealing pointer events
           so the ElementWrapper can handle selection / dragging.
           On the public page this overlay is NOT rendered and the controls work normally. */}
@@ -203,6 +226,15 @@ function AudioPropertyPanel({ props, onChange }: PropertyPanelProps) {
           />
           <span className="text-xs text-gray-700">Muted</span>
         </label>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            checked={props.showControls === true}
+            onChange={(e) => onChange({ showControls: e.target.checked })}
+          />
+          <span className="text-xs text-gray-700">Show player controls</span>
+        </label>
       </div>
     </div>
   );
@@ -221,6 +253,7 @@ registerElement({
     autoPlay: false,
     loop: false,
     muted: false,
+    showControls: false,
   },
   defaultTransform: { width: 300, height: 50 },
   component: AudioElementComponent,

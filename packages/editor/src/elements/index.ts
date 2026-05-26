@@ -14,6 +14,7 @@ import "./icon-element";
 import "./badge-element";
 import "./social-group";
 import "./social-icon-element";
+import "./whatsapp-button-element";
 import "./stat-card";
 import "./promo-card";
 import "./divider-element";

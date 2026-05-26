@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { X, ExternalLink } from "lucide-react";
+import { useTheme } from "next-themes";
 import {
   AreaChart,
   Area,
@@ -17,6 +18,22 @@ import {
   type ProductAnalyticsRange,
 } from "@/lib/dashboard/actions";
 import { formatCountry } from "@/lib/format-country";
+
+function useModalChartTheme() {
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const isDark = mounted && resolvedTheme === "dark";
+  return {
+    scansStroke: isDark ? "#e2e8f0" : "#0f172a",
+    feedbackStroke: "#0284c7",
+    axisTick: isDark ? "#a1a1aa" : "#64748B",
+    tooltipBg: isDark ? "#0F2230" : "#ffffff",
+    tooltipBorder: isDark ? "rgba(255,255,255,0.1)" : "#f1f5f9",
+    tooltipText: isDark ? "#ededed" : "#0f172a",
+    grid: isDark ? "rgba(255,255,255,0.1)" : "#f1f5f9",
+  };
+}
 
 type Bucket = "day" | "month";
 
@@ -102,6 +119,7 @@ export function ProductDetailModal({
   const [data, setData] = useState<ProductAnalyticsData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const chartTheme = useModalChartTheme();
 
   useEffect(() => {
     if (isOpen) setRange("monthly");
@@ -247,45 +265,46 @@ export function ProductDetailModal({
                   <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
                       <linearGradient id="pmScans" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#0f172a" stopOpacity={0.15} />
-                        <stop offset="95%" stopColor="#0f172a" stopOpacity={0} />
+                        <stop offset="5%" stopColor={chartTheme.scansStroke} stopOpacity={0.25} />
+                        <stop offset="95%" stopColor={chartTheme.scansStroke} stopOpacity={0} />
                       </linearGradient>
                       <linearGradient id="pmFeedback" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#0284c7" stopOpacity={0.25} />
-                        <stop offset="95%" stopColor="#0284c7" stopOpacity={0} />
+                        <stop offset="5%" stopColor={chartTheme.feedbackStroke} stopOpacity={0.25} />
+                        <stop offset="95%" stopColor={chartTheme.feedbackStroke} stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--ds-border)" />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartTheme.grid} />
                     <XAxis
                       dataKey="name"
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fontSize: 12, fill: "#64748B" }}
+                      tick={{ fontSize: 12, fill: chartTheme.axisTick }}
                       dy={10}
                       interval="preserveStartEnd"
                     />
                     <YAxis
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fontSize: 12, fill: "#64748B" }}
+                      tick={{ fontSize: 12, fill: chartTheme.axisTick }}
                       allowDecimals={false}
                     />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "var(--ds-bg)",
-                        border: "1px solid var(--ds-border)",
+                        backgroundColor: chartTheme.tooltipBg,
+                        border: `1px solid ${chartTheme.tooltipBorder}`,
                         borderRadius: "12px",
                         fontSize: "13px",
                         boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                       }}
-                      itemStyle={{ color: "var(--ds-text-primary)", fontWeight: 500 }}
+                      itemStyle={{ color: chartTheme.tooltipText, fontWeight: 500 }}
+                      labelStyle={{ color: chartTheme.tooltipText }}
                     />
-                    <Legend iconType="circle" wrapperStyle={{ fontSize: "13px", paddingTop: "10px" }} />
+                    <Legend iconType="circle" wrapperStyle={{ fontSize: "13px", paddingTop: "10px", color: chartTheme.tooltipText }} />
                     <Area
                       type="monotone"
                       dataKey="scans"
                       name="Scans"
-                      stroke="#0f172a"
+                      stroke={chartTheme.scansStroke}
                       strokeWidth={2}
                       fillOpacity={1}
                       fill="url(#pmScans)"
@@ -294,7 +313,7 @@ export function ProductDetailModal({
                       type="monotone"
                       dataKey="feedback"
                       name="Feedback"
-                      stroke="#0284c7"
+                      stroke={chartTheme.feedbackStroke}
                       strokeWidth={2}
                       fillOpacity={1}
                       fill="url(#pmFeedback)"

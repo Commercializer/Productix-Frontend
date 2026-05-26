@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Search } from "lucide-react";
+import { useTheme } from "next-themes";
 import { ProductDetailModal } from "@/components/dashboard/product-detail-modal";
 import {
   AreaChart,
@@ -17,6 +18,22 @@ import {
 } from "recharts";
 import { AnalyticsStats } from "@/hooks/use-analytics";
 import { formatCountry } from "@/lib/format-country";
+
+function useChartTheme() {
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const isDark = mounted && resolvedTheme === "dark";
+  return {
+    scansStroke: isDark ? "#e2e8f0" : "#0f172a",
+    feedbackStroke: "#0284c7",
+    axisTick: isDark ? "#a1a1aa" : "#64748B",
+    tooltipBg: isDark ? "#0F2230" : "#ffffff",
+    tooltipBorder: isDark ? "rgba(255,255,255,0.1)" : "#f1f5f9",
+    tooltipText: isDark ? "#ededed" : "#0f172a",
+    grid: isDark ? "rgba(255,255,255,0.1)" : "#f1f5f9",
+  };
+}
 
 const SOURCE_LABEL: Record<string, string> = {
   ON_PACKAGE: "On Package",
@@ -45,6 +62,7 @@ function formatDateLabel(iso: string) {
 }
 
 export function AnalyticsCharts({ stats }: { stats: AnalyticsStats | null }) {
+  const chartTheme = useChartTheme();
   const timeSeries = (stats?.timeSeries ?? []).map((p) => ({
     ...p,
     name: formatDateLabel(p.date),
@@ -83,24 +101,25 @@ export function AnalyticsCharts({ stats }: { stats: AnalyticsStats | null }) {
               <AreaChart data={timeSeries} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorScans" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#0f172a" stopOpacity={0.15} />
-                    <stop offset="95%" stopColor="#0f172a" stopOpacity={0} />
+                    <stop offset="5%" stopColor={chartTheme.scansStroke} stopOpacity={0.25} />
+                    <stop offset="95%" stopColor={chartTheme.scansStroke} stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="colorFeedback" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#0284c7" stopOpacity={0.25} />
-                    <stop offset="95%" stopColor="#0284c7" stopOpacity={0} />
+                    <stop offset="5%" stopColor={chartTheme.feedbackStroke} stopOpacity={0.25} />
+                    <stop offset="95%" stopColor={chartTheme.feedbackStroke} stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--ds-border)" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#64748B" }} dy={10} interval="preserveStartEnd" />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#64748B" }} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartTheme.grid} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: chartTheme.axisTick }} dy={10} interval="preserveStartEnd" />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: chartTheme.axisTick }} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: "var(--ds-bg)", border: "1px solid var(--ds-border)", borderRadius: "12px", fontSize: "13px", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
-                  itemStyle={{ color: "var(--ds-text-primary)", fontWeight: 500 }}
+                  contentStyle={{ backgroundColor: chartTheme.tooltipBg, border: `1px solid ${chartTheme.tooltipBorder}`, borderRadius: "12px", fontSize: "13px", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
+                  itemStyle={{ color: chartTheme.tooltipText, fontWeight: 500 }}
+                  labelStyle={{ color: chartTheme.tooltipText }}
                 />
-                <Legend iconType="circle" wrapperStyle={{ fontSize: "13px", paddingTop: "10px" }} />
-                <Area type="monotone" dataKey="scans" name="Scans" stroke="#0f172a" strokeWidth={2} fillOpacity={1} fill="url(#colorScans)" />
-                <Area type="monotone" dataKey="feedback" name="Feedback" stroke="#0284c7" strokeWidth={2} fillOpacity={1} fill="url(#colorFeedback)" />
+                <Legend iconType="circle" wrapperStyle={{ fontSize: "13px", paddingTop: "10px", color: chartTheme.tooltipText }} />
+                <Area type="monotone" dataKey="scans" name="Scans" stroke={chartTheme.scansStroke} strokeWidth={2} fillOpacity={1} fill="url(#colorScans)" />
+                <Area type="monotone" dataKey="feedback" name="Feedback" stroke={chartTheme.feedbackStroke} strokeWidth={2} fillOpacity={1} fill="url(#colorFeedback)" />
               </AreaChart>
             </ResponsiveContainer>
           )}
@@ -150,15 +169,16 @@ export function AnalyticsCharts({ stats }: { stats: AnalyticsStats | null }) {
               ) : (
                 <ResponsiveContainer width="100%" height="100%" minWidth={0} initialDimension={{ width: 1, height: 1 }}>
                   <BarChart data={sourceData} margin={{ top: 4, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--ds-border)" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#64748B" }} dy={6} interval={0} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#64748B" }} />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartTheme.grid} />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: chartTheme.axisTick }} dy={6} interval={0} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: chartTheme.axisTick }} />
                     <Tooltip
-                      cursor={{ fill: "var(--ds-border)", opacity: 0.3 }}
-                      contentStyle={{ backgroundColor: "var(--ds-bg)", border: "1px solid var(--ds-border)", borderRadius: "12px", fontSize: "13px" }}
-                      itemStyle={{ color: "var(--ds-text-primary)", fontWeight: 500 }}
+                      cursor={{ fill: chartTheme.grid, opacity: 0.3 }}
+                      contentStyle={{ backgroundColor: chartTheme.tooltipBg, border: `1px solid ${chartTheme.tooltipBorder}`, borderRadius: "12px", fontSize: "13px" }}
+                      itemStyle={{ color: chartTheme.tooltipText, fontWeight: 500 }}
+                      labelStyle={{ color: chartTheme.tooltipText }}
                     />
-                    <Bar dataKey="value" name="Scans" fill="#0284c7" radius={[4, 4, 0, 0]} barSize={24} />
+                    <Bar dataKey="value" name="Scans" fill={chartTheme.feedbackStroke} radius={[4, 4, 0, 0]} barSize={24} />
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -213,6 +233,25 @@ export function ProductBreakdownGrid({ stats }: { stats: AnalyticsStats | null }
     );
   }, [products, query]);
 
+  // Pad each breakdown section to the max row-count across all products so
+  // every card has identical structure — headers and rows line up across the
+  // grid, no matter how sparse an individual product's data is.
+  const minRows = useMemo(() => {
+    let qr = 0, devices = 0, countries = 0, browsers = 0;
+    for (const p of products) {
+      if (p.qrScans.length > qr) qr = p.qrScans.length;
+      if (p.devices.length > devices) devices = p.devices.length;
+      if (p.countries.length > countries) countries = p.countries.length;
+      if (p.browsers.length > browsers) browsers = p.browsers.length;
+    }
+    return {
+      qr: Math.max(qr, 1),
+      devices: Math.max(devices, 1),
+      countries: Math.max(countries, 1),
+      browsers: Math.max(browsers, 1),
+    };
+  }, [products]);
+
   if (products.length === 0) return null;
 
   return (
@@ -223,7 +262,7 @@ export function ProductBreakdownGrid({ stats }: { stats: AnalyticsStats | null }
           <p className="text-[13px] text-[#64748B]">
             {query
               ? `${filtered.length} of ${products.length} products`
-              : `Top ${products.length} products - device, country, and browser splits`}
+              : `${products.length} ${products.length === 1 ? "product" : "products"} - device, country, and browser splits`}
           </p>
         </div>
         <div className="relative w-full sm:w-72">
@@ -250,23 +289,29 @@ export function ProductBreakdownGrid({ stats }: { stats: AnalyticsStats | null }
               onClick={() =>
                 setSelected({ productId: p.productId, productName: p.productName, slug: p.slug })
               }
-              className="text-left bg-(--ds-surface) border border-(--ds-border) rounded-xl p-5 shadow-xs hover:border-primary/50 hover:shadow-md transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className="h-full text-left bg-(--ds-surface) border border-(--ds-border) rounded-xl p-4 shadow-xs hover:border-primary/50 hover:shadow-md transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/30"
             >
-              <header className="mb-4 flex items-start justify-between gap-3">
+              <header className="mb-3 flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <h4 className="text-[15px] font-semibold text-(--ds-text-primary) truncate">{p.productName}</h4>
-                  <p className="text-[11px] text-[#94a3b8] truncate">{p.slug || "-"}</p>
+                  <h4 className="text-[14px] font-semibold text-(--ds-text-primary) truncate leading-tight">{p.productName}</h4>
+                  <p className="text-[11px] text-[#94a3b8] truncate">{formatSlug(p.slug)}</p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-[11px] uppercase tracking-wider text-[#94a3b8]">Scans</p>
-                  <p className="text-xl font-bold text-(--ds-text-primary) tabular-nums">{p.scans.toLocaleString()}</p>
+                  <p className="text-[10px] uppercase tracking-wider text-[#94a3b8] leading-none">Scans</p>
+                  <p className="text-lg font-bold text-(--ds-text-primary) tabular-nums leading-tight">{p.scans.toLocaleString()}</p>
                 </div>
               </header>
 
-              <BreakdownRow label="QR Source" items={p.qrScans.map((q) => ({ key: QR_SCAN_TYPE_LABEL[q.qrScanType] ?? q.qrScanType, count: q.count }))} />
-              <BreakdownRow label="Devices" items={p.devices.map((d) => ({ key: DEVICE_LABEL[d.device] ?? d.device, count: d.count }))} />
-              <BreakdownRow label="Countries" items={p.countries.map((c) => ({ key: formatCountry(c.country), count: c.count }))} />
-              <BreakdownRow label="Browsers" items={p.browsers.map((b) => ({ key: b.browser, count: b.count }))} />
+              <div className="grid grid-cols-2 gap-x-4">
+                <div className="space-y-3">
+                  <BreakdownRow label="QR Source" minRows={minRows.qr} items={p.qrScans.map((q) => ({ key: QR_SCAN_TYPE_LABEL[q.qrScanType] ?? q.qrScanType, count: q.count }))} />
+                  <BreakdownRow label="Countries" minRows={minRows.countries} items={p.countries.map((c) => ({ key: formatCountry(c.country), count: c.count }))} />
+                </div>
+                <div className="space-y-3">
+                  <BreakdownRow label="Devices" minRows={minRows.devices} items={p.devices.map((d) => ({ key: DEVICE_LABEL[d.device] ?? d.device, count: d.count }))} />
+                  <BreakdownRow label="Browsers" minRows={minRows.browsers} items={p.browsers.map((b) => ({ key: b.browser, count: b.count }))} />
+                </div>
+              </div>
             </button>
           ))}
         </div>
@@ -289,31 +334,45 @@ const DEVICE_LABEL: Record<string, string> = {
   UNKNOWN: "Unknown",
 };
 
-function BreakdownRow({ label, items }: { label: string; items: { key: string; count: number }[] }) {
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function formatSlug(slug: string) {
+  if (!slug) return "-";
+  return UUID_RE.test(slug) ? slug.slice(0, 8) : slug;
+}
+
+function BreakdownRow({ label, items, minRows = 1 }: { label: string; items: { key: string; count: number }[]; minRows?: number }) {
   const total = items.reduce((sum, i) => sum + i.count, 0);
+  const rowCount = Math.max(items.length, minRows);
   return (
-    <div className="mb-3 last:mb-0">
-      <p className="text-[11px] uppercase tracking-wider text-[#94a3b8] font-medium mb-1.5">{label}</p>
-      {items.length === 0 ? (
-        <p className="text-[12px] text-[#64748B]">No data</p>
-      ) : (
-        <ul className="space-y-1.5">
-          {items.map((i) => {
-            const pct = total > 0 ? (i.count / total) * 100 : 0;
-            return (
-              <li key={i.key}>
-                <div className="flex items-center justify-between text-[12px] mb-0.5">
-                  <span className="text-(--ds-text-primary)">{i.key}</span>
-                  <span className="text-[#64748B] tabular-nums">{i.count.toLocaleString()}</span>
-                </div>
-                <div className="h-1 rounded-full bg-(--ds-border) overflow-hidden">
-                  <div className="h-full bg-primary rounded-full" style={{ width: `${pct}%` }} />
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+    <div className="min-w-0">
+      <p className="text-[10px] uppercase tracking-wider text-[#94a3b8] font-medium mb-1">{label}</p>
+      <ul className="space-y-1">
+        {Array.from({ length: rowCount }).map((_, idx) => {
+          const item = items[idx];
+          const showNoData = !item && idx === 0 && items.length === 0;
+          const invisible = !item && !showNoData;
+          const pct = item && total > 0 ? (item.count / total) * 100 : 0;
+          return (
+            <li
+              key={item?.key ?? `placeholder-${idx}`}
+              className={`min-w-0 ${invisible ? "invisible" : ""}`}
+              aria-hidden={invisible || undefined}
+            >
+              <div className="flex items-center justify-between gap-2 text-[11px]">
+                <span className={`truncate ${showNoData ? "text-[#94a3b8] italic" : "text-(--ds-text-primary)"}`}>
+                  {item?.key ?? (showNoData ? "No data" : " ")}
+                </span>
+                <span className="text-[#64748B] tabular-nums shrink-0">
+                  {item ? item.count.toLocaleString() : " "}
+                </span>
+              </div>
+              <div className="h-0.5 rounded-full bg-(--ds-border) overflow-hidden mt-0.5">
+                <div className="h-full bg-primary rounded-full" style={{ width: item ? `${pct}%` : "0%" }} />
+              </div>
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }

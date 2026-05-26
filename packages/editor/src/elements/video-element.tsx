@@ -50,7 +50,7 @@ function parseVideoUrl(raw: string): VideoEmbed | null {
 
 function buildEmbedSrc(
   embed: VideoEmbed,
-  opts: { autoPlay: boolean; loop: boolean; muted: boolean },
+  opts: { autoPlay: boolean; loop: boolean; muted: boolean; showControls: boolean },
 ): string {
   if (embed.kind === "youtube") {
     const params = new URLSearchParams({
@@ -64,6 +64,7 @@ function buildEmbedSrc(
       params.set("loop", "1");
       params.set("playlist", embed.id);
     }
+    if (!opts.showControls) params.set("controls", "0");
     return `https://www.youtube.com/embed/${embed.id}?${params}`;
   }
   if (embed.kind === "vimeo") {
@@ -71,6 +72,7 @@ function buildEmbedSrc(
     if (opts.autoPlay) params.set("autoplay", "1");
     if (opts.muted || opts.autoPlay) params.set("muted", "1");
     if (opts.loop) params.set("loop", "1");
+    if (!opts.showControls) params.set("controls", "0");
     const qs = params.toString();
     return `https://player.vimeo.com/video/${embed.id}${qs ? `?${qs}` : ""}`;
   }
@@ -85,6 +87,7 @@ function VideoElementComponent({ props }: ElementRenderProps) {
   const autoPlay = (props.autoPlay as boolean) || false;
   const loop = (props.loop as boolean) || false;
   const muted = (props.muted as boolean) || false;
+  const showControls = props.showControls === true;
   const inEditor = isInsideEditor();
   const embed = parseVideoUrl(src);
 
@@ -125,7 +128,7 @@ function VideoElementComponent({ props }: ElementRenderProps) {
       {embed.kind === "file" ? (
         <video
           src={embed.src}
-          controls
+          controls={showControls}
           autoPlay={autoPlay}
           loop={loop}
           muted={muted || autoPlay}
@@ -139,7 +142,7 @@ function VideoElementComponent({ props }: ElementRenderProps) {
         />
       ) : (
         <iframe
-          src={buildEmbedSrc(embed, { autoPlay, loop, muted })}
+          src={buildEmbedSrc(embed, { autoPlay, loop, muted, showControls })}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
           allowFullScreen
           style={{
@@ -224,6 +227,15 @@ function VideoPropertyPanel({ props, onChange }: PropertyPanelProps) {
           />
           <span className="text-xs text-gray-700">Muted</span>
         </label>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            checked={props.showControls === true}
+            onChange={(e) => onChange({ showControls: e.target.checked })}
+          />
+          <span className="text-xs text-gray-700">Show player controls</span>
+        </label>
       </div>
     </div>
   );
@@ -242,6 +254,7 @@ registerElement({
     autoPlay: false,
     loop: false,
     muted: false,
+    showControls: false,
   },
   defaultTransform: { width: 343, height: 193 }, // 16:9 aspect ratio roughly
   component: VideoElementComponent,
