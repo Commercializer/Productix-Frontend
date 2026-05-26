@@ -9,6 +9,7 @@ import {
   setSlugVisibleAction,
   updateSlugAction,
   updateRedirectAction,
+  updateProductNameAction,
 } from "@/lib/dashboard/actions";
 
 export interface Promption {
@@ -118,6 +119,20 @@ export function usePromptions() {
     []
   );
 
+  const updateProductName = useCallback(
+    async (profileId: string, productName: string) => {
+      const result = await updateProductNameAction(profileId, productName);
+      if (result.error) return { error: result.error };
+      if (result.success && result.productName) {
+        setPromptions((prev) =>
+          prev.map((p) => (p.id === profileId ? { ...p, productName: result.productName! } : p)),
+        );
+      }
+      return { success: true, productName: result.productName };
+    },
+    []
+  );
+
   const updateRedirect = useCallback(
     async (profileId: string, redirectUrl: string | null, redirectEnabled: boolean) => {
       const result = await updateRedirectAction(profileId, redirectUrl, redirectEnabled);
@@ -145,5 +160,6 @@ export function usePromptions() {
     setSlugVisible,
     updateSlug,
     updateRedirect,
+    updateProductName,
   };
 }

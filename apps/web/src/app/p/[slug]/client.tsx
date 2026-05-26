@@ -6,6 +6,7 @@ import type { CanvasDocument, ContentLocale } from "@productix/types";
 import { getContentLocaleMeta } from "@productix/types";
 import { PublicRenderer } from "@productix/editor";
 import { BrowserThemeWatcher } from "@/components/browser-theme-watcher";
+import { PageSearchOverlay } from "./search-overlay";
 
 interface PublicPageData {
   id: string;
@@ -48,6 +49,7 @@ export function PublicPageClient({ page }: PublicPageClientProps) {
   const [contentLocale, setContentLocale] = useState<ContentLocale>(initialLocale);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const langDropdownRef = useRef<HTMLDivElement>(null);
+  const searchTargetRef = useRef<HTMLDivElement>(null);
 
   // Available locales for THIS page (English + anything the author actually translated)
   const pageLocales: ContentLocale[] = (() => {
@@ -245,8 +247,13 @@ export function PublicPageClient({ page }: PublicPageClientProps) {
         `}</style>
       )}
 
+      {/* Floating search-on-page widget (top-left) - opt-out via canvas settings */}
+      {doc.showSearchOverlay !== false && <PageSearchOverlay targetRef={searchTargetRef} />}
+
       {/* Rendered page content */}
-      <PublicRenderer document={doc} contentLocale={contentLocale} productId={page.productId} />
+      <div ref={searchTargetRef}>
+        <PublicRenderer document={doc} contentLocale={contentLocale} productId={page.productId} />
+      </div>
 
       {/* Powered-by footer badge */}
       <footer

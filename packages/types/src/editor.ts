@@ -439,6 +439,11 @@ export interface CanvasDocument {
   availableLocales?: ContentLocale[];
   /** Block groups - groups of elements that move/act together */
   groups?: Record<string, BlockGroup>;
+  /**
+   * Whether the floating search-on-page widget is shown on the published page.
+   * Defaults to `true` when missing (existing pages keep the overlay).
+   */
+  showSearchOverlay?: boolean;
 }
 
 // ─── Template Types ────────────────────────────

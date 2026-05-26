@@ -537,7 +537,7 @@ registerElement({
   type: "feedback",
   label: "Feedback",
   icon: <MessageSquareHeart size={16} />,
-  category: "interactive",
+  category: "feedback",
   defaultProps: {
     text: "Send Feedback",
     variant: "filled",

@@ -53,6 +53,7 @@ export interface CanvasState {
   // ── Document actions ──
   loadDocument: (doc: CanvasDocument) => void;
   setPageTitle: (title: string) => void;
+  setShowSearchOverlay: (show: boolean) => void;
 
   // ── Artboard actions ──
   addArtboard: (overrides?: Partial<Artboard>) => string;
@@ -197,6 +198,11 @@ export const useCanvasStore = create<CanvasState>()(
     setPageTitle: (title) =>
       set((s) => {
         s.document.pageTitle = title;
+      }),
+
+    setShowSearchOverlay: (show) =>
+      set((s) => {
+        s.document.showSearchOverlay = show;
       }),
 
     // ── Artboard ──

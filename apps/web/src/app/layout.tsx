@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { GoogleAnalytics } from "@next/third-parties/google";
 
 import { fontSans, fontMono } from "@/lib/fonts";
 import { cn } from "@productix/utils";
@@ -61,6 +62,7 @@ export default function RootLayout({
           <AuthProvider>{children}</AuthProvider>
         </ThemeProvider>
       </body>
+      <GoogleAnalytics gaId="G-17LH6RDHYD" />
     </html>
   );
 }

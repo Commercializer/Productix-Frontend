@@ -65,7 +65,18 @@ interface CategoryMeta {
   iconBg: string;
 }
 
+/** Display labels for categories that don't have an i18n translation key. */
+const CATEGORY_LABEL_FALLBACK: Record<string, string> = {
+  feedback: "Feedback",
+};
+
 const CATEGORY_META: Record<string, CategoryMeta> = {
+  feedback: {
+    icon: <MessageSquareHeart size={15} />,
+    gradient: "linear-gradient(135deg, #ec4899 0%, #f9a8d4 100%)",
+    glow: "rgba(236, 72, 153, 0.15)",
+    iconBg: "rgba(236, 72, 153, 0.08)",
+  },
   content: {
     icon: <PenLine size={15} />,
     gradient: "linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%)",
@@ -104,7 +115,7 @@ const CATEGORY_META: Record<string, CategoryMeta> = {
   },
 };
 
-const CATEGORY_ORDER = ["content", "media", "interactive", "layout", "promotional", "social"];
+const CATEGORY_ORDER = ["feedback", "content", "media", "interactive", "layout", "promotional", "social"];
 
 /* ─── Block visual icons (Lucide) ────────────── */
 
@@ -170,7 +181,7 @@ export function ElementPanel() {
   const allElements = getAllElements();
   const grouped = CATEGORY_ORDER.map((cat) => ({
     category: cat,
-    label: CATEGORY_KEYS[cat] ? t(CATEGORY_KEYS[cat]!) : cat,
+    label: CATEGORY_KEYS[cat] ? t(CATEGORY_KEYS[cat]!) : (CATEGORY_LABEL_FALLBACK[cat] ?? cat),
     meta: CATEGORY_META[cat] || CATEGORY_META.content!,
     items: allElements.filter((el) => el.category === cat),
   })).filter((g) => g.items.length > 0);

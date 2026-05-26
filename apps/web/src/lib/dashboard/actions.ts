@@ -186,6 +186,43 @@ export async function updateSlugAction(profileId: string, slug: string) {
   }
 }
 
+/**
+ * Rename a product profile's display name. Like updateSlugAction, anyone with
+ * read/write access to the company can rename - this is the human-facing label
+ * shown on the dashboard and public page.
+ */
+const PRODUCT_NAME_MAX = 120;
+
+export async function updateProductNameAction(profileId: string, productName: string) {
+  if (!isUUID(profileId)) return { error: "Invalid profile ID" };
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const trimmed = productName.trim();
+  if (trimmed.length === 0) return { error: "Name is required." };
+  if (trimmed.length > PRODUCT_NAME_MAX) {
+    return { error: `Name must be ${PRODUCT_NAME_MAX} characters or fewer.` };
+  }
+
+  const companyId = await getUserCompanyId(session.user.id);
+  if (!companyId) return { error: "No company found for user" };
+
+  const profile = await prisma.productProfile.findUnique({
+    where: { id: profileId },
+    select: { id: true, productName: true, product: { select: { companyId: true } } },
+  });
+  if (!profile || profile.product.companyId !== companyId) return { error: "Product not found" };
+
+  if (profile.productName === trimmed) return { success: true, productName: trimmed };
+
+  try {
+    await prisma.productProfile.update({ where: { id: profileId }, data: { productName: trimmed } });
+    return { success: true, productName: trimmed };
+  } catch (error: any) {
+    return { error: error.message };
+  }
+}
+
 export async function setSlugVisibleAction(productId: string, visible: boolean) {
   if (!isUUID(productId)) return { error: "Invalid product ID" };
   const session = await auth();

@@ -26,6 +26,7 @@ import {
   Hash,
   X,
   CornerUpRight,
+  Type,
 } from "lucide-react";
 import type { Promption } from "@/hooks/use-promptions";
 import { QrModal } from "./qr-modal";
@@ -42,6 +43,10 @@ interface PromptionTableProps {
     redirectUrl: string | null,
     redirectEnabled: boolean,
   ) => Promise<{ success?: boolean; error?: string; redirectUrl?: string | null; redirectEnabled?: boolean }>;
+  onRenameProduct?: (
+    profileId: string,
+    productName: string,
+  ) => Promise<{ success?: boolean; error?: string; productName?: string }>;
   readOnly?: boolean;
 }
 
@@ -61,12 +66,14 @@ export function PromptionTable({
   onSetSlugVisible,
   onRenameSlug,
   onUpdateRedirect,
+  onRenameProduct,
   readOnly = false,
 }: PromptionTableProps) {
   const [search, setSearch] = useState("");
   const [selectedIDs, setSelectedIDs] = useState<Set<string>>(new Set());
   const [qrModal, setQrModal] = useState<{ name: string; shortCode: string } | null>(null);
   const [slugEditor, setSlugEditor] = useState<{ profileId: string; currentSlug: string } | null>(null);
+  const [nameEditor, setNameEditor] = useState<{ profileId: string; currentName: string } | null>(null);
   const [redirectEditor, setRedirectEditor] = useState<{
     profileId: string;
     productName: string;
@@ -270,24 +277,38 @@ export function PromptionTable({
 
                       {/* Name */}
                       <td className="block sm:table-cell py-1 sm:py-3 px-0 sm:px-4 pr-10 sm:pr-4 mb-3 sm:mb-0">
-                        <Link
-                          href={`/editor?profileId=${p.id}`}
-                          className="flex items-center gap-3 hover:opacity-80 transition-opacity"
-                        >
-                          <div className="w-8 h-8 rounded-full bg-[#f1f5f9] dark:bg-[#0f172a] sm:dark:bg-[#1e293b] text-(--ds-text-secondary) flex items-center justify-center text-[11px] font-semibold tracking-wider shrink-0">
-                            {p.productName.substring(0, 2).toUpperCase()}
-                          </div>
-                          <div>
-                            <span className="text-(--ds-text-primary) font-medium">
-                              {p.productName}
-                            </span>
-                            {p.tagline && (
-                              <p className="text-[11px] text-(--ds-text-muted) mt-0.5 max-w-[200px] truncate">
-                                {p.tagline}
-                              </p>
-                            )}
-                          </div>
-                        </Link>
+                        <div className="flex items-center gap-2">
+                          <Link
+                            href={`/editor?profileId=${p.id}`}
+                            className="flex items-center gap-3 hover:opacity-80 transition-opacity min-w-0"
+                          >
+                            <div className="w-8 h-8 rounded-full bg-[#f1f5f9] dark:bg-[#0f172a] sm:dark:bg-[#1e293b] text-(--ds-text-secondary) flex items-center justify-center text-[11px] font-semibold tracking-wider shrink-0">
+                              {p.productName.substring(0, 2).toUpperCase()}
+                            </div>
+                            <div className="min-w-0">
+                              <span className="text-(--ds-text-primary) font-medium">
+                                {p.productName}
+                              </span>
+                              {p.tagline && (
+                                <p className="text-[11px] text-(--ds-text-muted) mt-0.5 max-w-[200px] truncate">
+                                  {p.tagline}
+                                </p>
+                              )}
+                            </div>
+                          </Link>
+                          {onRenameProduct && (
+                            <button
+                              onClick={() =>
+                                setNameEditor({ profileId: p.id, currentName: p.productName })
+                              }
+                              className="w-5 h-5 flex items-center justify-center text-(--ds-text-secondary) bg-[#f1f5f9] dark:bg-[#0f172a] sm:dark:bg-[#1e293b] rounded border border-[#e2e8f0] dark:border-[#334155] hover:border-[#bae6fd] hover:text-[#0284c7] hover:bg-[#f0f9ff] dark:hover:bg-[#334155] transition-all shrink-0"
+                              title="Rename"
+                              aria-label={`Rename ${p.productName}`}
+                            >
+                              <Pencil size={9} strokeWidth={2} />
+                            </button>
+                          )}
+                        </div>
                       </td>
 
                       {/* Public URL */}
@@ -405,6 +426,19 @@ export function PromptionTable({
                                     Edit Details
                                   </Link>
 
+                                  {onRenameProduct && (
+                                    <button
+                                      onClick={() => {
+                                        setActiveMenu(null);
+                                        setNameEditor({ profileId: p.id, currentName: p.productName });
+                                      }}
+                                      className="w-full px-3 py-2 text-left text-[13px] hover:bg-[#f8fafc] dark:hover:bg-[#334155] flex items-center gap-2 transition-colors text-(--ds-text-primary)"
+                                    >
+                                      <Type size={15} className="text-[#64748b]" />
+                                      Rename
+                                    </button>
+                                  )}
+
                                   <a
                                     href={`/preview/${p.slug}`}
                                     target="_blank"
@@ -519,6 +553,16 @@ export function PromptionTable({
         />
       )}
 
+      {/* Product Name Edit Modal */}
+      {nameEditor && onRenameProduct && (
+        <ProductNameEditModal
+          profileId={nameEditor.profileId}
+          currentName={nameEditor.currentName}
+          onClose={() => setNameEditor(null)}
+          onSave={onRenameProduct}
+        />
+      )}
+
       {/* Slug Edit Modal */}
       {slugEditor && onRenameSlug && (
         <SlugEditModal
@@ -541,6 +585,105 @@ export function PromptionTable({
         />
       )}
     </div>
+  );
+}
+
+interface ProductNameEditModalProps {
+  profileId: string;
+  currentName: string;
+  onClose: () => void;
+  onSave: (
+    profileId: string,
+    productName: string,
+  ) => Promise<{ success?: boolean; error?: string; productName?: string }>;
+}
+
+function ProductNameEditModal({ profileId, currentName, onClose, onSave }: ProductNameEditModalProps) {
+  const [value, setValue] = useState(currentName);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+
+  const trimmed = value.trim();
+  const dirty = trimmed.length > 0 && trimmed !== currentName;
+
+  const handleSave = async () => {
+    setError(null);
+    setSaving(true);
+    const result = await onSave(profileId, value);
+    setSaving(false);
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
+    onClose();
+  };
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <>
+      <div className="fixed inset-0 z-[9998] bg-black/40 backdrop-blur-xs" onClick={onClose} />
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" onClick={onClose}>
+        <div
+          className="relative w-full max-w-[440px] rounded-2xl bg-white dark:bg-[#1e293b] shadow-2xl border border-[#e2e8f0] dark:border-[#334155] overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between px-6 pt-6 pb-2">
+            <div>
+              <h3 className="text-lg font-bold text-[#0f172a] dark:text-white">Rename product</h3>
+              <p className="text-[13px] text-[#64748b] dark:text-[#94a3b8] mt-0.5">
+                Shown on the dashboard and your public showcase page.
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-white hover:bg-[#f1f5f9] dark:hover:bg-[#334155] transition-colors"
+            >
+              <X size={18} />
+            </button>
+          </div>
+          <div className="px-6 py-4">
+            <label className="block text-[12px] font-medium text-[#64748b] dark:text-[#94a3b8] mb-1.5">
+              Product name
+            </label>
+            <input
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && dirty && !saving) handleSave();
+              }}
+              placeholder="My amazing product"
+              autoFocus
+              maxLength={120}
+              className="w-full h-[42px] px-3 rounded-lg border border-[#e2e8f0] dark:border-[#334155] bg-transparent text-[13px] text-[#0f172a] dark:text-white placeholder-[#94a3b8] outline-hidden focus:border-[#93c5fd]"
+            />
+            <p className="mt-1.5 text-[11px] text-[#94a3b8]">1–120 characters.</p>
+            {error && (
+              <p className="mt-2 text-[12px] text-red-600 dark:text-red-400">{error}</p>
+            )}
+          </div>
+          <div className="px-6 pb-6 flex gap-3">
+            <button
+              onClick={onClose}
+              className="flex-1 h-[42px] rounded-xl border border-[#e2e8f0] dark:border-[#334155] text-[#0f172a] dark:text-white font-semibold text-[13px] hover:bg-[#f8fafc] dark:hover:bg-[#334155] transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving || !dirty}
+              className="flex-1 h-[42px] rounded-xl bg-[#0f172a] dark:bg-white text-white dark:text-[#0f172a] font-semibold text-[13px] hover:opacity-90 transition-opacity disabled:opacity-50"
+            >
+              {saving ? "Saving…" : "Save"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </>,
+    document.body
   );
 }
 

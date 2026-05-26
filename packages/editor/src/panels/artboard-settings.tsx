@@ -5,7 +5,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Smartphone, Monitor, TabletSmartphone, Minimize2, Sparkles } from "lucide-react";
+import { Smartphone, Monitor, TabletSmartphone, Minimize2, Sparkles, Search } from "lucide-react";
 import { useCanvasStore } from "../engine/canvas-store";
 import { ImageUploadWidget } from "../media/image-upload-widget";
 import { HexColorPopover } from "../elements/hex-color-popover";
@@ -24,9 +24,13 @@ export function ArtboardSettings() {
   const document = useCanvasStore((s) => s.document);
   const activeArtboardId = useCanvasStore((s) => s.activeArtboardId);
   const updateArtboard = useCanvasStore((s) => s.updateArtboard);
+  const setShowSearchOverlay = useCanvasStore((s) => s.setShowSearchOverlay);
   const { t } = useTranslation();
   const ab = document.artboards.find((a) => a.id === activeArtboardId) || document.artboards[0];
   if (!ab) return null;
+
+  // Default ON when missing so existing pages keep the search widget.
+  const searchOverlayOn = document.showSearchOverlay !== false;
 
   return (
     <div style={{ display:"flex",flexDirection:"column",gap:16 }}>
@@ -144,6 +148,61 @@ export function ArtboardSettings() {
               );
             })}
           </div>
+        </div>
+
+        {/* ── Page Features ── */}
+        <div>
+          <div style={{ display:"flex",alignItems:"center",gap:8,marginBottom:10 }}>
+            <div style={{
+              width:24,height:24,borderRadius:7,
+              background:"linear-gradient(135deg,#0ea5e9,#38bdf8)",
+              display:"flex",alignItems:"center",justifyContent:"center",
+              boxShadow:"0 2px 8px rgba(14,165,233,0.25)",
+            }}>
+              <Search size={12} color="#fff" />
+            </div>
+            <span style={{ fontSize:10,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:"0.08em" }}>
+              Page Features
+            </span>
+          </div>
+          <label
+            style={{
+              display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,
+              padding:"10px 12px",borderRadius:12,border:"1px solid #e5e7eb",background:"#fafafa",
+              cursor:"pointer",
+            }}
+          >
+            <div style={{ display:"flex",flexDirection:"column",gap:2,minWidth:0 }}>
+              <span style={{ fontSize:12,fontWeight:600,color:"#1e1e2e" }}>Search on page</span>
+              <span style={{ fontSize:10,color:"#9ca3af",lineHeight:1.4 }}>
+                Floating search icon on the published page
+              </span>
+            </div>
+            <input
+              type="checkbox"
+              checked={searchOverlayOn}
+              onChange={(e) => setShowSearchOverlay(e.target.checked)}
+              style={{ position:"absolute",opacity:0,pointerEvents:"none" }}
+            />
+            <span
+              aria-hidden
+              style={{
+                position:"relative",flexShrink:0,
+                width:32,height:18,borderRadius:999,
+                background: searchOverlayOn ? "#0ea5e9" : "#d1d5db",
+                transition:"background 0.2s ease",
+              }}
+            >
+              <span
+                style={{
+                  position:"absolute",top:2,left: searchOverlayOn ? 16 : 2,
+                  width:14,height:14,borderRadius:"50%",background:"#fff",
+                  boxShadow:"0 1px 3px rgba(0,0,0,0.2)",
+                  transition:"left 0.2s ease",
+                }}
+              />
+            </span>
+          </label>
         </div>
       </div>
     </div>
