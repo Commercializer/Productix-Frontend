@@ -42,6 +42,8 @@ const ALLOWED_IMAGE_TYPES = [
   "image/gif",
   "image/webp",
   "image/svg+xml",
+  "image/x-icon",
+  "image/vnd.microsoft.icon",
 ];
 
 const ALLOWED_AUDIO_TYPES = [

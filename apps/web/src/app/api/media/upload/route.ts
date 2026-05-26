@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     if (!isImage && !isAudio) {
       return NextResponse.json(
         {
-          error: `Unsupported file type "${contentType}". Allowed: JPG, PNG, GIF, WebP, SVG, MP3, WAV, OGG, AAC, WebM.`,
+          error: `Unsupported file type "${contentType}". Allowed: JPG, PNG, GIF, WebP, SVG, ICO, MP3, WAV, OGG, AAC, WebM.`,
         },
         { status: 400 }
       );

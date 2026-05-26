@@ -163,12 +163,14 @@ export function SeoSettingsPanel({
         {/* Favicon */}
         <Field
           label="Favicon"
-          description="The tiny icon in browser tabs and address bars. PNG/SVG, square."
+          description="The tiny icon in browser tabs and address bars. PNG/SVG/ICO, square."
         >
           <ImageUploadField
             value={values.logoUrl}
             aspect="1/1"
             small
+            accept="image/*,.ico"
+            allowIco
             placeholderIcon={<ImageIcon size={16} className="text-(--ds-text-secondary)" />}
             placeholderText="Upload favicon"
             onChange={(url) => setValues((v) => ({ ...v, logoUrl: url }))}
@@ -257,6 +259,8 @@ function ImageUploadField({
   placeholderIcon,
   placeholderText,
   small,
+  accept = "image/*",
+  allowIco,
 }: {
   value: string | null;
   onChange: (url: string | null) => void;
@@ -264,6 +268,8 @@ function ImageUploadField({
   placeholderIcon: React.ReactNode;
   placeholderText: string;
   small?: boolean;
+  accept?: string;
+  allowIco?: boolean;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -272,7 +278,8 @@ function ImageUploadField({
 
   async function upload(file: File) {
     setError(null);
-    if (!file.type.startsWith("image/")) {
+    const isIco = allowIco && /\.ico$/i.test(file.name);
+    if (!file.type.startsWith("image/") && !isIco) {
       setError("File must be an image");
       return;
     }
@@ -318,7 +325,7 @@ function ImageUploadField({
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept={accept}
         onChange={handleFile}
         className="hidden"
       />
