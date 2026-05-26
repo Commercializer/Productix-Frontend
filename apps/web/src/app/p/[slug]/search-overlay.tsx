@@ -285,7 +285,7 @@ export function PageSearchOverlay({ targetRef }: PageSearchOverlayProps) {
               border: "none",
               outline: "none",
               background: "transparent",
-              fontSize: 13,
+              fontSize: 16,
               fontFamily: "var(--font-sans)",
               color: "#111827",
               padding: 0,
