@@ -305,7 +305,10 @@ export function PageSearchOverlay({ targetRef }: PageSearchOverlayProps) {
           <button
             type="button"
             aria-label="Previous match"
-            onClick={goPrev}
+            onPointerDown={(e) => {
+              e.preventDefault();
+              goPrev();
+            }}
             disabled={matches.length === 0}
             style={iconBtnStyle(matches.length === 0)}
           >
@@ -316,7 +319,10 @@ export function PageSearchOverlay({ targetRef }: PageSearchOverlayProps) {
           <button
             type="button"
             aria-label="Next match"
-            onClick={goNext}
+            onPointerDown={(e) => {
+              e.preventDefault();
+              goNext();
+            }}
             disabled={matches.length === 0}
             style={iconBtnStyle(matches.length === 0)}
           >
