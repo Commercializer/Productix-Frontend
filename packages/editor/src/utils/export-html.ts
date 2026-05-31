@@ -272,6 +272,29 @@ function elementToHtml(el: ElementNode, isFlowMode: boolean): string {
       return `<div style="display:flex;width:100%;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;border-radius:${borderRadius}px;background:${bgColor};-webkit-overflow-scrolling:touch;scrollbar-width:none;">${slidesHtml}</div>`;
     }
 
+    case "pdf-viewer": {
+      const src = (p.src as string) || "";
+      const fileName = (p.fileName as string) || "";
+      const page = (p.page as number) || 1;
+      const showToolbar = p.showToolbar !== false;
+      const fit = (p.fit as string) || "FitH";
+      const borderRadius = (p.borderRadius as number) ?? 8;
+      const bgColor = (p.bgColor as string) || "#f3f4f6";
+      const hideScrollbar = p.hideScrollbar === true;
+      if (!src) {
+        return `<div style="width:100%;height:100%;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border-radius:${borderRadius}px;"><span style="color:#9ca3af;font-size:14px;">📄 No document</span></div>`;
+      }
+      // PDF Open Parameters honored by built-in browser viewers.
+      const frag: string[] = [`toolbar=${showToolbar ? 1 : 0}`];
+      if (page > 1) frag.push(`page=${page}`);
+      if (fit && fit !== "none") frag.push(`view=${fit}`);
+      const viewerSrc = `${escapeHtml(src)}#${frag.join("&")}`;
+      // To hide the in-viewer scrollbar, widen the iframe past the clipped
+      // wrapper edge so the vertical scrollbar is pushed out of view.
+      const frameWidth = hideScrollbar ? "calc(100% + 17px)" : "100%";
+      return `<div style="width:100%;height:100%;overflow:hidden;border-radius:${borderRadius}px;background:${bgColor};"><iframe src="${viewerSrc}" title="${escapeHtml(fileName || "PDF document")}" style="width:${frameWidth};height:100%;border:0;display:block;"></iframe></div>`;
+    }
+
     case "badge": {
       const text = (p.text as string) || "Badge";
       const bgColor = (p.bgColor as string) || "#3b82f6";
@@ -336,7 +359,7 @@ export function exportToHtml(doc: CanvasDocument): string {
       const elHtml = elementToHtml(el, false);
       // Filled shapes fill their box, so they need an explicit height rather
       // than content-driven "auto" (which would collapse them to zero).
-      const needsExplicitHeight = el.type === "shape" || el.type === "carousel";
+      const needsExplicitHeight = el.type === "shape" || el.type === "carousel" || el.type === "pdf-viewer";
       const heightCss = needsExplicitHeight ? `${el.transform.height}px` : "auto";
       let absStyle = `position:absolute;left:${pctX.toFixed(2)}%;top:${pctY.toFixed(2)}%;width:${pctW.toFixed(2)}%;height:${heightCss};z-index:${el.zIndex};opacity:${el.opacity};`;
       if (rotation) absStyle += `transform:rotate(${rotation}deg);`;

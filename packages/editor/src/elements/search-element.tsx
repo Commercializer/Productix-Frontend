@@ -52,6 +52,10 @@ function SearchElementComponent({ props, isEditing, scaleFactor = 1 }: ElementRe
   const accentColor = (props.accentColor as string) || "#0ea5e9";
   const showCounter = props.showCounter !== false;
   const shadow = props.shadow !== false;
+  // "icon" = collapsed circular icon that expands on tap (default).
+  // "bar"  = always-expanded search field filling the block width.
+  const mode = (props.mode as string) === "bar" ? "bar" : "icon";
+  const isBar = mode === "bar";
 
   const editor = isInsideEditor();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -59,8 +63,9 @@ function SearchElementComponent({ props, isEditing, scaleFactor = 1 }: ElementRe
   // Live: collapsed until user taps. Editor: collapsed by default, but
   // showing the expanded state when the author has double-clicked into
   // edit mode lets them style colors/placeholder without leaving the canvas.
+  // Bar mode is always open (it never collapses).
   const [openLive, setOpenLive] = useState(false);
-  const open = editor ? isEditing : openLive;
+  const open = isBar ? true : editor ? isEditing : openLive;
 
   const [query, setQuery] = useState("");
   const [matches, setMatches] = useState<HTMLElement[]>([]);
@@ -173,9 +178,11 @@ function SearchElementComponent({ props, isEditing, scaleFactor = 1 }: ElementRe
     }
   }, [matches, activeIdx, editor]);
 
-  // Clear everything when the bar closes.
+  // Clear everything when the bar closes. In bar mode there is no
+  // collapse, so skip the auto-focus-on-open (it would steal focus and
+  // scroll the page on load).
   useEffect(() => {
-    if (editor) return;
+    if (editor || isBar) return;
     if (open) {
       const id = window.setTimeout(() => inputRef.current?.focus(), 200);
       return () => window.clearTimeout(id);
@@ -184,7 +191,7 @@ function SearchElementComponent({ props, isEditing, scaleFactor = 1 }: ElementRe
     clearHighlights();
     setMatches([]);
     setActiveIdx(0);
-  }, [open, clearHighlights, editor]);
+  }, [open, clearHighlights, editor, isBar]);
 
   const goNext = useCallback(() => {
     if (matches.length === 0) return;
@@ -221,7 +228,8 @@ function SearchElementComponent({ props, isEditing, scaleFactor = 1 }: ElementRe
         overflow: "visible",
       }}
     >
-      {/* Icon trigger (always rendered; morphs to X when open) */}
+      {/* Icon trigger (icon mode only; morphs to X when open) */}
+      {!isBar && (
       <button
         type="button"
         aria-label={open ? "Close search" : "Search this page"}
@@ -256,6 +264,7 @@ function SearchElementComponent({ props, isEditing, scaleFactor = 1 }: ElementRe
       >
         <SearchIcon size={scaledIconSize} strokeWidth={2.2} />
       </button>
+      )}
 
       {/* Expanding search bar */}
       <div
@@ -267,7 +276,7 @@ function SearchElementComponent({ props, isEditing, scaleFactor = 1 }: ElementRe
           background: bgColor,
           borderRadius,
           boxShadow: open ? boxShadow : "none",
-          width: open ? scaledExpandedWidth : "100%",
+          width: isBar ? "100%" : open ? scaledExpandedWidth : "100%",
           opacity: open ? 1 : 0,
           padding: open ? `0 ${scaledPadR}px 0 ${scaledPadL}px` : 0,
           display: "flex",
@@ -308,9 +317,10 @@ function SearchElementComponent({ props, isEditing, scaleFactor = 1 }: ElementRe
             }
           }}
           onPointerDown={(e) => {
-            // In the editor, let the wrapper handle pointer events for
-            // selection / drag instead of focusing the input.
-            if (editor) e.stopPropagation();
+            // In icon edit-preview mode, keep the field stable by swallowing
+            // the pointer. In bar mode the field always fills the block, so
+            // let the wrapper handle selection/drag (the input is read-only).
+            if (editor && !isBar) e.stopPropagation();
           }}
           style={{
             flex: 1,
@@ -373,22 +383,24 @@ function SearchElementComponent({ props, isEditing, scaleFactor = 1 }: ElementRe
           </svg>
         </button>
 
-        <button
-          type="button"
-          aria-label="Close search"
-          onPointerDown={(e) => {
-            if (editor) return;
-            e.preventDefault();
-            e.stopPropagation();
-            setOpenLive(false);
-          }}
-          style={navBtnStyle(false, iconColor, scaleFactor)}
-        >
-          <svg width={scaledNavIconSize} height={scaledNavIconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
+        {!isBar && (
+          <button
+            type="button"
+            aria-label="Close search"
+            onPointerDown={(e) => {
+              if (editor) return;
+              e.preventDefault();
+              e.stopPropagation();
+              setOpenLive(false);
+            }}
+            style={navBtnStyle(false, iconColor, scaleFactor)}
+          >
+            <svg width={scaledNavIconSize} height={scaledNavIconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        )}
       </div>
 
       {/* Highlight styles + placeholder color (scoped via class). */}
@@ -435,10 +447,38 @@ function SearchPropertyPanel({ props, onChange }: PropertyPanelProps) {
   const labelStyle = "text-xs font-medium text-gray-500 uppercase tracking-wide";
   const inputStyle = "mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500";
 
+  const mode = (props.mode as string) === "bar" ? "bar" : "icon";
+
   return (
     <div className="space-y-3">
+      <label className="block">
+        <span className={labelStyle}>Mode</span>
+        <div className="mt-1 grid grid-cols-2 gap-1 rounded-lg bg-gray-100 p-1">
+          {([
+            { id: "icon", label: "Icon" },
+            { id: "bar", label: "Search bar" },
+          ] as const).map((m) => {
+            const active = mode === m.id;
+            return (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => onChange({ mode: m.id })}
+                className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                  active ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                {m.label}
+              </button>
+            );
+          })}
+        </div>
+      </label>
+
       <p className="rounded-md bg-blue-50 px-3 py-2 text-xs leading-relaxed text-blue-700">
-        Tap the icon on the live page to expand the search bar. Double-click the block here to preview the open state.
+        {mode === "bar"
+          ? "Always-expanded search field. Type on the live page to highlight matches; resize the block to set its width."
+          : "Collapsed icon that expands on tap. Double-click the block here to preview the open state."}
       </p>
 
       <label className="block">
@@ -451,17 +491,19 @@ function SearchPropertyPanel({ props, onChange }: PropertyPanelProps) {
         />
       </label>
 
-      <label className="block">
-        <span className={labelStyle}>Expanded Width (px)</span>
-        <input
-          type="number"
-          className={inputStyle}
-          value={(props.expandedWidth as number) || 280}
-          onChange={(e) => onChange({ expandedWidth: Number(e.target.value) })}
-          min={120}
-          max={600}
-        />
-      </label>
+      {mode === "icon" && (
+        <label className="block">
+          <span className={labelStyle}>Expanded Width (px)</span>
+          <input
+            type="number"
+            className={inputStyle}
+            value={(props.expandedWidth as number) || 280}
+            onChange={(e) => onChange({ expandedWidth: Number(e.target.value) })}
+            min={120}
+            max={600}
+          />
+        </label>
+      )}
 
       <label className="block">
         <span className={labelStyle}>Background</span>
@@ -618,6 +660,7 @@ registerElement({
   icon: <SearchIcon size={16} />,
   category: "interactive",
   defaultProps: {
+    mode: "icon",
     placeholder: "Search this page…",
     bgColor: "#ffffff",
     textColor: "#111827",

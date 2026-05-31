@@ -11,8 +11,10 @@ import {
   uploadToR2,
   isAllowedImage,
   isAllowedAudio,
+  isAllowedDocument,
   MAX_IMAGE_SIZE,
   MAX_AUDIO_SIZE,
+  MAX_DOCUMENT_SIZE,
 } from "@/lib/r2";
 
 export async function POST(request: NextRequest) {
@@ -33,24 +35,30 @@ export async function POST(request: NextRequest) {
     const contentType = file.type;
     const isImage = isAllowedImage(contentType);
     const isAudio = isAllowedAudio(contentType);
+    const isDocument = isAllowedDocument(contentType);
 
-    if (!isImage && !isAudio) {
+    if (!isImage && !isAudio && !isDocument) {
       return NextResponse.json(
         {
-          error: `Unsupported file type "${contentType}". Allowed: JPG, PNG, GIF, WebP, SVG, ICO, MP3, WAV, OGG, AAC, WebM.`,
+          error: `Unsupported file type "${contentType}". Allowed: JPG, PNG, GIF, WebP, SVG, ICO, MP3, WAV, OGG, AAC, WebM, PDF.`,
         },
         { status: 400 }
       );
     }
 
     // Size limits
-    const maxSize = isImage ? MAX_IMAGE_SIZE : MAX_AUDIO_SIZE;
+    const maxSize = isImage
+      ? MAX_IMAGE_SIZE
+      : isAudio
+        ? MAX_AUDIO_SIZE
+        : MAX_DOCUMENT_SIZE;
+    const kind = isImage ? "images" : isAudio ? "audio" : "documents";
     const label = isImage ? "10MB" : "25MB";
 
     if (file.size > maxSize) {
       return NextResponse.json(
         {
-          error: `File too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum for ${isImage ? "images" : "audio"} is ${label}.`,
+          error: `File too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum for ${kind} is ${label}.`,
         },
         { status: 400 }
       );
@@ -59,7 +67,7 @@ export async function POST(request: NextRequest) {
     // Upload to R2
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const folder = isImage ? "images" : "audio";
+    const folder = isImage ? "images" : isAudio ? "audio" : "documents";
     const result = await uploadToR2(buffer, file.name, contentType, folder);
 
     return NextResponse.json({
@@ -68,7 +76,7 @@ export async function POST(request: NextRequest) {
       name: file.name,
       size: file.size,
       type: contentType,
-      mediaType: isImage ? "image" : "audio",
+      mediaType: isImage ? "image" : isAudio ? "audio" : "document",
     });
   } catch (error: any) {
     console.error("[media/upload] R2 upload failed:", error);

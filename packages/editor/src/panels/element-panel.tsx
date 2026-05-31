@@ -45,6 +45,7 @@ import {
   Shapes,
   GalleryHorizontalEnd,
   ChevronLeft,
+  FileText,
 } from "lucide-react";
 import { getAllElements, type ElementDefinition } from "../elements/registry";
 import { SHAPES, getShapeDefaultProps, ShapeRender } from "../elements/shapes-catalog";
@@ -161,6 +162,7 @@ const BLOCK_CONFIG: Record<string, { label: string; icon: React.ReactNode }> = {
   column:        { label: "Column",          icon: <Columns3 size={16} />          },
   video:         { label: "Video",           icon: <Video size={16} />            },
   carousel:      { label: "Carousel",         icon: <GalleryHorizontalEnd size={16} /> },
+  "pdf-viewer":  { label: "PDF Viewer",       icon: <FileText size={16} />          },
   audio:         { label: "Audio",           icon: <Music2 size={16} />            },
   feedback:      { label: "Feedback Form",   icon: <MessageSquareHeart size={16} /> },
   search:        { label: "Page Search",     icon: <Search size={16} />            },
@@ -178,6 +180,7 @@ export function ElementPanel() {
   const [hoveredBlock, setHoveredBlock] = useState<string | null>(null);
   const [clickedBlock, setClickedBlock] = useState<string | null>(null);
   const [showShapePicker, setShowShapePicker] = useState(false);
+  const [showSearchPicker, setShowSearchPicker] = useState(false);
 
   const addElementCentered = useCallback((
     type: string,
@@ -200,6 +203,11 @@ export function ElementPanel() {
       setShowShapePicker(true);
       return;
     }
+    // The "Page Search" block opens a mode picker (icon vs. search bar).
+    if (def.type === "search") {
+      setShowSearchPicker(true);
+      return;
+    }
     addElementCentered(def.type, { ...def.defaultProps }, def.defaultTransform);
 
     // Click ripple feedback
@@ -210,6 +218,14 @@ export function ElementPanel() {
   const addShapeVariant = useCallback((shapeId: string, defaultTransform: { width?: number; height?: number }) => {
     addElementCentered("shape", { ...getShapeDefaultProps(shapeId) }, defaultTransform ?? { width: 160, height: 160 });
     setShowShapePicker(false);
+  }, [addElementCentered]);
+
+  const addSearchVariant = useCallback((mode: "icon" | "bar") => {
+    const def = getAllElements().find((el) => el.type === "search");
+    const baseProps = { ...(def?.defaultProps ?? {}), mode };
+    const transform = mode === "bar" ? { width: 320, height: 44 } : { width: 40, height: 40 };
+    addElementCentered("search", baseProps, transform);
+    setShowSearchPicker(false);
   }, [addElementCentered]);
 
   const allElements = getAllElements();
@@ -229,6 +245,11 @@ export function ElementPanel() {
       {/* ── Shape picker overlay (Canva-style sub popup) ── */}
       {showShapePicker && (
         <ShapePicker onPick={addShapeVariant} onClose={() => setShowShapePicker(false)} />
+      )}
+
+      {/* ── Search mode picker overlay ── */}
+      {showSearchPicker && (
+        <SearchPicker onPick={addSearchVariant} onClose={() => setShowSearchPicker(false)} />
       )}
 
       {/* ── Header ── */}
@@ -528,6 +549,141 @@ function ShapePicker({
           100% { opacity: 1; transform: translateX(0); }
         }
       `}</style>
+    </div>
+  );
+}
+
+/* ─── Search Mode Picker (sub popup) ─────────── */
+
+function SearchPicker({
+  onPick,
+  onClose,
+}: {
+  onPick: (mode: "icon" | "bar") => void;
+  onClose: () => void;
+}) {
+  const [hovered, setHovered] = useState<string | null>(null);
+
+  const options: Array<{ id: "icon" | "bar"; label: string; desc: string; preview: React.ReactNode }> = [
+    {
+      id: "icon",
+      label: "Search icon",
+      desc: "Compact icon that expands on tap",
+      preview: (
+        <div style={{
+          width: 36, height: 36, borderRadius: 999,
+          background: "#fff", boxShadow: "0 2px 8px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.05)",
+          display: "flex", alignItems: "center", justifyContent: "center", color: "#374151",
+        }}>
+          <Search size={16} strokeWidth={2.2} />
+        </div>
+      ),
+    },
+    {
+      id: "bar",
+      label: "Search bar",
+      desc: "Always-visible search field",
+      preview: (
+        <div style={{
+          width: "100%", maxWidth: 150, height: 32, borderRadius: 999,
+          background: "#fff", boxShadow: "0 2px 8px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.05)",
+          display: "flex", alignItems: "center", gap: 6, padding: "0 12px", color: "#9ca3af",
+        }}>
+          <Search size={13} strokeWidth={2.2} color="#374151" />
+          <span style={{ fontSize: 10, fontWeight: 500 }}>Search this page…</span>
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        zIndex: 20,
+        display: "flex",
+        flexDirection: "column",
+        background: "linear-gradient(180deg, #ffffff 0%, #f0faff 100%)",
+        animation: "shapePickerIn 0.18s cubic-bezier(0.4,0,0.2,1)",
+      }}
+    >
+      {/* Header with back button */}
+      <div style={{
+        display: "flex", alignItems: "center", gap: 10,
+        padding: "16px 18px 12px",
+        borderBottom: "1px solid rgba(0,0,0,0.05)",
+      }}>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Back to blocks"
+          style={{
+            width: 28, height: 28, borderRadius: 8,
+            border: "1px solid rgba(0,0,0,0.06)",
+            background: "#fff",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", color: "#6b7280",
+          }}
+        >
+          <ChevronLeft size={16} />
+        </button>
+        <div style={{
+          width: 26, height: 26, borderRadius: 8,
+          background: "linear-gradient(135deg, #0ea5e9 0%, #7dd3fc 100%)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          color: "#fff", boxShadow: "0 2px 8px rgba(14,165,233,0.25)",
+        }}>
+          <Search size={15} />
+        </div>
+        <div style={{ flex: 1 }}>
+          <span style={{ fontSize: 12.5, fontWeight: 700, color: "#1a1a2e", letterSpacing: "-0.01em" }}>Page Search</span>
+          <span style={{ display: "block", fontSize: 9.5, color: "#b0b3c0", fontWeight: 500, marginTop: 1 }}>
+            Choose a style
+          </span>
+        </div>
+      </div>
+
+      {/* Mode options */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "14px", display: "flex", flexDirection: "column", gap: 10 }}>
+        {options.map((opt) => {
+          const isHovered = hovered === opt.id;
+          return (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => onPick(opt.id)}
+              onMouseEnter={() => setHovered(opt.id)}
+              onMouseLeave={() => setHovered(null)}
+              style={{
+                display: "flex", flexDirection: "column", gap: 10,
+                padding: "16px 14px",
+                borderRadius: 14,
+                border: `1px solid ${isHovered ? "rgba(14,165,233,0.35)" : "rgba(0,0,0,0.05)"}`,
+                background: isHovered ? "#fff" : "rgba(255,255,255,0.65)",
+                cursor: "pointer",
+                textAlign: "left",
+                transition: "all 0.16s cubic-bezier(0.4,0,0.2,1)",
+                boxShadow: isHovered ? "0 4px 14px rgba(14,165,233,0.12)" : "0 1px 2px rgba(0,0,0,0.02)",
+                transform: isHovered ? "translateY(-2px)" : "translateY(0)",
+              }}
+            >
+              <div style={{
+                height: 56, borderRadius: 10,
+                background: "linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                padding: "0 14px",
+              }}>
+                {opt.preview}
+              </div>
+              <div>
+                <span style={{ display: "block", fontSize: 12.5, fontWeight: 650, color: "#1a1a2e" }}>{opt.label}</span>
+                <span style={{ display: "block", fontSize: 10.5, color: "#8b8ea0", fontWeight: 500, marginTop: 1 }}>{opt.desc}</span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

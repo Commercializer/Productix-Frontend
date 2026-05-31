@@ -27,6 +27,7 @@ import "./feedback-element";
 import "./search-element";
 import "./shape-element";
 import "./carousel-element";
+import "./pdf-viewer-element";
 
 // Re-export registry API for consumers
 export {

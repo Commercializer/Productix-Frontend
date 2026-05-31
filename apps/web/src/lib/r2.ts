@@ -56,11 +56,18 @@ const ALLOWED_AUDIO_TYPES = [
   "audio/mp4",
 ];
 
-export const ALLOWED_MEDIA_TYPES = [...ALLOWED_IMAGE_TYPES, ...ALLOWED_AUDIO_TYPES];
+const ALLOWED_DOCUMENT_TYPES = ["application/pdf"];
 
-/** Max 10 MB for images, 25 MB for audio */
+export const ALLOWED_MEDIA_TYPES = [
+  ...ALLOWED_IMAGE_TYPES,
+  ...ALLOWED_AUDIO_TYPES,
+  ...ALLOWED_DOCUMENT_TYPES,
+];
+
+/** Max 10 MB for images, 25 MB for audio, 25 MB for documents */
 export const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 export const MAX_AUDIO_SIZE = 25 * 1024 * 1024;
+export const MAX_DOCUMENT_SIZE = 25 * 1024 * 1024;
 
 /* ─── Upload ────────────────────────────────── */
 
@@ -135,6 +142,11 @@ export function isAllowedImage(type: string): boolean {
 /** Check if a MIME type is an allowed audio type */
 export function isAllowedAudio(type: string): boolean {
   return ALLOWED_AUDIO_TYPES.includes(type);
+}
+
+/** Check if a MIME type is an allowed document type */
+export function isAllowedDocument(type: string): boolean {
+  return ALLOWED_DOCUMENT_TYPES.includes(type);
 }
 
 /** Check if a URL points to our R2 bucket */
