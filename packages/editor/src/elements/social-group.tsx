@@ -55,8 +55,9 @@ const PLATFORM_LABELS: Record<string, string> = {
   phone: "Phone",
 };
 
-function SocialGroupComponent({ props, scaleFactor = 1 }: ElementRenderProps) {
+function SocialGroupComponent({ props, isEditing, scaleFactor = 1 }: ElementRenderProps) {
   const platforms = (props.platforms as string[]) || ["twitter", "instagram", "linkedin"];
+  const links = (props.links as Record<string, string>) || {};
   const iconSize = (props.iconSize as number) || 36;
   const gap = (props.gap as number) || 12;
   const iconColor = (props.iconColor as string) || "#ffffff";
@@ -72,22 +73,31 @@ function SocialGroupComponent({ props, scaleFactor = 1 }: ElementRenderProps) {
     <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: scaledGap, flexWrap: "wrap" }}>
       {platforms.map((platform: string) => {
         const IconComp = SOCIAL_ICONS[platform] || Globe;
+        const url = links[platform] || "";
+        const iconStyle: React.CSSProperties = {
+          width: scaledIconSize,
+          height: scaledIconSize,
+          borderRadius,
+          backgroundColor: iconBg,
+          color: iconColor,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          transition: "transform 0.15s ease",
+          textDecoration: "none",
+        };
+
+        if (!isEditing && url) {
+          return (
+            <a key={platform} href={url} target="_blank" rel="noopener noreferrer" style={iconStyle}>
+              <IconComp size={lucideSize} color={iconColor} strokeWidth={1.8} />
+            </a>
+          );
+        }
+
         return (
-          <div
-            key={platform}
-            style={{
-              width: scaledIconSize,
-              height: scaledIconSize,
-              borderRadius,
-              backgroundColor: iconBg,
-              color: iconColor,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-              transition: "transform 0.15s ease",
-            }}
-          >
+          <div key={platform} style={iconStyle}>
             <IconComp size={lucideSize} color={iconColor} strokeWidth={1.8} />
           </div>
         );
@@ -96,8 +106,24 @@ function SocialGroupComponent({ props, scaleFactor = 1 }: ElementRenderProps) {
   );
 }
 
+const PLATFORM_URL_PLACEHOLDERS: Record<string, string> = {
+  twitter: "https://x.com/yourhandle",
+  facebook: "https://facebook.com/yourpage",
+  instagram: "https://instagram.com/yourhandle",
+  linkedin: "https://linkedin.com/in/you",
+  github: "https://github.com/you",
+  youtube: "https://youtube.com/@yourchannel",
+  tiktok: "https://tiktok.com/@yourhandle",
+  whatsapp: "https://wa.me/15551234567",
+  threads: "https://threads.net/@yourhandle",
+  website: "https://yoursite.com",
+  email: "mailto:you@example.com",
+  phone: "tel:+15551234567",
+};
+
 function SocialGroupPropertyPanel({ props, onChange }: PropertyPanelProps) {
   const platforms = (props.platforms as string[]) || [];
+  const links = (props.links as Record<string, string>) || {};
   const allPlatforms = Object.keys(SOCIAL_ICONS);
 
   const togglePlatform = (p: string) => {
@@ -106,6 +132,10 @@ function SocialGroupPropertyPanel({ props, onChange }: PropertyPanelProps) {
     } else {
       onChange({ platforms: [...platforms, p] });
     }
+  };
+
+  const setLink = (p: string, url: string) => {
+    onChange({ links: { ...links, [p]: url } });
   };
 
   return (
@@ -143,6 +173,30 @@ function SocialGroupPropertyPanel({ props, onChange }: PropertyPanelProps) {
           })}
         </div>
       </div>
+      {platforms.length > 0 && (
+        <div>
+          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Links</span>
+          <div className="mt-2 space-y-2">
+            {platforms.map((p) => {
+              const IconComp = SOCIAL_ICONS[p] || Globe;
+              return (
+                <div key={p} className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gray-100 text-gray-500" title={PLATFORM_LABELS[p] || p}>
+                    <IconComp size={14} />
+                  </div>
+                  <input
+                    type="text"
+                    className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none"
+                    placeholder={PLATFORM_URL_PLACEHOLDERS[p] || "https://..."}
+                    value={links[p] || ""}
+                    onChange={(e) => setLink(p, e.target.value)}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
       <label className="block">
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Icon Size</span>
         <input type="number" className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none" value={(props.iconSize as number) || 36} onChange={(e) => onChange({ iconSize: Number(e.target.value) })} min={16} max={80} />
@@ -184,7 +238,7 @@ registerElement({
   label: "Social Icons",
   icon: <Share2 size={16} />,
   category: "social",
-  defaultProps: { platforms: ["twitter", "instagram", "linkedin"], iconSize: 36, gap: 12, iconColor: "#ffffff", iconBg: "#1a1a2e", borderRadius: 999 },
+  defaultProps: { platforms: ["twitter", "instagram", "linkedin"], links: {}, iconSize: 36, gap: 12, iconColor: "#ffffff", iconBg: "#1a1a2e", borderRadius: 999 },
   defaultTransform: { width: 200, height: 48 },
   component: SocialGroupComponent,
   propertyPanel: SocialGroupPropertyPanel,
