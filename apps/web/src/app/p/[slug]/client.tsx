@@ -251,8 +251,8 @@ export function PublicPageClient({ page }: PublicPageClientProps) {
         `}</style>
       )}
 
-      {/* Floating search-on-page widget (top-left) - opt-out via canvas settings */}
-      {doc.showSearchOverlay !== false && <PageSearchOverlay targetRef={searchTargetRef} />}
+      {/* Floating search-on-page widget (top-left) - opt-IN via canvas settings (off by default) */}
+      {doc.showSearchOverlay === true && <PageSearchOverlay targetRef={searchTargetRef} />}
 
       {/* Rendered page content */}
       <div ref={searchTargetRef}>
