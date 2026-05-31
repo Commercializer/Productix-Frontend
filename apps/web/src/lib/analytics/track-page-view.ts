@@ -115,6 +115,60 @@ export async function trackPageView({
   }
 }
 
+// Hard ceiling on a recorded session, so a tab left open / a clock skew can't
+// drag the average to nonsense. 30 min of *foreground* time is already a lot.
+const MAX_DURATION_MS = 30 * 60 * 1000;
+const MIN_DURATION_MS = 1000; // ignore sub-second blips (bounce / prefetch)
+
+/**
+ * Records how long a visitor stayed on a page. Called from the
+ * `/api/analytics/duration` beacon endpoint, so it re-derives the SAME
+ * (visitor, page, day) identity used by `trackPageView` and updates that row.
+ *
+ * Keeps the LONGEST foreground session seen that day (beacons arrive with a
+ * monotonically-growing cumulative time, so GREATEST is the natural merge and
+ * is atomic — no read-modify-write race across concurrent beacons).
+ */
+export async function recordViewDuration({
+  productProfileId,
+  durationMs,
+  context,
+}: {
+  productProfileId: string;
+  durationMs: number;
+  context: ViewContext;
+}): Promise<void> {
+  try {
+    const { ip, userAgent } = context;
+    if (isLikelyBot(userAgent)) return;
+
+    const clamped = Math.round(durationMs);
+    if (!Number.isFinite(clamped) || clamped < MIN_DURATION_MS) return;
+    const bounded = Math.min(clamped, MAX_DURATION_MS);
+
+    const dayBucket = new Date();
+    dayBucket.setUTCHours(0, 0, 0, 0);
+    const dayKey = dayBucket.toISOString().slice(0, 10);
+
+    const visitorHash = createHash("sha256")
+      .update(`${ip}|${userAgent}|${HASH_SALT}|${dayKey}`)
+      .digest("hex");
+
+    // GREATEST(COALESCE(...)) so repeat beacons only ever raise the value, and
+    // the first beacon (NULL existing) takes the new value.
+    await prisma.$executeRaw`
+      UPDATE "page_views"
+      SET "duration_ms" = GREATEST(COALESCE("duration_ms", 0), ${bounded})
+      WHERE "product_profile_id" = ${productProfileId}::uuid
+        AND "visitor_hash" = ${visitorHash}
+        AND "day_bucket" = ${dayBucket}
+    `;
+  } catch (err) {
+    // Analytics must never surface an error to the visitor's beacon.
+    console.error("[recordViewDuration] failed", err);
+  }
+}
+
 // ─────────────────────────────────────────────────────────────
 // helpers
 // ─────────────────────────────────────────────────────────────

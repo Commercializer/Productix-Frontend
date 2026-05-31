@@ -7,6 +7,7 @@ import { getContentLocaleMeta } from "@productix/types";
 import { PublicRenderer } from "@productix/editor";
 import { BrowserThemeWatcher } from "@/components/browser-theme-watcher";
 import { PageSearchOverlay } from "./search-overlay";
+import { VisitDurationTracker } from "./visit-duration-tracker";
 
 interface PublicPageData {
   id: string;
@@ -100,6 +101,9 @@ export function PublicPageClient({ page }: PublicPageClientProps) {
 
       {/* Keep browser chrome (Android Chrome address bar, etc.) in sync with the page bg. */}
       <BrowserThemeWatcher color={pageBackground} />
+
+      {/* Measure active time-on-page and beacon it for analytics. */}
+      <VisitDurationTracker productProfileId={page.id} />
       {/* Language dropdown - top right floating */}
       {showLanguageSwitcher && (
         <div

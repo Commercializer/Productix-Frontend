@@ -27,6 +27,15 @@ export default function DashboardPage() {
   const pct = (n: number) => `${n.toFixed(n < 10 ? 2 : 1)}%`;
   const placeholder = loading ? "-" : null;
 
+  // Active time-on-page, averaged across visits that reported one. Sub-minute
+  // shows as seconds; otherwise minutes with 2 decimals (e.g. "1.25min").
+  const formatDuration = (ms: number | null | undefined) => {
+    if (!ms || ms < 1000) return "—";
+    const seconds = ms / 1000;
+    return seconds < 60 ? `${Math.round(seconds)}s` : `${(seconds / 60).toFixed(2)}min`;
+  };
+  const avgDurationMs = stats?.averageVisitorDurationMs ?? null;
+
   const totalProducts = stats?.totalProducts ?? 0;
   const publishedProducts = stats?.publishedProducts ?? 0;
   const draftProducts = stats?.draftProducts ?? 0;
@@ -67,7 +76,7 @@ export default function DashboardPage() {
         <div className="flex flex-col">
           <p className="text-[13px] md:text-[14px] text-[#64748B] mb-2 md:mb-3">Avg. Visitor Duration</p>
           <h2 className="text-[32px] md:text-[40px] font-medium text-(--ds-text-primary) leading-none tracking-tight">
-            1.25min
+            {placeholder ?? formatDuration(avgDurationMs)}
           </h2>
         </div>
 

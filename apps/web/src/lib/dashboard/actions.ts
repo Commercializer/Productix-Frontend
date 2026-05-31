@@ -1250,6 +1250,21 @@ export async function getCompanyAnalyticsAction() {
 
     const scanToFeedbackRatio = scanCount > 0 ? (feedbackCount / scanCount) * 100 : 0;
 
+    // Average active time-on-page across visits that reported a duration.
+    // Isolated try/catch: this column is newer than the rest of page_views, so
+    // a not-yet-migrated DB degrades to null here instead of zeroing all the
+    // metrics above.
+    let averageVisitorDurationMs: number | null = null;
+    try {
+      const durationAgg = await prisma.pageView.aggregate({
+        where: { companyId, durationMs: { not: null } },
+        _avg: { durationMs: true },
+      });
+      averageVisitorDurationMs = durationAgg._avg.durationMs ?? null;
+    } catch (durErr) {
+      console.error("[getCompanyAnalyticsAction] duration metric failed", durErr);
+    }
+
     return {
       success: true,
       stats: {
@@ -1262,6 +1277,7 @@ export async function getCompanyAnalyticsAction() {
         scansLast30Days,
         feedbackLast30Days,
         scanToFeedbackRatio,
+        averageVisitorDurationMs,
         timeSeries,
         deviceBreakdown,
         sourceBreakdown,

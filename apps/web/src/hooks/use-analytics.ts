@@ -46,6 +46,7 @@ export interface AnalyticsStats {
   scansLast30Days: number;
   feedbackLast30Days: number;
   scanToFeedbackRatio: number;
+  averageVisitorDurationMs: number | null;
   timeSeries: TimeSeriesPoint[];
   deviceBreakdown: { device: string; count: number }[];
   sourceBreakdown: { source: string; count: number }[];

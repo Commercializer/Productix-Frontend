@@ -475,6 +475,7 @@ model PageView {
   visitorHash      String      @map("visitor_hash") @db.Char(64)
   dayBucket        DateTime    @map("day_bucket") @db.Date
   viewedAt         DateTime    @default(now()) @map("viewed_at") @db.Timestamptz
+  durationMs       Int?        @map("duration_ms") // longest foreground session for this visitor/day, ms
   country          String?     @db.VarChar(100)
   region           String?     @db.VarChar(100)
   city             String?     @db.VarChar(100)
