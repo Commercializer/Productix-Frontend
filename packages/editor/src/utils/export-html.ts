@@ -33,6 +33,68 @@ function escapeHtmlMultiline(str: string): string {
   return escapeHtml(str).replace(/\r\n|\r|\n/g, "<br>");
 }
 
+/* ─── Shape geometry (mirrors elements/shapes-catalog) ─── */
+
+type ShapeGeom =
+  | { kind: "rect" }
+  | { kind: "ellipse" }
+  | { kind: "line" }
+  | { kind: "polygon"; points: string }
+  | { kind: "path"; d: string };
+
+const SHAPE_GEOM: Record<string, ShapeGeom> = {
+  "rectangle": { kind: "rect" },
+  "rounded-rectangle": { kind: "rect" },
+  "ellipse": { kind: "ellipse" },
+  "triangle": { kind: "polygon", points: "50,2 98,98 2,98" },
+  "right-triangle": { kind: "polygon", points: "2,2 2,98 98,98" },
+  "diamond": { kind: "polygon", points: "50,2 98,50 50,98 2,50" },
+  "pentagon": { kind: "polygon", points: "50,2 98,38 80,98 20,98 2,38" },
+  "hexagon": { kind: "polygon", points: "25,3 75,3 98,50 75,97 25,97 2,50" },
+  "star": { kind: "polygon", points: "50,2 64.7,30 97.5,34.5 73.8,57.7 79.4,90.5 50,75 20.6,90.5 26.2,57.7 2.5,34.5 35.3,30" },
+  "heart": { kind: "path", d: "M50,90 C50,90 8,58 8,32 C8,17 20,8 32,8 C42,8 48,17 50,24 C52,17 58,8 68,8 C80,8 92,17 92,32 C92,58 50,90 50,90 Z" },
+  "arrow-right": { kind: "polygon", points: "2,32 60,32 60,8 98,50 60,92 60,68 2,68" },
+  "parallelogram": { kind: "polygon", points: "25,3 98,3 75,97 2,97" },
+  "trapezoid": { kind: "polygon", points: "25,3 75,3 98,97 2,97" },
+  "cross": { kind: "polygon", points: "35,2 65,2 65,35 98,35 98,65 65,65 65,98 35,98 35,65 2,65 2,35 35,35" },
+  "semicircle": { kind: "path", d: "M2,98 A48,48 0 0 1 98,98 Z" },
+  "line": { kind: "line" },
+};
+
+function shapeToHtml(p: Record<string, unknown>): string {
+  const variant = (p.variant as string) || "rectangle";
+  const geom = SHAPE_GEOM[variant] ?? SHAPE_GEOM.rectangle!;
+  const fill = (p.fill as string) || "#8b5cf6";
+  const stroke = (p.stroke as string) || "#1a1a2e";
+  const strokeWidth = (p.strokeWidth as number) || 0;
+  const radius = (p.radius as number) || 0;
+  const lineStyle = (p.lineStyle as string) || "solid";
+
+  if (geom.kind === "rect") {
+    const border = strokeWidth > 0 ? `border:${strokeWidth}px solid ${stroke};` : "";
+    return `<div style="width:100%;height:100%;background:${fill};border-radius:${radius}px;${border}box-sizing:border-box;"></div>`;
+  }
+  if (geom.kind === "ellipse") {
+    const border = strokeWidth > 0 ? `border:${strokeWidth}px solid ${stroke};` : "";
+    return `<div style="width:100%;height:100%;background:${fill};border-radius:50%;${border}box-sizing:border-box;"></div>`;
+  }
+  if (geom.kind === "line") {
+    const thickness = strokeWidth || 3;
+    const dash =
+      lineStyle === "dashed" ? `stroke-dasharray:${Math.max(6, thickness * 3)} ${Math.max(4, thickness * 2)};`
+      : lineStyle === "dotted" ? `stroke-dasharray:0 ${Math.max(4, thickness * 2)};stroke-linecap:round;`
+      : "";
+    return `<svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" style="display:block;overflow:visible;"><line x1="0" y1="50" x2="100" y2="50" stroke="${stroke}" stroke-width="${thickness}" style="${dash}" vector-effect="non-scaling-stroke" /></svg>`;
+  }
+  const strokeAttrs = strokeWidth > 0
+    ? `stroke="${stroke}" stroke-width="${strokeWidth}" stroke-linejoin="round" vector-effect="non-scaling-stroke"`
+    : "";
+  const inner = geom.kind === "polygon"
+    ? `<polygon points="${geom.points}" fill="${fill}" ${strokeAttrs} />`
+    : `<path d="${geom.d}" fill="${fill}" ${strokeAttrs} />`;
+  return `<svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" style="display:block;overflow:visible;">${inner}</svg>`;
+}
+
 /**
  * Generate HTML for a single element based on its type and props.
  */
@@ -166,6 +228,50 @@ function elementToHtml(el: ElementNode, isFlowMode: boolean): string {
       return `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:${bgColor};border-radius:${borderRadius}px;"><img src="${svgUrl}" alt="${escapeHtml(iconName)}" width="${iconSize}" height="${iconSize}" style="filter:brightness(0) saturate(100%);color:${color};" /></div>`;
     }
 
+    case "shape": {
+      return shapeToHtml(p);
+    }
+
+    case "carousel": {
+      // Static export: a JS-free horizontal scroll-snap carousel. Slides
+      // are swipeable; autoplay/arrows are editor/live-renderer only.
+      const slides = (Array.isArray(p.slides) ? p.slides : []) as Array<{
+        src?: string;
+        alt?: string;
+        caption?: string;
+        cropRect?: { x: number; y: number; w: number; h: number };
+      }>;
+      const objectFit = (p.objectFit as string) === "contain" ? "contain" : "cover";
+      const borderRadius = (p.borderRadius as number) ?? 12;
+      const bgColor = (p.bgColor as string) || "#000000";
+      const captionColor = (p.captionColor as string) || "#ffffff";
+      if (slides.length === 0) {
+        return `<div style="width:100%;height:100%;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border-radius:${borderRadius}px;"><span style="color:#9ca3af;font-size:14px;">🖼️ No slides</span></div>`;
+      }
+      const slidesHtml = slides
+        .map((s) => {
+          let media: string;
+          if (!s.src) {
+            media = `<div style="width:100%;height:100%;background:#f3f4f6;"></div>`;
+          } else if (s.cropRect) {
+            const cw = Math.max(0.0001, s.cropRect.w);
+            const ch = Math.max(0.0001, s.cropRect.h);
+            const sizePct = `${(100 / cw).toFixed(4)}% ${(100 / ch).toFixed(4)}%`;
+            const posX = cw >= 0.9999 ? "0%" : `${((s.cropRect.x / (1 - cw)) * 100).toFixed(4)}%`;
+            const posY = ch >= 0.9999 ? "0%" : `${((s.cropRect.y / (1 - ch)) * 100).toFixed(4)}%`;
+            media = `<div role="img" aria-label="${escapeHtml(s.alt || "")}" style="width:100%;height:100%;background-image:url('${escapeHtml(s.src)}');background-repeat:no-repeat;background-size:${sizePct};background-position:${posX} ${posY};"></div>`;
+          } else {
+            media = `<img src="${escapeHtml(s.src)}" alt="${escapeHtml(s.alt || "")}" loading="lazy" style="width:100%;height:100%;object-fit:${objectFit};object-position:center;display:block;" />`;
+          }
+          const caption = s.caption
+            ? `<div style="position:absolute;left:0;right:0;bottom:0;padding:28px 16px 14px;background:linear-gradient(transparent,rgba(0,0,0,0.6));color:${captionColor};font-size:14px;font-weight:600;line-height:1.3;">${escapeHtml(s.caption)}</div>`
+            : "";
+          return `<div style="position:relative;flex:0 0 100%;width:100%;height:100%;scroll-snap-align:start;overflow:hidden;">${media}${caption}</div>`;
+        })
+        .join("");
+      return `<div style="display:flex;width:100%;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;border-radius:${borderRadius}px;background:${bgColor};-webkit-overflow-scrolling:touch;scrollbar-width:none;">${slidesHtml}</div>`;
+    }
+
     case "badge": {
       const text = (p.text as string) || "Badge";
       const bgColor = (p.bgColor as string) || "#3b82f6";
@@ -228,7 +334,11 @@ export function exportToHtml(doc: CanvasDocument): string {
       const pctW = (el.transform.width / ab.width) * 100;
       const rotation = el.transform.rotation;
       const elHtml = elementToHtml(el, false);
-      let absStyle = `position:absolute;left:${pctX.toFixed(2)}%;top:${pctY.toFixed(2)}%;width:${pctW.toFixed(2)}%;height:auto;z-index:${el.zIndex};opacity:${el.opacity};`;
+      // Filled shapes fill their box, so they need an explicit height rather
+      // than content-driven "auto" (which would collapse them to zero).
+      const needsExplicitHeight = el.type === "shape" || el.type === "carousel";
+      const heightCss = needsExplicitHeight ? `${el.transform.height}px` : "auto";
+      let absStyle = `position:absolute;left:${pctX.toFixed(2)}%;top:${pctY.toFixed(2)}%;width:${pctW.toFixed(2)}%;height:${heightCss};z-index:${el.zIndex};opacity:${el.opacity};`;
       if (rotation) absStyle += `transform:rotate(${rotation}deg);`;
       sectionHtml += `    <div class="el-${el.id}" style="${absStyle}">\n      ${elHtml}\n    </div>\n`;
     }

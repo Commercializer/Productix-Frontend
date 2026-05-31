@@ -15,7 +15,7 @@ export interface ElementDefinition {
   /** Icon component or emoji */
   icon: React.ReactNode;
   /** Category for sidebar grouping */
-  category: "content" | "media" | "interactive" | "layout" | "social" | "promotional" | "gaming" | "feedback";
+  category: "content" | "media" | "interactive" | "layout" | "social" | "promotional" | "gaming" | "feedback" | "shape";
   /** Default element-specific props */
   defaultProps: Record<string, unknown>;
   /** Default transform overrides */

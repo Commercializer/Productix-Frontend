@@ -27,9 +27,11 @@ import {
   X,
   CornerUpRight,
   Type,
+  Globe,
 } from "lucide-react";
 import type { Promption } from "@/hooks/use-promptions";
 import { QrModal } from "./qr-modal";
+import { SeoSettingsModal } from "./seo-settings-modal";
 
 interface PromptionTableProps {
   promptions: Promption[];
@@ -74,6 +76,7 @@ export function PromptionTable({
   const [qrModal, setQrModal] = useState<{ name: string; shortCode: string } | null>(null);
   const [slugEditor, setSlugEditor] = useState<{ profileId: string; currentSlug: string } | null>(null);
   const [nameEditor, setNameEditor] = useState<{ profileId: string; currentName: string } | null>(null);
+  const [seoEditor, setSeoEditor] = useState<{ profileId: string; slug: string } | null>(null);
   const [redirectEditor, setRedirectEditor] = useState<{
     profileId: string;
     productName: string;
@@ -450,6 +453,17 @@ export function PromptionTable({
                                   </a>
 
                                   <button
+                                    onClick={() => {
+                                      setActiveMenu(null);
+                                      setSeoEditor({ profileId: p.id, slug: p.slug });
+                                    }}
+                                    className="w-full px-3 py-2 text-left text-[13px] hover:bg-[#f8fafc] dark:hover:bg-[#334155] flex items-center gap-2 transition-colors text-(--ds-text-primary)"
+                                  >
+                                    <Globe size={15} className="text-[#64748b]" />
+                                    SEO &amp; sharing
+                                  </button>
+
+                                  <button
                                     onClick={() => handlePublishToggle(p)}
                                     disabled={isPending}
                                     className="w-full px-3 py-2 text-left text-[13px] hover:bg-[#f8fafc] dark:hover:bg-[#334155] flex items-center gap-2 transition-colors text-(--ds-text-primary)"
@@ -560,6 +574,15 @@ export function PromptionTable({
           currentName={nameEditor.currentName}
           onClose={() => setNameEditor(null)}
           onSave={onRenameProduct}
+        />
+      )}
+
+      {/* SEO Settings Modal */}
+      {seoEditor && (
+        <SeoSettingsModal
+          profileId={seoEditor.profileId}
+          slug={seoEditor.slug}
+          onClose={() => setSeoEditor(null)}
         />
       )}
 

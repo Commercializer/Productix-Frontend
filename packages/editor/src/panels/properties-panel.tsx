@@ -33,6 +33,7 @@ export function PropertiesPanel() {
   const elements = useCanvasStore((s) => s.document.elements);
   const updateElementProps = useCanvasStore((s) => s.updateElementProps);
   const updateElement = useCanvasStore((s) => s.updateElement);
+  const updateElementTransform = useCanvasStore((s) => s.updateElementTransform);
   const removeElement = useCanvasStore((s) => s.removeElement);
   const duplicateElement = useCanvasStore((s) => s.duplicateElement);
   const bringForward = useCanvasStore((s) => s.bringForward);
@@ -172,6 +173,24 @@ export function PropertiesPanel() {
             <div style={{ display:"flex",alignItems:"center",gap:8,marginTop:4 }}>
               <input type="range" style={{ flex:1,accentColor:"#0ea5e9" }} value={el.opacity*100} onChange={(e) => updateElement(el.id, { opacity:Number(e.target.value)/100 })} min={0} max={100} />
               <span style={{ fontSize:11,color:"#9ca3af",width:32,textAlign:"right" }}>{Math.round(el.opacity*100)}%</span>
+            </div>
+          </label>
+          <label style={{ display:"block",marginTop:12 }}>
+            <span style={{ fontSize:11,color:"#6b7280",fontWeight:500 }}>Rotation</span>
+            <div style={{ display:"flex",alignItems:"center",gap:8,marginTop:4 }}>
+              <input type="range" style={{ flex:1,accentColor:"#0ea5e9" }} value={el.transform.rotation} onChange={(e) => updateElementTransform(el.id, { rotation:Number(e.target.value) })} min={-180} max={180} step={1} />
+              <div style={{ display:"flex",alignItems:"center",gap:2 }}>
+                <input
+                  type="number"
+                  value={el.transform.rotation}
+                  onChange={(e) => updateElementTransform(el.id, { rotation:Math.max(-180,Math.min(180,Number(e.target.value)||0)) })}
+                  min={-180}
+                  max={180}
+                  step={1}
+                  style={{ width:44,fontSize:11,color:"#374151",border:"1px solid #e5e7eb",borderRadius:4,padding:"2px 4px",textAlign:"right" }}
+                />
+                <span style={{ fontSize:11,color:"#9ca3af" }}>°</span>
+              </div>
             </div>
           </label>
         </div>

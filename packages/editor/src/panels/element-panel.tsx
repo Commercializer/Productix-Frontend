@@ -42,8 +42,12 @@ import {
   Video,
   MessageSquareHeart,
   Search,
+  Shapes,
+  GalleryHorizontalEnd,
+  ChevronLeft,
 } from "lucide-react";
 import { getAllElements, type ElementDefinition } from "../elements/registry";
+import { SHAPES, getShapeDefaultProps, ShapeRender } from "../elements/shapes-catalog";
 import { useCanvasStore } from "../engine/canvas-store";
 import { useTranslation } from "../i18n";
 import type { TranslationStrings } from "../i18n";
@@ -69,6 +73,7 @@ interface CategoryMeta {
 /** Display labels for categories that don't have an i18n translation key. */
 const CATEGORY_LABEL_FALLBACK: Record<string, string> = {
   feedback: "Feedback",
+  shape: "Shapes",
 };
 
 const CATEGORY_META: Record<string, CategoryMeta> = {
@@ -114,9 +119,15 @@ const CATEGORY_META: Record<string, CategoryMeta> = {
     glow: "rgba(239, 68, 68, 0.15)",
     iconBg: "rgba(239, 68, 68, 0.08)",
   },
+  shape: {
+    icon: <Shapes size={15} />,
+    gradient: "linear-gradient(135deg, #8b5cf6 0%, #c4b5fd 100%)",
+    glow: "rgba(139, 92, 246, 0.15)",
+    iconBg: "rgba(139, 92, 246, 0.08)",
+  },
 };
 
-const CATEGORY_ORDER = ["feedback", "content", "media", "interactive", "layout", "promotional", "social"];
+const CATEGORY_ORDER = ["feedback", "content", "media", "interactive", "shape", "layout", "promotional", "social"];
 
 /* ─── Block visual icons (Lucide) ────────────── */
 
@@ -149,9 +160,11 @@ const BLOCK_CONFIG: Record<string, { label: string; icon: React.ReactNode }> = {
   row:           { label: "Content Row",     icon: <Rows3 size={16} />             },
   column:        { label: "Column",          icon: <Columns3 size={16} />          },
   video:         { label: "Video",           icon: <Video size={16} />            },
+  carousel:      { label: "Carousel",         icon: <GalleryHorizontalEnd size={16} /> },
   audio:         { label: "Audio",           icon: <Music2 size={16} />            },
   feedback:      { label: "Feedback Form",   icon: <MessageSquareHeart size={16} /> },
   search:        { label: "Page Search",     icon: <Search size={16} />            },
+  shape:         { label: "Shape",            icon: <Shapes size={16} />            },
 };
 
 /* ─── Component ──────────────────────────────── */
@@ -164,21 +177,40 @@ export function ElementPanel() {
 
   const [hoveredBlock, setHoveredBlock] = useState<string | null>(null);
   const [clickedBlock, setClickedBlock] = useState<string | null>(null);
+  const [showShapePicker, setShowShapePicker] = useState(false);
 
-  const handleAdd = useCallback((def: ElementDefinition) => {
+  const addElementCentered = useCallback((
+    type: string,
+    props: Record<string, unknown>,
+    defaultTransform: { width?: number; height?: number },
+  ) => {
     const ab = document.artboards.find((a) => a.id === activeArtboardId) || document.artboards[0];
     const abWidth = ab?.width ?? 428;
     const margin = 16;
     const maxW = abWidth - margin * 2;
-    const clampedW = Math.min(def.defaultTransform.width || 200, maxW);
+    const clampedW = Math.min(defaultTransform.width || 200, maxW);
     const centerX = ab ? (ab.width - clampedW) / 2 : 100;
-    const centerY = ab ? (ab.height - (def.defaultTransform.height || 80)) / 2 : 100;
-    addElement(def.type, { ...def.defaultProps }, { ...def.defaultTransform, width: clampedW, x: centerX, y: centerY }, activeArtboardId ?? undefined);
+    const centerY = ab ? (ab.height - (defaultTransform.height || 80)) / 2 : 100;
+    addElement(type, props, { ...defaultTransform, width: clampedW, x: centerX, y: centerY }, activeArtboardId ?? undefined);
+  }, [addElement, activeArtboardId, document.artboards]);
+
+  const handleAdd = useCallback((def: ElementDefinition) => {
+    // The "Shape" block opens a picker rather than adding directly.
+    if (def.type === "shape") {
+      setShowShapePicker(true);
+      return;
+    }
+    addElementCentered(def.type, { ...def.defaultProps }, def.defaultTransform);
 
     // Click ripple feedback
     setClickedBlock(def.type);
     setTimeout(() => setClickedBlock(null), 400);
-  }, [addElement, activeArtboardId, document.artboards]);
+  }, [addElementCentered]);
+
+  const addShapeVariant = useCallback((shapeId: string, defaultTransform: { width?: number; height?: number }) => {
+    addElementCentered("shape", { ...getShapeDefaultProps(shapeId) }, defaultTransform ?? { width: 160, height: 160 });
+    setShowShapePicker(false);
+  }, [addElementCentered]);
 
   const allElements = getAllElements();
   const grouped = CATEGORY_ORDER.map((cat) => ({
@@ -190,9 +222,15 @@ export function ElementPanel() {
 
   return (
     <div style={{
+      position: "relative",
       display: "flex", flexDirection: "column", height: "100%",
       background: "linear-gradient(180deg, #fafbff 0%, #f5f5fa 100%)",
     }}>
+      {/* ── Shape picker overlay (Canva-style sub popup) ── */}
+      {showShapePicker && (
+        <ShapePicker onPick={addShapeVariant} onClose={() => setShowShapePicker(false)} />
+      )}
+
       {/* ── Header ── */}
       <div style={{
         padding: "18px 20px 14px",
@@ -376,6 +414,120 @@ export function ElementPanel() {
         .story-blocks-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.08); border-radius: 4px; }
       `}
       </style>
+    </div>
+  );
+}
+
+/* ─── Shape Picker (sub popup) ───────────────── */
+
+function ShapePicker({
+  onPick,
+  onClose,
+}: {
+  onPick: (shapeId: string, defaultTransform: { width?: number; height?: number }) => void;
+  onClose: () => void;
+}) {
+  const [hovered, setHovered] = useState<string | null>(null);
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        zIndex: 20,
+        display: "flex",
+        flexDirection: "column",
+        background: "linear-gradient(180deg, #ffffff 0%, #faf8ff 100%)",
+        animation: "shapePickerIn 0.18s cubic-bezier(0.4,0,0.2,1)",
+      }}
+    >
+      {/* Header with back button */}
+      <div style={{
+        display: "flex", alignItems: "center", gap: 10,
+        padding: "16px 18px 12px",
+        borderBottom: "1px solid rgba(0,0,0,0.05)",
+      }}>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Back to blocks"
+          style={{
+            width: 28, height: 28, borderRadius: 8,
+            border: "1px solid rgba(0,0,0,0.06)",
+            background: "#fff",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", color: "#6b7280",
+          }}
+        >
+          <ChevronLeft size={16} />
+        </button>
+        <div style={{
+          width: 26, height: 26, borderRadius: 8,
+          background: "linear-gradient(135deg, #8b5cf6 0%, #c4b5fd 100%)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          color: "#fff", boxShadow: "0 2px 8px rgba(139,92,246,0.25)",
+        }}>
+          <Shapes size={15} />
+        </div>
+        <div style={{ flex: 1 }}>
+          <span style={{ fontSize: 12.5, fontWeight: 700, color: "#1a1a2e", letterSpacing: "-0.01em" }}>Shapes</span>
+          <span style={{ display: "block", fontSize: 9.5, color: "#b0b3c0", fontWeight: 500, marginTop: 1 }}>
+            {SHAPES.length} shapes
+          </span>
+        </div>
+      </div>
+
+      {/* Shape grid */}
+      <div style={{
+        flex: 1, overflowY: "auto", padding: "12px",
+        display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8,
+        alignContent: "start",
+      }}>
+        {SHAPES.map((shape) => {
+          const isHovered = hovered === shape.id;
+          return (
+            <button
+              key={shape.id}
+              type="button"
+              title={shape.label}
+              onClick={() => onPick(shape.id, shape.defaultTransform ?? { width: 160, height: 160 })}
+              onMouseEnter={() => setHovered(shape.id)}
+              onMouseLeave={() => setHovered(null)}
+              style={{
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 5,
+                padding: "12px 6px 8px",
+                borderRadius: 12,
+                border: `1px solid ${isHovered ? "rgba(139,92,246,0.3)" : "rgba(0,0,0,0.05)"}`,
+                background: isHovered ? "#fff" : "rgba(255,255,255,0.65)",
+                cursor: "pointer",
+                transition: "all 0.16s cubic-bezier(0.4,0,0.2,1)",
+                boxShadow: isHovered ? "0 4px 14px rgba(139,92,246,0.12)" : "0 1px 2px rgba(0,0,0,0.02)",
+                transform: isHovered ? "translateY(-2px)" : "translateY(0)",
+              }}
+            >
+              <div style={{
+                width: 40, height: 40,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: "#8b5cf6",
+              }}>
+                <div style={{ width: 34, height: 34 }}>
+                  <ShapeRender variant={shape.id} fill="#8b5cf6" stroke="#1a1a2e" strokeWidth={shape.kind === "line" ? 3 : 0} radius={shape.id === "rounded-rectangle" ? 8 : 0} />
+                </div>
+              </div>
+              <span style={{ fontSize: 9, fontWeight: 600, color: isHovered ? "#1a1a2e" : "#8b8ea0", lineHeight: 1.1, textAlign: "center" }}>
+                {shape.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <style>{`
+        @keyframes shapePickerIn {
+          0% { opacity: 0; transform: translateX(8px); }
+          100% { opacity: 1; transform: translateX(0); }
+        }
+      `}</style>
     </div>
   );
 }

@@ -20,6 +20,24 @@ export const SELECTION_BORDER = 2;
 /** Rotation handle offset from element top */
 export const ROTATION_HANDLE_OFFSET = 24;
 
+/** Size of the invisible rotation hit-zone placed at each corner */
+export const ROTATION_ZONE_SIZE = 26;
+
+/**
+ * Custom "rotate" cursor (a curved arrow) as an inline SVG data-URI.
+ * White outline under a black stroke so it reads on any background.
+ * Hotspot centered at 12 12.
+ */
+const ROTATE_CURSOR_SVG =
+  "<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke-linecap='round' stroke-linejoin='round'>" +
+  "<g stroke='white' stroke-width='4'><path d='M4.5 9a8 8 0 1 1-1 5'/><polyline points='2 4 4.5 9 9.5 7'/></g>" +
+  "<g stroke='black' stroke-width='2'><path d='M4.5 9a8 8 0 1 1-1 5'/><polyline points='2 4 4.5 9 9.5 7'/></g>" +
+  "</svg>";
+
+export const ROTATE_CURSOR = `url("data:image/svg+xml,${encodeURIComponent(
+  ROTATE_CURSOR_SVG
+)}") 12 12, grab`;
+
 /** Keyboard nudge distance (px) */
 export const NUDGE_DISTANCE = 1;
 

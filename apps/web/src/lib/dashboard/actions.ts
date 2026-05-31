@@ -876,8 +876,24 @@ export async function updatePageMetaAction(
     if (meta.ogImageUrl !== undefined) data.ogImageUrl = meta.ogImageUrl;
     if (meta.tagline !== undefined) data.tagline = meta.tagline;
     if (meta.logoUrl !== undefined) data.logoUrl = meta.logoUrl;
+
+    let newProductName: string | null = null;
     if (meta.productName !== undefined && meta.productName.trim().length > 0) {
-      data.productName = meta.productName.trim();
+      newProductName = meta.productName.trim();
+      data.productName = newProductName;
+    }
+
+    // Mirror the dashboard productName into the canvas content's pageTitle so
+    // a rename from the SEO panel shows up in the editor's top bar too.
+    if (newProductName) {
+      const existing = await prisma.productProfile.findUnique({
+        where: { id: profileId },
+        select: { content: true },
+      });
+      const currentContent = existing?.content as Record<string, unknown> | null;
+      if (currentContent && typeof currentContent === "object" && !Array.isArray(currentContent)) {
+        data.content = { ...currentContent, pageTitle: newProductName };
+      }
     }
 
     await prisma.productProfile.update({
@@ -888,6 +904,44 @@ export async function updatePageMetaAction(
   } catch (error: any) {
     return { error: error.message };
   }
+}
+
+// Lightweight fetch for the SEO settings modal (dashboard dropdown / editor
+// top-bar button). Loads just the columns the panel renders, no canvas blob.
+export async function getSeoFieldsAction(profileId: string) {
+  if (!isUUID(profileId)) return { error: "Invalid profile ID" as const };
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" as const };
+
+  const companyId = await getUserCompanyId(session.user.id);
+  if (!companyId) return { error: "No company found for user" as const };
+
+  const profile = await prisma.productProfile.findUnique({
+    where: { id: profileId },
+    select: {
+      id: true,
+      slug: true,
+      productName: true,
+      tagline: true,
+      metaDescription: true,
+      ogImageUrl: true,
+      logoUrl: true,
+      product: { select: { companyId: true } },
+    },
+  });
+  if (!profile || profile.product.companyId !== companyId) {
+    return { error: "Product not found" as const };
+  }
+
+  return {
+    id: profile.id,
+    slug: profile.slug,
+    productName: profile.productName,
+    tagline: profile.tagline,
+    metaDescription: profile.metaDescription,
+    ogImageUrl: profile.ogImageUrl,
+    logoUrl: profile.logoUrl,
+  };
 }
 
 // ═══════════════════════════════════════════════════════════════

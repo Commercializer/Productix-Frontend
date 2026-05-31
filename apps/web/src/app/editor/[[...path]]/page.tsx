@@ -11,6 +11,7 @@ import {
   exportProductixFileAction,
   importProductixFileAction,
 } from "@/lib/dashboard/actions";
+import { SeoSettingsModal } from "@/components/dashboard/seo-settings-modal";
 
 export default function EditorPage() {
   const searchParams = useSearchParams();
@@ -19,6 +20,7 @@ export default function EditorPage() {
   const profileId = searchParams.get("profileId");
   const [initialDoc, setInitialDoc] = useState<CanvasDocument | null>(null);
   const [pageInfo, setPageInfo] = useState<{ slug: string; productName: string } | null>(null);
+  const [seoOpen, setSeoOpen] = useState(false);
 
   useEffect(() => {
     // No profileId → redirect to create a product first
@@ -186,14 +188,24 @@ export default function EditorPage() {
   }
 
   return (
-    <EditRenderer
-      initialDocument={initialDoc}
-      onSave={handleSave}
-      onPublish={handlePublish}
-      onExportFile={handleExportFile}
-      onImportFile={handleImportFile}
-      previewSlug={pageInfo?.slug}
-    />
+    <>
+      <EditRenderer
+        initialDocument={initialDoc}
+        onSave={handleSave}
+        onPublish={handlePublish}
+        onExportFile={handleExportFile}
+        onImportFile={handleImportFile}
+        previewSlug={pageInfo?.slug}
+        onEditSeo={profileId ? () => setSeoOpen(true) : undefined}
+      />
+      {seoOpen && profileId && (
+        <SeoSettingsModal
+          profileId={profileId}
+          slug={pageInfo?.slug}
+          onClose={() => setSeoOpen(false)}
+        />
+      )}
+    </>
   );
 }
 

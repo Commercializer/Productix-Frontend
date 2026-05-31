@@ -29,6 +29,7 @@ import {
   Sparkles,
   Download,
   Upload,
+  Globe,
 } from "lucide-react";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
@@ -65,6 +66,9 @@ interface EditRendererProps {
   /** Import an encrypted .productix file. Receives the file's text content,
    *  returns the decrypted CanvasDocument (or throws). If omitted button hidden. */
   onImportFile?: (fileContent: string) => Promise<CanvasDocument>;
+  /** Open the SEO & sharing settings (page title, description, OG image,
+   *  favicon). The host app owns the modal. If omitted the button is hidden. */
+  onEditSeo?: () => void;
 }
 
 const CANVAS_H_PADDING = 120;
@@ -86,7 +90,7 @@ function computeFitZoom(
   return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, Math.min(viewportWidth / totalW, viewportHeight / totalH, 1)));
 }
 
-export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug, onExportFile, onImportFile }: EditRendererProps) {
+export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug, onExportFile, onImportFile, onEditSeo }: EditRendererProps) {
   const loadDocument = useCanvasStore((s) => s.loadDocument);
   const document = useCanvasStore((s) => s.document);
   const zoom = useCanvasStore((s) => s.zoom);
@@ -517,6 +521,14 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug, 
               title="Export as encrypted .productix file"
               icon={isExporting ? <Loader2 size={14} style={{ animation: "spin 0.6s linear infinite" }} /> : <Download size={14} />}
               label={isExporting ? "Exporting…" : "Export"}
+            />
+          )}
+          {onEditSeo && (
+            <PillBtn
+              onClick={onEditSeo}
+              title="SEO & sharing — page title, description, social image, favicon"
+              icon={<Globe size={14} />}
+              label="SEO"
             />
           )}
           <a href={previewSlug?`/preview/${previewSlug}`:"#"} target={previewSlug?"_blank":undefined}

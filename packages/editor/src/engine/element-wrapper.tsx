@@ -20,7 +20,8 @@ import { useCanvasStore } from "./canvas-store";
 import { getElementDefinition } from "../elements/registry";
 import { useDrag } from "../interactions/use-drag";
 import { useResize, type ResizeHandle } from "../interactions/use-resize";
-import { HANDLE_SIZE } from "../interactions/constants";
+import { useRotate } from "../interactions/use-rotate";
+import { HANDLE_SIZE, ROTATION_ZONE_SIZE, ROTATE_CURSOR } from "../interactions/constants";
 import { computeElementLayoutCSS } from "./layout-engine";
 import { getLocalizedProps } from "../utils/localize-props";
 import type { ElementNode, Transform, LayoutProps } from "@productix/types";
@@ -44,6 +45,15 @@ const HANDLE_POSITIONS: { key: ResizeHandle; style: React.CSSProperties }[] = [
   { key: "left", style: { top: "50%", left: -HANDLE_SIZE / 2, marginTop: -HANDLE_SIZE / 2, cursor: "ew-resize" } },
 ];
 
+// Rotation hit-zones, centered on each corner so half the zone sits outside
+// the element. The smaller resize dot renders on top (higher z-index).
+const ROTATE_ZONE_POSITIONS: { key: string; style: React.CSSProperties }[] = [
+  { key: "tl", style: { top: -ROTATION_ZONE_SIZE / 2, left: -ROTATION_ZONE_SIZE / 2 } },
+  { key: "tr", style: { top: -ROTATION_ZONE_SIZE / 2, right: -ROTATION_ZONE_SIZE / 2 } },
+  { key: "br", style: { bottom: -ROTATION_ZONE_SIZE / 2, right: -ROTATION_ZONE_SIZE / 2 } },
+  { key: "bl", style: { bottom: -ROTATION_ZONE_SIZE / 2, left: -ROTATION_ZONE_SIZE / 2 } },
+];
+
 export const ElementWrapper = memo(function ElementWrapper({
   element,
   effectiveTransform,
@@ -63,6 +73,7 @@ export const ElementWrapper = memo(function ElementWrapper({
 
   const { onDragStart, onDragMove, onDragEnd } = useDrag();
   const { onResizeStart, onResizeMove, onResizeEnd } = useResize();
+  const { onRotateStart, onRotateMove, onRotateEnd } = useRotate();
 
   const isSelected = selectedIds.includes(element.id);
   const isHovered = hoveredId === element.id;
@@ -218,9 +229,31 @@ export const ElementWrapper = memo(function ElementWrapper({
         onPropsChange={handlePropsChange}
       />
 
-      {/* Resize handles - only in absolute mode */}
+      {/* Resize + rotation handles - only in absolute mode */}
       {isSelected && !element.locked && !isEditing && !isFlow && (
         <>
+          {/* Corner rotation zones - sit just outside each corner, behind the
+              resize handle, so hovering the corner-outside rotates and the
+              corner dot itself still resizes. Drag to rotate (no key needed;
+              hold Shift to snap to 15°). */}
+          {ROTATE_ZONE_POSITIONS.map(({ key, style }) => (
+            <div
+              key={`rot-${key}`}
+              title="Drag to rotate (hold Shift to snap)"
+              onPointerDown={(e) => onRotateStart(e, element.id)}
+              onPointerMove={onRotateMove}
+              onPointerUp={onRotateEnd}
+              style={{
+                position: "absolute",
+                width: ROTATION_ZONE_SIZE,
+                height: ROTATION_ZONE_SIZE,
+                background: "transparent",
+                zIndex: 9998,
+                cursor: ROTATE_CURSOR,
+                ...style,
+              }}
+            />
+          ))}
           {HANDLE_POSITIONS.map(({ key, style }) => (
             <div
               key={key}
