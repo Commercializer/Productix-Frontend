@@ -30,6 +30,7 @@ import {
   Download,
   Upload,
   Globe,
+  History,
 } from "lucide-react";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
@@ -69,6 +70,9 @@ interface EditRendererProps {
   /** Open the SEO & sharing settings (page title, description, OG image,
    *  favicon). The host app owns the modal. If omitted the button is hidden. */
   onEditSeo?: () => void;
+  /** Open the version history / edit log. The host app owns the modal.
+   *  If omitted the button is hidden. */
+  onViewHistory?: () => void;
 }
 
 const CANVAS_H_PADDING = 120;
@@ -90,7 +94,7 @@ function computeFitZoom(
   return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, Math.min(viewportWidth / totalW, viewportHeight / totalH, 1)));
 }
 
-export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug, onExportFile, onImportFile, onEditSeo }: EditRendererProps) {
+export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug, onExportFile, onImportFile, onEditSeo, onViewHistory }: EditRendererProps) {
   const loadDocument = useCanvasStore((s) => s.loadDocument);
   const document = useCanvasStore((s) => s.document);
   const zoom = useCanvasStore((s) => s.zoom);
@@ -529,6 +533,14 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug, 
               title="SEO & sharing — page title, description, social image, favicon"
               icon={<Globe size={14} />}
               label="SEO"
+            />
+          )}
+          {onViewHistory && (
+            <PillBtn
+              onClick={onViewHistory}
+              title="Version history — view and restore past saves of this page"
+              icon={<History size={14} />}
+              label="History"
             />
           )}
           <a href={previewSlug?`/preview/${previewSlug}`:"#"} target={previewSlug?"_blank":undefined}

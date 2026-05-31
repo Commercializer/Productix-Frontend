@@ -12,6 +12,7 @@ import {
   importProductixFileAction,
 } from "@/lib/dashboard/actions";
 import { SeoSettingsModal } from "@/components/dashboard/seo-settings-modal";
+import { VersionHistoryModal } from "@/components/dashboard/version-history-modal";
 
 export default function EditorPage() {
   const searchParams = useSearchParams();
@@ -21,6 +22,7 @@ export default function EditorPage() {
   const [initialDoc, setInitialDoc] = useState<CanvasDocument | null>(null);
   const [pageInfo, setPageInfo] = useState<{ slug: string; productName: string } | null>(null);
   const [seoOpen, setSeoOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   useEffect(() => {
     // No profileId → redirect to create a product first
@@ -197,12 +199,26 @@ export default function EditorPage() {
         onImportFile={handleImportFile}
         previewSlug={pageInfo?.slug}
         onEditSeo={profileId ? () => setSeoOpen(true) : undefined}
+        onViewHistory={profileId ? () => setHistoryOpen(true) : undefined}
       />
       {seoOpen && profileId && (
         <SeoSettingsModal
           profileId={profileId}
           slug={pageInfo?.slug}
           onClose={() => setSeoOpen(false)}
+        />
+      )}
+      {historyOpen && profileId && (
+        <VersionHistoryModal
+          profileId={profileId}
+          slug={pageInfo?.slug}
+          onClose={() => setHistoryOpen(false)}
+          // Reload so the editor's in-memory canvas reflects the restored content
+          // (otherwise the next save would overwrite the restore).
+          onRestored={() => {
+            showNotification("✓ Version restored — reloading editor");
+            setTimeout(() => window.location.reload(), 600);
+          }}
         />
       )}
     </>

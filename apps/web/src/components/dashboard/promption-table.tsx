@@ -28,10 +28,12 @@ import {
   CornerUpRight,
   Type,
   Globe,
+  History,
 } from "lucide-react";
 import type { Promption } from "@/hooks/use-promptions";
 import { QrModal } from "./qr-modal";
 import { SeoSettingsModal } from "./seo-settings-modal";
+import { VersionHistoryModal } from "./version-history-modal";
 
 interface PromptionTableProps {
   promptions: Promption[];
@@ -77,6 +79,7 @@ export function PromptionTable({
   const [slugEditor, setSlugEditor] = useState<{ profileId: string; currentSlug: string } | null>(null);
   const [nameEditor, setNameEditor] = useState<{ profileId: string; currentName: string } | null>(null);
   const [seoEditor, setSeoEditor] = useState<{ profileId: string; slug: string } | null>(null);
+  const [versionHistory, setVersionHistory] = useState<{ profileId: string; slug: string } | null>(null);
   const [redirectEditor, setRedirectEditor] = useState<{
     profileId: string;
     productName: string;
@@ -464,6 +467,17 @@ export function PromptionTable({
                                   </button>
 
                                   <button
+                                    onClick={() => {
+                                      setActiveMenu(null);
+                                      setVersionHistory({ profileId: p.id, slug: p.slug });
+                                    }}
+                                    className="w-full px-3 py-2 text-left text-[13px] hover:bg-[#f8fafc] dark:hover:bg-[#334155] flex items-center gap-2 transition-colors text-(--ds-text-primary)"
+                                  >
+                                    <History size={15} className="text-[#64748b]" />
+                                    Version history
+                                  </button>
+
+                                  <button
                                     onClick={() => handlePublishToggle(p)}
                                     disabled={isPending}
                                     className="w-full px-3 py-2 text-left text-[13px] hover:bg-[#f8fafc] dark:hover:bg-[#334155] flex items-center gap-2 transition-colors text-(--ds-text-primary)"
@@ -583,6 +597,15 @@ export function PromptionTable({
           profileId={seoEditor.profileId}
           slug={seoEditor.slug}
           onClose={() => setSeoEditor(null)}
+        />
+      )}
+
+      {/* Version History Modal */}
+      {versionHistory && (
+        <VersionHistoryModal
+          profileId={versionHistory.profileId}
+          slug={versionHistory.slug}
+          onClose={() => setVersionHistory(null)}
         />
       )}
 

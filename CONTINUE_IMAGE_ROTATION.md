@@ -122,8 +122,40 @@ in `transpilePackages`), so no editor build step is needed.
   `search` (pre-existing — neither mode is wired into export-html). Files: `elements/search-element.tsx`,
   `panels/element-panel.tsx`. Editor typecheck passes.
 - Language model drag & drop positioning
-- Version tracking & user edit log (previously discussed)
-- Average Visitor Duration (previously discussed)
+- Version tracking & user edit log ✅ — Per-page version history + edit log. New Prisma model
+  `ProductProfileVersion` (`product_profile_versions`: `profileId`, nullable `userId`, `content`
+  JSON snapshot, `productName` label, `reason` save|publish|restore, `createdAt`) attached to
+  `ProductProfile` (+ relation on `User`). Migration: hand-written `packages/db/prisma/migrations/
+  add_product_profile_versions.sql` (repo convention — apply with Node ≥22.13: `pnpm db:push` or
+  run the SQL). Capture is server-side in `apps/web/src/lib/dashboard/actions.ts`: a private
+  `captureVersion()` helper appends a snapshot inside `savePageContentAction` (reason "save"),
+  **deduped** vs the newest version (a single editor Save calls the action twice via onSave +
+  onPublish) and pruned to the newest 50; `publishPageAction` promotes the latest snapshot's reason
+  to "publish". New actions: `getPageVersionsAction` (list w/o content, joins user email),
+  `getPageVersionContentAction`, `restorePageVersionAction` (copies content back + logs a "restore"
+  snapshot, scoped `where:{id,profileId}` for tenant safety). UI: new
+  `components/dashboard/version-history-modal.tsx` (mirrors `seo-settings-modal.tsx` shell; list with
+  Saved/Published/Restored badges + relative time + editor email, inline-confirm Restore), opened
+  from a new "Version history" item in the product-list dropdown (`promption-table.tsx`) **and** a
+  "History" pill in the editor top bar (`onViewHistory` prop on `edit-renderer.tsx` → editor
+  `page.tsx` renders the same modal; restoring from the editor reloads the page so the in-memory
+  canvas reflects the rollback). Each entry shows a **detailed change summary** (e.g. "Renamed page
+  to … · Added 2 images · Edited 3 elements (moved 1, content ×2)") computed server-side by
+  `describeCanvasDiff()` in actions.ts at capture time (diffs elements by id: add/remove grouped by
+  type, modified split into content/moved/resized/rotated/styled, page rename, section count) and
+  stored in a new `summary` column (migration `add_product_profile_version_summary.sql`; restore rows
+  read "Restored an earlier version"). **Dedicated detail page** at
+  `(dashboard)/dashboard/history/[profileId]/page.tsx` — a full timeline where each entry expands the
+  summary into a per-element breakdown (Added/Removed chips labelled by element text, Edited rows with
+  content/moved/resized/rotated/styled tags, page rename, section changes) + restore. Powered by
+  `getPageVersionDetailsAction` (loads each snapshot's content, recomputes a **structured** diff vs its
+  predecessor via shared `diffCanvasDetailed()`; `summarizeChanges()` builds the one-liner — content is
+  never sent to the client). Linked from the modal footer ("View full details") and reachable from the
+  editor History button → modal → page. Both packages typecheck. ⚠️ Two schema changes total — apply
+  with `pnpm db:push` (Node ≥22.13) + restart the dev server so the regenerated Prisma client loads.
+  v1 still has no rendered per-version visual preview (links open the current live page).
+- Average Visitor Duration ✅ — Implemented in commit 8e391cd (`page_views.duration_ms` +
+  `/api/analytics/duration` beacon; migration `add_page_view_duration.sql`).
 - PDF viewer element in editor blocks ✅ — New `pdf-viewer` element (category `media`) that
   embeds a PDF via the browser's built-in viewer (`<iframe>` + PDF Open Parameters:
   `#toolbar=`, `#page=`, `#view=FitH|Fit`). Same editor-overlay pattern as the video element

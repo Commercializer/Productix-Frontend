@@ -127,6 +127,7 @@ model User {
 
   // Activity
   feedbackResponses FeedbackResponse[]
+  profileVersions   ProductProfileVersion[]
 
   @@map("users")
 }
@@ -385,12 +386,34 @@ model ProductProfile {
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
-  product   Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product   Product                 @relation(fields: [productId], references: [id], onDelete: Cascade)
   pageViews PageView[]
+  versions  ProductProfileVersion[]
 
   @@unique([productId, languageCode])
   @@index([productId])
   @@map("product_profiles")
+}
+
+/// Point-in-time snapshot of a ProductProfile's editor content, captured on each
+/// save/publish, plus the editing user — together this is the page version history
+/// and the user edit log.
+model ProductProfileVersion {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profileId   String   @map("profile_id") @db.Uuid
+  userId      String?  @map("user_id") @db.Uuid
+  content     Json
+  productName String?  @map("product_name") @db.VarChar(255)
+  reason      String   @default("save") @db.VarChar(16)
+  /// Human-readable summary of what changed vs the previous version.
+  summary     String?  @db.VarChar(600)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  profile ProductProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  user    User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([profileId, createdAt])
+  @@map("product_profile_versions")
 }
 
 /// Cross-sell / related product links

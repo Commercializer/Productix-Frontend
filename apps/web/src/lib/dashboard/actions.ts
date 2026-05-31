@@ -557,6 +557,236 @@ export async function importProductixFileAction(fileContent: string) {
 // SAVE PAGE CONTENT (from editor → DB)
 // ═══════════════════════════════════════════════════════════════
 
+// How many version snapshots to retain per profile (older ones are pruned).
+const VERSION_RETENTION = 50;
+
+// Friendly names for the element types we diff (falls back to the raw type key).
+const ELEMENT_TYPE_LABELS: Record<string, string> = {
+  text: "text",
+  heading: "heading",
+  image: "image",
+  button: "button",
+  card: "card",
+  video: "video",
+  audio: "audio",
+  shape: "shape",
+  carousel: "carousel",
+  search: "search bar",
+  "pdf-viewer": "PDF",
+  group: "group",
+  divider: "divider",
+  icon: "icon",
+};
+
+function elementCountLabel(type: string | undefined, n: number): string {
+  const base = (type && ELEMENT_TYPE_LABELS[type]) || type || "element";
+  return `${n} ${base}${n === 1 ? "" : "s"}`;
+}
+
+function truncate(s: string, max: number): string {
+  return s.length > max ? `${s.slice(0, max - 1)}…` : s;
+}
+
+function asObj(v: unknown): Record<string, any> {
+  return v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, any>) : {};
+}
+
+// Props that carry user-facing text, used to label an element in the detail view
+// (e.g. a text block becomes its first words rather than just "text").
+const TEXTUAL_PROP_KEYS = ["text", "title", "label", "heading", "caption", "content", "alt"];
+
+function elementLabel(el: any): string {
+  const props = asObj(el?.props);
+  for (const k of TEXTUAL_PROP_KEYS) {
+    const v = props[k];
+    if (typeof v === "string" && v.trim()) return truncate(v.trim().replace(/\s+/g, " "), 48);
+  }
+  const type = (el?.type as string) || "element";
+  return ELEMENT_TYPE_LABELS[type] || type;
+}
+
+function groupByTypeFromList(items: { type: string }[]): string {
+  const counts: Record<string, number> = {};
+  for (const it of items) counts[it.type] = (counts[it.type] ?? 0) + 1;
+  return Object.entries(counts)
+    .map(([t, n]) => elementCountLabel(t, n))
+    .join(", ");
+}
+
+export type ElementChangeKind = "content" | "moved" | "resized" | "rotated" | "styled";
+
+export type ElementRef = { type: string; label: string };
+
+// Structured diff between two canvas documents — the basis for both the one-line
+// summary stored on each version and the detailed per-element breakdown shown on
+// the version-history page.
+export type CanvasChanges = {
+  isInitial: boolean;
+  pageRenamedTo: string | null;
+  added: ElementRef[];
+  removed: ElementRef[];
+  modified: (ElementRef & { kinds: ElementChangeKind[] })[];
+  sectionsDelta: number;
+};
+
+function diffCanvasDetailed(prev: unknown, next: unknown): CanvasChanges {
+  const nextDoc = asObj(next);
+  const nextEls = asObj(nextDoc.elements);
+
+  if (prev == null) {
+    return {
+      isInitial: true,
+      pageRenamedTo: null,
+      added: Object.keys(nextEls).map((id) => ({
+        type: (nextEls[id]?.type as string) || "element",
+        label: elementLabel(nextEls[id]),
+      })),
+      removed: [],
+      modified: [],
+      sectionsDelta: 0,
+    };
+  }
+
+  const prevDoc = asObj(prev);
+  const prevEls = asObj(prevDoc.elements);
+  const prevIds = Object.keys(prevEls);
+  const nextIds = Object.keys(nextEls);
+
+  const added = nextIds
+    .filter((id) => !(id in prevEls))
+    .map((id) => ({ type: (nextEls[id]?.type as string) || "element", label: elementLabel(nextEls[id]) }));
+  const removed = prevIds
+    .filter((id) => !(id in nextEls))
+    .map((id) => ({ type: (prevEls[id]?.type as string) || "element", label: elementLabel(prevEls[id]) }));
+
+  const modified: (ElementRef & { kinds: ElementChangeKind[] })[] = [];
+  for (const id of nextIds) {
+    if (!(id in prevEls)) continue;
+    const a = prevEls[id];
+    const b = nextEls[id];
+    if (JSON.stringify(a) === JSON.stringify(b)) continue;
+    const kinds: ElementChangeKind[] = [];
+    const ta = asObj(a?.transform);
+    const tb = asObj(b?.transform);
+    if (JSON.stringify(a?.props) !== JSON.stringify(b?.props)) kinds.push("content");
+    if (ta.x !== tb.x || ta.y !== tb.y) kinds.push("moved");
+    if (ta.width !== tb.width || ta.height !== tb.height) kinds.push("resized");
+    if (ta.rotation !== tb.rotation) kinds.push("rotated");
+    if (a?.opacity !== b?.opacity || a?.visible !== b?.visible || a?.locked !== b?.locked || a?.zIndex !== b?.zIndex) {
+      kinds.push("styled");
+    }
+    modified.push({ type: (b?.type as string) || "element", label: elementLabel(b), kinds });
+  }
+
+  const prevAb = Array.isArray(prevDoc.artboards) ? prevDoc.artboards.length : 0;
+  const nextAb = Array.isArray(nextDoc.artboards) ? nextDoc.artboards.length : 0;
+
+  return {
+    isInitial: false,
+    pageRenamedTo:
+      typeof nextDoc.pageTitle === "string" && nextDoc.pageTitle !== prevDoc.pageTitle
+        ? String(nextDoc.pageTitle)
+        : null,
+    added,
+    removed,
+    modified,
+    sectionsDelta: nextAb - prevAb,
+  };
+}
+
+// Build a one-line human-readable summary from a structured diff. `prev` null
+// means this is the first snapshot. Stored on each version as the "what happened"
+// line shown in the editor/dashboard history.
+function summarizeChanges(c: CanvasChanges): string {
+  if (c.isInitial) {
+    return c.added.length ? `Initial version — ${elementCountLabel(undefined, c.added.length)}` : "Initial version";
+  }
+
+  const parts: string[] = [];
+  if (c.pageRenamedTo) parts.push(`Renamed page to “${truncate(c.pageRenamedTo, 40)}”`);
+  if (c.added.length) parts.push(`Added ${groupByTypeFromList(c.added)}`);
+  if (c.removed.length) parts.push(`Removed ${groupByTypeFromList(c.removed)}`);
+
+  if (c.modified.length) {
+    const counts: Record<ElementChangeKind, number> = {
+      content: 0,
+      moved: 0,
+      resized: 0,
+      rotated: 0,
+      styled: 0,
+    };
+    for (const m of c.modified) for (const k of m.kinds) counts[k]++;
+    const detail: string[] = [];
+    if (counts.content) detail.push(`content ×${counts.content}`);
+    if (counts.moved) detail.push(`moved ×${counts.moved}`);
+    if (counts.resized) detail.push(`resized ×${counts.resized}`);
+    if (counts.rotated) detail.push(`rotated ×${counts.rotated}`);
+    if (counts.styled) detail.push(`styled ×${counts.styled}`);
+    parts.push(
+      `Edited ${c.modified.length} element${c.modified.length === 1 ? "" : "s"}` +
+        (detail.length ? ` (${detail.join(", ")})` : ""),
+    );
+  }
+
+  if (c.sectionsDelta > 0) parts.push(`Added ${c.sectionsDelta} section${c.sectionsDelta === 1 ? "" : "s"}`);
+  else if (c.sectionsDelta < 0)
+    parts.push(`Removed ${-c.sectionsDelta} section${-c.sectionsDelta === 1 ? "" : "s"}`);
+
+  if (!parts.length) return "Minor changes";
+  return truncate(parts.join(" · "), 580);
+}
+
+function describeCanvasDiff(prev: unknown, next: unknown): string {
+  return summarizeChanges(diffCanvasDetailed(prev, next));
+}
+
+// Best-effort: append a point-in-time snapshot of the canvas content to the
+// page's version history (= the user edit log). Deduped against the newest
+// version because a single editor "Save" calls savePageContentAction twice
+// (onSave + the onPublish path), and pruned to VERSION_RETENTION. Never throws —
+// version capture must not fail a save.
+async function captureVersion(
+  profileId: string,
+  content: Record<string, unknown>,
+  userId: string | null,
+  reason: "save" | "publish" | "restore"
+) {
+  try {
+    const latest = await prisma.productProfileVersion.findFirst({
+      where: { profileId },
+      orderBy: { createdAt: "desc" },
+      select: { content: true },
+    });
+    if (latest && JSON.stringify(latest.content) === JSON.stringify(content)) return;
+
+    const rawTitle = typeof content?.pageTitle === "string" ? content.pageTitle.trim() : "";
+    const productName = rawTitle.length > 0 && rawTitle.length <= PRODUCT_NAME_MAX ? rawTitle : null;
+
+    const summary =
+      reason === "restore"
+        ? "Restored an earlier version"
+        : describeCanvasDiff(latest?.content ?? null, content);
+
+    await prisma.productProfileVersion.create({
+      data: { profileId, userId, content: content as any, productName, reason, summary },
+    });
+
+    const stale = await prisma.productProfileVersion.findMany({
+      where: { profileId },
+      orderBy: { createdAt: "desc" },
+      skip: VERSION_RETENTION,
+      select: { id: true },
+    });
+    if (stale.length > 0) {
+      await prisma.productProfileVersion.deleteMany({
+        where: { id: { in: stale.map((s) => s.id) } },
+      });
+    }
+  } catch {
+    // swallow — a snapshot failure must never block the underlying save
+  }
+}
+
 export async function savePageContentAction(profileId: string, content: Record<string, unknown>) {
   if (!isUUID(profileId)) return { error: "Invalid profile ID" };
   const session = await auth();
@@ -576,6 +806,7 @@ export async function savePageContentAction(profileId: string, content: Record<s
         ? { content: content as any, productName: syncName }
         : { content: content as any },
     });
+    await captureVersion(profileId, content, session.user.id, "save");
     return { success: true };
   } catch (error: any) {
     return { error: error.message };
@@ -662,6 +893,23 @@ export async function publishPageAction(profileId: string) {
       });
     }
 
+    // Mark the newest snapshot as the published one so it stands out in history.
+    try {
+      const latestVersion = await prisma.productProfileVersion.findFirst({
+        where: { profileId },
+        orderBy: { createdAt: "desc" },
+        select: { id: true },
+      });
+      if (latestVersion) {
+        await prisma.productProfileVersion.update({
+          where: { id: latestVersion.id },
+          data: { reason: "publish" },
+        });
+      }
+    } catch {
+      // best-effort label; never fail the publish over it
+    }
+
     return { success: true, slug: profile.slug, shortCode: profile.product.shortCode };
   } catch (error: any) {
     return { error: error.message };
@@ -678,6 +926,159 @@ export async function unpublishPageAction(profileId: string) {
       where: { id: profileId },
       data: { isPublished: false },
     });
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message };
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// VERSION HISTORY / EDIT LOG
+// ═══════════════════════════════════════════════════════════════
+
+export type PageVersionSummary = {
+  id: string;
+  reason: string;
+  createdAt: string;
+  productName: string | null;
+  email: string | null;
+  summary: string | null;
+};
+
+// List a page's version history (newest first), without the heavy content blob.
+export async function getPageVersionsAction(profileId: string) {
+  if (!isUUID(profileId)) return { error: "Invalid profile ID" as const };
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" as const };
+
+  const versions = await prisma.productProfileVersion.findMany({
+    where: { profileId },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      reason: true,
+      createdAt: true,
+      productName: true,
+      summary: true,
+      user: { select: { email: true } },
+    },
+  });
+
+  return {
+    versions: versions.map((v) => ({
+      id: v.id,
+      reason: v.reason,
+      createdAt: v.createdAt.toISOString(),
+      productName: v.productName,
+      email: v.user?.email ?? null,
+      summary: v.summary,
+    })) satisfies PageVersionSummary[],
+  };
+}
+
+export type PageVersionDetail = PageVersionSummary & {
+  changes: CanvasChanges;
+  isCurrent: boolean;
+};
+
+// Full, detailed history for the dedicated version-history page. Loads each
+// snapshot's content and recomputes a structured diff against its predecessor so
+// the page can show a per-element breakdown (content is NOT returned to the
+// client — only the computed change lists). Newest first.
+export async function getPageVersionDetailsAction(profileId: string) {
+  if (!isUUID(profileId)) return { error: "Invalid profile ID" as const };
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" as const };
+
+  const profile = await prisma.productProfile.findUnique({
+    where: { id: profileId },
+    select: { productName: true, slug: true },
+  });
+  if (!profile) return { error: "Profile not found" as const };
+
+  // Ascending so each row can be diffed against the one before it.
+  const rows = await prisma.productProfileVersion.findMany({
+    where: { profileId },
+    orderBy: { createdAt: "asc" },
+    select: {
+      id: true,
+      reason: true,
+      createdAt: true,
+      productName: true,
+      summary: true,
+      content: true,
+      user: { select: { email: true } },
+    },
+  });
+
+  const detailed: PageVersionDetail[] = rows.map((v, i) => {
+    const prevContent = i > 0 ? rows[i - 1]!.content : null;
+    const changes = diffCanvasDetailed(prevContent, v.content);
+    return {
+      id: v.id,
+      reason: v.reason,
+      createdAt: v.createdAt.toISOString(),
+      productName: v.productName,
+      email: v.user?.email ?? null,
+      summary: v.summary ?? summarizeChanges(changes),
+      changes,
+      isCurrent: false,
+    };
+  });
+
+  // Newest first; the newest snapshot is the live/current content.
+  detailed.reverse();
+  if (detailed.length > 0) detailed[0]!.isCurrent = true;
+
+  return {
+    productName: profile.productName,
+    slug: profile.slug,
+    versions: detailed,
+  };
+}
+
+// Fetch a single version's full canvas content (for preview / inspection).
+export async function getPageVersionContentAction(versionId: string) {
+  if (!isUUID(versionId)) return { error: "Invalid version ID" };
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const version = await prisma.productProfileVersion.findUnique({
+    where: { id: versionId },
+    select: { content: true },
+  });
+  if (!version) return { error: "Version not found" };
+
+  return { content: version.content };
+}
+
+// Restore a prior version: copy its content back onto the live profile and log
+// the restore as a fresh version (so it is itself reversible).
+export async function restorePageVersionAction(profileId: string, versionId: string) {
+  if (!isUUID(profileId) || !isUUID(versionId)) return { error: "Invalid ID" };
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  try {
+    // Scope the lookup to the profile so a version can't be restored across pages.
+    const version = await prisma.productProfileVersion.findFirst({
+      where: { id: versionId, profileId },
+      select: { content: true },
+    });
+    if (!version) return { error: "Version not found" };
+
+    const content = version.content as Record<string, unknown>;
+    const rawTitle = typeof content?.pageTitle === "string" ? content.pageTitle.trim() : "";
+    const syncName = rawTitle.length > 0 && rawTitle.length <= PRODUCT_NAME_MAX ? rawTitle : null;
+
+    await prisma.productProfile.update({
+      where: { id: profileId },
+      data: syncName
+        ? { content: content as any, productName: syncName }
+        : { content: content as any },
+    });
+    await captureVersion(profileId, content, session.user.id, "restore");
+
     return { success: true };
   } catch (error: any) {
     return { error: error.message };
