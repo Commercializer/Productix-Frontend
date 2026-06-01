@@ -94,16 +94,25 @@ export const ElementWrapper = memo(function ElementWrapper({
       if ((window as unknown as Record<string, unknown>).__editorPanMode || e.button === 1) return;
       e.stopPropagation();
 
-      // If grouped and not shift-clicking, select all group members
-      if (isGrouped && !e.shiftKey) {
+      // Selection rules on pointer-down:
+      //  - shift-click → toggle this element in/out of the selection
+      //  - grouped element → select all its group members
+      //  - already part of a multi-selection → keep it, so the drag moves the
+      //    whole selection together (no grouping needed)
+      //  - otherwise → select just this element
+      if (e.shiftKey) {
+        select(element.id, true);
+      } else if (isGrouped) {
         const memberIds = getGroupMemberIds(element.id);
         if (memberIds.length > 1) {
           useCanvasStore.setState({ selectedIds: [...memberIds], editingElementId: null });
         } else {
           select(element.id, false);
         }
+      } else if (selectedIds.length > 1 && selectedIds.includes(element.id)) {
+        // preserve the existing multi-selection for a group move
       } else {
-        select(element.id, e.shiftKey);
+        select(element.id, false);
       }
 
       // Only allow pixel dragging in absolute mode
@@ -111,7 +120,7 @@ export const ElementWrapper = memo(function ElementWrapper({
         onDragStart(e, element.id);
       }
     },
-    [element.id, element.locked, isEditing, isFlow, isGrouped, select, onDragStart, getGroupMemberIds]
+    [element.id, element.locked, isEditing, isFlow, isGrouped, select, onDragStart, getGroupMemberIds, selectedIds]
   );
 
   const handleDoubleClick = useCallback(

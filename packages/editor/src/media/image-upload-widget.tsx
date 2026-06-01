@@ -188,8 +188,15 @@ export function ImageUploadWidget({
               className="w-full h-full object-cover"
               draggable={false}
             />
+            {/* Uploading overlay (e.g. while replacing) */}
+            {isUploading && (
+              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-white/70 backdrop-blur-sm">
+                <div className="w-5 h-5 border-2 border-gray-200 border-t-blue-600 rounded-full animate-spin" />
+                <span className="text-[11px] font-semibold text-blue-600">Uploading…</span>
+              </div>
+            )}
             {/* Hover overlay for replace */}
-            {!readOnly && (
+            {!readOnly && !isUploading && (
               <div
                 className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 transition-opacity"
                 onDragEnter={handleDragEnter}

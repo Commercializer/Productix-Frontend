@@ -15,6 +15,13 @@ export function useMarqueeSelection(canvasRef: React.RefObject<HTMLDivElement | 
   const marqueeStartRef = useRef<{ x: number; y: number } | null>(null);
   const rafRef = useRef<number>(0);
   const pointerRef = useRef({ x: 0, y: 0 });
+  // Selection present when the marquee began (used for shift-additive marquees)
+  const baseSelectionRef = useRef<string[]>([]);
+  const additiveRef = useRef(false);
+  // True once the pointer has dragged far enough to count as a real marquee
+  // selection. Read by the canvas click handler to avoid the trailing click
+  // event clearing the selection we just made.
+  const didSelectRef = useRef(false);
 
   const onPointerDown = useCallback((e: React.PointerEvent) => {
     // Only trigger on left-click on the background
@@ -25,7 +32,7 @@ export function useMarqueeSelection(canvasRef: React.RefObject<HTMLDivElement | 
 
     // Don't trigger if space is held (handled by pan)
     if ((window as unknown as Record<string, unknown>).__editorPanMode) return;
-    
+
     // Don't trigger if the active tool is hand
     if (activeTool === "hand") return;
 
@@ -39,6 +46,10 @@ export function useMarqueeSelection(canvasRef: React.RefObject<HTMLDivElement | 
 
     marqueeStartRef.current = { x, y };
     pointerRef.current = { x, y };
+    // Shift-drag extends the current selection instead of replacing it
+    additiveRef.current = e.shiftKey;
+    baseSelectionRef.current = e.shiftKey ? [...useCanvasStore.getState().selectedIds] : [];
+    didSelectRef.current = false;
     setMarquee({ left: x, top: y, width: 0, height: 0 });
 
     target.setPointerCapture(e.pointerId);
@@ -98,10 +109,15 @@ export function useMarqueeSelection(canvasRef: React.RefObject<HTMLDivElement | 
         }
       });
 
+      // Mark as a real marquee once the pointer has travelled past a small
+      // threshold, so a near-stationary click isn't treated as a selection.
+      if (width > 3 || height > 3) didSelectRef.current = true;
+
       // Expand selection to include all members of any groups that are partially selected
       const state = useCanvasStore.getState();
-      const finalSelectedIds = new Set<string>();
-      
+      // Seed with the pre-drag selection when shift-extending
+      const finalSelectedIds = new Set<string>(additiveRef.current ? baseSelectionRef.current : []);
+
       newlySelectedIds.forEach((id) => {
         const memberIds = state.getGroupMemberIds(id);
         memberIds.forEach((mid) => finalSelectedIds.add(mid));
@@ -112,7 +128,15 @@ export function useMarqueeSelection(canvasRef: React.RefObject<HTMLDivElement | 
   }, [canvasRef]);
 
   const onPointerUp = useCallback((e: React.PointerEvent) => {
-    if (!marqueeStartRef.current) return;
+    const start = marqueeStartRef.current;
+    if (!start) return;
+
+    // Confirm a real marquee drag from start→release, independent of any
+    // pending rAF, so the trailing click handler can be suppressed.
+    const current = pointerRef.current;
+    if (Math.abs(current.x - start.x) > 3 || Math.abs(current.y - start.y) > 3) {
+      didSelectRef.current = true;
+    }
 
     try {
       (e.target as HTMLElement).releasePointerCapture(e.pointerId);
@@ -130,5 +154,7 @@ export function useMarqueeSelection(canvasRef: React.RefObject<HTMLDivElement | 
     onMarqueePointerDown: onPointerDown,
     onMarqueePointerMove: onPointerMove,
     onMarqueePointerUp: onPointerUp,
+    /** Ref flag: true when the last pointer interaction was a real marquee drag. */
+    didMarqueeSelect: didSelectRef,
   };
 }

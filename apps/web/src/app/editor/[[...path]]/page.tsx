@@ -193,6 +193,7 @@ export default function EditorPage() {
     <>
       <EditRenderer
         initialDocument={initialDoc}
+        profileId={profileId ?? undefined}
         onSave={handleSave}
         onPublish={handlePublish}
         onExportFile={handleExportFile}

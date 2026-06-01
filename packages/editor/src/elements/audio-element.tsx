@@ -16,7 +16,7 @@
 
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { Music2 } from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
 
@@ -134,19 +134,27 @@ function AudioElementComponent({ props }: ElementRenderProps) {
 
 function AudioPropertyPanel({ props, onChange }: PropertyPanelProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleFile = async (file: File) => {
     if (!file.type.startsWith("audio/")) return;
+    setIsUploading(true);
     try {
       const { addMedia } = await import("../media/media-store");
       const item = await addMedia(file);
       onChange({ src: item.url });
     } catch {
-      const reader = new FileReader();
-      reader.onload = () => {
-        onChange({ src: reader.result as string });
-      };
-      reader.readAsDataURL(file);
+      await new Promise<void>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          onChange({ src: reader.result as string });
+          resolve();
+        };
+        reader.onerror = () => resolve();
+        reader.readAsDataURL(file);
+      });
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -158,11 +166,30 @@ function AudioPropertyPanel({ props, onChange }: PropertyPanelProps) {
         <div className="flex gap-2 mb-2">
           <button
             type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="flex-1 rounded-md bg-blue-50 py-1.5 text-xs font-medium text-blue-600 transition-colors hover:bg-blue-100"
+            onClick={() => !isUploading && fileInputRef.current?.click()}
+            disabled={isUploading}
+            className="flex flex-1 items-center justify-center gap-2 rounded-md bg-blue-50 py-1.5 text-xs font-medium text-blue-600 transition-colors hover:bg-blue-100 disabled:cursor-default disabled:opacity-80"
           >
-            Upload Audio
+            {isUploading ? (
+              <>
+                <span
+                  style={{
+                    width: 12,
+                    height: 12,
+                    border: "2px solid #bfdbfe",
+                    borderTopColor: "#2563eb",
+                    borderRadius: "50%",
+                    display: "inline-block",
+                    animation: "spin 0.8s linear infinite",
+                  }}
+                />
+                <span>Uploading…</span>
+              </>
+            ) : (
+              "Upload Audio"
+            )}
           </button>
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
           <input
             ref={fileInputRef}
             type="file"

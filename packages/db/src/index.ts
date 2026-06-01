@@ -27,6 +27,7 @@ export type {
   PageView,
   FeedbackInquiry,
   FeedbackResponse,
+  MediaAsset,
   // Enums
   UserRole,
   TenantType,
@@ -40,4 +41,5 @@ export type {
   FeedbackInquiryType,
   FeedbackType,
   FeedbackStatus,
+  MediaAssetType,
 } from "@prisma/client";

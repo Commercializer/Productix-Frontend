@@ -66,9 +66,21 @@ export function useDrag() {
       const scaleRatio = previewW / abW;
       const combinedScale = state.zoom * scaleRatio;
 
-      // Gather all group siblings (if element is in a group)
-      const groupMemberIds = state.getGroupMemberIds(elementId);
-      const groupSiblings = groupMemberIds.map((id) => {
+      // Determine which elements move together with the dragged one:
+      //  - if the dragged element is part of a multi-selection, move the whole
+      //    selection (so marquee-selected blocks move together without grouping)
+      //  - otherwise just move the element's group members (or itself)
+      const selected = state.selectedIds;
+      const moveIds = new Set<string>();
+      if (selected.includes(elementId) && selected.length > 1) {
+        for (const id of selected) {
+          state.getGroupMemberIds(id).forEach((m) => moveIds.add(m));
+        }
+      } else {
+        state.getGroupMemberIds(elementId).forEach((m) => moveIds.add(m));
+      }
+
+      const groupSiblings = Array.from(moveIds).map((id) => {
         const member = state.document.elements[id];
         return {
           id,
@@ -77,10 +89,9 @@ export function useDrag() {
         };
       });
 
-      // Auto-select all group members
-      if (groupMemberIds.length > 1) {
-        const store = useCanvasStore.getState();
-        useCanvasStore.setState({ selectedIds: [...groupMemberIds] });
+      // Keep the full set selected while dragging
+      if (groupSiblings.length > 1) {
+        useCanvasStore.setState({ selectedIds: groupSiblings.map((s) => s.id) });
       }
 
       // Always use the native transform - that's what the artboard renders

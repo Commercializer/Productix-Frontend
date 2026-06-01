@@ -6,27 +6,26 @@ import React, {
   useState,
   useCallback,
   useEffect,
-  useRef,
 } from "react";
 
 import {
   addMedia as storeAddMedia,
-  getAllMedia,
+  listMedia,
   deleteMedia as storeDeleteMedia,
-  createMediaObjectUrl,
-  createMediaUrl,
+  setActiveMediaProfile,
   type MediaItem,
   type MediaItemMeta,
+  type MediaScope,
 } from "./media-store";
 
 /* ─── Types ─────────────────────────────────── */
 
 interface MediaContextValue {
-  /** All uploaded media items (metadata only, no blobs in state) */
+  /** Media items for the current user, scoped per the active scope */
   items: MediaItemMeta[];
   /** Upload a file and return its public R2 URL */
   upload: (file: File) => Promise<string>;
-  /** Remove a media item by ID (deletes from R2 + local cache) */
+  /** Remove a media item by ID (deletes from R2 + server registry) */
   remove: (id: string) => Promise<void>;
   /** Get a renderable URL for a media ID */
   getUrl: (id: string) => Promise<string>;
@@ -36,66 +35,71 @@ interface MediaContextValue {
   error: string | null;
   /** Clear the error */
   clearError: () => void;
-  /** Refresh the items list from store */
+  /** Refresh the items list from the server */
   refresh: () => Promise<void>;
+  /** Current library scope ("product" = active product only, "user" = all my uploads) */
+  scope: MediaScope;
+  /** Switch the library scope (re-fetches) */
+  setScope: (scope: MediaScope) => void;
+  /** Whether a product context exists (controls whether the scope toggle is useful) */
+  hasProductScope: boolean;
 }
 
 const MediaContext = createContext<MediaContextValue | null>(null);
 
+function toMeta(item: MediaItem): MediaItemMeta {
+  return {
+    id: item.id,
+    name: item.name,
+    size: item.size,
+    type: item.type,
+    mediaType: item.mediaType || "image",
+    width: item.width,
+    height: item.height,
+    duration: item.duration || 0,
+    createdAt: item.createdAt,
+    url: item.url || "",
+    r2Key: item.r2Key || "",
+  };
+}
+
 /* ─── Provider ──────────────────────────────── */
 
-export function MediaProvider({ children }: { children: React.ReactNode }) {
+export function MediaProvider({
+  children,
+  profileId,
+}: {
+  children: React.ReactNode;
+  /** The product (ProductProfile id) being edited - scopes uploads + library */
+  profileId?: string;
+}) {
   const [items, setItems] = useState<MediaItemMeta[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hasProductScope = Boolean(profileId);
+  // Default to the active product when we have one, otherwise all the user's media.
+  const [scope, setScope] = useState<MediaScope>(hasProductScope ? "product" : "user");
 
-  // Cache object URLs for legacy blob thumbnails
-  const urlCacheRef = useRef<Map<string, string>>(new Map());
+  // Register the active product so uploads (including direct addMedia() calls
+  // from element components) are tagged with it.
+  useEffect(() => {
+    setActiveMediaProfile(profileId ?? null);
+    return () => setActiveMediaProfile(null);
+  }, [profileId]);
 
-  // Load items on mount
   const refresh = useCallback(async () => {
     try {
-      const allItems = await getAllMedia();
-      setItems(
-        allItems.map((item) => ({
-          id: item.id,
-          name: item.name,
-          size: item.size,
-          type: item.type,
-          mediaType: item.mediaType || "image",
-          width: item.width,
-          height: item.height,
-          duration: item.duration || 0,
-          createdAt: item.createdAt,
-          url: item.url || "",
-          r2Key: item.r2Key || "",
-        }))
-      );
-
-      // Cache thumbnail URLs for legacy items that have blobs
-      for (const item of allItems) {
-        if (!urlCacheRef.current.has(item.id)) {
-          if (item.thumbnailBlob) {
-            urlCacheRef.current.set(
-              `thumb_${item.id}`,
-              createMediaObjectUrl(item.thumbnailBlob)
-            );
-          }
-        }
-      }
+      const allItems = await listMedia({ scope });
+      setItems(allItems.map(toMeta));
     } catch {
-      // IndexedDB may not be available (e.g., SSR)
+      // Network/auth error - leave the list empty rather than showing stale data
+      setItems([]);
     }
-  }, []);
+  }, [scope]);
 
+  // Reload whenever the scope (or product) changes
   useEffect(() => {
     refresh();
-    // Cleanup object URLs on unmount
-    return () => {
-      urlCacheRef.current.forEach((url) => {
-        try { URL.revokeObjectURL(url); } catch { /* noop */ }
-      });
-    };
   }, [refresh]);
 
   const upload = useCallback(
@@ -104,40 +108,11 @@ export function MediaProvider({ children }: { children: React.ReactNode }) {
       setError(null);
       try {
         const mediaItem: MediaItem = await storeAddMedia(file);
-
-        // The R2 URL is the permanent, canonical URL
-        const publicUrl = mediaItem.url;
-
-        // Cache thumbnail for library UI
-        if (mediaItem.thumbnailBlob) {
-          urlCacheRef.current.set(
-            `thumb_${mediaItem.id}`,
-            createMediaObjectUrl(mediaItem.thumbnailBlob)
-          );
-        }
-
-        // Update items list
-        setItems((prev) => [
-          {
-            id: mediaItem.id,
-            name: mediaItem.name,
-            size: mediaItem.size,
-            type: mediaItem.type,
-            mediaType: mediaItem.mediaType,
-            width: mediaItem.width,
-            height: mediaItem.height,
-            duration: mediaItem.duration,
-            createdAt: mediaItem.createdAt,
-            url: mediaItem.url,
-            r2Key: mediaItem.r2Key,
-          },
-          ...prev,
-        ]);
-
-        return publicUrl;
+        // Prepend to the list for instant feedback
+        setItems((prev) => [toMeta(mediaItem), ...prev]);
+        return mediaItem.url;
       } catch (err) {
-        const msg =
-          err instanceof Error ? err.message : "Upload failed";
+        const msg = err instanceof Error ? err.message : "Upload failed";
         setError(msg);
         throw err;
       } finally {
@@ -147,40 +122,41 @@ export function MediaProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
-  const remove = useCallback(async (id: string) => {
-    await storeDeleteMedia(id);
+  const remove = useCallback(
+    async (id: string) => {
+      const target = items.find((item) => item.id === id);
+      await storeDeleteMedia(target?.r2Key ?? "");
+      setItems((prev) => prev.filter((item) => item.id !== id));
+    },
+    [items]
+  );
 
-    // Revoke any cached local thumbnail URLs
-    const thumbUrl = urlCacheRef.current.get(`thumb_${id}`);
-    if (thumbUrl) { URL.revokeObjectURL(thumbUrl); urlCacheRef.current.delete(`thumb_${id}`); }
-
-    setItems((prev) => prev.filter((item) => item.id !== id));
-  }, []);
-
-  const getUrl = useCallback(async (id: string): Promise<string> => {
-    // Check if it's already a full URL (R2)
-    const cached = urlCacheRef.current.get(id);
-    if (cached) return cached;
-
-    // Load from IndexedDB cache
-    const { getMedia } = await import("./media-store");
-    const item = await getMedia(id);
-    if (!item) throw new Error(`Media not found: ${id}`);
-
-    // Return the R2 URL directly
-    if (item.url) return item.url;
-
-    // Legacy fallback: create blob URL
-    const url = createMediaUrl(item);
-    urlCacheRef.current.set(id, url);
-    return url;
-  }, []);
+  const getUrl = useCallback(
+    async (id: string): Promise<string> => {
+      const target = items.find((item) => item.id === id);
+      if (target?.url) return target.url;
+      throw new Error(`Media not found: ${id}`);
+    },
+    [items]
+  );
 
   const clearError = useCallback(() => setError(null), []);
 
   return (
     <MediaContext.Provider
-      value={{ items, upload, remove, getUrl, isUploading, error, clearError, refresh }}
+      value={{
+        items,
+        upload,
+        remove,
+        getUrl,
+        isUploading,
+        error,
+        clearError,
+        refresh,
+        scope,
+        setScope,
+        hasProductScope,
+      }}
     >
       {children}
     </MediaContext.Provider>

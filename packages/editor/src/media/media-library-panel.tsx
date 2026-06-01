@@ -2,11 +2,6 @@
 
 import React, { useState, useCallback, useEffect } from "react";
 import { useMediaLibrary } from "./media-context";
-import {
-  getAllMedia,
-  createMediaObjectUrl,
-  type MediaItem,
-} from "./media-store";
 
 /* ─────────────────────────────────────────────
  * MediaLibraryPanel - Browseable uploaded media
@@ -28,54 +23,20 @@ export function MediaLibraryPanel({
   onClose,
   filterType = "all",
 }: MediaLibraryPanelProps) {
-  const { items, remove, refresh } = useMediaLibrary();
-  const [thumbnails, setThumbnails] = useState<
-    Map<string, string>
-  >(new Map());
+  const { items, remove, refresh, scope, setScope, hasProductScope } =
+    useMediaLibrary();
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+
+  // Refresh from the server whenever the panel opens
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
 
   // Filter items by type
   const filteredItems = items.filter((item) => {
     if (filterType === "all") return true;
     return (item.mediaType || "image") === filterType;
   });
-
-  // Load thumbnails for images
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const allItems = await getAllMedia();
-      if (cancelled) return;
-      const map = new Map<string, string>();
-      for (const item of allItems) {
-        if ((item.mediaType || "image") === "image") {
-          if (item.url) {
-            // R2 URL - use directly as thumbnail
-            map.set(item.id, item.url);
-          } else if (item.thumbnailBlob) {
-            map.set(item.id, createMediaObjectUrl(item.thumbnailBlob));
-          } else if (item.blob) {
-            map.set(item.id, createMediaObjectUrl(item.blob));
-          }
-        }
-      }
-      setThumbnails(map);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [items]);
-
-  // Cleanup local blob URLs on unmount (but not R2 URLs)
-  useEffect(() => {
-    return () => {
-      thumbnails.forEach((url) => {
-        if (url.startsWith("blob:")) {
-          try { URL.revokeObjectURL(url); } catch { /* noop */ }
-        }
-      });
-    };
-  }, [thumbnails]);
 
   const handleSelect = useCallback(
     (item: typeof filteredItems[0]) => {
@@ -193,6 +154,45 @@ export function MediaLibraryPanel({
           </button>
         </div>
 
+        {/* Scope toggle - only when editing within a product */}
+        {hasProductScope && (
+          <div
+            style={{
+              display: "flex",
+              gap: 4,
+              padding: "10px 20px",
+              borderBottom: "1px solid #e5e7eb",
+            }}
+          >
+            {([
+              { key: "product", label: "This product" },
+              { key: "user", label: "All my images" },
+            ] as const).map((opt) => {
+              const active = scope === opt.key;
+              return (
+                <button
+                  key={opt.key}
+                  type="button"
+                  onClick={() => setScope(opt.key)}
+                  style={{
+                    padding: "5px 12px",
+                    borderRadius: 6,
+                    border: active ? "1px solid #3b82f6" : "1px solid #e5e7eb",
+                    backgroundColor: active ? "#eff6ff" : "#ffffff",
+                    color: active ? "#1d4ed8" : "#6b7280",
+                    fontSize: 12,
+                    fontWeight: 500,
+                    cursor: "pointer",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {/* Body */}
         <div
           style={{
@@ -263,17 +263,7 @@ export function MediaLibraryPanel({
                     }}
                   >
                     {(item.mediaType || "image") === "image" ? (
-                      thumbnails.has(item.id) ? (
-                        <img
-                          src={thumbnails.get(item.id)!}
-                          alt={item.name}
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                          }}
-                        />
-                      ) : item.url ? (
+                      item.url ? (
                         <img
                           src={item.url}
                           alt={item.name}

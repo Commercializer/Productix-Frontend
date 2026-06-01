@@ -58,6 +58,9 @@ import "../elements";
 
 interface EditRendererProps {
   initialDocument?: CanvasDocument;
+  /** The product (ProductProfile id) being edited. Scopes uploaded media to
+   *  this user + product so the media library never shows other users' files. */
+  profileId?: string;
   onSave?: (document: CanvasDocument) => Promise<void> | void;
   onPublish?: (document: CanvasDocument) => Promise<void> | void;
   previewSlug?: string;
@@ -94,7 +97,7 @@ function computeFitZoom(
   return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, Math.min(viewportWidth / totalW, viewportHeight / totalH, 1)));
 }
 
-export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug, onExportFile, onImportFile, onEditSeo, onViewHistory }: EditRendererProps) {
+export function EditRenderer({ initialDocument, profileId, onSave, onPublish, previewSlug, onExportFile, onImportFile, onEditSeo, onViewHistory }: EditRendererProps) {
   const loadDocument = useCanvasStore((s) => s.loadDocument);
   const document = useCanvasStore((s) => s.document);
   const zoom = useCanvasStore((s) => s.zoom);
@@ -135,6 +138,7 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug, 
   const {
     marquee,
     onMarqueePointerDown, onMarqueePointerMove, onMarqueePointerUp,
+    didMarqueeSelect,
   } = useMarqueeSelection(canvasRef, activeTool);
 
   useEffect(() => { setActiveBreakpoint("mobile"); }, [setActiveBreakpoint]);
@@ -299,9 +303,12 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug, 
   const handleCanvasPointerUp = useCallback((e: React.PointerEvent) => { onPanPointerUp(e); onMarqueePointerUp(e); }, [onPanPointerUp, onMarqueePointerUp]);
   const handleCanvasClick = useCallback((e: React.MouseEvent) => {
     if (isPanning) return;
+    // A marquee drag fires a trailing click on the background — don't let it
+    // clear the selection the marquee just made.
+    if (didMarqueeSelect.current) { didMarqueeSelect.current = false; return; }
     const target = e.target as HTMLElement;
     if (target === canvasRef.current || target.dataset.canvasBg === "true") deselectAll();
-  }, [isPanning, deselectAll]);
+  }, [isPanning, deselectAll, didMarqueeSelect]);
 
   const documentJSON = JSON.stringify(document);
   const isDirty = documentJSON !== lastSavedJSON;
@@ -404,7 +411,7 @@ export function EditRenderer({ initialDocument, onSave, onPublish, previewSlug, 
   const showRightPanel = selectedIds.length > 0;
 
   return (
-    <MediaProvider>
+    <MediaProvider profileId={profileId}>
     <div style={{ display:"flex", flexDirection:"column", height:"100vh", background:"linear-gradient(180deg,#f8fafc 0%,#eef3f9 100%)", overflow:"hidden", userSelect:"none", fontFamily:"var(--font-sans)" }}>
 
       {/* ── Top Bar ── */}

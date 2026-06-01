@@ -155,6 +155,7 @@ export function MediaUploadField({
         <div style={{ position: "relative" }}>
           <div
             style={{
+              position: "relative",
               borderRadius: 8,
               overflow: "hidden",
               border: "1px solid #e5e7eb",
@@ -172,6 +173,36 @@ export function MediaUploadField({
                 display: "block",
               }}
             />
+            {/* Uploading overlay (e.g. while replacing) */}
+            {isUploading && (
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  backgroundColor: "rgba(255,255,255,0.7)",
+                  backdropFilter: "blur(2px)",
+                }}
+              >
+                <div
+                  style={{
+                    width: 24,
+                    height: 24,
+                    border: "2px solid #e5e7eb",
+                    borderTopColor: "#3b82f6",
+                    borderRadius: "50%",
+                    animation: "spin 0.8s linear infinite",
+                  }}
+                />
+                <span style={{ fontSize: 12, fontWeight: 600, color: "#3b82f6" }}>
+                  Uploading…
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Actions */}

@@ -76,6 +76,7 @@ function ImageElementComponent({ props, isEditing, width, height, onPropsChange 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const blockRef = useRef<HTMLDivElement>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [isPanning, setIsPanning] = useState(false);
   const [nat, setNat] = useState<{ w: number; h: number } | null>(null);
   const [measured, setMeasured] = useState<{ w: number; h: number } | null>(null);
@@ -136,6 +137,7 @@ function ImageElementComponent({ props, isEditing, width, height, onPropsChange 
   const handleFile = useCallback(
     async (file: File) => {
       if (!file.type.startsWith("image/")) return;
+      setIsUploading(true);
       try {
         const { addMedia } = await import("../media/media-store");
         const item = await addMedia(file);
@@ -146,16 +148,22 @@ function ImageElementComponent({ props, isEditing, width, height, onPropsChange 
           zoom: DEFAULT_ZOOM,
         });
       } catch {
-        const reader = new FileReader();
-        reader.onload = () => {
-          onPropsChange({
-            src: reader.result as string,
-            cropOffsetX: DEFAULT_OFFSET,
-            cropOffsetY: DEFAULT_OFFSET,
-            zoom: DEFAULT_ZOOM,
-          });
-        };
-        reader.readAsDataURL(file);
+        await new Promise<void>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            onPropsChange({
+              src: reader.result as string,
+              cropOffsetX: DEFAULT_OFFSET,
+              cropOffsetY: DEFAULT_OFFSET,
+              zoom: DEFAULT_ZOOM,
+            });
+            resolve();
+          };
+          reader.onerror = () => resolve();
+          reader.readAsDataURL(file);
+        });
+      } finally {
+        setIsUploading(false);
       }
     },
     [onPropsChange]
@@ -227,6 +235,39 @@ function ImageElementComponent({ props, isEditing, width, height, onPropsChange 
     [isEditing, zoom, onPropsChange]
   );
 
+  /* Loading overlay shown while a new file uploads to R2. Reused across the
+     image render branches (cover / free-crop / non-cover). */
+  const uploadingOverlay = isUploading ? (
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        zIndex: 5,
+        background: "rgba(255,255,255,0.7)",
+        backdropFilter: "blur(2px)",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 8,
+        pointerEvents: "none",
+      }}
+    >
+      <div
+        style={{
+          width: 24,
+          height: 24,
+          border: "2px solid #dbeafe",
+          borderTopColor: "#3b82f6",
+          borderRadius: "50%",
+          animation: "productix-img-spin 0.8s linear infinite",
+        }}
+      />
+      <span style={{ fontSize: 12, fontWeight: 600, color: "#3b82f6" }}>Uploading…</span>
+      <style>{`@keyframes productix-img-spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  ) : null;
+
   /* ── Empty state ── */
   if (!src) {
     return (
@@ -250,10 +291,31 @@ function ImageElementComponent({ props, isEditing, width, height, onPropsChange 
           gap: 8,
         }}
       >
-        <ImageIcon size={28} style={{ opacity: 0.5, color: "#9ca3af" }} />
-        <span style={{ fontSize: 12, color: "#9ca3af", fontWeight: 500 }}>
-          {isEditing ? "Click or drag to upload" : "No image"}
-        </span>
+        {isUploading ? (
+          <>
+            <div
+              style={{
+                width: 24,
+                height: 24,
+                border: "2px solid #dbeafe",
+                borderTopColor: "#3b82f6",
+                borderRadius: "50%",
+                animation: "productix-img-spin 0.8s linear infinite",
+              }}
+            />
+            <span style={{ fontSize: 12, color: "#3b82f6", fontWeight: 600 }}>
+              Uploading…
+            </span>
+            <style>{`@keyframes productix-img-spin { to { transform: rotate(360deg); } }`}</style>
+          </>
+        ) : (
+          <>
+            <ImageIcon size={28} style={{ opacity: 0.5, color: "#9ca3af" }} />
+            <span style={{ fontSize: 12, color: "#9ca3af", fontWeight: 500 }}>
+              {isEditing ? "Click or drag to upload" : "No image"}
+            </span>
+          </>
+        )}
         <input
           ref={fileInputRef}
           type="file"
@@ -365,6 +427,7 @@ function ImageElementComponent({ props, isEditing, width, height, onPropsChange 
             maxWidth: "none",
           }}
         />
+        {uploadingOverlay}
         {dragOver && !isEditing && (
           <div
             style={{
@@ -415,6 +478,7 @@ function ImageElementComponent({ props, isEditing, width, height, onPropsChange 
             userSelect: "none",
           }}
         />
+        {uploadingOverlay}
         {dragOver && !isEditing && (
           <div
             style={{
@@ -518,6 +582,7 @@ function ImageElementComponent({ props, isEditing, width, height, onPropsChange 
         </>
       )}
 
+      {uploadingOverlay}
       {dragOver && !isEditing && (
         <div
           style={{

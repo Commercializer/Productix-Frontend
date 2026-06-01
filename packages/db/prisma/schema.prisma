@@ -105,6 +105,12 @@ enum FeedbackStatus {
   CLOSED
 }
 
+enum MediaAssetType {
+  IMAGE
+  AUDIO
+  DOCUMENT
+}
+
 // ═══════════════════════════════════════════════════════════════
 // AUTHENTICATION & AUTHORIZATION
 // ═══════════════════════════════════════════════════════════════
@@ -128,6 +134,7 @@ model User {
   // Activity
   feedbackResponses FeedbackResponse[]
   profileVersions   ProductProfileVersion[]
+  mediaAssets       MediaAsset[]
 
   @@map("users")
 }
@@ -209,6 +216,7 @@ model Company {
   subCategories     SubCategory[]
   products          Product[]
   feedbackInquiries FeedbackInquiry[]
+  mediaAssets       MediaAsset[]
 
   @@index([tenantId])
   @@map("companies")
@@ -386,9 +394,10 @@ model ProductProfile {
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
-  product   Product                 @relation(fields: [productId], references: [id], onDelete: Cascade)
-  pageViews PageView[]
-  versions  ProductProfileVersion[]
+  product     Product                 @relation(fields: [productId], references: [id], onDelete: Cascade)
+  pageViews   PageView[]
+  versions    ProductProfileVersion[]
+  mediaAssets MediaAsset[]
 
   @@unique([productId, languageCode])
   @@index([productId])
@@ -414,6 +423,41 @@ model ProductProfileVersion {
 
   @@index([profileId, createdAt])
   @@map("product_profile_versions")
+}
+
+/// An uploaded media file (image / audio / document) stored in Cloudflare R2.
+/// Scoped to the uploading user so the editor's media library only shows a
+/// user's own uploads, optionally narrowed to the product they were uploaded
+/// for. companyId is denormalized from the product for account-level queries.
+model MediaAsset {
+  id               String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId           String         @map("user_id") @db.Uuid
+  /// Company that owns the product the asset was uploaded for (denormalized).
+  companyId        String?        @map("company_id") @db.Uuid
+  /// Product page the asset was uploaded for. Null = uploaded outside a product.
+  productProfileId String?        @map("product_profile_id") @db.Uuid
+  /// R2 object key - used for deletion. Unique per object.
+  r2Key            String         @unique @map("r2_key") @db.VarChar(500)
+  /// Public R2 URL - the canonical reference stored in page content.
+  url              String         @db.VarChar(1000)
+  name             String         @db.VarChar(255)
+  size             Int
+  mimeType         String         @map("mime_type") @db.VarChar(100)
+  mediaType        MediaAssetType @map("media_type")
+  width            Int            @default(0)
+  height           Int            @default(0)
+  /// Duration in seconds (audio only).
+  duration         Int            @default(0)
+  createdAt        DateTime       @default(now()) @map("created_at") @db.Timestamptz
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company        Company?        @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  productProfile ProductProfile? @relation(fields: [productProfileId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([userId, productProfileId, createdAt])
+  @@index([companyId])
+  @@map("media_assets")
 }
 
 /// Cross-sell / related product links

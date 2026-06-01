@@ -1,21 +1,21 @@
 /* ─────────────────────────────────────────────
- * Media Store - Cloud R2 + IndexedDB cache
+ * Media Store - Cloud R2 + server-side registry
  *
  * Primary storage: Cloudflare R2 (via API routes)
- * Local cache: IndexedDB for thumbnails + metadata
+ * Source of truth for the library: the server media
+ * registry (/api/media/list), scoped per-user and
+ * optionally per-product.
  *
- * Upload flow:
- *   1. Upload file to /api/media/upload → R2
- *   2. Get back a permanent public URL
- *   3. Cache metadata + thumbnail locally in IndexedDB
+ * Uploads are recorded against the uploading user (and
+ * the active product), so the editor's media library
+ * only ever shows a user's own files - never another
+ * account's. This replaces the previous per-browser
+ * IndexedDB cache, which leaked uploads between users
+ * sharing a browser and mixed every product together.
  *
  * On publish/save, element props store the R2 URL
  * directly - no blob: or data: URLs in persisted data.
  * ──────────────────────────────────────────── */
-
-const DB_NAME = "productix-media";
-const DB_VERSION = 2; // Bumped for schema changes
-const STORE_NAME = "media";
 
 /* ─── Allowed Types ─────────────────────────── */
 
@@ -45,7 +45,10 @@ const THUMBNAIL_SIZE = 200; // px
 
 /* ─── Types ─────────────────────────────────── */
 
-export type MediaType = "image" | "audio";
+export type MediaType = "image" | "audio" | "document";
+
+/** Which set of media to list. "product" = only the active product's uploads. */
+export type MediaScope = "product" | "user";
 
 export interface MediaItem {
   id: string;
@@ -53,7 +56,7 @@ export interface MediaItem {
   name: string;
   size: number;
   type: string;
-  /** "image" or "audio" */
+  /** "image", "audio" or "document" */
   mediaType: MediaType;
   width: number;
   height: number;
@@ -64,13 +67,8 @@ export interface MediaItem {
   url: string;
   /** R2 object key - for deletion */
   r2Key: string;
-  /** Local thumbnail blob (images only, for library UI) */
+  /** Local thumbnail blob (images only, generated on upload for instant preview) */
   thumbnailBlob: Blob | null;
-  /**
-   * @deprecated Legacy field - kept for backward compat with old items.
-   * New items store the R2 url instead of a blob.
-   */
-  blob?: Blob;
 }
 
 /** Lightweight reference (without blobs) for listings */
@@ -95,34 +93,22 @@ export interface MediaValidationError {
   message: string;
 }
 
-/* ─── DB Helpers ────────────────────────────── */
+/* ─── Active product context ────────────────── */
 
-function openDB(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-    request.onupgradeneeded = () => {
-      const db = request.result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME, { keyPath: "id" });
-      }
-    };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
+/**
+ * The product (ProductProfile id) currently being edited. Uploads are tagged
+ * with this so the library can be scoped per-product. Set by <MediaProvider>.
+ * Module-level because some element components upload via a direct import of
+ * addMedia() rather than through React context.
+ */
+let activeProfileId: string | null = null;
+
+export function setActiveMediaProfile(profileId: string | null): void {
+  activeProfileId = profileId ?? null;
 }
 
-function txStore(
-  db: IDBDatabase,
-  mode: IDBTransactionMode
-): IDBObjectStore {
-  return db.transaction(STORE_NAME, mode).objectStore(STORE_NAME);
-}
-
-function req<T>(request: IDBRequest<T>): Promise<T> {
-  return new Promise((resolve, reject) => {
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
+export function getActiveMediaProfile(): string | null {
+  return activeProfileId;
 }
 
 /* ─── Image Utilities ───────────────────────── */
@@ -182,10 +168,6 @@ function generateThumbnail(blob: Blob): Promise<Blob> {
   });
 }
 
-function generateId(): string {
-  return `media_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-}
-
 function isImageType(type: string): boolean {
   return ALLOWED_IMAGE_TYPES.includes(type);
 }
@@ -226,21 +208,24 @@ export function validateFile(
 /* ─── R2 Upload (via API route) ─────────────── */
 
 export interface R2UploadResponse {
+  id: string | null;
   url: string;
   key: string;
   name: string;
   size: number;
   type: string;
-  mediaType: "image" | "audio";
+  mediaType: MediaType;
+  createdAt: string;
 }
 
 /**
  * Upload a file to Cloudflare R2 via the /api/media/upload endpoint.
- * Returns the public URL, R2 key, and metadata.
+ * Records the asset against the current user + active product.
  */
 async function uploadToR2(file: File): Promise<R2UploadResponse> {
   const formData = new FormData();
   formData.append("file", file);
+  if (activeProfileId) formData.append("profileId", activeProfileId);
 
   const response = await fetch("/api/media/upload", {
     method: "POST",
@@ -256,7 +241,7 @@ async function uploadToR2(file: File): Promise<R2UploadResponse> {
 }
 
 /**
- * Delete a file from R2 via the /api/media/delete endpoint.
+ * Delete a file from R2 (and the server registry) via /api/media/delete.
  */
 async function deleteFromR2(key: string): Promise<void> {
   const response = await fetch("/api/media/delete", {
@@ -274,8 +259,9 @@ async function deleteFromR2(key: string): Promise<void> {
 /* ─── Public API ────────────────────────────── */
 
 /**
- * Upload a file to R2 and cache metadata in IndexedDB.
- * Returns the full MediaItem with the public R2 URL.
+ * Upload a file to R2 and record it in the server registry (scoped to the
+ * current user + active product). Returns the full MediaItem with the public
+ * R2 URL and a locally-generated thumbnail for instant preview.
  */
 export async function addMedia(file: File): Promise<MediaItem> {
   const validationError = validateFile(file);
@@ -283,17 +269,15 @@ export async function addMedia(file: File): Promise<MediaItem> {
     throw new Error(validationError.message);
   }
 
-  const id = generateId();
   const isImage = isImageType(file.type);
   const blob = new Blob([await file.arrayBuffer()], { type: file.type });
 
-  // ── Upload to R2 ──
+  // ── Upload to R2 + record on the server ──
   const r2Result = await uploadToR2(file);
 
-  // ── Get image dimensions + thumbnail (images only) ──
+  // ── Get image dimensions + thumbnail (images only) for instant preview ──
   let width = 0;
   let height = 0;
-  let duration = 0;
   let thumbnailBlob: Blob | null = null;
 
   if (isImage) {
@@ -310,84 +294,68 @@ export async function addMedia(file: File): Promise<MediaItem> {
     }
   }
 
-  const item: MediaItem = {
-    id,
+  return {
+    id: r2Result.id || r2Result.key,
     name: file.name,
     size: file.size,
     type: file.type,
     mediaType: isImage ? "image" : "audio",
     width,
     height,
-    duration,
-    createdAt: new Date().toISOString(),
+    duration: 0,
+    createdAt: r2Result.createdAt,
     url: r2Result.url,
     r2Key: r2Result.key,
     thumbnailBlob,
   };
-
-  // ── Cache in IndexedDB (metadata + thumbnail only, no full blob) ──
-  try {
-    const db = await openDB();
-    await req(txStore(db, "readwrite").put(item));
-    db.close();
-  } catch {
-    // IndexedDB may not be available - R2 upload already succeeded
-  }
-
-  return item;
 }
 
-/** Get a single media item by ID (from IndexedDB cache) */
-export async function getMedia(
-  id: string
-): Promise<MediaItem | null> {
-  const db = await openDB();
-  const result = await req(txStore(db, "readonly").get(id));
-  db.close();
-  return result || null;
-}
-
-/** Get all media items (sorted newest first, from IndexedDB cache) */
-export async function getAllMedia(): Promise<MediaItem[]> {
-  const db = await openDB();
-  const items: MediaItem[] = await req(txStore(db, "readonly").getAll());
-  db.close();
-  return items.sort(
-    (a, b) =>
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
-}
-
-/** Delete a media item from both R2 and IndexedDB */
-export async function deleteMedia(id: string): Promise<void> {
-  // Load the item to get the R2 key
-  try {
-    const item = await getMedia(id);
-    if (item?.r2Key) {
-      await deleteFromR2(item.r2Key);
-    }
-  } catch {
-    // Continue with local deletion even if R2 delete fails
-  }
-
-  // Remove from IndexedDB
-  const db = await openDB();
-  await req(txStore(db, "readwrite").delete(id));
-  db.close();
+export interface ListMediaOptions {
+  scope?: MediaScope;
+  type?: MediaType;
 }
 
 /**
- * Get a renderable URL for a media item.
- *
- * For R2-backed items, this returns the public R2 URL directly.
- * For legacy blob-backed items, creates an object URL.
- * Caller is responsible for revoking blob URLs.
+ * List the current user's media from the server registry. When a product is
+ * active and scope is "product" (the default in that case), only that product's
+ * uploads are returned. Never returns other users' files.
+ */
+export async function listMedia(
+  opts: ListMediaOptions = {}
+): Promise<MediaItem[]> {
+  const params = new URLSearchParams();
+  if (activeProfileId) params.set("profileId", activeProfileId);
+  if (opts.scope) params.set("scope", opts.scope);
+  if (opts.type) params.set("type", opts.type);
+
+  const response = await fetch(`/api/media/list?${params.toString()}`, {
+    method: "GET",
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to load media (${response.status})`);
+  }
+
+  const data = (await response.json()) as { items: Array<Omit<MediaItem, "thumbnailBlob">> };
+  return (data.items || []).map((item) => ({
+    ...item,
+    thumbnailBlob: null,
+  }));
+}
+
+/**
+ * Delete a media item from both R2 and the server registry. The server verifies
+ * the asset belongs to the current user before removing it.
+ */
+export async function deleteMedia(r2Key: string): Promise<void> {
+  if (!r2Key) return;
+  await deleteFromR2(r2Key);
+}
+
+/**
+ * Get a renderable URL for a media item (the public R2 URL).
  */
 export function createMediaUrl(item: MediaItem): string {
-  if (item.url) return item.url;
-  // Legacy fallback for old IndexedDB-only items
-  if (item.blob) return URL.createObjectURL(item.blob);
-  return "";
+  return item.url || "";
 }
 
 /**
@@ -398,7 +366,7 @@ export function createMediaObjectUrl(blob: Blob): string {
   return URL.createObjectURL(blob);
 }
 
-/** Check if a URL is a media store reference (legacy ID check) */
+/** Check if a URL is a legacy media store reference (old IndexedDB ID). */
 export function isMediaId(value: string): boolean {
   return value.startsWith("media_");
 }
