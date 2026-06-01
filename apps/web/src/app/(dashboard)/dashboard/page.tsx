@@ -34,7 +34,19 @@ export default function DashboardPage() {
     const seconds = ms / 1000;
     return seconds < 60 ? `${Math.round(seconds)}s` : `${(seconds / 60).toFixed(2)}min`;
   };
+  // Total active time-on-page summed across all visits. Scales up to hours/days.
+  const formatTotalDuration = (ms: number | null | undefined) => {
+    if (!ms || ms < 1000) return "—";
+    const seconds = ms / 1000;
+    if (seconds < 60) return `${Math.round(seconds)}s`;
+    const minutes = seconds / 60;
+    if (minutes < 60) return `${minutes.toFixed(1)}min`;
+    const hours = minutes / 60;
+    if (hours < 24) return `${hours.toFixed(1)}h`;
+    return `${(hours / 24).toFixed(1)}d`;
+  };
   const avgDurationMs = stats?.averageVisitorDurationMs ?? null;
+  const totalDurationMs = stats?.totalVisitorDurationMs ?? null;
 
   const totalProducts = stats?.totalProducts ?? 0;
   const publishedProducts = stats?.publishedProducts ?? 0;
@@ -70,6 +82,13 @@ export default function DashboardPage() {
           <p className="text-[13px] md:text-[14px] text-[#64748B] mb-2 md:mb-3">Total QR Leads</p>
           <h2 className="text-[32px] md:text-[40px] font-medium text-(--ds-text-primary) leading-none tracking-tight">
             {placeholder ?? fmt(totalScans)}
+          </h2>
+        </div>
+
+        <div className="flex flex-col">
+          <p className="text-[13px] md:text-[14px] text-[#64748B] mb-2 md:mb-3">Total Duration</p>
+          <h2 className="text-[32px] md:text-[40px] font-medium text-(--ds-text-primary) leading-none tracking-tight">
+            {placeholder ?? formatTotalDuration(totalDurationMs)}
           </h2>
         </div>
 
@@ -157,14 +176,16 @@ export default function DashboardPage() {
                 <th className="py-3 px-4 text-left">Status</th>
                 <th className="py-3 px-4 text-right">Scans</th>
                 <th className="py-3 px-4 text-right">Feedback</th>
+                <th className="py-3 px-4 text-right">Total Duration</th>
+                <th className="py-3 px-4 text-right">Avg Duration</th>
                 <th className="py-3 px-4 text-right">Conversion</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={5} className="py-8 text-center text-[#64748B]">Loading…</td></tr>
+                <tr><td colSpan={7} className="py-8 text-center text-[#64748B]">Loading…</td></tr>
               ) : topProducts.length === 0 ? (
-                <tr><td colSpan={5} className="py-8 text-center text-[#64748B]">No scans recorded yet.</td></tr>
+                <tr><td colSpan={7} className="py-8 text-center text-[#64748B]">No scans recorded yet.</td></tr>
               ) : (
                 topProducts.map((p) => (
                   <tr key={p.productId} className="border-b border-(--ds-border) last:border-b-0 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
@@ -180,6 +201,8 @@ export default function DashboardPage() {
                     </td>
                     <td className="py-3 px-4 text-right tabular-nums text-(--ds-text-primary)">{fmt(p.scans)}</td>
                     <td className="py-3 px-4 text-right tabular-nums text-(--ds-text-primary)">{fmt(p.feedback)}</td>
+                    <td className="py-3 px-4 text-right tabular-nums text-(--ds-text-primary)">{formatTotalDuration(p.totalDurationMs)}</td>
+                    <td className="py-3 px-4 text-right tabular-nums text-(--ds-text-primary)">{formatDuration(p.avgDurationMs)}</td>
                     <td className="py-3 px-4 text-right tabular-nums text-(--ds-text-primary)">{pct(p.conversionRate)}</td>
                   </tr>
                 ))

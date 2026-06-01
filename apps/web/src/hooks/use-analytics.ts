@@ -22,6 +22,8 @@ export interface TopProduct {
   scans: number;
   feedback: number;
   conversionRate: number;
+  totalDurationMs: number | null;
+  avgDurationMs: number | null;
 }
 
 export interface ProductBreakdown {
@@ -47,6 +49,7 @@ export interface AnalyticsStats {
   feedbackLast30Days: number;
   scanToFeedbackRatio: number;
   averageVisitorDurationMs: number | null;
+  totalVisitorDurationMs: number | null;
   timeSeries: TimeSeriesPoint[];
   deviceBreakdown: { device: string; count: number }[];
   sourceBreakdown: { source: string; count: number }[];

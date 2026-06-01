@@ -1585,6 +1585,29 @@ export async function getCompanyAnalyticsAction() {
     for (const row of topProductFeedback) {
       if (row.productId) feedbackByProduct.set(row.productId, row._count._all);
     }
+
+    // Per-product active time-on-page (total + average). Isolated try/catch
+    // because durationMs is a newer column than the rest of page_views - a
+    // not-yet-migrated DB degrades to null per product instead of throwing.
+    const totalDurationByProduct = new Map<string, number>();
+    const avgDurationByProduct = new Map<string, number>();
+    if (topProductIds.length) {
+      try {
+        const durationRows = await prisma.pageView.groupBy({
+          by: ["productId"],
+          where: { companyId, productId: { in: topProductIds }, durationMs: { not: null } },
+          _sum: { durationMs: true },
+          _avg: { durationMs: true },
+        });
+        for (const row of durationRows) {
+          if (row._sum.durationMs != null) totalDurationByProduct.set(row.productId, row._sum.durationMs);
+          if (row._avg.durationMs != null) avgDurationByProduct.set(row.productId, row._avg.durationMs);
+        }
+      } catch (durErr) {
+        console.error("[getCompanyAnalyticsAction] per-product duration metric failed", durErr);
+      }
+    }
+
     const topProducts = topProductsRaw.slice(0, 5).map((r) => {
       const profile = profileByProduct.get(r.productId);
       const scans = r._count._all;
@@ -1597,6 +1620,8 @@ export async function getCompanyAnalyticsAction() {
         scans,
         feedback: fb,
         conversionRate: scans > 0 ? (fb / scans) * 100 : 0,
+        totalDurationMs: totalDurationByProduct.get(r.productId) ?? null,
+        avgDurationMs: avgDurationByProduct.get(r.productId) ?? null,
       };
     });
 
@@ -1674,12 +1699,15 @@ export async function getCompanyAnalyticsAction() {
     // a not-yet-migrated DB degrades to null here instead of zeroing all the
     // metrics above.
     let averageVisitorDurationMs: number | null = null;
+    let totalVisitorDurationMs: number | null = null;
     try {
       const durationAgg = await prisma.pageView.aggregate({
         where: { companyId, durationMs: { not: null } },
         _avg: { durationMs: true },
+        _sum: { durationMs: true },
       });
       averageVisitorDurationMs = durationAgg._avg.durationMs ?? null;
+      totalVisitorDurationMs = durationAgg._sum.durationMs ?? null;
     } catch (durErr) {
       console.error("[getCompanyAnalyticsAction] duration metric failed", durErr);
     }
@@ -1697,6 +1725,7 @@ export async function getCompanyAnalyticsAction() {
         feedbackLast30Days,
         scanToFeedbackRatio,
         averageVisitorDurationMs,
+        totalVisitorDurationMs,
         timeSeries,
         deviceBreakdown,
         sourceBreakdown,
@@ -1817,6 +1846,23 @@ export async function getProductAnalyticsAction(
       where: { companyId, productId },
     });
 
+    // Lifetime active time-on-page for this product (total + average across
+    // visits that reported a duration). Isolated try/catch because durationMs
+    // is a newer column - degrade to null instead of failing the whole panel.
+    let totalDurationMs: number | null = null;
+    let avgDurationMs: number | null = null;
+    try {
+      const durationAgg = await prisma.pageView.aggregate({
+        where: { companyId, productId, durationMs: { not: null } },
+        _sum: { durationMs: true },
+        _avg: { durationMs: true },
+      });
+      totalDurationMs = durationAgg._sum.durationMs ?? null;
+      avgDurationMs = durationAgg._avg.durationMs ?? null;
+    } catch (durErr) {
+      console.error("[getProductAnalyticsAction] duration metric failed", durErr);
+    }
+
     const buckets = new Map<string, { date: string; scans: number; feedback: number }>();
     if (bucket === "day") {
       const dayMs = 24 * 60 * 60 * 1000;
@@ -1923,6 +1969,8 @@ export async function getProductAnalyticsAction(
         rangeConversion: rangeScans > 0 ? (rangeFeedback / rangeScans) * 100 : 0,
         totalScans,
         totalFeedback,
+        totalDurationMs,
+        avgDurationMs,
         devices,
         countries,
         browsers,

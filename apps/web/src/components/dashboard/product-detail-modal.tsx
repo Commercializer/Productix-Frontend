@@ -46,6 +46,8 @@ interface ProductAnalyticsData {
   rangeConversion: number;
   totalScans: number;
   totalFeedback: number;
+  totalDurationMs: number | null;
+  avgDurationMs: number | null;
   devices: { device: string; count: number }[];
   countries: { country: string; count: number }[];
   browsers: { browser: string; count: number }[];
@@ -87,6 +89,26 @@ const RANGES: ReadonlyArray<{ id: ProductAnalyticsRange; label: string }> = [
   { id: "yearly", label: "Yearly" },
   { id: "lifetime", label: "Lifetime" },
 ];
+
+// Average active time-on-page. Sub-minute shows as seconds; otherwise minutes
+// with 2 decimals (e.g. "1.25min"). Mirrors the dashboard overview formatting.
+function formatAvgDuration(ms: number | null | undefined) {
+  if (!ms || ms < 1000) return "—";
+  const seconds = ms / 1000;
+  return seconds < 60 ? `${Math.round(seconds)}s` : `${(seconds / 60).toFixed(2)}min`;
+}
+
+// Total active time-on-page summed across visits. Scales up to hours/days.
+function formatTotalDuration(ms: number | null | undefined) {
+  if (!ms || ms < 1000) return "—";
+  const seconds = ms / 1000;
+  if (seconds < 60) return `${Math.round(seconds)}s`;
+  const minutes = seconds / 60;
+  if (minutes < 60) return `${minutes.toFixed(1)}min`;
+  const hours = minutes / 60;
+  if (hours < 24) return `${hours.toFixed(1)}h`;
+  return `${(hours / 24).toFixed(1)}d`;
+}
 
 function formatLabel(value: string, bucket: Bucket) {
   if (bucket === "day") {
@@ -234,7 +256,7 @@ export function ProductDetailModal({
             </div>
           </div>
 
-          <div className="px-6 pt-5 grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="px-6 pt-5 grid grid-cols-2 md:grid-cols-3 gap-3">
             <Stat label={`${rangeLabel(range)} scans`} value={data?.rangeScans} loading={loading} />
             <Stat label={`${rangeLabel(range)} feedback`} value={data?.rangeFeedback} loading={loading} />
             <Stat
@@ -243,6 +265,16 @@ export function ProductDetailModal({
               loading={loading}
             />
             <Stat label="Lifetime scans" value={data?.totalScans} loading={loading} />
+            <Stat
+              label="Total duration"
+              value={data ? formatTotalDuration(data.totalDurationMs) : undefined}
+              loading={loading}
+            />
+            <Stat
+              label="Avg duration"
+              value={data ? formatAvgDuration(data.avgDurationMs) : undefined}
+              loading={loading}
+            />
           </div>
 
           <div className="px-6 py-6">
