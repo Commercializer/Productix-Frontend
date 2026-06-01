@@ -32,6 +32,7 @@ export default function EditorPage() {
     }
 
     async function loadDocument() {
+      let productName: string | undefined;
       try {
         const result = await getPageContentAction(profileId!);
         if (result && "content" in result && result.content) {
@@ -45,6 +46,7 @@ export default function EditorPage() {
         }
         // Profile exists but no saved content yet - start with empty or template
         if (result && "productName" in result) {
+          productName = result.productName!;
           setPageInfo({ slug: result.slug!, productName: result.productName! });
         }
       } catch {
@@ -61,8 +63,8 @@ export default function EditorPage() {
         }
       }
 
-      // Start with empty document
-      setInitialDoc(createEmptyDocument());
+      // Start with empty document, using the product name as the page title when available
+      setInitialDoc(createEmptyDocument(productName));
     }
 
     loadDocument();
