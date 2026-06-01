@@ -1420,6 +1420,7 @@ export async function getCompanyAnalyticsAction() {
       scansLast30Days: number;
       deviceRows: Array<{ deviceType: string | null; _count: { _all: number } }>;
       countryRows: Array<{ country: string | null; _count: { _all: number } }>;
+      qrScanRows: Array<{ qrScanType: QrScanType | null; _count: { _all: number } }>;
       recentViewRows: Array<{ viewedAt: Date; referrer: string | null }>;
       topProductsRaw: Array<{ productId: string; _count: { _all: number } }>;
     };
@@ -1430,13 +1431,14 @@ export async function getCompanyAnalyticsAction() {
       scansLast30Days: 0,
       deviceRows: [],
       countryRows: [],
+      qrScanRows: [],
       recentViewRows: [],
       topProductsRaw: [],
     };
 
     let viewMetrics: ViewMetrics = emptyViewMetrics;
     try {
-      const [scanCount, scansLast7Days, scansLast30Days, deviceRows, countryRows, recentViewRows, topProductsRaw] =
+      const [scanCount, scansLast7Days, scansLast30Days, deviceRows, countryRows, qrScanRows, recentViewRows, topProductsRaw] =
         await Promise.all([
           prisma.pageView.count({ where: { companyId } }),
           prisma.pageView.count({ where: { companyId, viewedAt: { gte: sevenDaysAgo } } }),
@@ -1452,6 +1454,11 @@ export async function getCompanyAnalyticsAction() {
             _count: { _all: true },
             orderBy: { _count: { country: "desc" } },
             take: 5,
+          }),
+          prisma.pageView.groupBy({
+            by: ["qrScanType"],
+            where: { companyId },
+            _count: { _all: true },
           }),
           prisma.pageView.findMany({
             where: { companyId, viewedAt: { gte: thirtyDaysAgo } },
@@ -1470,6 +1477,7 @@ export async function getCompanyAnalyticsAction() {
         scansLast30Days,
         deviceRows,
         countryRows,
+        qrScanRows,
         recentViewRows,
         topProductsRaw,
       };
@@ -1480,7 +1488,7 @@ export async function getCompanyAnalyticsAction() {
       console.error("[getCompanyAnalyticsAction] page-view metrics failed", viewErr);
     }
 
-    const { scanCount, scansLast7Days, scansLast30Days, deviceRows, countryRows, recentViewRows, topProductsRaw } =
+    const { scanCount, scansLast7Days, scansLast30Days, deviceRows, countryRows, qrScanRows, recentViewRows, topProductsRaw } =
       viewMetrics;
 
     // Time-series: bucket scans + feedback by day for the last 30 days.
@@ -1639,6 +1647,16 @@ export async function getCompanyAnalyticsAction() {
       count: r._count._all,
     }));
 
+    // QR surface breakdown (On Pack / Link / Social). Pre-migration rows with a
+    // null qrScanType land in UNTAGGED. Sorted desc so the dominant surface
+    // leads the list in the dashboard.
+    const qrScanBreakdown = qrScanRows
+      .map((r) => ({
+        qrScanType: r.qrScanType ?? "UNTAGGED",
+        count: r._count._all,
+      }))
+      .sort((a, b) => b.count - a.count);
+
     const topCountries = countryRows.map((r) => ({
       country: r.country ?? "Unknown",
       count: r._count._all,
@@ -1682,6 +1700,7 @@ export async function getCompanyAnalyticsAction() {
         timeSeries,
         deviceBreakdown,
         sourceBreakdown,
+        qrScanBreakdown,
         topCountries,
         feedbackByStatus,
         topProducts,
