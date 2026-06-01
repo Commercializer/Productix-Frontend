@@ -74,6 +74,7 @@ export function useRotate() {
 
       pointerRef.current = { x: e.clientX, y: e.clientY, shiftKey: e.shiftKey };
       (e.target as HTMLElement).setPointerCapture(e.pointerId);
+      state.setRotating(elementId);
     },
     []
   );
@@ -105,6 +106,7 @@ export function useRotate() {
   const onRotateEnd = useCallback(() => {
     rotateRef.current = null;
     cancelAnimationFrame(rafRef.current);
+    useCanvasStore.getState().setRotating(null);
   }, []);
 
   return { onRotateStart, onRotateMove, onRotateEnd };

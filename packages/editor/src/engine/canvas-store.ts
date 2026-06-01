@@ -33,6 +33,8 @@ export interface CanvasState {
   // ── Selection ──
   selectedIds: string[];
   hoveredId: string | null;
+  /** Element currently being rotated via the canvas handles (drives the live angle badge). */
+  rotatingElementId: string | null;
 
   // ── Editor UI ──
   zoom: number;
@@ -78,6 +80,7 @@ export interface CanvasState {
   selectAll: () => void;
   deselectAll: () => void;
   setHovered: (id: string | null) => void;
+  setRotating: (id: string | null) => void;
   setEditingElement: (id: string | null) => void;
 
   // ── Layer ordering ──
@@ -172,6 +175,7 @@ export const useCanvasStore = create<CanvasState>()(
     document: createEmptyDocument(),
     selectedIds: [],
     hoveredId: null,
+    rotatingElementId: null,
     zoom: 0.75,
     panX: 0,
     panY: 0,
@@ -386,6 +390,11 @@ export const useCanvasStore = create<CanvasState>()(
     setHovered: (id) =>
       set((s) => {
         s.hoveredId = id;
+      }),
+
+    setRotating: (id) =>
+      set((s) => {
+        s.rotatingElementId = id;
       }),
 
     setEditingElement: (id) =>

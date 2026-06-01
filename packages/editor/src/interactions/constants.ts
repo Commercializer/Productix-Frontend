@@ -17,11 +17,8 @@ export const HANDLE_SIZE = 8;
 /** Selection border width */
 export const SELECTION_BORDER = 2;
 
-/** Rotation handle offset from element top */
+/** Distance (px) the rotation handle sits below the element's bottom edge */
 export const ROTATION_HANDLE_OFFSET = 24;
-
-/** Size of the invisible rotation hit-zone placed at each corner */
-export const ROTATION_ZONE_SIZE = 26;
 
 /**
  * Custom "rotate" cursor (a curved arrow) as an inline SVG data-URI.

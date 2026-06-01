@@ -21,7 +21,7 @@ import { getElementDefinition } from "../elements/registry";
 import { useDrag } from "../interactions/use-drag";
 import { useResize, type ResizeHandle } from "../interactions/use-resize";
 import { useRotate } from "../interactions/use-rotate";
-import { HANDLE_SIZE, ROTATION_ZONE_SIZE, ROTATE_CURSOR } from "../interactions/constants";
+import { HANDLE_SIZE, ROTATION_HANDLE_OFFSET, ROTATE_CURSOR } from "../interactions/constants";
 import { computeElementLayoutCSS } from "./layout-engine";
 import { getLocalizedProps } from "../utils/localize-props";
 import type { ElementNode, Transform, LayoutProps } from "@productix/types";
@@ -45,15 +45,6 @@ const HANDLE_POSITIONS: { key: ResizeHandle; style: React.CSSProperties }[] = [
   { key: "left", style: { top: "50%", left: -HANDLE_SIZE / 2, marginTop: -HANDLE_SIZE / 2, cursor: "ew-resize" } },
 ];
 
-// Rotation hit-zones, centered on each corner so half the zone sits outside
-// the element. The smaller resize dot renders on top (higher z-index).
-const ROTATE_ZONE_POSITIONS: { key: string; style: React.CSSProperties }[] = [
-  { key: "tl", style: { top: -ROTATION_ZONE_SIZE / 2, left: -ROTATION_ZONE_SIZE / 2 } },
-  { key: "tr", style: { top: -ROTATION_ZONE_SIZE / 2, right: -ROTATION_ZONE_SIZE / 2 } },
-  { key: "br", style: { bottom: -ROTATION_ZONE_SIZE / 2, right: -ROTATION_ZONE_SIZE / 2 } },
-  { key: "bl", style: { bottom: -ROTATION_ZONE_SIZE / 2, left: -ROTATION_ZONE_SIZE / 2 } },
-];
-
 export const ElementWrapper = memo(function ElementWrapper({
   element,
   effectiveTransform,
@@ -61,6 +52,7 @@ export const ElementWrapper = memo(function ElementWrapper({
 }: ElementWrapperProps) {
   const selectedIds = useCanvasStore((s) => s.selectedIds);
   const hoveredId = useCanvasStore((s) => s.hoveredId);
+  const rotatingElementId = useCanvasStore((s) => s.rotatingElementId);
   const editingElementId = useCanvasStore((s) => s.editingElementId);
   const select = useCanvasStore((s) => s.select);
   const setHovered = useCanvasStore((s) => s.setHovered);
@@ -77,6 +69,7 @@ export const ElementWrapper = memo(function ElementWrapper({
 
   const isSelected = selectedIds.includes(element.id);
   const isHovered = hoveredId === element.id;
+  const isRotating = rotatingElementId === element.id;
   const isEditing = editingElementId === element.id;
   const isNonDesktop = activeBreakpoint !== "desktop";
   const isFlow = !!effectiveLayout && effectiveLayout.layoutMode === "flow";
@@ -241,28 +234,60 @@ export const ElementWrapper = memo(function ElementWrapper({
       {/* Resize + rotation handles - only in absolute mode */}
       {isSelected && !element.locked && !isEditing && !isFlow && (
         <>
-          {/* Corner rotation zones - sit just outside each corner, behind the
-              resize handle, so hovering the corner-outside rotates and the
-              corner dot itself still resizes. Drag to rotate (no key needed;
-              hold Shift to snap to 15°). */}
-          {ROTATE_ZONE_POSITIONS.map(({ key, style }) => (
-            <div
-              key={`rot-${key}`}
-              title="Drag to rotate (hold Shift to snap)"
-              onPointerDown={(e) => onRotateStart(e, element.id)}
-              onPointerMove={onRotateMove}
-              onPointerUp={onRotateEnd}
-              style={{
-                position: "absolute",
-                width: ROTATION_ZONE_SIZE,
-                height: ROTATION_ZONE_SIZE,
-                background: "transparent",
-                zIndex: 9998,
-                cursor: ROTATE_CURSOR,
-                ...style,
-              }}
-            />
-          ))}
+          {/* Rotation handle - a visible, clickable knob centered below the
+              block, connected to the bottom edge by a short stem. Drag it to
+              rotate (hold Shift to snap to 15°). */}
+          <div
+            style={{
+              position: "absolute",
+              top: "100%",
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: 2,
+              height: ROTATION_HANDLE_OFFSET,
+              background: showOverrideIndicator ? "#38bdf8" : "#3b82f6",
+              zIndex: 9998,
+              pointerEvents: "none",
+            }}
+          />
+          <div
+            title="Drag to rotate (hold Shift to snap)"
+            onPointerDown={(e) => onRotateStart(e, element.id)}
+            onPointerMove={onRotateMove}
+            onPointerUp={onRotateEnd}
+            style={{
+              position: "absolute",
+              top: `calc(100% + ${ROTATION_HANDLE_OFFSET}px)`,
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: 20,
+              height: 20,
+              borderRadius: "50%",
+              backgroundColor: "#ffffff",
+              border: `2px solid ${showOverrideIndicator ? "#38bdf8" : "#3b82f6"}`,
+              boxShadow: "0 1px 3px rgba(0,0,0,0.25)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 9999,
+              cursor: ROTATE_CURSOR,
+            }}
+          >
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke={showOverrideIndicator ? "#38bdf8" : "#3b82f6"}
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ pointerEvents: "none" }}
+            >
+              <path d="M4.5 9a8 8 0 1 1-1 5" />
+              <polyline points="2 4 4.5 9 9.5 7" />
+            </svg>
+          </div>
           {HANDLE_POSITIONS.map(({ key, style }) => (
             <div
               key={key}
@@ -282,6 +307,33 @@ export const ElementWrapper = memo(function ElementWrapper({
             />
           ))}
         </>
+      )}
+
+      {/* Rotation angle badge - shown while actively rotating, and also
+          whenever a rotated block is selected so the current angle stays
+          visible. Counter-rotated so the value stays upright as the element
+          spins. */}
+      {!isFlow && (isRotating || (isSelected && rotation !== 0)) && (
+        <div
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: "50%",
+            transform: `translate(-50%, -50%) rotate(${-rotation}deg)`,
+            fontSize: 11,
+            background: "rgba(17,24,39,0.92)",
+            color: "#fff",
+            borderRadius: 4,
+            padding: "2px 7px",
+            fontWeight: 600,
+            fontVariantNumeric: "tabular-nums",
+            pointerEvents: "none",
+            zIndex: 10000,
+            whiteSpace: "nowrap",
+          }}
+        >
+          {rotation}°
+        </div>
       )}
 
       {/* Lock indicator */}
