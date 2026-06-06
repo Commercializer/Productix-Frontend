@@ -1036,7 +1036,7 @@ function PinLockModal({ profileId, productName, currentEnabled, onClose, onSave 
   useEffect(() => setMounted(true), []);
 
   const pinDigits = pin.replace(/\D/g, "");
-  const validNewPin = pinDigits.length >= 4 && pinDigits.length <= 6;
+  const validNewPin = pinDigits.length === 6;
   // Turning the lock on for the first time needs a PIN; otherwise the field is optional.
   const needsPin = enabled && !hasExistingPin;
   const dirty = enabled !== currentEnabled || pinDigits.length > 0;
@@ -1091,14 +1091,14 @@ function PinLockModal({ profileId, productName, currentEnabled, onClose, onSave 
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && canSave && !saving) handleSave();
                 }}
-                placeholder="4–6 digits"
+                placeholder="6 digits"
                 autoFocus
                 inputMode="numeric"
                 autoComplete="off"
                 className="w-full h-[42px] px-3 rounded-lg border border-[#e2e8f0] dark:border-[#334155] bg-transparent text-[15px] tracking-[0.3em] font-mono text-[#0f172a] dark:text-white placeholder-[#94a3b8] placeholder:tracking-normal placeholder:font-sans placeholder:text-[13px] outline-hidden focus:border-[#93c5fd]"
               />
               <p className="mt-1.5 text-[11px] text-[#94a3b8]">
-                Numbers only, 4–6 digits. Share it with people allowed to view the page.
+                Numbers only, 6 digits. Share it with people allowed to view the page.
               </p>
             </div>
 

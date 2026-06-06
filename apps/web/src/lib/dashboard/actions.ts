@@ -91,7 +91,7 @@ export async function getMyPromptionsAction() {
 // every navigation.
 // ═══════════════════════════════════════════════════════════════
 
-const PIN_RE = /^\d{4,6}$/;
+const PIN_RE = /^\d{6}$/;
 
 // Unlock tokens are signed HS256 JWTs stored in the visitor's localStorage,
 // one per product. They're self-verifying (no DB lookup to validate the
@@ -155,7 +155,7 @@ function verifyPinToken(token: string, nowSec: number): PinTokenPayload | null {
 /**
  * Set / change / clear a product page's access PIN, and toggle the lock.
  * Owner-only (same company scoping as the other product mutations).
- * Pass `pin = null` to keep the existing PIN, or a 4–8 digit string to set a
+ * Pass `pin = null` to keep the existing PIN, or a 6 digit string to set a
  * new one. The lock can't be enabled until a PIN exists.
  */
 export async function setPinLockAction(
@@ -183,7 +183,7 @@ export async function setPinLockAction(
   if (pin !== null) {
     const trimmed = pin.trim();
     if (!PIN_RE.test(trimmed)) {
-      return { error: "PIN must be 4–6 digits." };
+      return { error: "PIN must be 6 digits." };
     }
     pinHash = await bcrypt.hash(trimmed, 10);
     pinLength = trimmed.length;

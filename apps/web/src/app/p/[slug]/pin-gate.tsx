@@ -17,7 +17,7 @@ interface PinGateProps {
   readonly pinLength?: number | null;
 }
 
-const MIN_PIN = 4;
+const MIN_PIN = 6;
 const MAX_PIN = 6;
 const DEFAULT_ACCENT = "#0284c7";
 
