@@ -29,6 +29,7 @@ import {
   Type,
   Globe,
   History,
+  Lock,
 } from "lucide-react";
 import type { Promption } from "@/hooks/use-promptions";
 import { QrModal } from "./qr-modal";
@@ -51,6 +52,11 @@ interface PromptionTableProps {
     profileId: string,
     productName: string,
   ) => Promise<{ success?: boolean; error?: string; productName?: string }>;
+  onUpdatePinLock?: (
+    profileId: string,
+    pin: string | null,
+    pinEnabled: boolean,
+  ) => Promise<{ success?: boolean; error?: string; pinEnabled?: boolean; hasPin?: boolean }>;
   readOnly?: boolean;
 }
 
@@ -71,6 +77,7 @@ export function PromptionTable({
   onRenameSlug,
   onUpdateRedirect,
   onRenameProduct,
+  onUpdatePinLock,
   readOnly = false,
 }: PromptionTableProps) {
   const [search, setSearch] = useState("");
@@ -84,6 +91,11 @@ export function PromptionTable({
     profileId: string;
     productName: string;
     currentUrl: string | null;
+    currentEnabled: boolean;
+  } | null>(null);
+  const [pinEditor, setPinEditor] = useState<{
+    profileId: string;
+    productName: string;
     currentEnabled: boolean;
   } | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -523,6 +535,29 @@ export function PromptionTable({
                                     </button>
                                   )}
 
+                                  {onUpdatePinLock && (
+                                    <button
+                                      onClick={() => {
+                                        setActiveMenu(null);
+                                        setPinEditor({
+                                          profileId: p.id,
+                                          productName: p.productName,
+                                          currentEnabled: p.pinEnabled,
+                                        });
+                                      }}
+                                      className="w-full px-3 py-2 text-left text-[13px] hover:bg-[#f8fafc] dark:hover:bg-[#334155] flex items-center justify-between gap-2 transition-colors text-(--ds-text-primary)"
+                                      title="Require a PIN before visitors can view this page."
+                                    >
+                                      <span className="flex items-center gap-2">
+                                        <Lock size={15} className="text-[#64748b]" />
+                                        PIN lock
+                                      </span>
+                                      {p.pinEnabled && (
+                                        <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                      )}
+                                    </button>
+                                  )}
+
                                   {onSetSlugVisible && (
                                     <button
                                       onClick={() => handleToggleSlug(p)}
@@ -628,6 +663,17 @@ export function PromptionTable({
           currentEnabled={redirectEditor.currentEnabled}
           onClose={() => setRedirectEditor(null)}
           onSave={onUpdateRedirect}
+        />
+      )}
+
+      {/* PIN Lock Modal */}
+      {pinEditor && onUpdatePinLock && (
+        <PinLockModal
+          profileId={pinEditor.profileId}
+          productName={pinEditor.productName}
+          currentEnabled={pinEditor.currentEnabled}
+          onClose={() => setPinEditor(null)}
+          onSave={onUpdatePinLock}
         />
       )}
     </div>
@@ -953,6 +999,147 @@ function RedirectEditModal({
             <button
               onClick={handleSave}
               disabled={saving || !dirty}
+              className="flex-1 h-[42px] rounded-xl bg-[#0f172a] dark:bg-white text-white dark:text-[#0f172a] font-semibold text-[13px] hover:opacity-90 transition-opacity disabled:opacity-50"
+            >
+              {saving ? "Saving…" : "Save"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </>,
+    document.body
+  );
+}
+
+interface PinLockModalProps {
+  profileId: string;
+  productName: string;
+  currentEnabled: boolean;
+  onClose: () => void;
+  onSave: (
+    profileId: string,
+    pin: string | null,
+    pinEnabled: boolean,
+  ) => Promise<{ success?: boolean; error?: string; pinEnabled?: boolean; hasPin?: boolean }>;
+}
+
+function PinLockModal({ profileId, productName, currentEnabled, onClose, onSave }: PinLockModalProps) {
+  // A PIN already exists whenever the lock is currently on (you can't enable
+  // without one). Leaving the field blank then keeps that existing PIN.
+  const hasExistingPin = currentEnabled;
+  const [pin, setPin] = useState("");
+  const [enabled, setEnabled] = useState(currentEnabled);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+
+  const pinDigits = pin.replace(/\D/g, "");
+  const validNewPin = pinDigits.length >= 4 && pinDigits.length <= 6;
+  // Turning the lock on for the first time needs a PIN; otherwise the field is optional.
+  const needsPin = enabled && !hasExistingPin;
+  const dirty = enabled !== currentEnabled || pinDigits.length > 0;
+  const canSave = dirty && (!needsPin || validNewPin) && (pinDigits.length === 0 || validNewPin);
+
+  const handleSave = async () => {
+    setError(null);
+    setSaving(true);
+    // Send the new PIN only when the user typed one; null keeps the existing.
+    const result = await onSave(profileId, pinDigits.length > 0 ? pinDigits : null, enabled);
+    setSaving(false);
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
+    onClose();
+  };
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <>
+      <div className="fixed inset-0 z-[9998] bg-black/40 backdrop-blur-xs" onClick={onClose} />
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" onClick={onClose}>
+        <div
+          className="relative w-full max-w-[460px] rounded-2xl bg-white dark:bg-[#1e293b] shadow-2xl border border-[#e2e8f0] dark:border-[#334155] overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between px-6 pt-6 pb-2">
+            <div>
+              <h3 className="text-lg font-bold text-[#0f172a] dark:text-white">PIN lock</h3>
+              <p className="text-[13px] text-[#64748b] dark:text-[#94a3b8] mt-0.5">
+                Require a PIN before visitors of{" "}
+                <span className="font-medium text-(--ds-text-primary)">{productName}</span> can view the page.
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-white hover:bg-[#f1f5f9] dark:hover:bg-[#334155] transition-colors"
+            >
+              <X size={18} />
+            </button>
+          </div>
+          <div className="px-6 py-4 space-y-4">
+            <div>
+              <label className="block text-[12px] font-medium text-[#64748b] dark:text-[#94a3b8] mb-1.5">
+                {hasExistingPin ? "New PIN (leave blank to keep current)" : "PIN"}
+              </label>
+              <input
+                value={pin}
+                onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && canSave && !saving) handleSave();
+                }}
+                placeholder="4–6 digits"
+                autoFocus
+                inputMode="numeric"
+                autoComplete="off"
+                className="w-full h-[42px] px-3 rounded-lg border border-[#e2e8f0] dark:border-[#334155] bg-transparent text-[15px] tracking-[0.3em] font-mono text-[#0f172a] dark:text-white placeholder-[#94a3b8] placeholder:tracking-normal placeholder:font-sans placeholder:text-[13px] outline-hidden focus:border-[#93c5fd]"
+              />
+              <p className="mt-1.5 text-[11px] text-[#94a3b8]">
+                Numbers only, 4–6 digits. Share it with people allowed to view the page.
+              </p>
+            </div>
+
+            <label className="flex items-center justify-between gap-3 cursor-pointer">
+              <span className="flex flex-col">
+                <span className="text-[13px] font-medium text-(--ds-text-primary)">Lock this page</span>
+                <span className="text-[11px] text-[#94a3b8]">When on, visitors must enter the PIN first.</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setEnabled((v) => !v)}
+                className={`inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                  enabled ? "bg-(--ds-accent)" : "bg-[#cbd5e1] dark:bg-[#475569]"
+                }`}
+                aria-pressed={enabled}
+              >
+                <span
+                  className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${
+                    enabled ? "translate-x-4.5" : "translate-x-0.5"
+                  }`}
+                />
+              </button>
+            </label>
+
+            {needsPin && (
+              <p className="text-[12px] text-[#94a3b8]">Set a PIN above to turn the lock on.</p>
+            )}
+            {error && (
+              <p className="text-[12px] text-red-600 dark:text-red-400">{error}</p>
+            )}
+          </div>
+          <div className="px-6 pb-6 flex gap-3">
+            <button
+              onClick={onClose}
+              className="flex-1 h-[42px] rounded-xl border border-[#e2e8f0] dark:border-[#334155] text-[#0f172a] dark:text-white font-semibold text-[13px] hover:bg-[#f8fafc] dark:hover:bg-[#334155] transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving || !canSave}
               className="flex-1 h-[42px] rounded-xl bg-[#0f172a] dark:bg-white text-white dark:text-[#0f172a] font-semibold text-[13px] hover:opacity-90 transition-opacity disabled:opacity-50"
             >
               {saving ? "Saving…" : "Save"}

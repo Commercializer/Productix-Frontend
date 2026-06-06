@@ -386,6 +386,10 @@ model ProductProfile {
   description     String    @db.Text
   redirectUrl     String?   @map("redirect_url") @db.VarChar(500)
   redirectEnabled Boolean   @default(false) @map("redirect_enabled")
+  /// bcrypt hash of the access PIN. Null when no PIN has been set.
+  pinHash         String?   @map("pin_hash") @db.VarChar(100)
+  /// When true, visitors must enter the PIN before the showcase page renders.
+  pinEnabled      Boolean   @default(false) @map("pin_enabled")
   content         Json      @default("{}")
   isPublished     Boolean   @default(false) @map("is_published")
   publishedAt     DateTime? @map("published_at") @db.Timestamptz

@@ -3,6 +3,9 @@
 import { prisma } from "@productix/db";
 import type { DeviceType, QrScanType } from "@productix/db";
 import { auth } from "@/auth";
+import bcrypt from "bcryptjs";
+import { createHash } from "crypto";
+import { cookies } from "next/headers";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 function isUUID(val: string): boolean {
@@ -76,8 +79,130 @@ export async function getMyPromptionsAction() {
       metaDescription: p.metaDescription,
       redirectUrl: p.redirectUrl,
       redirectEnabled: p.redirectEnabled,
+      pinEnabled: p.pinEnabled,
     }))
   };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PIN LOCK - when enabled, a visitor must enter the matching PIN
+// before the public showcase page renders. The PIN is stored as a
+// bcrypt hash; we never read it back. Verification (below) sets a
+// short-lived, per-page cookie so the visitor isn't re-prompted on
+// every navigation.
+// ═══════════════════════════════════════════════════════════════
+
+const PIN_RE = /^\d{4,6}$/;
+
+/** Stable per-page cookie name; scoped to the profile so unlocking one page
+ * never unlocks another. */
+function pinCookieName(profileId: string): string {
+  return `ppin_${profileId}`;
+}
+
+/** Cookie value proves the PIN was entered without storing it. It's a hash of
+ * the profile id + the current pinHash, so rotating the PIN invalidates every
+ * outstanding cookie automatically. */
+function pinCookieToken(profileId: string, pinHash: string): string {
+  return createHash("sha256").update(`${profileId}:${pinHash}`).digest("hex");
+}
+
+/**
+ * Set / change / clear a product page's access PIN, and toggle the lock.
+ * Owner-only (same company scoping as the other product mutations).
+ * Pass `pin = null` to keep the existing PIN, or a 4–8 digit string to set a
+ * new one. The lock can't be enabled until a PIN exists.
+ */
+export async function setPinLockAction(
+  profileId: string,
+  pin: string | null,
+  pinEnabled: boolean,
+) {
+  if (!isUUID(profileId)) return { error: "Invalid profile ID" };
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const companyId = await getUserCompanyId(session.user.id);
+  if (!companyId) return { error: "No company found for user" };
+
+  const profile = await prisma.productProfile.findUnique({
+    where: { id: profileId },
+    select: { id: true, pinHash: true, product: { select: { companyId: true } } },
+  });
+  if (!profile || profile.product.companyId !== companyId) return { error: "Product not found" };
+
+  // Resolve the hash to persist: a new PIN re-hashes, otherwise keep the existing.
+  let pinHash = profile.pinHash;
+  if (pin !== null) {
+    const trimmed = pin.trim();
+    if (!PIN_RE.test(trimmed)) {
+      return { error: "PIN must be 4–6 digits." };
+    }
+    pinHash = await bcrypt.hash(trimmed, 10);
+  }
+
+  // Can't lock without a PIN to check against.
+  const effectiveEnabled = pinEnabled && !!pinHash;
+
+  try {
+    await prisma.productProfile.update({
+      where: { id: profileId },
+      data: { pinHash, pinEnabled: effectiveEnabled },
+    });
+    return { success: true, pinEnabled: effectiveEnabled, hasPin: !!pinHash };
+  } catch (error: any) {
+    return { error: error.message };
+  }
+}
+
+/**
+ * Public (unauthenticated) PIN check for a locked showcase page. On success it
+ * drops a per-page cookie so the server can render the page on the next load.
+ */
+export async function verifyPagePinAction(profileId: string, pin: string) {
+  if (!isUUID(profileId)) return { error: "Invalid page" };
+
+  const profile = await prisma.productProfile.findUnique({
+    where: { id: profileId },
+    select: { id: true, pinHash: true, pinEnabled: true, isPublished: true },
+  });
+  if (!profile || !profile.isPublished) return { error: "Page not found" };
+
+  // Not locked → nothing to verify.
+  if (!profile.pinEnabled || !profile.pinHash) return { success: true };
+
+  const ok = await bcrypt.compare(pin.trim(), profile.pinHash);
+  if (!ok) return { error: "Incorrect PIN. Try again." };
+
+  const jar = await cookies();
+  jar.set(pinCookieName(profileId), pinCookieToken(profileId, profile.pinHash), {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 12, // 12 hours
+  });
+
+  return { success: true };
+}
+
+/**
+ * Server-side gate check used by the public route. Returns true when the page
+ * is either unlocked (no PIN) or the visitor already holds a valid PIN cookie.
+ * Never exposes the hash to the client — returns a boolean only.
+ */
+export async function isPagePinUnlockedAction(profileId: string): Promise<boolean> {
+  if (!isUUID(profileId)) return false;
+
+  const profile = await prisma.productProfile.findUnique({
+    where: { id: profileId },
+    select: { pinHash: true, pinEnabled: true },
+  });
+  if (!profile || !profile.pinEnabled || !profile.pinHash) return true;
+
+  const jar = await cookies();
+  const token = jar.get(pinCookieName(profileId))?.value;
+  return !!token && token === pinCookieToken(profileId, profile.pinHash);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1239,6 +1364,7 @@ function publicProfileShape(profile: any) {
     ogImageUrl: profile.ogImageUrl,
     redirectUrl: profile.redirectUrl as string | null,
     redirectEnabled: profile.redirectEnabled as boolean,
+    pinEnabled: profile.pinEnabled as boolean,
     publishedAt: profile.publishedAt?.toISOString() ?? null,
     company: {
       name: profile.product.company.name,

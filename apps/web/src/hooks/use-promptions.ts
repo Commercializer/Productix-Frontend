@@ -10,6 +10,7 @@ import {
   updateSlugAction,
   updateRedirectAction,
   updateProductNameAction,
+  setPinLockAction,
 } from "@/lib/dashboard/actions";
 
 export interface Promption {
@@ -29,6 +30,7 @@ export interface Promption {
   metaDescription: string | null;
   redirectUrl: string | null;
   redirectEnabled: boolean;
+  pinEnabled: boolean;
 }
 
 export function usePromptions() {
@@ -149,6 +151,20 @@ export function usePromptions() {
     []
   );
 
+  const updatePinLock = useCallback(
+    async (profileId: string, pin: string | null, pinEnabled: boolean) => {
+      const result = await setPinLockAction(profileId, pin, pinEnabled);
+      if (result.error) return { error: result.error };
+      setPromptions((prev) =>
+        prev.map((p) =>
+          p.id === profileId ? { ...p, pinEnabled: !!result.pinEnabled } : p
+        )
+      );
+      return { success: true, pinEnabled: !!result.pinEnabled, hasPin: !!result.hasPin };
+    },
+    []
+  );
+
   return {
     promptions,
     loading,
@@ -161,5 +177,6 @@ export function usePromptions() {
     updateSlug,
     updateRedirect,
     updateProductName,
+    updatePinLock,
   };
 }
