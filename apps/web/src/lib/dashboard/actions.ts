@@ -79,6 +79,10 @@ export async function getMyPromptionsAction() {
       redirectUrl: p.redirectUrl,
       redirectEnabled: p.redirectEnabled,
       pinEnabled: p.pinEnabled,
+      // Whether a viewable plaintext PIN exists. The PIN itself is never sent in
+      // this payload — it's only returned by revealProductPinAction after the
+      // owner re-enters their account password.
+      hasPinCode: !!p.pinCode,
     }))
   };
 }
@@ -172,14 +176,16 @@ export async function setPinLockAction(
 
   const profile = await prisma.productProfile.findUnique({
     where: { id: profileId },
-    select: { id: true, pinHash: true, pinLength: true, product: { select: { companyId: true } } },
+    select: { id: true, pinHash: true, pinLength: true, pinCode: true, product: { select: { companyId: true } } },
   });
   if (!profile || profile.product.companyId !== companyId) return { error: "Product not found" };
 
-  // Resolve the hash + length to persist: a new PIN re-hashes, otherwise keep
-  // the existing values.
+  // Resolve the hash + length + plaintext to persist: a new PIN re-hashes and
+  // stores the plaintext (so the owner can view it later), otherwise keep the
+  // existing values.
   let pinHash = profile.pinHash;
   let pinLength = profile.pinLength;
+  let pinCode = profile.pinCode;
   if (pin !== null) {
     const trimmed = pin.trim();
     if (!PIN_RE.test(trimmed)) {
@@ -187,6 +193,7 @@ export async function setPinLockAction(
     }
     pinHash = await bcrypt.hash(trimmed, 10);
     pinLength = trimmed.length;
+    pinCode = trimmed;
   }
 
   // Can't lock without a PIN to check against.
@@ -195,12 +202,53 @@ export async function setPinLockAction(
   try {
     await prisma.productProfile.update({
       where: { id: profileId },
-      data: { pinHash, pinLength, pinEnabled: effectiveEnabled },
+      data: { pinHash, pinLength, pinCode, pinEnabled: effectiveEnabled },
     });
-    return { success: true, pinEnabled: effectiveEnabled, hasPin: !!pinHash };
+    return { success: true, pinEnabled: effectiveEnabled, hasPin: !!pinHash, hasPinCode: !!pinCode };
   } catch (error: any) {
     return { error: error.message };
   }
+}
+
+/**
+ * Reveal a product's stored plaintext PIN to its owner. Gated behind the owner's
+ * own account password — the PIN is never shipped to the client until this check
+ * passes, so it can't be read out of the page payload. Owner-only (same company
+ * scoping as the other product mutations).
+ */
+export async function revealProductPinAction(profileId: string, password: string) {
+  if (!isUUID(profileId)) return { error: "Invalid profile ID" as const };
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) return { error: "Not authenticated" as const };
+
+  if (!password) return { error: "Enter your account password to view the PIN." as const };
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { passwordHash: true },
+  });
+  if (!user?.passwordHash) {
+    return { error: "Your account has no password set. Contact an administrator." as const };
+  }
+  const matches = await bcrypt.compare(password, user.passwordHash);
+  if (!matches) return { error: "Incorrect password." as const };
+
+  const companyId = await getUserCompanyId(userId);
+  if (!companyId) return { error: "No company found for user" as const };
+
+  const profile = await prisma.productProfile.findUnique({
+    where: { id: profileId },
+    select: { pinCode: true, product: { select: { companyId: true } } },
+  });
+  if (!profile || profile.product.companyId !== companyId) {
+    return { error: "Product not found" as const };
+  }
+  if (!profile.pinCode) {
+    return { error: "This PIN was set before it could be saved for viewing. Set a new PIN to view it." as const };
+  }
+
+  return { success: true as const, pinCode: profile.pinCode };
 }
 
 /**
@@ -475,12 +523,8 @@ export async function createPromptionAction(data: {
 
   const userId = session.user.id;
 
-  // Find the user's first company
-  const adminMembership = await prisma.companyAdmin.findFirst({ where: { userId } });
-  const userMembership = adminMembership
-    ? null
-    : await prisma.companyUser.findFirst({ where: { userId } });
-  const companyId = adminMembership?.companyId ?? userMembership?.companyId;
+  // Find the user's company (handles company admins/users and tenant admins).
+  const companyId = await getUserCompanyId(userId);
 
   if (!companyId) return { error: "No company found for user" };
 
@@ -696,7 +740,7 @@ export async function getBranchesAction() {
   const branches = await prisma.branch.findMany({
     where: { companyId },
     orderBy: { name: "asc" },
-    select: { id: true, name: true, city: true, address: true, isActive: true },
+    select: { id: true, code: true, name: true, city: true, address: true, isActive: true },
   });
 
   return { success: true, items: branches };
@@ -718,13 +762,24 @@ export async function createBranchAction(input: { name: string; city?: string; a
   try {
     const existing = await prisma.branch.findFirst({
       where: { companyId, name: { equals: name, mode: "insensitive" } },
-      select: { id: true, name: true, city: true, address: true, isActive: true },
+      select: { id: true, code: true, name: true, city: true, address: true, isActive: true },
     });
     if (existing) return { success: true, item: existing };
 
-    const item = await prisma.branch.create({
-      data: { companyId, name, city, address },
-      select: { id: true, name: true, city: true, address: true, isActive: true },
+    // Assign the next per-company code (max + 1, starting at 1). Done in a
+    // transaction so concurrent creates don't read the same max; the
+    // (companyId, code) unique index is the final backstop.
+    const item = await prisma.$transaction(async (tx) => {
+      const last = await tx.branch.findFirst({
+        where: { companyId },
+        orderBy: { code: "desc" },
+        select: { code: true },
+      });
+      const code = (last?.code ?? 0) + 1;
+      return tx.branch.create({
+        data: { companyId, code, name, city, address },
+        select: { id: true, code: true, name: true, city: true, address: true, isActive: true },
+      });
     });
     return { success: true, item };
   } catch (error: any) {
@@ -763,7 +818,7 @@ export async function updateBranchAction(
     const item = await prisma.branch.update({
       where: { id },
       data,
-      select: { id: true, name: true, city: true, address: true, isActive: true },
+      select: { id: true, code: true, name: true, city: true, address: true, isActive: true },
     });
     return { success: true, item };
   } catch (error: any) {
@@ -1671,13 +1726,27 @@ export async function uploadImageAction(formData: FormData) {
 
 async function getUserCompanyId(userId: string) {
   const adminMembership = await prisma.companyAdmin.findFirst({ where: { userId } });
-  const userMembership = adminMembership
-    ? null
-    : await prisma.companyUser.findFirst({ where: { userId } });
-  return adminMembership?.companyId ?? userMembership?.companyId;
+  if (adminMembership) return adminMembership.companyId;
+
+  const userMembership = await prisma.companyUser.findFirst({ where: { userId } });
+  if (userMembership) return userMembership.companyId;
+
+  // Tenant admins aren't tied to a single company, so they act on the first
+  // company under their tenant.
+  const tenantLink = await prisma.tenantAdmin.findUnique({
+    where: { userId },
+    select: {
+      tenant: {
+        select: {
+          companies: { select: { id: true }, orderBy: { createdAt: "asc" }, take: 1 },
+        },
+      },
+    },
+  });
+  return tenantLink?.tenant.companies[0]?.id;
 }
 
-export async function getCompanyAnalyticsAction() {
+export async function getCompanyAnalyticsAction(branchId?: string) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
 
@@ -1686,26 +1755,63 @@ export async function getCompanyAnalyticsAction() {
 
   try {
     const now = new Date();
+
+    // Optional branch filter for the product breakdown. Validate ownership so a
+    // foreign/invalid id can't leak another company's data — an unrecognized id
+    // simply degrades to "all branches" (company-wide) rather than erroring.
+    // Scoped to scan (page_views) and feedback queries; the product catalog
+    // counts below stay company-wide so the header still reflects total inventory.
+    let branchScope: { branchId?: string } = {};
+    if (branchId && isUUID(branchId)) {
+      const ownedBranch = await prisma.branch.findFirst({
+        where: { id: branchId, companyId },
+        select: { id: true },
+      });
+      if (ownedBranch) branchScope = { branchId };
+    }
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
+    // Resolve custom link-type prefixes to their friendly labels for the QR
+    // scan breakdown. Wrapped so a pre-migration DB (no table) degrades to the
+    // raw prefix rather than blanking analytics.
+    let linkTypeLabel = new Map<string, string>();
+    try {
+      const linkTypeRows = await prisma.companyLinkType.findMany({
+        where: { companyId },
+        select: { prefix: true, label: true },
+      });
+      linkTypeLabel = new Map(linkTypeRows.map((t) => [t.prefix, t.label]));
+    } catch {
+      // Table not migrated yet - custom types just show by prefix.
+    }
+    // Display key for a QR scan row: built-in enum value (or UNTAGGED for null),
+    // or the custom link type's label (falling back to its prefix) for CUSTOM.
+    const qrScanKey = (qrScanType: QrScanType | null, qrScanPrefix: string | null): string => {
+      if (qrScanType === "CUSTOM") {
+        return qrScanPrefix ? linkTypeLabel.get(qrScanPrefix) ?? qrScanPrefix : "Custom";
+      }
+      return qrScanType ?? "UNTAGGED";
+    };
+
     // Split into two batches so a failure in page-view queries (e.g. stale
     // Prisma client in dev) can't blank out product/feedback counts.
-    const [productCount, publishedCount, feedbackCount, feedbackLast30Days, feedbackStatusRows, recentFeedbackRows] =
+    const [productCount, publishedCount, feedbackCount, feedbackLast30Days, feedbackStatusRows, recentFeedbackRows, ratedFeedbackCount] =
       await Promise.all([
         prisma.product.count({ where: { companyId } }),
         prisma.productProfile.count({ where: { product: { companyId }, isPublished: true } }),
-        prisma.feedbackInquiry.count({ where: { companyId } }),
-        prisma.feedbackInquiry.count({ where: { companyId, createdAt: { gte: thirtyDaysAgo } } }),
+        prisma.feedbackInquiry.count({ where: { companyId, ...branchScope } }),
+        prisma.feedbackInquiry.count({ where: { companyId, ...branchScope, createdAt: { gte: thirtyDaysAgo } } }),
         prisma.feedbackInquiry.groupBy({
           by: ["status"],
-          where: { companyId },
+          where: { companyId, ...branchScope },
           _count: { _all: true },
         }),
         prisma.feedbackInquiry.findMany({
-          where: { companyId, createdAt: { gte: thirtyDaysAgo } },
+          where: { companyId, ...branchScope, createdAt: { gte: thirtyDaysAgo } },
           select: { createdAt: true },
         }),
+        prisma.feedbackInquiry.count({ where: { companyId, ...branchScope, ratingScore: { not: null } } }),
       ]);
 
     type ViewMetrics = {
@@ -1714,7 +1820,7 @@ export async function getCompanyAnalyticsAction() {
       scansLast30Days: number;
       deviceRows: Array<{ deviceType: string | null; _count: { _all: number } }>;
       countryRows: Array<{ country: string | null; _count: { _all: number } }>;
-      qrScanRows: Array<{ qrScanType: QrScanType | null; _count: { _all: number } }>;
+      qrScanRows: Array<{ qrScanType: QrScanType | null; qrScanPrefix: string | null; _count: { _all: number } }>;
       recentViewRows: Array<{ viewedAt: Date; referrer: string | null }>;
       topProductsRaw: Array<{ productId: string; _count: { _all: number } }>;
     };
@@ -1734,33 +1840,33 @@ export async function getCompanyAnalyticsAction() {
     try {
       const [scanCount, scansLast7Days, scansLast30Days, deviceRows, countryRows, qrScanRows, recentViewRows, topProductsRaw] =
         await Promise.all([
-          prisma.pageView.count({ where: { companyId } }),
-          prisma.pageView.count({ where: { companyId, viewedAt: { gte: sevenDaysAgo } } }),
-          prisma.pageView.count({ where: { companyId, viewedAt: { gte: thirtyDaysAgo } } }),
+          prisma.pageView.count({ where: { companyId, ...branchScope } }),
+          prisma.pageView.count({ where: { companyId, ...branchScope, viewedAt: { gte: sevenDaysAgo } } }),
+          prisma.pageView.count({ where: { companyId, ...branchScope, viewedAt: { gte: thirtyDaysAgo } } }),
           prisma.pageView.groupBy({
             by: ["deviceType"],
-            where: { companyId },
+            where: { companyId, ...branchScope },
             _count: { _all: true },
           }),
           prisma.pageView.groupBy({
             by: ["country"],
-            where: { companyId, country: { not: null } },
+            where: { companyId, ...branchScope, country: { not: null } },
             _count: { _all: true },
             orderBy: { _count: { country: "desc" } },
             take: 5,
           }),
           prisma.pageView.groupBy({
-            by: ["qrScanType"],
-            where: { companyId },
+            by: ["qrScanType", "qrScanPrefix"],
+            where: { companyId, ...branchScope },
             _count: { _all: true },
           }),
           prisma.pageView.findMany({
-            where: { companyId, viewedAt: { gte: thirtyDaysAgo } },
+            where: { companyId, ...branchScope, viewedAt: { gte: thirtyDaysAgo } },
             select: { viewedAt: true, referrer: true },
           }),
           prisma.pageView.groupBy({
             by: ["productId"],
-            where: { companyId },
+            where: { companyId, ...branchScope },
             _count: { _all: true },
             orderBy: { _count: { productId: "desc" } },
           }),
@@ -1834,38 +1940,38 @@ export async function getCompanyAnalyticsAction() {
         topProductIds.length
           ? prisma.feedbackInquiry.groupBy({
             by: ["productId"],
-            where: { companyId, productId: { in: topProductIds } },
+            where: { companyId, ...branchScope, productId: { in: topProductIds } },
             _count: { _all: true },
           })
           : Promise.resolve([] as { productId: string | null; _count: { _all: number } }[]),
         topProductIds.length
           ? prisma.pageView.groupBy({
             by: ["productId", "deviceType"],
-            where: { companyId, productId: { in: topProductIds } },
+            where: { companyId, ...branchScope, productId: { in: topProductIds } },
             _count: { _all: true },
           })
           : Promise.resolve([] as Array<{ productId: string; deviceType: DeviceType | null; _count: { _all: number } }>),
         topProductIds.length
           ? prisma.pageView.groupBy({
             by: ["productId", "country"],
-            where: { companyId, productId: { in: topProductIds }, country: { not: null } },
+            where: { companyId, ...branchScope, productId: { in: topProductIds }, country: { not: null } },
             _count: { _all: true },
           })
           : Promise.resolve([] as Array<{ productId: string; country: string | null; _count: { _all: number } }>),
         topProductIds.length
           ? prisma.pageView.groupBy({
             by: ["productId", "browser"],
-            where: { companyId, productId: { in: topProductIds }, browser: { not: null } },
+            where: { companyId, ...branchScope, productId: { in: topProductIds }, browser: { not: null } },
             _count: { _all: true },
           })
           : Promise.resolve([] as Array<{ productId: string; browser: string | null; _count: { _all: number } }>),
         topProductIds.length
           ? prisma.pageView.groupBy({
-            by: ["productId", "qrScanType"],
-            where: { companyId, productId: { in: topProductIds } },
+            by: ["productId", "qrScanType", "qrScanPrefix"],
+            where: { companyId, ...branchScope, productId: { in: topProductIds } },
             _count: { _all: true },
           })
-          : Promise.resolve([] as Array<{ productId: string; qrScanType: QrScanType | null; _count: { _all: number } }>),
+          : Promise.resolve([] as Array<{ productId: string; qrScanType: QrScanType | null; qrScanPrefix: string | null; _count: { _all: number } }>),
       ]);
     const profileByProduct = new Map<string, { productName: string; slug: string; isPublished: boolean }>();
     for (const p of topProductProfiles) {
@@ -1889,7 +1995,7 @@ export async function getCompanyAnalyticsAction() {
       try {
         const durationRows = await prisma.pageView.groupBy({
           by: ["productId"],
-          where: { companyId, productId: { in: topProductIds }, durationMs: { not: null } },
+          where: { companyId, ...branchScope, productId: { in: topProductIds }, durationMs: { not: null } },
           _sum: { durationMs: true },
           _avg: { durationMs: true },
         });
@@ -1939,9 +2045,13 @@ export async function getCompanyAnalyticsAction() {
         .map((r) => ({ browser: r.browser ?? "Unknown", count: r._count._all }))
         .sort((a, b) => b.count - a.count)
         .slice(0, 3);
-      const qrScans = perProductQrScanType
-        .filter((r) => r.productId === pid)
-        .map((r) => ({ qrScanType: r.qrScanType ?? "UNTAGGED", count: r._count._all }))
+      const qrAcc = new Map<string, number>();
+      for (const r of perProductQrScanType) {
+        if (r.productId !== pid) continue;
+        const key = qrScanKey(r.qrScanType, r.qrScanPrefix);
+        qrAcc.set(key, (qrAcc.get(key) ?? 0) + r._count._all);
+      }
+      const qrScans = Array.from(qrAcc, ([qrScanType, count]) => ({ qrScanType, count }))
         .sort((a, b) => b.count - a.count);
       return {
         productId: pid,
@@ -1966,14 +2076,15 @@ export async function getCompanyAnalyticsAction() {
       count: r._count._all,
     }));
 
-    // QR surface breakdown (On Pack / Link / Social). Pre-migration rows with a
-    // null qrScanType land in UNTAGGED. Sorted desc so the dominant surface
-    // leads the list in the dashboard.
-    const qrScanBreakdown = qrScanRows
-      .map((r) => ({
-        qrScanType: r.qrScanType ?? "UNTAGGED",
-        count: r._count._all,
-      }))
+    // QR surface breakdown (On Pack / Link / Social + custom link types). Custom
+    // scans are keyed by their link-type label; pre-migration rows with a null
+    // qrScanType land in UNTAGGED. Sorted desc so the dominant surface leads.
+    const qrScanCounts = new Map<string, number>();
+    for (const r of qrScanRows) {
+      const key = qrScanKey(r.qrScanType, r.qrScanPrefix);
+      qrScanCounts.set(key, (qrScanCounts.get(key) ?? 0) + r._count._all);
+    }
+    const qrScanBreakdown = Array.from(qrScanCounts, ([qrScanType, count]) => ({ qrScanType, count }))
       .sort((a, b) => b.count - a.count);
 
     const topCountries = countryRows.map((r) => ({
@@ -1986,7 +2097,18 @@ export async function getCompanyAnalyticsAction() {
       count: r._count._all,
     }));
 
+    // Conversion funnel metrics, all expressed as percentages.
+    //  - scanToFeedbackRatio: visits that resulted in a feedback submission.
+    //  - feedbackResolutionRate: feedback the team has actioned (responded/closed).
+    //  - ratedFeedbackRate: feedback that included a star/emoji/nps rating.
+    //  - publishRate: products that have at least one published page.
     const scanToFeedbackRatio = scanCount > 0 ? (feedbackCount / scanCount) * 100 : 0;
+    const resolvedFeedbackCount = feedbackStatusRows
+      .filter((r) => r.status === "RESPONDED" || r.status === "CLOSED")
+      .reduce((sum, r) => sum + r._count._all, 0);
+    const feedbackResolutionRate = feedbackCount > 0 ? (resolvedFeedbackCount / feedbackCount) * 100 : 0;
+    const ratedFeedbackRate = feedbackCount > 0 ? (ratedFeedbackCount / feedbackCount) * 100 : 0;
+    const publishRate = productCount > 0 ? (publishedCount / productCount) * 100 : 0;
 
     // Average active time-on-page across visits that reported a duration.
     // Isolated try/catch: this column is newer than the rest of page_views, so
@@ -1996,7 +2118,7 @@ export async function getCompanyAnalyticsAction() {
     let totalVisitorDurationMs: number | null = null;
     try {
       const durationAgg = await prisma.pageView.aggregate({
-        where: { companyId, durationMs: { not: null } },
+        where: { companyId, ...branchScope, durationMs: { not: null } },
         _avg: { durationMs: true },
         _sum: { durationMs: true },
       });
@@ -2018,6 +2140,11 @@ export async function getCompanyAnalyticsAction() {
         scansLast30Days,
         feedbackLast30Days,
         scanToFeedbackRatio,
+        feedbackResolutionRate,
+        ratedFeedbackRate,
+        publishRate,
+        resolvedFeedbackCount,
+        ratedFeedbackCount,
         averageVisitorDurationMs,
         totalVisitorDurationMs,
         timeSeries,
@@ -2360,6 +2487,114 @@ export async function getCompanySettingsAction() {
     };
   } catch (error: any) {
     return { error: error.message };
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Custom QR link types (per-company)
+// ═══════════════════════════════════════════════════════════════
+
+// Custom link types resolve at the top level as /<prefix>/<code>, so a prefix
+// must never collide with a real top-level route. This blocks every existing
+// top-level segment (built-in QR routes p/l/s, app routes, route-group pages)
+// plus reserved/likely-future names and Next.js internals. Compared
+// case-insensitively against the prefix.
+const RESERVED_LINK_PREFIXES = new Set([
+  // Existing top-level routes
+  "p", "l", "s", "x", "api", "editor", "preview", "showcase",
+  "dashboard", "admin", "login",
+  // Reserved / likely-future
+  "tenant", "signup", "register", "logout", "auth", "settings", "account",
+  "_next", "__next", "public", "static", "assets", "favicon", "robots", "sitemap",
+]);
+
+const LINK_PREFIX_RE = /^[a-z][a-z0-9-]{0,39}$/;
+
+/** Normalize + validate a custom link-type prefix. Returns the cleaned value or an error. */
+function normalizeLinkPrefix(raw: string): { prefix: string } | { error: string } {
+  const prefix = raw.trim().toLowerCase();
+  if (!prefix) return { error: "Prefix is required" };
+  if (!LINK_PREFIX_RE.test(prefix)) {
+    return {
+      error:
+        "Prefix must be 1-40 chars, start with a letter, and contain only lowercase letters, numbers, or hyphens",
+    };
+  }
+  if (RESERVED_LINK_PREFIXES.has(prefix)) {
+    return { error: `"${prefix}" is reserved - pick a different prefix` };
+  }
+  return { prefix };
+}
+
+export async function getCompanyLinkTypesAction() {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const companyId = await getUserCompanyId(session.user.id);
+  if (!companyId) return { error: "No company found for user" };
+
+  try {
+    const items = await prisma.companyLinkType.findMany({
+      where: { companyId },
+      orderBy: { createdAt: "asc" },
+      select: { id: true, label: true, prefix: true, icon: true, isActive: true },
+    });
+    return { success: true, items };
+  } catch (error: any) {
+    return { error: error?.message ?? "Failed to load link types" };
+  }
+}
+
+export async function createCompanyLinkTypeAction(input: { label: string; prefix: string; icon?: string }) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const companyId = await getUserCompanyId(session.user.id);
+  if (!companyId) return { error: "No company found for user" };
+
+  const label = input.label?.trim() ?? "";
+  if (!label) return { error: "Label is required" };
+  if (label.length > 60) return { error: "Label too long (max 60 chars)" };
+
+  const normalized = normalizeLinkPrefix(input.prefix ?? "");
+  if ("error" in normalized) return { error: normalized.error };
+
+  const icon = input.icon?.trim() || null;
+  if (icon && icon.length > 40) return { error: "Icon name too long" };
+
+  try {
+    const item = await prisma.companyLinkType.create({
+      data: { companyId, label, prefix: normalized.prefix, icon },
+      select: { id: true, label: true, prefix: true, icon: true, isActive: true },
+    });
+    return { success: true, item };
+  } catch (error: any) {
+    // Unique constraint on (companyId, prefix)
+    if (error?.code === "P2002") {
+      return { error: `Prefix "${normalized.prefix}" is already in use` };
+    }
+    return { error: error?.message ?? "Failed to create link type" };
+  }
+}
+
+export async function deleteCompanyLinkTypeAction(id: string) {
+  if (!isUUID(id)) return { error: "Invalid link type ID" };
+
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const companyId = await getUserCompanyId(session.user.id);
+  if (!companyId) return { error: "No company found for user" };
+
+  // Confirm ownership before deleting.
+  const owned = await prisma.companyLinkType.findFirst({ where: { id, companyId }, select: { id: true } });
+  if (!owned) return { error: "Link type not found" };
+
+  try {
+    await prisma.companyLinkType.delete({ where: { id } });
+    return { success: true };
+  } catch (error: any) {
+    return { error: error?.message ?? "Failed to delete link type" };
   }
 }
 

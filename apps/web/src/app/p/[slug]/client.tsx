@@ -47,6 +47,13 @@ export function PublicPageClient({ page }: PublicPageClientProps) {
   const langParam = searchParams.get("lang");
   const initialLocale: ContentLocale =
     langParam && /^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,4})?$/.test(langParam) ? langParam : "en";
+
+  // Branch-specific QR codes carry `?b=<code>` (short per-company branch number);
+  // when present, feedback submitted from this page is attributed to that branch.
+  // The server-side API resolves the code within the product's company.
+  const branchParam = searchParams.get("b");
+  const forcedBranchCode =
+    branchParam && /^[1-9][0-9]{0,8}$/.test(branchParam) ? branchParam : undefined;
   const [contentLocale, setContentLocale] = useState<ContentLocale>(initialLocale);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const langDropdownRef = useRef<HTMLDivElement>(null);
@@ -256,7 +263,7 @@ export function PublicPageClient({ page }: PublicPageClientProps) {
 
       {/* Rendered page content */}
       <div ref={searchTargetRef}>
-        <PublicRenderer document={doc} contentLocale={contentLocale} productId={page.productId} />
+        <PublicRenderer document={doc} contentLocale={contentLocale} productId={page.productId} forcedBranchCode={forcedBranchCode} />
       </div>
 
       {/* Powered-by footer badge */}

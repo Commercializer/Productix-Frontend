@@ -3,6 +3,8 @@
 import { useSettings } from "@/hooks/use-settings";
 import { DashboardHeader } from "@/components/dashboard/header";
 import { BranchManager } from "@/components/dashboard/branch-manager";
+import { ChangePasswordCard } from "@/components/dashboard/change-password-card";
+import { LinkTypesCard } from "@/components/dashboard/link-types-card";
 
 export default function SettingsPage() {
   const { settings, loading } = useSettings();
@@ -80,7 +82,11 @@ export default function SettingsPage() {
                 </div>
               </div>
             </div>
-            
+
+            <LinkTypesCard />
+
+            <ChangePasswordCard />
+
           </div>
         ) : (
           <div className="bg-(--ds-surface) border border-(--ds-border) rounded-xl p-8 text-center text-(--ds-text-secondary)">

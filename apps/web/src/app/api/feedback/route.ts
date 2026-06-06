@@ -35,6 +35,8 @@ interface FeedbackPayload {
   email?: string;
   details?: string;
   branchId?: string | null;
+  /** Short per-company branch code from a branch-scoped QR (`?b=<code>`). Wins over branchId. */
+  branchCode?: string | number | null;
   answers?: AnswerPayload[];
   /** Deprecated: author-defined fields keyed by label. */
   extra?: Record<string, unknown>;

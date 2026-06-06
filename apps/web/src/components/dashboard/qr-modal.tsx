@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { X, Download, Copy, Check, ExternalLink, Package, Link2, Share2 } from "lucide-react";
+import { X, Download, Copy, Check, ExternalLink, Package, Link2, Share2, Tag, ChevronDown, MapPin } from "lucide-react";
 import QRCode from "qrcode";
+import { getCompanyLinkTypesAction, getBranchesAction } from "@/lib/dashboard/actions";
 
 interface QrModalProps {
   isOpen: boolean;
@@ -11,14 +12,26 @@ interface QrModalProps {
   shortCode: string;
 }
 
-type QrType = "onpack" | "link" | "social";
-
-const QR_TYPES: ReadonlyArray<{
-  id: QrType;
+interface QrTab {
+  id: string;
   label: string;
+  // Full path prefix, e.g. "/p" for built-ins or "/<prefix>" for custom types.
   prefix: string;
   Icon: typeof Package;
-}> = [
+}
+
+interface BranchOption {
+  id: string;
+  code: number;
+  name: string;
+}
+
+// Sentinel value for "not scoped to any branch" in the branch picker.
+const ALL_BRANCHES = "__all__";
+
+// Built-in QR surfaces. Custom company-defined link types are fetched and
+// appended at runtime (they resolve at the top level as /<prefix>/<code>).
+const BUILTIN_TABS: ReadonlyArray<QrTab> = [
   { id: "onpack", label: "On Pack", prefix: "/p", Icon: Package },
   { id: "link", label: "Link", prefix: "/l", Icon: Link2 },
   { id: "social", label: "Social", prefix: "/s", Icon: Share2 },
@@ -27,13 +40,74 @@ const QR_TYPES: ReadonlyArray<{
 export function QrModal({ isOpen, onClose, productName, shortCode }: QrModalProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [copied, setCopied] = useState(false);
-  const [qrType, setQrType] = useState<QrType>("onpack");
+  const [qrTypeId, setQrTypeId] = useState<string>("onpack");
+  const [customTabs, setCustomTabs] = useState<QrTab[]>([]);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const selectorRef = useRef<HTMLDivElement>(null);
+  const [branches, setBranches] = useState<BranchOption[]>([]);
+  const [branchId, setBranchId] = useState<string>(ALL_BRANCHES);
+  const [branchMenuOpen, setBranchMenuOpen] = useState(false);
+  const branchSelectorRef = useRef<HTMLDivElement>(null);
 
-  const prefix = useMemo(
-    () => QR_TYPES.find((t) => t.id === qrType)?.prefix ?? "/p",
-    [qrType],
+  // Pull the company's custom link types whenever the modal opens.
+  useEffect(() => {
+    if (!isOpen) return;
+    let cancelled = false;
+    getCompanyLinkTypesAction().then((res) => {
+      if (cancelled) return;
+      const items = "items" in res ? res.items : undefined;
+      if (!items) return;
+      setCustomTabs(
+        items
+          .filter((t) => t.isActive)
+          .map((t) => ({
+            id: `custom:${t.id}`,
+            label: t.label,
+            prefix: `/${t.prefix}`,
+            Icon: Tag,
+          })),
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen]);
+
+  // Pull the company's active branches so a QR can be scoped to one location.
+  useEffect(() => {
+    if (!isOpen) return;
+    let cancelled = false;
+    getBranchesAction().then((res) => {
+      if (cancelled) return;
+      const items = "items" in res ? res.items : undefined;
+      if (!items) return;
+      setBranches(items.filter((b) => b.isActive).map((b) => ({ id: b.id, code: b.code, name: b.name })));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen]);
+
+  const tabs = useMemo<QrTab[]>(() => [...BUILTIN_TABS, ...customTabs], [customTabs]);
+  const selectedBranch = useMemo(
+    () => branches.find((b) => b.id === branchId) ?? null,
+    [branches, branchId],
   );
-  const publicUrl = `${typeof window !== "undefined" ? window.location.origin : ""}${prefix}/${shortCode}`;
+
+  const activeTab = useMemo(
+    () => tabs.find((t) => t.id === qrTypeId) ?? tabs[0],
+    [tabs, qrTypeId],
+  );
+  const prefix = activeTab?.prefix ?? "/p";
+  // Last path segment, used in download filenames (e.g. "p", "l", "promo").
+  const typeSlug = prefix.split("/").filter(Boolean).pop() ?? "qr";
+  // A branch-scoped QR carries ?b=<code> (short per-company number); the public
+  // page resolves it and attributes every feedback submission to that branch.
+  const branchQuery = selectedBranch ? `?b=${selectedBranch.code}` : "";
+  const branchSlug = selectedBranch
+    ? `-${selectedBranch.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 24)}`
+    : "";
+  const publicUrl = `${typeof window !== "undefined" ? window.location.origin : ""}${prefix}/${shortCode}${branchQuery}`;
 
   useEffect(() => {
     if (!isOpen || !canvasRef.current) return;
@@ -52,13 +126,43 @@ export function QrModal({ isOpen, onClose, productName, shortCode }: QrModalProp
   // Reset to default type whenever the modal is reopened so each session starts
   // on On Pack rather than whatever the user picked last time.
   useEffect(() => {
-    if (isOpen) setQrType("onpack");
+    if (isOpen) {
+      setQrTypeId("onpack");
+      setMenuOpen(false);
+      setBranchId(ALL_BRANCHES);
+      setBranchMenuOpen(false);
+    }
   }, [isOpen]);
+
+  // Close either dropdown on outside click or Escape.
+  useEffect(() => {
+    if (!menuOpen && !branchMenuOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (selectorRef.current && !selectorRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+      if (branchSelectorRef.current && !branchSelectorRef.current.contains(e.target as Node)) {
+        setBranchMenuOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMenuOpen(false);
+        setBranchMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [menuOpen, branchMenuOpen]);
 
   const handleDownloadPng = () => {
     if (!canvasRef.current) return;
     const link = document.createElement("a");
-    link.download = `${shortCode}-${qrType}-qr.png`;
+    link.download = `${shortCode}-${typeSlug}${branchSlug}-qr.png`;
     link.href = canvasRef.current.toDataURL("image/png");
     link.click();
   };
@@ -76,7 +180,7 @@ export function QrModal({ isOpen, onClose, productName, shortCode }: QrModalProp
     const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.download = `${shortCode}-${qrType}-qr.svg`;
+    link.download = `${shortCode}-${typeSlug}${branchSlug}-qr.svg`;
     link.href = url;
     link.click();
     URL.revokeObjectURL(url);
@@ -127,29 +231,116 @@ export function QrModal({ isOpen, onClose, productName, shortCode }: QrModalProp
             </button>
           </div>
 
-          {/* QR Type Tabs */}
+          {/* QR Type Selector — a dropdown so it stays tidy no matter how many
+              link types a company defines. */}
           <div className="px-6 pt-2">
-            <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-[#f1f5f9] dark:bg-[#0f172a] border border-[#e2e8f0] dark:border-[#334155]">
-              {QR_TYPES.map(({ id, label, Icon }) => {
-                const active = qrType === id;
-                return (
-                  <button
-                    key={id}
-                    onClick={() => setQrType(id)}
-                    className={`h-9 px-2 rounded-lg text-[12px] font-medium flex items-center justify-center gap-1.5 transition-all ${
-                      active
-                        ? "bg-white dark:bg-[#1e293b] text-[#0f172a] dark:text-white shadow-xs border border-[#e2e8f0] dark:border-[#334155]"
-                        : "text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-white"
-                    }`}
-                    aria-pressed={active}
-                  >
-                    <Icon size={14} strokeWidth={2.2} />
-                    {label}
-                  </button>
-                );
-              })}
+            <div ref={selectorRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setMenuOpen((o) => !o)}
+                className="w-full h-10 px-3 rounded-xl bg-[#f1f5f9] dark:bg-[#0f172a] border border-[#e2e8f0] dark:border-[#334155] flex items-center justify-between gap-2 text-[13px] font-medium text-[#0f172a] dark:text-white hover:border-[#cbd5e1] dark:hover:border-[#475569] transition-colors"
+                aria-haspopup="listbox"
+                aria-expanded={menuOpen}
+              >
+                <span className="flex items-center gap-2 min-w-0">
+                  {activeTab?.Icon && <activeTab.Icon size={15} strokeWidth={2.2} className="shrink-0 text-[#64748b] dark:text-[#94a3b8]" />}
+                  <span className="truncate">{activeTab?.label ?? "On Pack"}</span>
+                </span>
+                <ChevronDown
+                  size={16}
+                  className={`shrink-0 text-[#94a3b8] transition-transform ${menuOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+
+              {menuOpen && (
+                <ul
+                  role="listbox"
+                  className="absolute left-0 right-0 top-full mt-1.5 z-10 max-h-[220px] overflow-y-auto p-1 rounded-xl bg-white dark:bg-[#1e293b] border border-[#e2e8f0] dark:border-[#334155] shadow-lg"
+                >
+                  {tabs.map(({ id, label, Icon }) => {
+                    const active = qrTypeId === id;
+                    return (
+                      <li key={id} role="option" aria-selected={active}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setQrTypeId(id);
+                            setMenuOpen(false);
+                          }}
+                          className={`w-full h-9 px-2.5 rounded-lg text-[13px] font-medium flex items-center gap-2 transition-colors ${
+                            active
+                              ? "bg-[#f1f5f9] dark:bg-[#0f172a] text-[#0f172a] dark:text-white"
+                              : "text-[#64748b] dark:text-[#94a3b8] hover:bg-[#f8fafc] dark:hover:bg-[#0f172a] hover:text-[#0f172a] dark:hover:text-white"
+                          }`}
+                        >
+                          <Icon size={15} strokeWidth={2.2} className="shrink-0" />
+                          <span className="truncate flex-1 text-left">{label}</span>
+                          {active && <Check size={14} className="shrink-0 text-emerald-500" />}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </div>
           </div>
+
+          {/* Branch Selector — optional. Scopes the QR to one location so every
+              feedback submission scanned through it is attributed to that branch.
+              Only shown when the company has active branches. */}
+          {branches.length > 0 && (
+            <div className="px-6 pt-4">
+              <div ref={branchSelectorRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => setBranchMenuOpen((o) => !o)}
+                  className="w-full h-10 px-3 rounded-xl bg-[#f1f5f9] dark:bg-[#0f172a] border border-[#e2e8f0] dark:border-[#334155] flex items-center justify-between gap-2 text-[13px] font-medium text-[#0f172a] dark:text-white hover:border-[#cbd5e1] dark:hover:border-[#475569] transition-colors"
+                  aria-haspopup="listbox"
+                  aria-expanded={branchMenuOpen}
+                >
+                  <span className="flex items-center gap-2 min-w-0">
+                    <MapPin size={15} strokeWidth={2.2} className="shrink-0 text-[#64748b] dark:text-[#94a3b8]" />
+                    <span className="truncate">{selectedBranch ? selectedBranch.name : "All branches"}</span>
+                  </span>
+                  <ChevronDown
+                    size={16}
+                    className={`shrink-0 text-[#94a3b8] transition-transform ${branchMenuOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+
+                {branchMenuOpen && (
+                  <ul
+                    role="listbox"
+                    className="absolute left-0 right-0 top-full mt-1.5 z-10 max-h-[220px] overflow-y-auto p-1 rounded-xl bg-white dark:bg-[#1e293b] border border-[#e2e8f0] dark:border-[#334155] shadow-lg"
+                  >
+                    {[{ id: ALL_BRANCHES, name: "All branches" }, ...branches].map((b) => {
+                      const active = branchId === b.id;
+                      return (
+                        <li key={b.id} role="option" aria-selected={active}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setBranchId(b.id);
+                              setBranchMenuOpen(false);
+                            }}
+                            className={`w-full h-9 px-2.5 rounded-lg text-[13px] font-medium flex items-center gap-2 transition-colors ${
+                              active
+                                ? "bg-[#f1f5f9] dark:bg-[#0f172a] text-[#0f172a] dark:text-white"
+                                : "text-[#64748b] dark:text-[#94a3b8] hover:bg-[#f8fafc] dark:hover:bg-[#0f172a] hover:text-[#0f172a] dark:hover:text-white"
+                            }`}
+                          >
+                            <MapPin size={15} strokeWidth={2.2} className="shrink-0" />
+                            <span className="truncate flex-1 text-left">{b.name}</span>
+                            {active && <Check size={14} className="shrink-0 text-emerald-500" />}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* QR Canvas */}
           <div className="px-6 py-5 flex flex-col items-center">

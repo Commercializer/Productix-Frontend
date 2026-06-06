@@ -44,6 +44,8 @@ export interface PublicRendererProps {
   contentLocale?: ContentLocale;
   /** The Product this page represents - needed for feedback / inquiry submissions. */
   productId?: string;
+  /** Short branch code from the QR/share URL (`?b=<code>`); feedback is attributed to it. */
+  forcedBranchCode?: string;
 }
 
 /** Detect the breakpoint from a pixel width */
@@ -54,7 +56,7 @@ function detectBreakpoint(width: number): Breakpoint {
   return "desktop";
 }
 
-export function PublicRenderer({ document: doc, className, contentLocale = "en", productId }: PublicRendererProps) {
+export function PublicRenderer({ document: doc, className, contentLocale = "en", productId, forcedBranchCode }: PublicRendererProps) {
   const containerRef = useRef<HTMLElement>(null);
   // Default to 1440 to match SSR output and avoid hydration mismatch.
   // After mount, the ResizeObserver below switches to the real container width.
@@ -83,7 +85,7 @@ export function PublicRenderer({ document: doc, className, contentLocale = "en",
   const responsiveCSS = useMemo(() => generateResponsiveStylesheet(doc), [doc]);
 
   return (
-    <PublicPageProvider value={{ productId }}>
+    <PublicPageProvider value={{ productId, forcedBranchCode }}>
       {/* Inject responsive stylesheet */}
       <style dangerouslySetInnerHTML={{ __html: responsiveCSS }} />
 

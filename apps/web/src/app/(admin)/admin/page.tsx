@@ -3,6 +3,7 @@
 import { useState, useEffect, useTransition } from "react";
 import { getDashboardStatsAction } from "@/lib/admin/actions";
 import { StatsCard } from "@/components/dashboard/stats-card";
+import { CreateCompanyModal } from "@/components/admin/create-company-modal";
 
 interface Stats {
   totalUsers: number;

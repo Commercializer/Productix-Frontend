@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { createUserAction } from "@/lib/admin/actions";
+import { listTenantsAction } from "@/lib/admin/companies";
 
 interface CreateUserModalProps {
   onClose: () => void;
@@ -21,7 +22,20 @@ export function CreateUserModal({ onClose, onSuccess }: CreateUserModalProps) {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState("COMPANY_USER");
+  const [tenants, setTenants] = useState<{ id: string; name: string }[]>([]);
+  const [tenantId, setTenantId] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  // Tenant admins must be tied to a tenant; load the list lazily for the picker.
+  useEffect(() => {
+    listTenantsAction()
+      .then((rows) => {
+        setTenants(rows);
+        const first = rows[0];
+        if (first) setTenantId((prev) => prev || first.id);
+      })
+      .catch(() => {});
+  }, []);
 
   const generatePassword = () => {
     const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
@@ -37,7 +51,12 @@ export function CreateUserModal({ onClose, onSuccess }: CreateUserModalProps) {
     e.preventDefault();
     setError(null);
     startTransition(async () => {
-      const result = await createUserAction({ email, password, role });
+      const result = await createUserAction({
+        email,
+        password,
+        role,
+        tenantId: role === "TENANT_ADMIN" ? tenantId : undefined,
+      });
       if (result.error) {
         setError(result.error);
       } else {
@@ -120,6 +139,31 @@ export function CreateUserModal({ onClose, onSuccess }: CreateUserModalProps) {
               ))}
             </select>
           </div>
+
+          {role === "TENANT_ADMIN" && (
+            <div className="form-group">
+              <label className="form-label">Tenant</label>
+              <select
+                className="form-input form-select"
+                value={tenantId}
+                onChange={(e) => setTenantId(e.target.value)}
+                disabled={isPending || tenants.length === 0}
+                required
+                id="new-user-tenant"
+              >
+                {tenants.length === 0 ? (
+                  <option value="">No tenants yet — create a company first</option>
+                ) : (
+                  tenants.map((t) => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))
+                )}
+              </select>
+              <p className="td-muted" style={{ fontSize: 12, marginTop: 4 }}>
+                The tenant admin manages the first company under this tenant, with full dashboard and team access.
+              </p>
+            </div>
+          )}
 
           {error && (
             <div className="form-error" role="alert">

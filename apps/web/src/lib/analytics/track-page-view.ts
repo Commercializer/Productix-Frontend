@@ -60,6 +60,37 @@ interface TrackArgs {
   companyId: string;
   context: ViewContext;
   qrScanType?: QrScanType;
+  // For CUSTOM qrScanType: the company-defined link-type prefix the scan came
+  // through. Stored so analytics can break custom link types out by prefix.
+  qrScanPrefix?: string | null;
+  // When the scan arrived through a branch-scoped QR (`?b=<code>`), the branch
+  // it resolves to. Null for generic QRs. Lets analytics segment scans by branch.
+  branchId?: string | null;
+}
+
+/**
+ * Resolve the short per-company branch code carried in a branch-scoped QR
+ * (`?b=<code>`) to a branch id, so the scan can be attributed to that branch.
+ * Returns null when there's no valid `b` param or it doesn't match a branch in
+ * this company. Safe to call inside `after()` — never throws.
+ */
+export async function resolveBranchIdFromSearch(
+  companyId: string,
+  search: string,
+): Promise<string | null> {
+  // Mirror the client-side `forcedBranchCode` validation: 1–9 digits, no
+  // leading zero. Anything else is treated as "no branch".
+  const match = /[?&]b=([1-9][0-9]{0,8})(?:&|$)/.exec(search);
+  if (!match) return null;
+  try {
+    const branch = await prisma.branch.findUnique({
+      where: { companyId_code: { companyId, code: Number(match[1]) } },
+      select: { id: true },
+    });
+    return branch?.id ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export async function trackPageView({
@@ -68,6 +99,8 @@ export async function trackPageView({
   companyId,
   context,
   qrScanType,
+  qrScanPrefix,
+  branchId,
 }: TrackArgs): Promise<void> {
   try {
     const { ip, userAgent, referrer, language, country, region, city } = context;
@@ -105,6 +138,8 @@ export async function trackPageView({
           referrer,
           language,
           qrScanType,
+          qrScanPrefix: qrScanPrefix ?? null,
+          branchId: branchId ?? null,
         },
       ],
       skipDuplicates: true,

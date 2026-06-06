@@ -11,6 +11,7 @@ import {
   updateRedirectAction,
   updateProductNameAction,
   setPinLockAction,
+  revealProductPinAction,
 } from "@/lib/dashboard/actions";
 
 export interface Promption {
@@ -31,6 +32,7 @@ export interface Promption {
   redirectUrl: string | null;
   redirectEnabled: boolean;
   pinEnabled: boolean;
+  hasPinCode: boolean;
 }
 
 export function usePromptions() {
@@ -157,10 +159,19 @@ export function usePromptions() {
       if (result.error) return { error: result.error };
       setPromptions((prev) =>
         prev.map((p) =>
-          p.id === profileId ? { ...p, pinEnabled: !!result.pinEnabled } : p
+          p.id === profileId
+            ? { ...p, pinEnabled: !!result.pinEnabled, hasPinCode: result.hasPinCode ?? p.hasPinCode }
+            : p
         )
       );
       return { success: true, pinEnabled: !!result.pinEnabled, hasPin: !!result.hasPin };
+    },
+    []
+  );
+
+  const revealPin = useCallback(
+    async (profileId: string, password: string) => {
+      return revealProductPinAction(profileId, password);
     },
     []
   );
@@ -178,5 +189,6 @@ export function usePromptions() {
     updateRedirect,
     updateProductName,
     updatePinLock,
+    revealPin,
   };
 }

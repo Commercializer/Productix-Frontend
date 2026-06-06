@@ -22,6 +22,8 @@ interface AuthContextValue {
   isTenantAdmin: boolean;
   isCompanyAdmin: boolean;
   isCompanyUser: boolean;
+  /** Can manage a company's dashboard with admin privileges (company OR tenant admin). */
+  isCompanyManager: boolean;
   signOut: () => Promise<void>;
 }
 
@@ -33,6 +35,7 @@ const AuthContext = createContext<AuthContextValue>({
   isTenantAdmin: false,
   isCompanyAdmin: false,
   isCompanyUser: false,
+  isCompanyManager: false,
   signOut: async () => {},
 });
 
@@ -57,6 +60,8 @@ function AuthStateManager({ children }: { children: ReactNode }) {
   const isTenantAdmin = user?.role === "TENANT_ADMIN";
   const isCompanyAdmin = user?.role === "COMPANY_ADMIN";
   const isCompanyUser = user?.role === "COMPANY_USER";
+  // Tenant admins act as company admins on the dashboard.
+  const isCompanyManager = isCompanyAdmin || isTenantAdmin;
 
   return (
     <AuthContext.Provider
@@ -68,6 +73,7 @@ function AuthStateManager({ children }: { children: ReactNode }) {
         isTenantAdmin,
         isCompanyAdmin,
         isCompanyUser,
+        isCompanyManager,
         signOut,
       }}
     >

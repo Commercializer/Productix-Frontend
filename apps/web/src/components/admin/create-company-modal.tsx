@@ -28,7 +28,7 @@ export function CreateCompanyModal({ onClose, onSuccess }: CreateCompanyModalPro
   const [email, setEmail] = useState("");
   const [businessUsername, setBusinessUsername] = useState("");
   const [plan, setPlan] = useState<typeof PLANS[number]["value"]>("FREE");
-  const [maximumUsers, setMaximumUsers] = useState(5);
+  const [maximumUsers, setMaximumUsers] = useState(3);
   const [adminEmail, setAdminEmail] = useState("");
   const [adminPassword, setAdminPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -197,7 +197,7 @@ export function CreateCompanyModal({ onClose, onSuccess }: CreateCompanyModalPro
               </select>
             </div>
             <div style={{ flex: 1 }}>
-              <label className="form-label">Max users</label>
+              <label className="form-label">Team seats</label>
               <input
                 type="number"
                 className="form-input"
@@ -205,6 +205,7 @@ export function CreateCompanyModal({ onClose, onSuccess }: CreateCompanyModalPro
                 value={maximumUsers}
                 onChange={(e) => setMaximumUsers(Number(e.target.value) || 1)}
                 disabled={isPending}
+                title="Members the company admin can add. The admin you assign below does not count toward this."
               />
             </div>
           </div>

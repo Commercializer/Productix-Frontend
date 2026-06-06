@@ -13,9 +13,9 @@ export const authConfig: NextAuthConfig = {
       if (isOnLogin) {
         if (isLoggedIn) {
           const role = (auth?.user as any)?.role as string | undefined;
+          // TENANT_ADMIN acts as a company admin and lives on /dashboard.
           let target = "/dashboard";
           if (role === "SUPER_ADMIN") target = "/admin";
-          else if (role === "TENANT_ADMIN") target = "/tenant";
           return Response.redirect(new URL(target, nextUrl));
         }
         return true;

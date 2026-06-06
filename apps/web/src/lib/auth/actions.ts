@@ -36,10 +36,8 @@ export async function loginAction(email: string, password: string) {
   let redirectTo = "/dashboard";
   if (role === "SUPER_ADMIN") {
     redirectTo = "/admin";
-  } else if (role === "TENANT_ADMIN") {
-    redirectTo = "/tenant";
   }
-  // COMPANY_ADMIN and COMPANY_USER → /dashboard (default)
+  // TENANT_ADMIN, COMPANY_ADMIN and COMPANY_USER → /dashboard (default)
 
   return { success: true, redirectTo };
 }

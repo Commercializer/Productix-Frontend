@@ -15,6 +15,7 @@ export function CreateTeamMemberModal({ onClose, onSuccess }: CreateTeamMemberMo
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<"COMPANY_USER" | "COMPANY_ADMIN">("COMPANY_USER");
   const [error, setError] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
 
   const generatePassword = () => {
     const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
@@ -29,10 +30,20 @@ export function CreateTeamMemberModal({ onClose, onSuccess }: CreateTeamMemberMo
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setWarning(null);
     startTransition(async () => {
       const result = await createTeamMemberAction({ email, password, role });
       if ("error" in result && result.error) {
         setError(result.error);
+      } else if ("emailSent" in result && result.emailSent === false) {
+        // User was created, but the invite email didn't go out. Keep the modal
+        // open so the admin can share the credentials manually.
+        onSuccess();
+        setWarning(
+          `Member added, but the invite email couldn't be sent${
+            result.emailError ? ` (${result.emailError})` : ""
+          }. Share the email and password with them directly.`
+        );
       } else {
         onSuccess();
         onClose();
@@ -120,13 +131,46 @@ export function CreateTeamMemberModal({ onClose, onSuccess }: CreateTeamMemberMo
             </div>
           )}
 
+          {warning && (
+            <div
+              role="alert"
+              style={{
+                display: "flex",
+                gap: 8,
+                alignItems: "flex-start",
+                background: "#fffbeb",
+                border: "1px solid #fde68a",
+                color: "#92400e",
+                borderRadius: 8,
+                padding: "10px 12px",
+                fontSize: 13,
+                marginTop: 4,
+              }}
+            >
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ flexShrink: 0, marginTop: 1 }}>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+              {warning}
+            </div>
+          )}
+
           <div className="modal-actions">
-            <button type="button" className="btn-secondary" onClick={onClose} disabled={isPending}>
-              Cancel
-            </button>
-            <button type="submit" className="btn-primary" disabled={isPending}>
-              {isPending ? "Adding…" : "Add member"}
-            </button>
+            {warning ? (
+              <button type="button" className="btn-primary" onClick={onClose}>
+                Done
+              </button>
+            ) : (
+              <>
+                <button type="button" className="btn-secondary" onClick={onClose} disabled={isPending}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn-primary" disabled={isPending}>
+                  {isPending ? "Adding…" : "Add member"}
+                </button>
+              </>
+            )}
           </div>
         </form>
       </div>

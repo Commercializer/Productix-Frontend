@@ -1,11 +1,14 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import {
+  assignTenantAction,
   deleteUserAction,
   disableUserAction,
   resetUserPasswordAction,
 } from "@/lib/admin/actions";
+import { listTenantsAction } from "@/lib/admin/companies";
+import { computeSeatUsage } from "@/lib/seats";
 
 interface UserRow {
   id: string;
@@ -83,6 +86,18 @@ export function UserTree({ companies, platformUsers, onCreateUser, onRefresh }: 
   const [newPassword, setNewPassword] = useState("");
   const [actionError, setActionError] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [assignModal, setAssignModal] = useState<PlatformUserRow | null>(null);
+  const [assignTenantId, setAssignTenantId] = useState("");
+  const [tenants, setTenants] = useState<
+    { id: string; name: string; companyCount: number }[]
+  >([]);
+
+  // Tenants are needed for the "assign tenant" picker on orphaned tenant admins.
+  useEffect(() => {
+    listTenantsAction()
+      .then(setTenants)
+      .catch(() => {});
+  }, []);
 
   const matches = (u: UserRow) =>
     !search ||
@@ -138,6 +153,26 @@ export function UserTree({ companies, platformUsers, onCreateUser, onRefresh }: 
     });
   };
 
+  const openAssign = (u: PlatformUserRow) => {
+    setActionError(null);
+    setAssignModal(u);
+    // Preselect their current tenant, else the first one.
+    const current = tenants.find((t) => t.name === u.tenantName);
+    setAssignTenantId(current?.id ?? tenants[0]?.id ?? "");
+  };
+
+  const handleAssignTenant = () => {
+    if (!assignModal || !assignTenantId) return;
+    startTransition(async () => {
+      const result = await assignTenantAction(assignModal.id, assignTenantId);
+      if ("error" in result && result.error) setActionError(result.error);
+      else {
+        setAssignModal(null);
+        onRefresh();
+      }
+    });
+  };
+
   const handleResetPassword = () => {
     if (!resetModal || !newPassword) return;
     startTransition(async () => {
@@ -152,12 +187,24 @@ export function UserTree({ companies, platformUsers, onCreateUser, onRefresh }: 
 
   const renderUserRow = (u: UserRow, depth = 1) => {
     const roleInfo = ROLE_LABELS[u.role] ?? { label: u.role, cls: "badge badge--gray" };
+    const isTenantAdminRow = u.role === "TENANT_ADMIN";
+    const tenantName = (u as PlatformUserRow).tenantName ?? null;
     return (
       <tr key={u.id} className="tr">
         <td className="td">
           <div className="td-name" style={{ paddingLeft: depth * 24 }}>
             <div className="td-avatar">{u.email[0]?.toUpperCase()}</div>
-            <span className="td-title">{u.email}</span>
+            <div>
+              <span className="td-title">{u.email}</span>
+              {isTenantAdminRow && (
+                <div
+                  className="td-muted"
+                  style={{ fontSize: 12, color: tenantName ? undefined : "#dc2626" }}
+                >
+                  {tenantName ? `Tenant: ${tenantName}` : "No tenant — assign one to enable the dashboard"}
+                </div>
+              )}
+            </div>
           </div>
         </td>
         <td className="td">
@@ -172,6 +219,18 @@ export function UserTree({ companies, platformUsers, onCreateUser, onRefresh }: 
         <td className="td td-muted">{formatDate(u.createdAt)}</td>
         <td className="td">
           <div className="td-actions">
+            {isTenantAdminRow && (
+              <button
+                className="action-btn action-btn--edit"
+                title={tenantName ? "Change tenant" : "Assign tenant"}
+                onClick={() => openAssign(u as PlatformUserRow)}
+                id={`assign-tenant-${u.id}`}
+              >
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+              </button>
+            )}
             <button
               className="action-btn action-btn--edit"
               title="Reset password"
@@ -231,6 +290,8 @@ export function UserTree({ companies, platformUsers, onCreateUser, onRefresh }: 
   const renderCompany = (c: CompanyGroup) => {
     const open = effectiveExpanded(c.id);
     const memberCount = c.admins.length + c.users.length;
+    // Seats used against the limit — the owner admin is a free seat.
+    const seatsUsed = computeSeatUsage(c.admins.length, c.users.length, c.maximumUsers).used;
     return (
       <tbody key={c.id}>
         <tr
@@ -253,7 +314,7 @@ export function UserTree({ companies, platformUsers, onCreateUser, onRefresh }: 
             </div>
           </td>
           <td className="td td-muted" colSpan={4}>
-            {memberCount} member{memberCount === 1 ? "" : "s"} of {c.maximumUsers}
+            {memberCount} member{memberCount === 1 ? "" : "s"} · {seatsUsed} of {c.maximumUsers} seats
           </td>
           <td className="td">
             <span className={`badge ${c.isActive ? "badge--success" : "badge--danger"}`}>
@@ -365,6 +426,66 @@ export function UserTree({ companies, platformUsers, onCreateUser, onRefresh }: 
           </table>
         </div>
       </div>
+
+      {assignModal && (
+        <div className="modal-overlay" onClick={() => setAssignModal(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title">Assign tenant</h3>
+              <button className="modal-close" onClick={() => setAssignModal(null)}>✕</button>
+            </div>
+            <p className="modal-desc">
+              Link <strong>{assignModal.email}</strong> to a tenant. They'll manage the
+              first company under that tenant from the dashboard.
+            </p>
+            <div className="form-group">
+              <label className="form-label">Tenant</label>
+              <select
+                className="form-input form-select"
+                value={assignTenantId}
+                onChange={(e) => setAssignTenantId(e.target.value)}
+                disabled={isPending || tenants.length === 0}
+                id="assign-tenant-select"
+              >
+                {tenants.length === 0 ? (
+                  <option value="">No tenants yet — create a company first</option>
+                ) : (
+                  tenants.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                      {t.companyCount === 0 ? " (no company yet)" : ""}
+                    </option>
+                  ))
+                )}
+              </select>
+              {(() => {
+                const sel = tenants.find((t) => t.id === assignTenantId);
+                if (sel && sel.companyCount === 0) {
+                  return (
+                    <p className="td-muted" style={{ fontSize: 12, marginTop: 4, color: "#b45309" }}>
+                      This tenant has no company yet — the admin's dashboard will be empty until you add one.
+                    </p>
+                  );
+                }
+                return null;
+              })()}
+            </div>
+            <div className="modal-actions">
+              <button className="btn-secondary" onClick={() => setAssignModal(null)} disabled={isPending}>
+                Cancel
+              </button>
+              <button
+                className="btn-primary"
+                onClick={handleAssignTenant}
+                disabled={isPending || !assignTenantId}
+                id="confirm-assign-tenant-btn"
+              >
+                {isPending ? "Saving…" : "Assign"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {resetModal && (
         <div className="modal-overlay" onClick={() => setResetModal(null)}>

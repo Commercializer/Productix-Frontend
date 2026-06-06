@@ -48,6 +48,11 @@ export interface AnalyticsStats {
   scansLast30Days: number;
   feedbackLast30Days: number;
   scanToFeedbackRatio: number;
+  feedbackResolutionRate: number;
+  ratedFeedbackRate: number;
+  publishRate: number;
+  resolvedFeedbackCount: number;
+  ratedFeedbackCount: number;
   averageVisitorDurationMs: number | null;
   totalVisitorDurationMs: number | null;
   timeSeries: TimeSeriesPoint[];
@@ -60,7 +65,9 @@ export interface AnalyticsStats {
   productBreakdowns: ProductBreakdown[];
 }
 
-export function useAnalytics() {
+// `branchId` scopes scan + feedback metrics to a single branch; omit (or pass
+// null) for company-wide totals. Changing it refetches.
+export function useAnalytics(branchId?: string | null) {
   const [stats, setStats] = useState<AnalyticsStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +76,7 @@ export function useAnalytics() {
     setLoading(true);
     setError(null);
     try {
-      const result = await getCompanyAnalyticsAction();
+      const result = await getCompanyAnalyticsAction(branchId ?? undefined);
       if (result.error) {
         throw new Error(result.error);
       }
@@ -79,7 +86,7 @@ export function useAnalytics() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [branchId]);
 
   useEffect(() => {
     fetchAnalytics();

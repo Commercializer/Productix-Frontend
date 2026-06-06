@@ -164,18 +164,33 @@ export async function createUserAction(data: {
   email: string;
   password: string;
   role: string;
+  /** Required for TENANT_ADMIN: the tenant this admin manages. */
+  tenantId?: string;
 }) {
+  // A tenant admin acts as a company admin scoped to its tenant, so it must be
+  // linked to a tenant — otherwise it has no company to manage.
+  if (data.role === "TENANT_ADMIN" && !data.tenantId) {
+    return { error: "Select a tenant for the tenant admin." };
+  }
+
   try {
     const passwordHash = await bcrypt.hash(data.password, 10);
 
-    // We use nested writes or rely on the default Role enum via Prisma
-    const user = await prisma.user.create({
-      data: {
-        email: data.email,
-        passwordHash,
-        role: data.role as any,
-        isActive: true,
+    const user = await prisma.$transaction(async (tx) => {
+      const created = await tx.user.create({
+        data: {
+          email: data.email,
+          passwordHash,
+          role: data.role as any,
+          isActive: true,
+        },
+      });
+      if (data.role === "TENANT_ADMIN" && data.tenantId) {
+        await tx.tenantAdmin.create({
+          data: { userId: created.id, tenantId: data.tenantId },
+        });
       }
+      return created;
     });
 
     revalidatePath("/admin/users");
@@ -186,6 +201,39 @@ export async function createUserAction(data: {
       return { error: "Email already exists." };
     }
     return { error: error.message || "Failed to create user." };
+  }
+}
+
+/**
+ * Link (or move) an existing TENANT_ADMIN to a tenant so they can manage that
+ * tenant's company from the dashboard. Lets you fix orphaned tenant admins
+ * without deleting and recreating them.
+ */
+export async function assignTenantAction(userId: string, tenantId: string) {
+  if (!tenantId) return { error: "Select a tenant." };
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true },
+    });
+    if (!user) return { error: "User not found." };
+    if (user.role !== "TENANT_ADMIN") {
+      return { error: "Only tenant admins can be linked to a tenant." };
+    }
+
+    await prisma.tenantAdmin.upsert({
+      where: { userId },
+      update: { tenantId },
+      create: { userId, tenantId },
+    });
+
+    revalidatePath("/admin/users");
+    return { success: true };
+  } catch (error: any) {
+    if (error.code === "P2003") {
+      return { error: "That tenant no longer exists." };
+    }
+    return { error: error.message || "Failed to assign tenant." };
   }
 }
 

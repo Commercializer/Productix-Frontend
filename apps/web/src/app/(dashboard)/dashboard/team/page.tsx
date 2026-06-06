@@ -36,21 +36,22 @@ function formatDate(iso: string | null) {
 }
 
 export default function TeamPage() {
-  const { user, loading, isCompanyAdmin } = useAuth();
+  const { user, loading, isCompanyManager } = useAuth();
   const router = useRouter();
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [companyName, setCompanyName] = useState("");
   const [maximumUsers, setMaximumUsers] = useState(0);
+  const [seatsUsed, setSeatsUsed] = useState(0);
   const [showCreate, setShowCreate] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
-    if (!loading && user && !isCompanyAdmin) {
+    if (!loading && user && !isCompanyManager) {
       router.replace("/dashboard");
     }
-  }, [loading, user, isCompanyAdmin, router]);
+  }, [loading, user, isCompanyManager, router]);
 
   const load = useCallback(() => {
     startTransition(async () => {
@@ -59,6 +60,7 @@ export default function TeamPage() {
         setMembers(data.members);
         setCompanyName(data.companyName);
         setMaximumUsers(data.maximumUsers);
+        setSeatsUsed(data.seatsUsed);
       } catch (e: any) {
         setActionError(e?.message ?? "Failed to load team.");
       }
@@ -66,10 +68,10 @@ export default function TeamPage() {
   }, []);
 
   useEffect(() => {
-    if (isCompanyAdmin) load();
-  }, [isCompanyAdmin, load]);
+    if (isCompanyManager) load();
+  }, [isCompanyManager, load]);
 
-  if (loading || !user || !isCompanyAdmin) {
+  if (loading || !user || !isCompanyManager) {
     return (
       <div className="app-loading">
         <div className="app-spinner" />
@@ -94,7 +96,7 @@ export default function TeamPage() {
     });
   };
 
-  const seatsLeft = Math.max(0, maximumUsers - members.length);
+  const seatsLeft = Math.max(0, maximumUsers - seatsUsed);
 
   return (
     <div className="page-content">
@@ -103,7 +105,7 @@ export default function TeamPage() {
           <h1 className="page-title">Team</h1>
           <p className="page-sub">
             {companyName ? `${companyName} · ` : ""}
-            {members.length} of {maximumUsers} seats used
+            {seatsUsed} of {maximumUsers} seats used
             {seatsLeft > 0 ? ` · ${seatsLeft} remaining` : ""}
           </p>
         </div>

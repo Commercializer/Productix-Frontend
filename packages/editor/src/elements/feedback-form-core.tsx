@@ -21,8 +21,9 @@
 
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { FieldInput } from "./feedback-field-input";
+import { usePublicPage } from "../renderer/public-page-context";
 import {
   fieldGridColumn,
   type FeedbackAnswerPayload,
@@ -75,6 +76,15 @@ export function FeedbackFormCore({
   onDone,
   doneLabel,
 }: FeedbackFormCoreProps) {
+  // When the page was opened via a branch-specific QR (`?b=<code>`), every
+  // submission is attributed to that branch and the branch picker is hidden —
+  // the location is already decided, so asking again would be redundant.
+  const { forcedBranchCode } = usePublicPage();
+  const effectiveFields = useMemo(
+    () => (forcedBranchCode ? fields.filter((rf) => rf.field.type !== "branch") : fields),
+    [fields, forcedBranchCode],
+  );
+
   const submitBg = submitStyle?.bgColor ?? accentColor;
   const submitText = submitStyle?.textColor ?? "#ffffff";
   const submitRadius = submitStyle?.borderRadius ?? 14;
@@ -104,7 +114,7 @@ export function FeedbackFormCore({
 
   // Lazily load the company's branches when a branch picker is present, so the
   // dropdown stays empty (and cheap) for forms that don't use one.
-  const hasBranchField = fields.some((rf) => rf.field.type === "branch");
+  const hasBranchField = effectiveFields.some((rf) => rf.field.type === "branch");
   useEffect(() => {
     if (!interactive || !hasBranchField || !productId || branchOptions.length > 0) return;
     let cancelled = false;
@@ -134,9 +144,9 @@ export function FeedbackFormCore({
 
   // Every required field must be filled. The built-in email field is resolved
   // with required:false (stays optional even when shown), preserving prior behavior.
-  const requiredFilled = fields.every(({ field }) => !field.required || isFilled(values[field.id]));
+  const requiredFilled = effectiveFields.every(({ field }) => !field.required || isFilled(values[field.id]));
   // Guard against a form where the author disabled every input.
-  const hasAnyVisible = fields.length > 0;
+  const hasAnyVisible = effectiveFields.length > 0;
   const canSubmit = interactive && hasAnyVisible && requiredFilled && !submitting;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -157,10 +167,13 @@ export function FeedbackFormCore({
       let phone = "";
       let email = "";
       let details = "";
+      // Branch picked in the form's branch field (hidden when a QR already
+      // forced a branch — see effectiveFields). The forced branch is sent as
+      // branchCode below and takes precedence server-side.
       let branchId: string | null = null;
       const answers: FeedbackAnswerPayload[] = [];
 
-      for (const { field } of fields) {
+      for (const { field } of effectiveFields) {
         const v = values[field.id];
         if (field.builtin === "name") {
           name = typeof v === "string" ? v.trim() : "";
@@ -202,6 +215,7 @@ export function FeedbackFormCore({
           email,
           details,
           branchId,
+          branchCode: forcedBranchCode ?? null,
           answers,
         }),
       });
@@ -272,7 +286,7 @@ export function FeedbackFormCore({
   return (
     <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <div style={listStyle}>
-        {fields.map((rf) => {
+        {effectiveFields.map((rf) => {
           const setValue = (v: string | string[] | number) => setValues((prev) => ({ ...prev, [rf.field.id]: v }));
           const itemStyle: React.CSSProperties = isFree ? { gridColumn: fieldGridColumn(rf.x, rf.width), minWidth: 0 } : {};
           return (

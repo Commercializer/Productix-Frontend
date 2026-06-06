@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
 import { prisma } from "@productix/db";
 import { auth } from "@/auth";
+import { computeSeatUsage } from "@/lib/seats";
 
 async function requireSuperAdmin() {
   const session = await auth();
@@ -16,10 +17,15 @@ async function requireSuperAdmin() {
 export async function listTenantsAction() {
   await requireSuperAdmin();
   const tenants = await prisma.tenant.findMany({
-    select: { id: true, name: true },
+    select: { id: true, name: true, _count: { select: { companies: true } } },
     orderBy: { name: "asc" },
   });
-  return tenants;
+  // companyCount lets callers warn when a tenant has no company to manage yet.
+  return tenants.map((t) => ({
+    id: t.id,
+    name: t.name,
+    companyCount: t._count.companies,
+  }));
 }
 
 export async function listCompaniesAction() {
@@ -53,7 +59,9 @@ export async function listCompaniesAction() {
     createdAt: c.createdAt.toISOString(),
     tenantId: c.tenant.id,
     tenantName: c.tenant.name,
-    memberCount: c._count.admins + c._count.users,
+    // Seats consumed against the limit — the owner admin is free, so this
+    // counts only the members added on top of them.
+    memberCount: computeSeatUsage(c._count.admins, c._count.users, c.maximumUsers).used,
   }));
 }
 
@@ -143,6 +151,79 @@ export async function createCompanyAction(input: CreateCompanyInput) {
       return { error: "A record with that value already exists." };
     }
     return { error: error?.message ?? "Failed to create company." };
+  }
+}
+
+/**
+ * Update a company's seat limit (maximum number of users). Super-admin only.
+ * The new limit can't be set below the number of seats already occupied.
+ */
+export async function updateCompanySeatLimitAction(companyId: string, maximumUsers: number) {
+  await requireSuperAdmin();
+
+  const limit = Math.floor(Number(maximumUsers));
+  if (!Number.isFinite(limit) || limit < 1) {
+    return { error: "Seat limit must be a positive whole number." };
+  }
+  if (limit > 1000) {
+    return { error: "Seat limit is unreasonably high (max 1000)." };
+  }
+
+  try {
+    const company = await prisma.company.findUnique({
+      where: { id: companyId },
+      select: { _count: { select: { admins: true, users: true } } },
+    });
+    if (!company) return { error: "Company not found." };
+
+    // The owner admin is free; only the members added on top count toward the limit.
+    const { used } = computeSeatUsage(company._count.admins, company._count.users, limit);
+    if (limit < used) {
+      return { error: `Company already has ${used} members. Remove members before lowering the limit below that.` };
+    }
+
+    await prisma.company.update({
+      where: { id: companyId },
+      data: { maximumUsers: limit },
+    });
+
+    revalidatePath("/admin/companies");
+    return { success: true };
+  } catch (error: any) {
+    return { error: error?.message ?? "Failed to update seat limit." };
+  }
+}
+
+/**
+ * Rename a company. Super-admin only.
+ */
+export async function renameCompanyAction(companyId: string, name: string) {
+  await requireSuperAdmin();
+
+  const trimmed = name?.trim();
+  if (!trimmed) {
+    return { error: "Company name is required." };
+  }
+  if (trimmed.length > 100) {
+    return { error: "Company name is too long (max 100 characters)." };
+  }
+
+  try {
+    const company = await prisma.company.findUnique({
+      where: { id: companyId },
+      select: { id: true },
+    });
+    if (!company) return { error: "Company not found." };
+
+    await prisma.company.update({
+      where: { id: companyId },
+      data: { name: trimmed },
+    });
+
+    revalidatePath("/admin/companies");
+    return { success: true };
+  } catch (error: any) {
+    return { error: error?.message ?? "Failed to rename company." };
   }
 }
 

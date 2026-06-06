@@ -19,6 +19,7 @@
     "@productix/types": "workspace:*",
     "@productix/ui": "workspace:*",
     "@productix/utils": "workspace:*",
+    "@sendgrid/mail": "^8.1.6",
     "bcryptjs": "^3.0.3",
     "lucide-react": "^0.577.0",
     "next": "^16.2.6",

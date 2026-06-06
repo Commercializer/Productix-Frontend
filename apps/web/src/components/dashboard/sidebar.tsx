@@ -40,11 +40,11 @@ const STORAGE_KEY = "productix.dashboard.sidebar.expanded";
 
 export function DashboardSidebar() {
   const pathname = usePathname();
-  const { signOut, isCompanyAdmin } = useAuth();
+  const { signOut, isCompanyManager } = useAuth();
   const [expanded, setExpanded] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
-  const navItems = isCompanyAdmin
+  const navItems = isCompanyManager
     ? [...baseNavItems, teamNavItem, settingsNavItem]
     : [...baseNavItems, settingsNavItem];
 

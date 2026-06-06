@@ -57,8 +57,12 @@ export default function DashboardPage() {
   const scansLast30 = stats?.scansLast30Days ?? 0;
   const feedbackLast30 = stats?.feedbackLast30Days ?? 0;
   const ratio = stats?.scanToFeedbackRatio ?? 0;
+  const resolutionRate = stats?.feedbackResolutionRate ?? 0;
+  const ratedRate = stats?.ratedFeedbackRate ?? 0;
+  const resolvedFeedback = stats?.resolvedFeedbackCount ?? 0;
+  const ratedFeedback = stats?.ratedFeedbackCount ?? 0;
   const avgScansPerProduct = totalProducts > 0 ? totalScans / totalProducts : 0;
-  const publishRate = totalProducts > 0 ? (publishedProducts / totalProducts) * 100 : 0;
+  const publishRate = stats?.publishRate ?? (totalProducts > 0 ? (publishedProducts / totalProducts) * 100 : 0);
 
   const deviceTotal = (stats?.deviceBreakdown ?? []).reduce((a, b) => a + b.count, 0);
   const topCountries = stats?.topCountries ?? [];
@@ -102,7 +106,7 @@ export default function DashboardPage() {
         <div className="flex flex-col">
           <p className="text-[13px] md:text-[14px] text-[#64748B] mb-2 md:mb-3">Total Conversion</p>
           <h2 className="text-[32px] md:text-[40px] font-medium text-(--ds-text-primary) leading-none tracking-tight">
-            2.5%
+            {placeholder ?? pct(ratio)}
           </h2>
         </div>
       </div>
@@ -146,12 +150,40 @@ export default function DashboardPage() {
             </h3>
             <p className="text-[12px] text-[#64748B] mt-2">{placeholder ?? `${fmt(feedbackLast30)} in last 30d`}</p>
           </div>
+        </div>
+      </section>
+
+      {/* Conversion Rates */}
+      <section className="mb-12">
+        <h2 className="text-[22px] md:text-[24px] font-semibold text-(--ds-text-primary) mb-6 tracking-tight">Conversion Rates</h2>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-(--ds-surface) border border-(--ds-border) rounded-xl p-5">
             <p className="text-[13px] text-[#64748B] font-medium mb-2">Scan → Feedback</p>
             <h3 className="text-[28px] font-medium text-(--ds-text-primary) leading-none tracking-tight">
               {placeholder ?? pct(ratio)}
             </h3>
-            <p className="text-[12px] text-[#64748B] mt-2">Conversion rate</p>
+            <p className="text-[12px] text-[#64748B] mt-2">{placeholder ?? `${fmt(feedbackCount)} of ${fmt(totalScans)} visits`}</p>
+          </div>
+          <div className="bg-(--ds-surface) border border-(--ds-border) rounded-xl p-5">
+            <p className="text-[13px] text-[#64748B] font-medium mb-2">Feedback Resolution</p>
+            <h3 className="text-[28px] font-medium text-(--ds-text-primary) leading-none tracking-tight">
+              {placeholder ?? pct(resolutionRate)}
+            </h3>
+            <p className="text-[12px] text-[#64748B] mt-2">{placeholder ?? `${fmt(resolvedFeedback)} of ${fmt(feedbackCount)} handled`}</p>
+          </div>
+          <div className="bg-(--ds-surface) border border-(--ds-border) rounded-xl p-5">
+            <p className="text-[13px] text-[#64748B] font-medium mb-2">Rated Feedback</p>
+            <h3 className="text-[28px] font-medium text-(--ds-text-primary) leading-none tracking-tight">
+              {placeholder ?? pct(ratedRate)}
+            </h3>
+            <p className="text-[12px] text-[#64748B] mt-2">{placeholder ?? `${fmt(ratedFeedback)} of ${fmt(feedbackCount)} rated`}</p>
+          </div>
+          <div className="bg-(--ds-surface) border border-(--ds-border) rounded-xl p-5">
+            <p className="text-[13px] text-[#64748B] font-medium mb-2">Publish Rate</p>
+            <h3 className="text-[28px] font-medium text-(--ds-text-primary) leading-none tracking-tight">
+              {placeholder ?? pct(publishRate)}
+            </h3>
+            <p className="text-[12px] text-[#64748B] mt-2">{placeholder ?? `${fmt(publishedProducts)} of ${fmt(totalProducts)} live`}</p>
           </div>
         </div>
       </section>

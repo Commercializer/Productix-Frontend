@@ -10,7 +10,7 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading, isSuperAdmin, isTenantAdmin } = useAuth();
+  const { user, loading, isSuperAdmin } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -18,11 +18,11 @@ export default function AdminLayout({
       if (!user) {
         router.replace("/login");
       } else if (!isSuperAdmin) {
-        if (isTenantAdmin) router.replace("/tenant");
-        else router.replace("/dashboard");
+        // Everyone below super admin (incl. tenant admins) uses the dashboard.
+        router.replace("/dashboard");
       }
     }
-  }, [user, loading, isSuperAdmin, isTenantAdmin, router]);
+  }, [user, loading, isSuperAdmin, router]);
 
   if (loading) {
     return (

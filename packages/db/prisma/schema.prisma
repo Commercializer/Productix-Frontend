@@ -79,6 +79,7 @@ enum QrScanType {
   ON_PACK
   LINK
   SOCIAL
+  CUSTOM
 }
 
 enum DeviceType {
@@ -200,7 +201,7 @@ model Company {
   companyWebsiteUrl    String?            @map("company_website_url") @db.VarChar(500)
   subscriptionPlan     SubscriptionPlan   @default(FREE) @map("subscription_plan")
   subscriptionStatus   SubscriptionStatus @default(ACTIVE) @map("subscription_status")
-  maximumUsers         Int                @default(5) @map("maximum_users")
+  maximumUsers         Int                @default(3) @map("maximum_users")
   subscriptionAmount   Decimal?           @map("subscription_amount") @db.Decimal(10, 2)
   isActive             Boolean            @default(true) @map("is_active")
   createdAt            DateTime           @default(now()) @map("created_at") @db.Timestamptz
@@ -219,9 +220,32 @@ model Company {
   feedbackForms     FeedbackForm[]
   feedbackInquiries FeedbackInquiry[]
   mediaAssets       MediaAsset[]
+  linkTypes         CompanyLinkType[]
 
   @@index([tenantId])
   @@map("companies")
+}
+
+/// Company-defined custom QR link types. Each adds a tab in the QR modal that
+/// generates codes resolving to /x/<prefix>/<code>. Built-in types (On Pack /p,
+/// Link /l, Social /s) are NOT stored here - only user-created extras.
+model CompanyLinkType {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId String   @map("company_id") @db.Uuid
+  label     String   @db.VarChar(60)
+  /// URL-safe slug used as the path segment: /x/<prefix>/<code>. Unique per company.
+  prefix    String   @db.VarChar(40)
+  /// Optional lucide icon name shown on the QR-modal tab (e.g. "Tag"). Falls back to a default.
+  icon      String?  @db.VarChar(40)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, prefix])
+  @@index([companyId])
+  @@map("company_link_types")
 }
 
 /// Junction: User ↔ Company (admin relationship)
@@ -391,6 +415,10 @@ model ProductProfile {
   /// Number of digits in the PIN (always 6). Used by the public gate to render the
   /// right number of input dots; not sensitive (the PIN itself stays hashed).
   pinLength       Int?      @map("pin_length")
+  /// Plaintext access PIN, kept so the owner can view / re-share it after setting.
+  /// This is a low-sensitivity page-access code, not a user credential. Only ever
+  /// returned to the authenticated owner, never to public visitors. Null when unset.
+  pinCode         String?   @map("pin_code") @db.VarChar(12)
   /// When true, visitors must enter the PIN before the showcase page renders.
   pinEnabled      Boolean   @default(false) @map("pin_enabled")
   content         Json      @default("{}")
@@ -561,13 +589,24 @@ model PageView {
   referrer         String?     @db.VarChar(500)
   language         String?     @db.VarChar(10)
   qrScanType       QrScanType? @map("qr_scan_type")
+  // For CUSTOM qrScanType: the company-defined link-type prefix (e.g. "promo")
+  // the scan came through. Null for built-in types. Lets analytics break out
+  // custom link types by prefix.
+  qrScanPrefix     String?     @map("qr_scan_prefix") @db.VarChar(40)
+  // When the scan arrived through a branch-scoped QR (`?b=<code>`), the branch
+  // it was attributed to. Null for generic (non-branch) QRs and for scans
+  // recorded before branch tracking shipped. Lets analytics segment scans by
+  // branch the same way feedback already is.
+  branchId         String?     @map("branch_id") @db.Uuid
 
   productProfile ProductProfile @relation(fields: [productProfileId], references: [id], onDelete: Cascade)
+  branch         Branch?        @relation(fields: [branchId], references: [id], onDelete: SetNull)
 
   @@unique([productProfileId, visitorHash, dayBucket], map: "page_views_dedupe_unique")
   @@index([productProfileId, viewedAt])
   @@index([productId, viewedAt])
   @@index([companyId, viewedAt])
+  @@index([companyId, branchId])
   @@map("page_views")
 }
 
@@ -614,6 +653,9 @@ model FeedbackInquiry {
 model Branch {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   companyId String   @map("company_id") @db.Uuid
+  /// Short, per-company sequential code (1, 2, 3, …) used in branch-scoped QR
+  /// links (/p/<short>?b=<code>) so the URL stays compact and human-readable.
+  code      Int
   name      String   @db.VarChar(255)
   city      String?  @db.VarChar(255)
   address   String?  @db.VarChar(500)
@@ -623,8 +665,10 @@ model Branch {
 
   company           Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
   feedbackInquiries FeedbackInquiry[]
+  pageViews         PageView[]
 
   @@unique([companyId, name])
+  @@unique([companyId, code])
   @@index([companyId])
   @@map("branches")
 }

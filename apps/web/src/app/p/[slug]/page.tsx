@@ -4,7 +4,7 @@ import type { Metadata, Viewport } from "next";
 import { redirect } from "next/navigation";
 import type { QrScanType } from "@productix/db";
 import { getPublicPageByHandleAction } from "@/lib/dashboard/actions";
-import { readViewContext, trackPageView } from "@/lib/analytics/track-page-view";
+import { readViewContext, trackPageView, resolveBranchIdFromSearch } from "@/lib/analytics/track-page-view";
 import { PublicPageClient } from "./client";
 import { PinGate } from "./pin-gate";
 
@@ -15,6 +15,18 @@ import { PinGate } from "./pin-gate";
 interface PageProps {
   // [slug] is the route segment but accepts either a slug or an 8-char shortCode.
   params: Promise<{ slug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+/** Serialize resolved searchParams back into a `?a=b&c=d` query string (or ""). */
+function serializeSearch(sp: Record<string, string | string[] | undefined>): string {
+  const qs = new URLSearchParams();
+  for (const [key, value] of Object.entries(sp)) {
+    if (Array.isArray(value)) value.forEach((v) => qs.append(key, v));
+    else if (value != null) qs.set(key, value);
+  }
+  const s = qs.toString();
+  return s ? `?${s}` : "";
 }
 
 // Profiles are seeded with a UUID slug until the user picks a pretty one; treat
@@ -47,9 +59,13 @@ function resolveThemeColor(page: {
   return artboardBg || page.themeColor || page.brand?.themeColor || "#0284c7";
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const page = await getPage(slug);
+/**
+ * Build page metadata for a given handle. `pathPrefix` is the route prefix the
+ * visitor arrived through ("p", "l", "s", or "x/<custom>"), used so the
+ * canonical/og URL points back at the same surface.
+ */
+export async function buildPublicMetadata(handle: string, pathPrefix: string): Promise<Metadata> {
+  const page = await getPage(handle);
 
   if (!page) {
     return {
@@ -69,7 +85,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   // Canonical/og URL follows the same rule as the route: slug when visible AND
   // the user has set a real slug; otherwise fall back to the shortCode so we
   // never canonicalize to the placeholder UUID.
-  const canonicalPath = `/p/${page.slugVisible && isCustomSlug(page.slug) ? page.slug : page.shortCode}`;
+  const canonicalPath = `/${pathPrefix}/${page.slugVisible && isCustomSlug(page.slug) ? page.slug : page.shortCode}`;
 
   return {
     title,
@@ -121,6 +137,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  return buildPublicMetadata(slug, "p");
+}
+
 export async function generateViewport({ params }: PageProps): Promise<Viewport> {
   const { slug } = await params;
   const page = await getPage(slug);
@@ -142,7 +163,18 @@ export async function generateViewport({ params }: PageProps): Promise<Viewport>
 // Page Component (Server Component)
 // ═══════════════════════════════════════════════════════════════
 
-export async function renderPublicPage(handle: string, qrScanType: QrScanType, urlPrefix: "p" | "l" | "s") {
+export async function renderPublicPage(
+  handle: string,
+  qrScanType: QrScanType,
+  // Route prefix the visitor arrived through: "p" | "l" | "s" for built-ins, or
+  // "x/<custom>" for a company-defined link type. Used for the slug redirect.
+  urlPrefix: string,
+  // For CUSTOM scans: the company-defined prefix to record in analytics.
+  qrScanPrefix?: string | null,
+  // Raw query string (e.g. "?b=<branchId>") to carry across the slug redirect so
+  // branch-specific QR params survive the shortCode → pretty-slug swap.
+  search: string = "",
+) {
   const page = await getPage(handle);
 
   if (!page) {
@@ -156,13 +188,17 @@ export async function renderPublicPage(handle: string, qrScanType: QrScanType, u
   // Tracking is scheduled before any redirect so external-redirect scans
   // still show up in analytics.
   const viewContext = await readViewContext();
-  after(() =>
+  after(async () =>
     trackPageView({
       productProfileId: page.id,
       productId: page.productId,
       companyId: page.companyId,
       context: viewContext,
       qrScanType,
+      qrScanPrefix: qrScanPrefix ?? null,
+      // Attribute the scan to a branch when the QR carried `?b=<code>`. Resolved
+      // here (not on the render path) so it never delays the response.
+      branchId: await resolveBranchIdFromSearch(page.companyId, search),
     }),
   );
 
@@ -197,15 +233,15 @@ export async function renderPublicPage(handle: string, qrScanType: QrScanType, u
     page.slug !== handle &&
     isCustomSlug(page.slug)
   ) {
-    redirect(`/${urlPrefix}/${page.slug}`);
+    redirect(`/${urlPrefix}/${page.slug}${search}`);
   }
 
   return <PublicPageClient page={page} />;
 }
 
-export default async function PublicPage({ params }: PageProps) {
+export default async function PublicPage({ params, searchParams }: PageProps) {
   const { slug: handle } = await params;
-  return renderPublicPage(handle, "ON_PACK", "p");
+  return renderPublicPage(handle, "ON_PACK", "p", null, serializeSearch(await searchParams));
 }
 
 // ═══════════════════════════════════════════════════════════════

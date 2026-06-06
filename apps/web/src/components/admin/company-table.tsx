@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { deleteCompanyAction } from "@/lib/admin/companies";
+import { deleteCompanyAction, renameCompanyAction, updateCompanySeatLimitAction } from "@/lib/admin/companies";
 
 export interface AdminCompany {
   id: string;
@@ -44,6 +44,47 @@ export function CompanyTable({ companies, onCreateCompany, onRefresh }: CompanyT
   const [isPending, startTransition] = useTransition();
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [editSeatsId, setEditSeatsId] = useState<string | null>(null);
+  const [seatsValue, setSeatsValue] = useState("");
+  const [editNameId, setEditNameId] = useState<string | null>(null);
+  const [nameValue, setNameValue] = useState("");
+
+  const startEditSeats = (c: AdminCompany) => {
+    setActionError(null);
+    setEditSeatsId(c.id);
+    setSeatsValue(String(c.maximumUsers));
+  };
+
+  const startEditName = (c: AdminCompany) => {
+    setActionError(null);
+    setEditNameId(c.id);
+    setNameValue(c.name);
+  };
+
+  const handleSaveName = (id: string) => {
+    startTransition(async () => {
+      const result = await renameCompanyAction(id, nameValue);
+      if ("error" in result && result.error) {
+        setActionError(result.error);
+      } else {
+        setEditNameId(null);
+        onRefresh();
+      }
+    });
+  };
+
+  const handleSaveSeats = (id: string) => {
+    const next = Number(seatsValue);
+    startTransition(async () => {
+      const result = await updateCompanySeatLimitAction(id, next);
+      if ("error" in result && result.error) {
+        setActionError(result.error);
+      } else {
+        setEditSeatsId(null);
+        onRefresh();
+      }
+    });
+  };
 
   const filtered = companies.filter(
     (c) =>
@@ -117,10 +158,60 @@ export function CompanyTable({ companies, onCreateCompany, onRefresh }: CompanyT
                     <td className="td">
                       <div className="td-name">
                         <div className="td-avatar">{c.name[0]?.toUpperCase()}</div>
-                        <div>
-                          <div className="td-title">{c.name}</div>
-                          <div className="td-muted" style={{ fontSize: 12 }}>@{c.businessUsername}</div>
-                        </div>
+                        {editNameId === c.id ? (
+                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            <input
+                              type="text"
+                              value={nameValue}
+                              onChange={(e) => setNameValue(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleSaveName(c.id);
+                                if (e.key === "Escape") setEditNameId(null);
+                              }}
+                              disabled={isPending}
+                              maxLength={100}
+                              style={{ width: 180, padding: "2px 6px", border: "1px solid var(--ds-border, #d1d5db)", borderRadius: 6, fontSize: 13 }}
+                              aria-label="Company name"
+                              autoFocus
+                            />
+                            <button
+                              className="action-btn action-btn--confirm"
+                              onClick={() => handleSaveName(c.id)}
+                              disabled={isPending}
+                              title="Save name"
+                            >
+                              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                            </button>
+                            <button
+                              className="action-btn"
+                              onClick={() => setEditNameId(null)}
+                              disabled={isPending}
+                              title="Cancel"
+                            >
+                              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        ) : (
+                          <div>
+                            <button
+                              type="button"
+                              onClick={() => startEditName(c)}
+                              title="Rename company"
+                              style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", color: "inherit", cursor: "pointer", font: "inherit", padding: 0 }}
+                              id={`edit-name-${c.id}`}
+                            >
+                              <span className="td-title">{c.name}</span>
+                              <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ opacity: 0.5 }}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </button>
+                            <div className="td-muted" style={{ fontSize: 12 }}>@{c.businessUsername}</div>
+                          </div>
+                        )}
                       </div>
                     </td>
                     <td className="td td-muted">{c.tenantName}</td>
@@ -130,7 +221,55 @@ export function CompanyTable({ companies, onCreateCompany, onRefresh }: CompanyT
                       </span>
                     </td>
                     <td className="td td-muted">
-                      {c.memberCount} / {c.maximumUsers}
+                      {editSeatsId === c.id ? (
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <span>{c.memberCount} /</span>
+                          <input
+                            type="number"
+                            min={Math.max(1, c.memberCount)}
+                            max={1000}
+                            value={seatsValue}
+                            onChange={(e) => setSeatsValue(e.target.value)}
+                            disabled={isPending}
+                            style={{ width: 60, padding: "2px 6px", border: "1px solid var(--ds-border, #d1d5db)", borderRadius: 6, fontSize: 13 }}
+                            aria-label="Seat limit"
+                            autoFocus
+                          />
+                          <button
+                            className="action-btn action-btn--confirm"
+                            onClick={() => handleSaveSeats(c.id)}
+                            disabled={isPending}
+                            title="Save seat limit"
+                          >
+                            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          </button>
+                          <button
+                            className="action-btn"
+                            onClick={() => setEditSeatsId(null)}
+                            disabled={isPending}
+                            title="Cancel"
+                          >
+                            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => startEditSeats(c)}
+                          title="Edit seat limit"
+                          style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", color: "inherit", cursor: "pointer", font: "inherit", padding: 0 }}
+                          id={`edit-seats-${c.id}`}
+                        >
+                          {c.memberCount} / {c.maximumUsers}
+                          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ opacity: 0.5 }}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                      )}
                     </td>
                     <td className="td td-muted">{formatDate(c.createdAt)}</td>
                     <td className="td">

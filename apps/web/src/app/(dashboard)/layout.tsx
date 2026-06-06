@@ -19,11 +19,10 @@ export default function DashboardLayout({
         router.replace("/login");
       } else if (isSuperAdmin) {
         router.replace("/admin");
-      } else if (isTenantAdmin) {
-        router.replace("/tenant");
       }
+      // TENANT_ADMIN stays on /dashboard and is treated as a company admin.
     }
-  }, [user, loading, isSuperAdmin, isTenantAdmin, router]);
+  }, [user, loading, isSuperAdmin, router]);
 
   if (loading) {
     return (
@@ -33,7 +32,7 @@ export default function DashboardLayout({
     );
   }
 
-  if (!user || (!isCompanyAdmin && !isCompanyUser)) return null;
+  if (!user || (!isCompanyAdmin && !isCompanyUser && !isTenantAdmin)) return null;
 
   return (
     <div className="app-shell">

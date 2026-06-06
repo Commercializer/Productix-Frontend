@@ -18,6 +18,7 @@ import {
   Copy,
   Check,
   Eye,
+  EyeOff,
   Trash2,
   Brush,
   Pencil,
@@ -57,6 +58,10 @@ interface PromptionTableProps {
     pin: string | null,
     pinEnabled: boolean,
   ) => Promise<{ success?: boolean; error?: string; pinEnabled?: boolean; hasPin?: boolean }>;
+  onRevealPin?: (
+    profileId: string,
+    password: string,
+  ) => Promise<{ success?: boolean; error?: string; pinCode?: string }>;
   readOnly?: boolean;
 }
 
@@ -78,6 +83,7 @@ export function PromptionTable({
   onUpdateRedirect,
   onRenameProduct,
   onUpdatePinLock,
+  onRevealPin,
   readOnly = false,
 }: PromptionTableProps) {
   const [search, setSearch] = useState("");
@@ -97,6 +103,7 @@ export function PromptionTable({
     profileId: string;
     productName: string;
     currentEnabled: boolean;
+    hasPinCode: boolean;
   } | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
@@ -167,6 +174,11 @@ export function PromptionTable({
             className="absolute left-3 top-1/2 -translate-y-1/2 text-(--ds-text-muted)"
           />
           <input
+            type="search"
+            name="product-search"
+            autoComplete="off"
+            data-1p-ignore
+            data-lpignore="true"
             className="w-full h-[38px] pl-9 pr-4 rounded-md border border-(--ds-border) bg-(--ds-surface) text-[13px] text-(--ds-text-primary) placeholder-(--ds-text-muted) focus:outline-hidden focus:border-[#93c5fd] transition-colors"
             placeholder="Search products..."
             value={search}
@@ -543,6 +555,7 @@ export function PromptionTable({
                                           profileId: p.id,
                                           productName: p.productName,
                                           currentEnabled: p.pinEnabled,
+                                          hasPinCode: p.hasPinCode,
                                         });
                                       }}
                                       className="w-full px-3 py-2 text-left text-[13px] hover:bg-[#f8fafc] dark:hover:bg-[#334155] flex items-center justify-between gap-2 transition-colors text-(--ds-text-primary)"
@@ -672,8 +685,10 @@ export function PromptionTable({
           profileId={pinEditor.profileId}
           productName={pinEditor.productName}
           currentEnabled={pinEditor.currentEnabled}
+          hasPinCode={pinEditor.hasPinCode}
           onClose={() => setPinEditor(null)}
           onSave={onUpdatePinLock}
+          onReveal={onRevealPin}
         />
       )}
     </div>
@@ -1015,25 +1030,72 @@ interface PinLockModalProps {
   profileId: string;
   productName: string;
   currentEnabled: boolean;
+  hasPinCode: boolean;
   onClose: () => void;
   onSave: (
     profileId: string,
     pin: string | null,
     pinEnabled: boolean,
   ) => Promise<{ success?: boolean; error?: string; pinEnabled?: boolean; hasPin?: boolean }>;
+  onReveal?: (
+    profileId: string,
+    password: string,
+  ) => Promise<{ success?: boolean; error?: string; pinCode?: string }>;
 }
 
-function PinLockModal({ profileId, productName, currentEnabled, onClose, onSave }: PinLockModalProps) {
-  // A PIN already exists whenever the lock is currently on (you can't enable
-  // without one). Leaving the field blank then keeps that existing PIN.
-  const hasExistingPin = currentEnabled;
+function PinLockModal({ profileId, productName, currentEnabled, hasPinCode, onClose, onSave, onReveal }: PinLockModalProps) {
+  // A PIN already exists whenever the lock is currently on, or we have a stored
+  // viewable code. Leaving the field blank then keeps that existing PIN.
+  const hasExistingPin = currentEnabled || hasPinCode;
   const [pin, setPin] = useState("");
   const [enabled, setEnabled] = useState(currentEnabled);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  // Reveal-with-password flow. The plaintext PIN never ships with the page; we
+  // fetch it only after the owner confirms their account password.
+  const [revealOpen, setRevealOpen] = useState(false);
+  const [password, setPassword] = useState("");
+  const [revealedPin, setRevealedPin] = useState<string | null>(null);
+  const [revealError, setRevealError] = useState<string | null>(null);
+  const [revealing, setRevealing] = useState(false);
 
   useEffect(() => setMounted(true), []);
+
+  const handleReveal = async () => {
+    if (!onReveal || !password) return;
+    setRevealError(null);
+    setRevealing(true);
+    const result = await onReveal(profileId, password);
+    setRevealing(false);
+    if (result.error || !result.pinCode) {
+      setRevealError(result.error ?? "Could not retrieve the PIN.");
+      return;
+    }
+    setRevealedPin(result.pinCode);
+    setRevealOpen(false);
+    setPassword("");
+  };
+
+  const handleHidePin = () => {
+    setRevealedPin(null);
+    setRevealError(null);
+    setPassword("");
+    setRevealOpen(false);
+  };
+
+  const handleCopyPin = async () => {
+    if (!revealedPin) return;
+    try {
+      await navigator.clipboard.writeText(revealedPin);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* clipboard unavailable — no-op */
+    }
+  };
 
   const pinDigits = pin.replace(/\D/g, "");
   const validNewPin = pinDigits.length === 6;
@@ -1081,6 +1143,93 @@ function PinLockModal({ profileId, productName, currentEnabled, onClose, onSave 
             </button>
           </div>
           <div className="px-6 py-4 space-y-4">
+            {hasPinCode && onReveal && (
+              <div>
+                <label className="block text-[12px] font-medium text-[#64748b] dark:text-[#94a3b8] mb-1.5">
+                  Current PIN
+                </label>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-[42px] px-3 rounded-lg border border-[#e2e8f0] dark:border-[#334155] bg-[#f8fafc] dark:bg-[#0f172a]/40 flex items-center text-[15px] tracking-[0.3em] font-mono text-[#0f172a] dark:text-white">
+                    {revealedPin ?? "••••••"}
+                  </div>
+                  {revealedPin ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={handleHidePin}
+                        className="w-[42px] h-[42px] shrink-0 rounded-lg border border-[#e2e8f0] dark:border-[#334155] flex items-center justify-center text-[#64748b] hover:text-[#0f172a] dark:hover:text-white hover:bg-[#f1f5f9] dark:hover:bg-[#334155] transition-colors"
+                        title="Hide PIN"
+                        aria-label="Hide PIN"
+                      >
+                        <EyeOff size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleCopyPin}
+                        className="w-[42px] h-[42px] shrink-0 rounded-lg border border-[#e2e8f0] dark:border-[#334155] flex items-center justify-center text-[#64748b] hover:text-[#0f172a] dark:hover:text-white hover:bg-[#f1f5f9] dark:hover:bg-[#334155] transition-colors"
+                        title="Copy PIN"
+                        aria-label="Copy PIN"
+                      >
+                        {copied ? <Check size={16} className="text-emerald-500" /> : <Copy size={16} />}
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => { setRevealOpen((v) => !v); setRevealError(null); }}
+                      className="h-[42px] shrink-0 px-3 rounded-lg border border-[#e2e8f0] dark:border-[#334155] flex items-center gap-1.5 text-[13px] font-medium text-[#64748b] hover:text-[#0f172a] dark:hover:text-white hover:bg-[#f1f5f9] dark:hover:bg-[#334155] transition-colors"
+                    >
+                      <Eye size={15} />
+                      Show
+                    </button>
+                  )}
+                </div>
+                {revealOpen && !revealedPin && (
+                  <div className="mt-2 rounded-lg border border-[#e2e8f0] dark:border-[#334155] bg-[#f8fafc] dark:bg-[#0f172a]/40 p-3 space-y-2">
+                    <p className="text-[11px] text-[#64748b] dark:text-[#94a3b8]">
+                      Enter your account password to view this PIN.
+                    </p>
+                    <div className="flex items-center gap-2">
+                      {/* Decoy username field: gives the browser/password-manager a
+                          credential target so it doesn't autofill the email into the
+                          product search box (which lives on the same page). */}
+                      <input
+                        type="text"
+                        name="username"
+                        autoComplete="username"
+                        tabIndex={-1}
+                        aria-hidden="true"
+                        className="absolute h-0 w-0 overflow-hidden border-0 p-0 opacity-0"
+                      />
+                      <input
+                        type="password"
+                        name="account-password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && password && !revealing) handleReveal();
+                        }}
+                        placeholder="Account password"
+                        autoFocus
+                        autoComplete="current-password"
+                        className="flex-1 h-[38px] px-3 rounded-lg border border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-transparent text-[14px] text-[#0f172a] dark:text-white placeholder-[#94a3b8] outline-hidden focus:border-[#93c5fd]"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleReveal}
+                        disabled={!password || revealing}
+                        className="h-[38px] shrink-0 px-4 rounded-lg bg-[#0f172a] dark:bg-white text-white dark:text-[#0f172a] font-semibold text-[13px] hover:opacity-90 transition-opacity disabled:opacity-50"
+                      >
+                        {revealing ? "…" : "Unlock"}
+                      </button>
+                    </div>
+                    {revealError && (
+                      <p className="text-[12px] text-red-600 dark:text-red-400">{revealError}</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
             <div>
               <label className="block text-[12px] font-medium text-[#64748b] dark:text-[#94a3b8] mb-1.5">
                 {hasExistingPin ? "New PIN (leave blank to keep current)" : "PIN"}
