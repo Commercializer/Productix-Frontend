@@ -3,7 +3,7 @@ import { after } from "next/server";
 import type { Metadata, Viewport } from "next";
 import { redirect } from "next/navigation";
 import type { QrScanType } from "@productix/db";
-import { getPublicPageByHandleAction, isPagePinUnlockedAction } from "@/lib/dashboard/actions";
+import { getPublicPageByHandleAction } from "@/lib/dashboard/actions";
 import { readViewContext, trackPageView } from "@/lib/analytics/track-page-view";
 import { PublicPageClient } from "./client";
 import { PinGate } from "./pin-gate";
@@ -171,22 +171,20 @@ export async function renderPublicPage(handle: string, qrScanType: QrScanType, u
     redirect(page.redirectUrl);
   }
 
-  // PIN gate: when the page is locked and the visitor hasn't already entered
-  // the PIN (no valid cookie), show the prompt instead of the showcase. The
-  // page content is never sent to the client until this passes.
+  // PIN gate: when the page is locked, render only the gate. It checks the
+  // visitor's localStorage token client-side and fetches the content itself
+  // once unlocked — the showcase content is never sent in this initial HTML.
   if (page.pinEnabled) {
-    const unlocked = await isPagePinUnlockedAction(page.id);
-    if (!unlocked) {
-      return (
-        <PinGate
-          profileId={page.id}
-          productName={page.productName}
-          companyName={page.company.name}
-          logoUrl={page.logoUrl || page.brand?.logoUrl || page.company.logoUrl}
-          themeColor={resolveThemeColor(page)}
-        />
-      );
-    }
+    return (
+      <PinGate
+        profileId={page.id}
+        productName={page.productName}
+        companyName={page.company.name}
+        logoUrl={page.logoUrl || page.brand?.logoUrl || page.company.logoUrl}
+        themeColor={resolveThemeColor(page)}
+        pinLength={page.pinLength}
+      />
+    );
   }
 
   // If the visitor arrived via the 8-char short code and the product opted to

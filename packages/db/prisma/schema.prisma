@@ -388,6 +388,9 @@ model ProductProfile {
   redirectEnabled Boolean   @default(false) @map("redirect_enabled")
   /// bcrypt hash of the access PIN. Null when no PIN has been set.
   pinHash         String?   @map("pin_hash") @db.VarChar(100)
+  /// Number of digits in the PIN (4–6). Used by the public gate to render the
+  /// right number of input dots; not sensitive (the PIN itself stays hashed).
+  pinLength       Int?      @map("pin_length")
   /// When true, visitors must enter the PIN before the showcase page renders.
   pinEnabled      Boolean   @default(false) @map("pin_enabled")
   content         Json      @default("{}")

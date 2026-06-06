@@ -4,8 +4,7 @@ import { prisma } from "@productix/db";
 import type { DeviceType, QrScanType } from "@productix/db";
 import { auth } from "@/auth";
 import bcrypt from "bcryptjs";
-import { createHash } from "crypto";
-import { cookies } from "next/headers";
+import { createHash, createHmac, timingSafeEqual } from "crypto";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 function isUUID(val: string): boolean {
@@ -94,17 +93,63 @@ export async function getMyPromptionsAction() {
 
 const PIN_RE = /^\d{4,6}$/;
 
-/** Stable per-page cookie name; scoped to the profile so unlocking one page
- * never unlocks another. */
-function pinCookieName(profileId: string): string {
-  return `ppin_${profileId}`;
+// Unlock tokens are signed HS256 JWTs stored in the visitor's localStorage,
+// one per product. They're self-verifying (no DB lookup to validate the
+// signature) and carry a fingerprint of the PIN hash so rotating the PIN
+// invalidates every outstanding token. 12-hour lifetime.
+const PIN_TOKEN_TTL_SEC = 60 * 60 * 12;
+
+function getPinSecret(): string {
+  const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
+  if (!secret) throw new Error("AUTH_SECRET / NEXTAUTH_SECRET is not configured");
+  return secret;
 }
 
-/** Cookie value proves the PIN was entered without storing it. It's a hash of
- * the profile id + the current pinHash, so rotating the PIN invalidates every
- * outstanding cookie automatically. */
-function pinCookieToken(profileId: string, pinHash: string): string {
-  return createHash("sha256").update(`${profileId}:${pinHash}`).digest("hex");
+function b64url(input: Buffer | string): string {
+  return Buffer.from(input).toString("base64url");
+}
+
+/** Short, non-reversible fingerprint of the PIN hash. Embedded in the token so
+ * changing the PIN (new hash) invalidates previously issued tokens. */
+function pinFingerprint(pinHash: string): string {
+  return createHash("sha256").update(pinHash).digest("base64url").slice(0, 16);
+}
+
+/** Issue an HS256 JWT proving the visitor entered the correct PIN for a product. */
+function signPinToken(profileId: string, pinHash: string, nowSec: number): string {
+  const header = b64url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+  const payload = b64url(
+    JSON.stringify({ sub: profileId, pf: pinFingerprint(pinHash), iat: nowSec, exp: nowSec + PIN_TOKEN_TTL_SEC }),
+  );
+  const data = `${header}.${payload}`;
+  const sig = createHmac("sha256", getPinSecret()).update(data).digest("base64url");
+  return `${data}.${sig}`;
+}
+
+type PinTokenPayload = { sub: string; pf: string; iat: number; exp: number };
+
+/** Validate a token's signature + expiry. Returns the payload, or null when the
+ * token is malformed, tampered, or expired. Does NOT hit the database. */
+function verifyPinToken(token: string, nowSec: number): PinTokenPayload | null {
+  if (typeof token !== "string") return null;
+  const parts = token.split(".");
+  if (parts.length !== 3) return null;
+  const [header, payload, sig] = parts as [string, string, string];
+  const expected = createHmac("sha256", getPinSecret()).update(`${header}.${payload}`).digest();
+  let provided: Buffer;
+  try {
+    provided = Buffer.from(sig, "base64url");
+  } catch {
+    return null;
+  }
+  if (provided.length !== expected.length || !timingSafeEqual(provided, expected)) return null;
+  try {
+    const decoded = JSON.parse(Buffer.from(payload, "base64url").toString()) as PinTokenPayload;
+    if (!decoded?.sub || typeof decoded.exp !== "number" || decoded.exp < nowSec) return null;
+    return decoded;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -127,18 +172,21 @@ export async function setPinLockAction(
 
   const profile = await prisma.productProfile.findUnique({
     where: { id: profileId },
-    select: { id: true, pinHash: true, product: { select: { companyId: true } } },
+    select: { id: true, pinHash: true, pinLength: true, product: { select: { companyId: true } } },
   });
   if (!profile || profile.product.companyId !== companyId) return { error: "Product not found" };
 
-  // Resolve the hash to persist: a new PIN re-hashes, otherwise keep the existing.
+  // Resolve the hash + length to persist: a new PIN re-hashes, otherwise keep
+  // the existing values.
   let pinHash = profile.pinHash;
+  let pinLength = profile.pinLength;
   if (pin !== null) {
     const trimmed = pin.trim();
     if (!PIN_RE.test(trimmed)) {
       return { error: "PIN must be 4–6 digits." };
     }
     pinHash = await bcrypt.hash(trimmed, 10);
+    pinLength = trimmed.length;
   }
 
   // Can't lock without a PIN to check against.
@@ -147,7 +195,7 @@ export async function setPinLockAction(
   try {
     await prisma.productProfile.update({
       where: { id: profileId },
-      data: { pinHash, pinEnabled: effectiveEnabled },
+      data: { pinHash, pinLength, pinEnabled: effectiveEnabled },
     });
     return { success: true, pinEnabled: effectiveEnabled, hasPin: !!pinHash };
   } catch (error: any) {
@@ -157,52 +205,61 @@ export async function setPinLockAction(
 
 /**
  * Public (unauthenticated) PIN check for a locked showcase page. On success it
- * drops a per-page cookie so the server can render the page on the next load.
+ * returns a signed JWT (for the visitor to store in localStorage, per product)
+ * plus the full page payload so the client can render immediately without a
+ * second round trip.
  */
 export async function verifyPagePinAction(profileId: string, pin: string) {
-  if (!isUUID(profileId)) return { error: "Invalid page" };
+  if (!isUUID(profileId)) return { error: "Invalid page" as const };
 
   const profile = await prisma.productProfile.findUnique({
     where: { id: profileId },
-    select: { id: true, pinHash: true, pinEnabled: true, isPublished: true },
+    include: productProfileInclude,
   });
-  if (!profile || !profile.isPublished) return { error: "Page not found" };
+  if (!profile || !profile.isPublished) return { error: "Page not found" as const };
 
-  // Not locked → nothing to verify.
-  if (!profile.pinEnabled || !profile.pinHash) return { success: true };
+  // Not locked → hand back the page directly (no token needed).
+  if (!profile.pinEnabled || !profile.pinHash) {
+    return { success: true as const, token: null, page: publicProfileShape(profile) };
+  }
 
   const ok = await bcrypt.compare(pin.trim(), profile.pinHash);
-  if (!ok) return { error: "Incorrect PIN. Try again." };
+  if (!ok) return { error: "Incorrect PIN. Try again." as const };
 
-  const jar = await cookies();
-  jar.set(pinCookieName(profileId), pinCookieToken(profileId, profile.pinHash), {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 60 * 60 * 12, // 12 hours
-  });
-
-  return { success: true };
+  const nowSec = Math.floor(Date.now() / 1000);
+  const token = signPinToken(profileId, profile.pinHash, nowSec);
+  return { success: true as const, token, page: publicProfileShape(profile) };
 }
 
 /**
- * Server-side gate check used by the public route. Returns true when the page
- * is either unlocked (no PIN) or the visitor already holds a valid PIN cookie.
- * Never exposes the hash to the client — returns a boolean only.
+ * Validate a stored unlock token and return the page payload. Used on repeat
+ * visits: the client reads its localStorage token and calls this. The signature
+ * check needs no DB, but we still load the profile to (a) get the content to
+ * render and (b) confirm the token's fingerprint matches the current PIN hash,
+ * so a rotated/disabled PIN invalidates old tokens.
  */
-export async function isPagePinUnlockedAction(profileId: string): Promise<boolean> {
-  if (!isUUID(profileId)) return false;
+export async function getUnlockedPageAction(profileId: string, token: string) {
+  if (!isUUID(profileId)) return { error: "Invalid page" as const };
+
+  const nowSec = Math.floor(Date.now() / 1000);
+  const payload = verifyPinToken(token, nowSec);
+  if (!payload || payload.sub !== profileId) return { error: "Locked" as const };
 
   const profile = await prisma.productProfile.findUnique({
     where: { id: profileId },
-    select: { pinHash: true, pinEnabled: true },
+    include: productProfileInclude,
   });
-  if (!profile || !profile.pinEnabled || !profile.pinHash) return true;
+  if (!profile || !profile.isPublished) return { error: "Page not found" as const };
 
-  const jar = await cookies();
-  const token = jar.get(pinCookieName(profileId))?.value;
-  return !!token && token === pinCookieToken(profileId, profile.pinHash);
+  // Lock turned off since the token was issued → page is open to everyone.
+  if (!profile.pinEnabled || !profile.pinHash) {
+    return { success: true as const, page: publicProfileShape(profile) };
+  }
+
+  // PIN rotated since issue → token no longer valid.
+  if (payload.pf !== pinFingerprint(profile.pinHash)) return { error: "Locked" as const };
+
+  return { success: true as const, page: publicProfileShape(profile) };
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1365,6 +1422,7 @@ function publicProfileShape(profile: any) {
     redirectUrl: profile.redirectUrl as string | null,
     redirectEnabled: profile.redirectEnabled as boolean,
     pinEnabled: profile.pinEnabled as boolean,
+    pinLength: profile.pinLength as number | null,
     publishedAt: profile.publishedAt?.toISOString() ?? null,
     company: {
       name: profile.product.company.name,
