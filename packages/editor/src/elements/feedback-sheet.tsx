@@ -5,13 +5,18 @@
  * dimmed backdrop. Used by the Feedback element on
  * published product pages so visitors can leave
  * feedback or an inquiry against a product.
+ *
+ * The form itself lives in FeedbackFormCore (shared
+ * with the standalone Feedback Form element); this
+ * file only provides the bottom-sheet chrome.
  * ──────────────────────────────────────────── */
 
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { X, ImagePlus, Loader2 } from "lucide-react";
+import { X } from "lucide-react";
+import { FeedbackFormCore, type FeedbackFormStatus } from "./feedback-form-core";
 
 export interface FeedbackSheetLabels {
   title: string;
@@ -38,12 +43,147 @@ export interface FeedbackSheetFields {
   details: boolean;
 }
 
+export type FeedbackFieldType =
+  | "text"
+  | "textarea"
+  | "tel"
+  | "email"
+  | "number"
+  | "image"
+  | "star"
+  | "emoji"
+  | "select"
+  | "multiselect"
+  | "nps"
+  | "date"
+  | "slider"
+  | "branch";
+
+/** The four built-in contact fields, which map to dedicated submit-payload keys. */
+export type BuiltinFieldKind = "name" | "phone" | "email" | "details";
+
+/** Reserved field ids for the built-in fields, so geometry can reference them. */
+export const BUILTIN_FIELD_IDS: Record<BuiltinFieldKind, string> = {
+  name: "__name",
+  phone: "__phone",
+  email: "__email",
+  details: "__details",
+};
+
 export interface CustomField {
   id: string;
   label: string;
   placeholder?: string;
-  type: "text" | "textarea" | "tel" | "email" | "number" | "image";
+  type: FeedbackFieldType;
   required: boolean;
+  /** Choices for select / multiselect fields. */
+  options?: string[];
+  /** Max value for star (default 5) and slider. */
+  max?: number;
+  /** Min value for slider (default 0). */
+  min?: number;
+  /** Step for slider (default 1). */
+  step?: number;
+  /**
+   * Set when this is one of the built-in contact fields (name/phone/email/details).
+   * Built-ins map to the top-level submit keys rather than the structured answers[].
+   * Never sent in the submit payload.
+   */
+  builtin?: BuiltinFieldKind;
+}
+
+/**
+ * Free-canvas geometry for one field. `x` and `width` are fractions (0–1) of the
+ * form's content width; `order` drives vertical stacking. Stored separately from
+ * field content (in the non-translatable `fieldLayout` prop) so position never
+ * forks per content-locale.
+ */
+export interface FieldGeometry {
+  id: string;
+  x: number;
+  width: number;
+  order: number;
+}
+
+/** A field resolved for rendering: its definition plus effective geometry. */
+export interface ResolvedField {
+  field: CustomField;
+  x: number;
+  width: number;
+  order: number;
+}
+
+/** Layout mode for the shared form body. */
+export type FeedbackFormLayout = "stack" | "free";
+
+/**
+ * Merge field presence (legacy `showXField` toggles + `customFields[]`) with the
+ * optional positioned geometry (`fieldLayout`) into one ordered list. Built-ins
+ * come first in a fixed order, then custom fields in array order; any field with a
+ * stored geometry entry uses its x/width/order instead. Pure + back-compatible:
+ * documents with no `fieldLayout` resolve to a full-width vertical stack.
+ */
+export function resolveFields(props: Record<string, unknown>, labels: FeedbackSheetLabels): ResolvedField[] {
+  const builtinDefs: CustomField[] = [];
+  if (props.showNameField !== false)
+    builtinDefs.push({ id: BUILTIN_FIELD_IDS.name, builtin: "name", type: "text", label: labels.nameLabel, placeholder: labels.namePlaceholder, required: true });
+  if (props.showPhoneField !== false)
+    builtinDefs.push({ id: BUILTIN_FIELD_IDS.phone, builtin: "phone", type: "tel", label: labels.phoneLabel, placeholder: labels.phonePlaceholder, required: true });
+  if (props.showEmailField !== false)
+    builtinDefs.push({ id: BUILTIN_FIELD_IDS.email, builtin: "email", type: "email", label: labels.emailLabel, placeholder: labels.emailPlaceholder, required: false });
+  if (props.showDetailsField !== false)
+    builtinDefs.push({ id: BUILTIN_FIELD_IDS.details, builtin: "details", type: "textarea", label: labels.detailsLabel, placeholder: labels.detailsPlaceholder, required: true });
+
+  const customs: CustomField[] = Array.isArray(props.customFields) ? (props.customFields as CustomField[]) : [];
+  const natural = [...builtinDefs, ...customs];
+
+  const geometryArr: FieldGeometry[] = Array.isArray(props.fieldLayout) ? (props.fieldLayout as FieldGeometry[]) : [];
+  const geometryById = new Map(geometryArr.map((g) => [g.id, g]));
+
+  const resolved: ResolvedField[] = natural.map((field, idx) => {
+    const geom = geometryById.get(field.id);
+    return {
+      field,
+      x: typeof geom?.x === "number" ? geom.x : 0,
+      width: typeof geom?.width === "number" ? geom.width : 1,
+      order: typeof geom?.order === "number" ? geom.order : idx,
+    };
+  });
+
+  resolved.sort((a, b) => a.order - b.order);
+  return resolved;
+}
+
+/** Number of columns the free layout snaps to. */
+export const FIELD_GRID_COLS = 12;
+
+/**
+ * Map a field's x (left offset) and width fractions onto a CSS grid-column value
+ * over a 12-column grid. Using a grid (rather than flow + margins) means side-by-
+ * side fields never overlap or overflow, heights stay automatic, and it renders
+ * identically on the server. Shared by the production form and the editor canvas.
+ */
+export function fieldGridColumn(x: number, width: number): string {
+  const startCol = Math.max(1, Math.min(FIELD_GRID_COLS, Math.round(Math.max(0, Math.min(1, x)) * FIELD_GRID_COLS) + 1));
+  const maxSpan = FIELD_GRID_COLS + 1 - startCol;
+  const span = Math.max(1, Math.min(maxSpan, Math.round(Math.max(0.08, Math.min(1, width)) * FIELD_GRID_COLS)));
+  return `${startCol} / span ${span}`;
+}
+
+/** Field types whose answer is a numeric rating averaged into ratingScore. */
+export const RATING_FIELD_TYPES: FeedbackFieldType[] = ["star", "emoji", "nps"];
+
+/** 5-face happiness scale, index 0..4 maps to score 1..5. */
+export const EMOJI_SCALE = ["😠", "🙁", "😐", "🙂", "😄"] as const;
+
+/** A single submitted answer in the structured payload sent to /api/feedback. */
+export interface FeedbackAnswerPayload {
+  fieldId: string;
+  label: string;
+  type: FeedbackFieldType;
+  value: string | string[] | number;
+  /** Max scale value, sent for star ratings so the server can normalize ratingScore. */
+  max?: number;
 }
 
 export interface FeedbackSubmitStyle {
@@ -60,10 +200,10 @@ export interface FeedbackSheetProps {
   productId?: string;
   labels: FeedbackSheetLabels;
   accentColor?: string;
-  /** Which fields to show. Defaults to all enabled. */
-  fields?: Partial<FeedbackSheetFields>;
-  /** Author-defined custom fields rendered after the built-ins. */
-  customFields?: CustomField[];
+  /** Resolved, ordered fields to render (built-ins + customs). */
+  fields: ResolvedField[];
+  /** Form body layout: "stack" (single column) or "free" (12-col grid). Defaults to "stack". */
+  layout?: FeedbackFormLayout;
   /** Optional style overrides for the submit button. Falls back to accentColor / sensible defaults. */
   submitStyle?: FeedbackSubmitStyle;
   /**
@@ -74,8 +214,6 @@ export interface FeedbackSheetProps {
    */
   portalRoot?: HTMLElement | null;
 }
-
-const DEFAULT_FIELDS: FeedbackSheetFields = { name: true, phone: true, email: true, details: true };
 
 const DEFAULT_LABELS: FeedbackSheetLabels = {
   title: "Share your feedback",
@@ -99,38 +237,17 @@ export function getDefaultFeedbackLabels(): FeedbackSheetLabels {
   return { ...DEFAULT_LABELS };
 }
 
-export function FeedbackSheet({ open, onClose, productId, labels, accentColor = "#0ea5e9", fields, customFields, submitStyle, portalRoot }: FeedbackSheetProps) {
+export function FeedbackSheet({ open, onClose, productId, labels, accentColor = "#0ea5e9", fields, layout = "stack", submitStyle, portalRoot }: FeedbackSheetProps) {
   const contained = !!portalRoot;
-  const submitBg = submitStyle?.bgColor ?? accentColor;
-  const submitText = submitStyle?.textColor ?? "#ffffff";
-  const submitRadius = submitStyle?.borderRadius ?? 14;
-  const submitFontSize = submitStyle?.fontSize ?? 15;
-  const submitFontWeight = submitStyle?.fontWeight ?? "600";
-  const visible: FeedbackSheetFields = { ...DEFAULT_FIELDS, ...fields };
-  const extras = customFields ?? [];
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [details, setDetails] = useState("");
-  const [extraValues, setExtraValues] = useState<Record<string, string>>({});
-  const [submitting, setSubmitting] = useState(false);
-  const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
-  const [errorText, setErrorText] = useState<string | null>(null);
+  const [status, setStatus] = useState<FeedbackFormStatus>("idle");
+  const [resetNonce, setResetNonce] = useState(0);
   const sheetRef = useRef<HTMLDivElement>(null);
 
-  // Reset form when sheet closes (after the close animation completes).
+  // Reset the form when the sheet closes (after the close animation completes),
+  // by bumping the nonce the core watches.
   useEffect(() => {
     if (!open) {
-      const t = setTimeout(() => {
-        setName("");
-        setPhone("");
-        setEmail("");
-        setDetails("");
-        setExtraValues({});
-        setStatus("idle");
-        setErrorText(null);
-        setSubmitting(false);
-      }, 250);
+      const t = setTimeout(() => setResetNonce((n) => n + 1), 250);
       return () => clearTimeout(t);
     }
   }, [open]);
@@ -158,84 +275,6 @@ export function FeedbackSheet({ open, onClose, productId, labels, accentColor = 
   }, [open, onClose]);
 
   if (typeof window === "undefined") return null;
-
-  // Each visible field (except email) is required to submit. Email stays
-  // optional even when shown - common pattern for contact forms.
-  const requiredFilled =
-    (!visible.name || name.trim().length > 0) &&
-    (!visible.phone || phone.trim().length > 0) &&
-    (!visible.details || details.trim().length > 0) &&
-    extras.every((f) => !f.required || (extraValues[f.id] ?? "").trim().length > 0);
-  // Guard against a form where the author disabled every input.
-  const hasAnyVisible = visible.name || visible.phone || visible.email || visible.details || extras.length > 0;
-  const canSubmit = hasAnyVisible && requiredFilled && !submitting;
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!canSubmit) return;
-    if (!productId) {
-      setErrorText("This page isn't attached to a product. Open the published product page to submit feedback.");
-      setStatus("error");
-      return;
-    }
-    setSubmitting(true);
-    setErrorText(null);
-    try {
-      // Build the extra payload using each field's label as the key so the
-      // dashboard can read it without needing to know about field ids.
-      const extraPayload: Record<string, string> = {};
-      for (const f of extras) {
-        const v = (extraValues[f.id] ?? "").trim();
-        if (v.length > 0) extraPayload[f.label] = v;
-      }
-      const res = await fetch("/api/feedback", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          productId: productId ?? null,
-          name: visible.name ? name.trim() : "",
-          phone: visible.phone ? phone.trim() : "",
-          email: visible.email ? email.trim() : "",
-          details: visible.details ? details.trim() : "",
-          extra: extraPayload,
-        }),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body?.error || labels.errorMessage);
-      }
-      setStatus("success");
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : labels.errorMessage;
-      setErrorText(msg);
-      setStatus("error");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const inputStyle: React.CSSProperties = {
-    width: "100%",
-    padding: "12px 14px",
-    borderRadius: 12,
-    border: "1px solid #e5e7eb",
-    fontSize: 15,
-    fontFamily: "inherit",
-    background: "#fff",
-    color: "#0f172a",
-    outline: "none",
-    transition: "border-color 0.15s ease, box-shadow 0.15s ease",
-    boxSizing: "border-box",
-  };
-
-  const labelStyle: React.CSSProperties = {
-    display: "block",
-    fontSize: 12,
-    fontWeight: 600,
-    color: "#475569",
-    marginBottom: 6,
-    letterSpacing: "0.01em",
-  };
 
   const content = (
     <div
@@ -323,344 +362,21 @@ export function FeedbackSheet({ open, onClose, productId, labels, accentColor = 
 
         {/* Body */}
         <div style={{ overflowY: "auto", padding: "8px 22px 22px" }}>
-          {status === "success" ? (
-            <div style={{ padding: "16px 0 24px", textAlign: "center" }}>
-              <div
-                style={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: 999,
-                  background: `${accentColor}1A`,
-                  color: accentColor,
-                  margin: "0 auto 16px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 32,
-                  fontWeight: 700,
-                }}
-              >
-                ✓
-              </div>
-              <p style={{ margin: 0, fontSize: 15, color: "#334155", lineHeight: 1.5 }}>{labels.successMessage}</p>
-              <button
-                type="button"
-                onClick={onClose}
-                style={{
-                  marginTop: 22,
-                  width: "100%",
-                  padding: "14px 18px",
-                  borderRadius: submitRadius,
-                  border: "none",
-                  background: submitBg,
-                  color: submitText,
-                  fontSize: submitFontSize,
-                  fontWeight: submitFontWeight,
-                  cursor: "pointer",
-                }}
-              >
-                {labels.cancelLabel}
-              </button>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              {visible.name && (
-                <div>
-                  <label style={labelStyle}>{labels.nameLabel}</label>
-                  <input
-                    type="text"
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder={labels.namePlaceholder}
-                    style={inputStyle}
-                  />
-                </div>
-              )}
-              {visible.phone && (
-                <div>
-                  <label style={labelStyle}>{labels.phoneLabel}</label>
-                  <input
-                    type="tel"
-                    required
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder={labels.phonePlaceholder}
-                    style={inputStyle}
-                  />
-                </div>
-              )}
-              {visible.email && (
-                <div>
-                  <label style={labelStyle}>{labels.emailLabel}</label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder={labels.emailPlaceholder}
-                    style={inputStyle}
-                  />
-                </div>
-              )}
-              {visible.details && (
-                <div>
-                  <label style={labelStyle}>{labels.detailsLabel}</label>
-                  <textarea
-                    required
-                    value={details}
-                    onChange={(e) => setDetails(e.target.value)}
-                    placeholder={labels.detailsPlaceholder}
-                    rows={4}
-                    style={{ ...inputStyle, resize: "vertical", minHeight: 96 }}
-                  />
-                </div>
-              )}
-
-              {extras.map((f) => {
-                const value = extraValues[f.id] ?? "";
-                const onValueChange = (v: string) => setExtraValues((prev) => ({ ...prev, [f.id]: v }));
-                const labelNode = (
-                  <label style={labelStyle}>
-                    {f.label}
-                    {!f.required && <span style={{ color: "#9ca3af", fontWeight: 400, marginLeft: 4 }}>(optional)</span>}
-                  </label>
-                );
-                if (f.type === "textarea") {
-                  return (
-                    <div key={f.id}>
-                      {labelNode}
-                      <textarea
-                        required={f.required}
-                        value={value}
-                        onChange={(e) => onValueChange(e.target.value)}
-                        placeholder={f.placeholder}
-                        rows={3}
-                        style={{ ...inputStyle, resize: "vertical", minHeight: 80 }}
-                      />
-                    </div>
-                  );
-                }
-                if (f.type === "image") {
-                  return (
-                    <div key={f.id}>
-                      {labelNode}
-                      <ImageUploadField
-                        value={value}
-                        onChange={onValueChange}
-                        accentColor={accentColor}
-                        placeholder={f.placeholder}
-                      />
-                    </div>
-                  );
-                }
-                return (
-                  <div key={f.id}>
-                    {labelNode}
-                    <input
-                      type={f.type}
-                      required={f.required}
-                      value={value}
-                      onChange={(e) => onValueChange(e.target.value)}
-                      placeholder={f.placeholder}
-                      style={inputStyle}
-                    />
-                  </div>
-                );
-              })}
-
-              {errorText && (
-                <div style={{ padding: "10px 12px", borderRadius: 10, background: "#fef2f2", border: "1px solid #fecaca", color: "#b91c1c", fontSize: 13 }}>
-                  {errorText}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={!canSubmit}
-                style={{
-                  marginTop: 4,
-                  width: "100%",
-                  padding: "14px 18px",
-                  borderRadius: submitRadius,
-                  border: "none",
-                  background: canSubmit ? submitBg : "#cbd5e1",
-                  color: submitText,
-                  fontSize: submitFontSize,
-                  fontWeight: submitFontWeight,
-                  cursor: canSubmit ? "pointer" : "not-allowed",
-                  transition: "background 0.15s ease, transform 0.1s ease",
-                }}
-              >
-                {submitting ? "Sending…" : labels.submitLabel}
-              </button>
-            </form>
-          )}
+          <FeedbackFormCore
+            productId={productId}
+            labels={labels}
+            accentColor={accentColor}
+            fields={fields}
+            layout={layout}
+            submitStyle={submitStyle}
+            resetNonce={resetNonce}
+            onStatusChange={setStatus}
+            onDone={onClose}
+          />
         </div>
       </div>
     </div>
   );
 
   return createPortal(content, portalRoot ?? document.body);
-}
-
-/* ─── Image upload field ────────────────────── */
-
-interface ImageUploadFieldProps {
-  value: string;
-  onChange: (url: string) => void;
-  accentColor: string;
-  placeholder?: string;
-}
-
-function ImageUploadField({ value, onChange, accentColor, placeholder }: ImageUploadFieldProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSelect = async (file: File) => {
-    setError(null);
-    if (!file.type.startsWith("image/")) {
-      setError("Please choose an image file.");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setError("Image must be 5MB or smaller.");
-      return;
-    }
-    setUploading(true);
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch("/api/feedback/upload", { method: "POST", body: fd });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body?.error || "Upload failed");
-      if (typeof body?.url !== "string") throw new Error("Upload failed");
-      onChange(body.url);
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Upload failed");
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  if (value) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          padding: 10,
-          borderRadius: 12,
-          border: "1px solid #e5e7eb",
-          background: "#fff",
-        }}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={value}
-          alt="Uploaded"
-          style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 8, background: "#f1f5f9", flexShrink: 0 }}
-        />
-        <div style={{ flex: 1, minWidth: 0, fontSize: 12.5, color: "#475569" }}>
-          <div style={{ fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            Image uploaded
-          </div>
-          <a
-            href={value}
-            target="_blank"
-            rel="noreferrer"
-            style={{ color: accentColor, textDecoration: "none", fontSize: 11.5 }}
-          >
-            View
-          </a>
-        </div>
-        <button
-          type="button"
-          onClick={() => {
-            onChange("");
-            if (inputRef.current) inputRef.current.value = "";
-          }}
-          style={{
-            flexShrink: 0,
-            width: 32,
-            height: 32,
-            borderRadius: 8,
-            border: "1px solid #fecaca",
-            background: "#fef2f2",
-            color: "#b91c1c",
-            cursor: "pointer",
-            fontSize: 14,
-            lineHeight: 1,
-          }}
-          aria-label="Remove image"
-        >
-          ×
-        </button>
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/*"
-          style={{ display: "none" }}
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) void handleSelect(f);
-          }}
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <button
-        type="button"
-        onClick={() => inputRef.current?.click()}
-        disabled={uploading}
-        style={{
-          width: "100%",
-          padding: "18px 14px",
-          borderRadius: 12,
-          border: `1.5px dashed ${uploading ? "#cbd5e1" : "#e5e7eb"}`,
-          background: uploading ? "#f8fafc" : "#fafafa",
-          color: "#475569",
-          cursor: uploading ? "wait" : "pointer",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: 8,
-          fontFamily: "inherit",
-          fontSize: 13,
-          transition: "border-color 0.15s ease, background 0.15s ease",
-        }}
-      >
-        {uploading ? (
-          <>
-            <Loader2 size={22} style={{ animation: "spin 1s linear infinite", color: accentColor }} />
-            <span style={{ color: "#64748b" }}>Uploading…</span>
-          </>
-        ) : (
-          <>
-            <ImagePlus size={22} style={{ color: accentColor }} />
-            <span style={{ fontWeight: 600, color: "#0f172a" }}>{placeholder || "Choose an image"}</span>
-            <span style={{ fontSize: 11, color: "#94a3b8" }}>JPG, PNG, GIF, WebP or SVG · up to 5MB</span>
-          </>
-        )}
-      </button>
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*"
-        style={{ display: "none" }}
-        onChange={(e) => {
-          const f = e.target.files?.[0];
-          if (f) void handleSelect(f);
-        }}
-      />
-      {error && (
-        <div style={{ marginTop: 6, fontSize: 12, color: "#b91c1c" }}>{error}</div>
-      )}
-      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
-    </div>
-  );
 }

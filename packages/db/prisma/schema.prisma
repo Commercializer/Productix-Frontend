@@ -215,6 +215,8 @@ model Company {
   categories        Category[]
   subCategories     SubCategory[]
   products          Product[]
+  branches          Branch[]
+  feedbackForms     FeedbackForm[]
   feedbackInquiries FeedbackInquiry[]
   mediaAssets       MediaAsset[]
 
@@ -568,28 +570,99 @@ model PageView {
 
 /// Customer feedback and inquiries - can be submitted anonymously.
 model FeedbackInquiry {
-  id           String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  companyId    String              @map("company_id") @db.Uuid
-  productId    String?             @map("product_id") @db.Uuid
-  qrId         String?             @map("qr_id") @db.Uuid
-  type         FeedbackInquiryType
-  feedbackType FeedbackType?       @map("feedback_type")
-  name         String              @db.VarChar(255)
-  email        String              @db.VarChar(255)
-  phoneNumber  String?             @map("phone_number") @db.VarChar(50)
-  description  String              @db.Text
-  imageUrl     String?             @map("image_url") @db.VarChar(500)
-  status       FeedbackStatus      @default(NEW)
-  createdAt    DateTime            @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt    DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  id             String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId      String              @map("company_id") @db.Uuid
+  productId      String?             @map("product_id") @db.Uuid
+  branchId       String?             @map("branch_id") @db.Uuid
+  feedbackFormId String?             @map("feedback_form_id") @db.Uuid
+  qrId           String?             @map("qr_id") @db.Uuid
+  type           FeedbackInquiryType
+  feedbackType   FeedbackType?       @map("feedback_type")
+  name           String              @db.VarChar(255)
+  email          String              @db.VarChar(255)
+  phoneNumber    String?             @map("phone_number") @db.VarChar(50)
+  description    String              @db.Text
+  imageUrl       String?             @map("image_url") @db.VarChar(500)
+  /// Average of the submission's rating fields (star/emoji/nps), normalized to a 1-5 scale. Null when no rating field was answered.
+  ratingScore    Float?              @map("rating_score")
+  status         FeedbackStatus      @default(NEW)
+  createdAt      DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
-  company   Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  product   Product?           @relation(fields: [productId], references: [id], onDelete: SetNull)
-  responses FeedbackResponse[]
+  company      Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  product      Product?           @relation(fields: [productId], references: [id], onDelete: SetNull)
+  branch       Branch?            @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  feedbackForm FeedbackForm?      @relation(fields: [feedbackFormId], references: [id], onDelete: SetNull)
+  answers      FeedbackAnswer[]
+  responses    FeedbackResponse[]
 
   @@index([companyId])
   @@index([productId])
+  @@index([branchId])
   @@map("feedback_inquiries")
+}
+
+/// A physical location / branch of a company. Customers pick their branch when
+/// submitting feedback so the dashboard can filter and segment by location.
+model Branch {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId String   @map("company_id") @db.Uuid
+  name      String   @db.VarChar(255)
+  city      String?  @db.VarChar(255)
+  address   String?  @db.VarChar(500)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company           Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  feedbackInquiries FeedbackInquiry[]
+
+  @@unique([companyId, name])
+  @@index([companyId])
+  @@map("branches")
+}
+
+/// A reusable feedback form template authored in the editor. The `fields` JSON
+/// snapshots the builder configuration (FeedbackFieldDef[]).
+model FeedbackForm {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId String   @map("company_id") @db.Uuid
+  name      String   @db.VarChar(255)
+  fields    Json
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company           Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  feedbackInquiries FeedbackInquiry[]
+
+  @@index([companyId])
+  @@map("feedback_forms")
+}
+
+/// One structured answer per answered field per feedback submission. Enables
+/// filtering and aggregation (ratings, custom selections) that the flattened
+/// `description` text could not support.
+model FeedbackAnswer {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  feedbackInquiryId String   @map("feedback_inquiry_id") @db.Uuid
+  /// Stable field id from the form definition.
+  fieldId           String   @map("field_id") @db.VarChar(100)
+  /// Snapshot of the field label at submission time.
+  label             String   @db.VarChar(255)
+  fieldType         String   @map("field_type") @db.VarChar(50)
+  /// Used by text/textarea/tel/email/number/image/date fields.
+  valueText         String?  @map("value_text") @db.Text
+  /// Used by star/emoji/nps/slider/number rating fields.
+  valueNumber       Float?   @map("value_number")
+  /// Used by select / multi-select fields.
+  valueOptions      String[] @map("value_options")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  feedbackInquiry FeedbackInquiry @relation(fields: [feedbackInquiryId], references: [id], onDelete: Cascade)
+
+  @@index([feedbackInquiryId])
+  @@index([fieldId])
+  @@map("feedback_answers")
 }
 
 /// Staff responses to feedback/inquiries

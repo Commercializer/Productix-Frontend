@@ -501,6 +501,116 @@ export async function createBrandProfileAction(brandName: string) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// BRANCHES (company locations used for feedback segmentation)
+// ═══════════════════════════════════════════════════════════════
+
+export async function getBranchesAction() {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const companyId = await getUserCompanyId(session.user.id);
+  if (!companyId) return { error: "No company found for user" };
+
+  const branches = await prisma.branch.findMany({
+    where: { companyId },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true, city: true, address: true, isActive: true },
+  });
+
+  return { success: true, items: branches };
+}
+
+export async function createBranchAction(input: { name: string; city?: string; address?: string }) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const name = input.name.trim();
+  if (!name) return { error: "Branch name is required" };
+  if (name.length > 255) return { error: "Branch name too long" };
+  const city = input.city?.trim() || null;
+  const address = input.address?.trim() || null;
+
+  const companyId = await getUserCompanyId(session.user.id);
+  if (!companyId) return { error: "No company found for user" };
+
+  try {
+    const existing = await prisma.branch.findFirst({
+      where: { companyId, name: { equals: name, mode: "insensitive" } },
+      select: { id: true, name: true, city: true, address: true, isActive: true },
+    });
+    if (existing) return { success: true, item: existing };
+
+    const item = await prisma.branch.create({
+      data: { companyId, name, city, address },
+      select: { id: true, name: true, city: true, address: true, isActive: true },
+    });
+    return { success: true, item };
+  } catch (error: any) {
+    return { error: error.message };
+  }
+}
+
+export async function updateBranchAction(
+  id: string,
+  patch: { name?: string; city?: string; address?: string; isActive?: boolean },
+) {
+  if (!isUUID(id)) return { error: "Invalid branch ID" };
+
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const companyId = await getUserCompanyId(session.user.id);
+  if (!companyId) return { error: "No company found for user" };
+
+  // Confirm the branch belongs to the caller's company before mutating it.
+  const owned = await prisma.branch.findFirst({ where: { id, companyId }, select: { id: true } });
+  if (!owned) return { error: "Branch not found" };
+
+  const data: { name?: string; city?: string | null; address?: string | null; isActive?: boolean } = {};
+  if (patch.name !== undefined) {
+    const name = patch.name.trim();
+    if (!name) return { error: "Branch name is required" };
+    if (name.length > 255) return { error: "Branch name too long" };
+    data.name = name;
+  }
+  if (patch.city !== undefined) data.city = patch.city.trim() || null;
+  if (patch.address !== undefined) data.address = patch.address.trim() || null;
+  if (patch.isActive !== undefined) data.isActive = patch.isActive;
+
+  try {
+    const item = await prisma.branch.update({
+      where: { id },
+      data,
+      select: { id: true, name: true, city: true, address: true, isActive: true },
+    });
+    return { success: true, item };
+  } catch (error: any) {
+    return { error: error.message };
+  }
+}
+
+export async function deleteBranchAction(id: string) {
+  if (!isUUID(id)) return { error: "Invalid branch ID" };
+
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const companyId = await getUserCompanyId(session.user.id);
+  if (!companyId) return { error: "No company found for user" };
+
+  const owned = await prisma.branch.findFirst({ where: { id, companyId }, select: { id: true } });
+  if (!owned) return { error: "Branch not found" };
+
+  try {
+    // Feedback keeps its branchId set to null (onDelete: SetNull) so history survives.
+    await prisma.branch.delete({ where: { id } });
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message };
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
 // EXPORT / IMPORT (.productix encrypted project file)
 // ═══════════════════════════════════════════════════════════════
 
@@ -1994,7 +2104,14 @@ export async function getCompanyMessagesAction() {
     const messages = await prisma.feedbackInquiry.findMany({
       where: { companyId },
       orderBy: { createdAt: 'desc' },
-      include: { product: { include: { profiles: true } } }
+      include: {
+        product: { include: { profiles: true, category: true } },
+        branch: { select: { name: true } },
+        answers: {
+          orderBy: { createdAt: 'asc' },
+          select: { fieldId: true, label: true, fieldType: true, valueText: true, valueNumber: true, valueOptions: true },
+        },
+      }
     });
 
     return {
@@ -2009,7 +2126,18 @@ export async function getCompanyMessagesAction() {
         status: m.status,
         description: m.description,
         createdAt: m.createdAt.toISOString(),
-        productName: m.product?.profiles?.[0]?.productName || "General"
+        productName: m.product?.profiles?.[0]?.productName || "General",
+        branchName: m.branch?.name ?? null,
+        categoryName: m.product?.category?.name ?? null,
+        ratingScore: m.ratingScore ?? null,
+        answers: m.answers.map(a => ({
+          fieldId: a.fieldId,
+          label: a.label,
+          fieldType: a.fieldType,
+          valueText: a.valueText,
+          valueNumber: a.valueNumber,
+          valueOptions: a.valueOptions,
+        })),
       }))
     };
   } catch (error: any) {

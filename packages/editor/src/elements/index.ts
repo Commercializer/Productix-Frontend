@@ -24,6 +24,7 @@ import "./column-element";
 import "./video-element";
 import "./audio-element";
 import "./feedback-element";
+import "./feedback-form-element";
 import "./search-element";
 import "./shape-element";
 import "./carousel-element";

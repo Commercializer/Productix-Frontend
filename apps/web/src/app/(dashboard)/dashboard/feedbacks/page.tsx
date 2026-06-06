@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { X, Mail, Phone, Package as PackageIcon, Calendar, Tag, Filter, Image as ImageIcon, ExternalLink, Download } from "lucide-react";
+import { X, Mail, Phone, Package as PackageIcon, Calendar, Tag, Filter, Image as ImageIcon, ExternalLink, Download, MapPin, Layers, ListChecks } from "lucide-react";
 import { useMessages, type Message } from "@/hooks/use-messages";
 import { DashboardHeader } from "@/components/dashboard/header";
 
@@ -135,6 +135,59 @@ function renderTextWithLinks(text: string): React.ReactNode[] {
 type TypeFilter = "ALL" | "FEEDBACK" | "INQUIRY";
 type DateFilter = "ALL" | "TODAY" | "7D" | "30D" | "CUSTOM";
 
+const EMOJI_SCALE = ["😠", "🙁", "😐", "🙂", "😄"];
+
+/** Render a feedback answer's value in a type-appropriate way. */
+function AnswerValue({ answer }: { answer: import("@/hooks/use-messages").FeedbackAnswer }) {
+  const { fieldType, valueNumber, valueText, valueOptions } = answer;
+
+  if (fieldType === "star" && valueNumber != null) {
+    return (
+      <span className="inline-flex items-center gap-0.5 text-amber-500">
+        {"★".repeat(Math.round(valueNumber))}
+        <span className="text-(--ds-text-secondary) text-[12px] ml-1">{valueNumber}</span>
+      </span>
+    );
+  }
+  if (fieldType === "emoji" && valueNumber != null) {
+    return (
+      <span className="inline-flex items-center gap-1.5">
+        <span className="text-[18px] leading-none">{EMOJI_SCALE[Math.min(4, Math.max(0, Math.round(valueNumber) - 1))]}</span>
+        <span className="text-(--ds-text-secondary) text-[12px]">{valueNumber}/5</span>
+      </span>
+    );
+  }
+  if (fieldType === "nps" && valueNumber != null) {
+    return <span className="font-semibold text-(--ds-text-primary)">{valueNumber}<span className="text-(--ds-text-secondary) text-[12px] font-normal">/10</span></span>;
+  }
+  if ((fieldType === "slider" || fieldType === "number") && valueNumber != null) {
+    return <span className="font-semibold text-(--ds-text-primary)">{valueNumber}</span>;
+  }
+  if ((fieldType === "select" || fieldType === "multiselect") && valueOptions.length > 0) {
+    return (
+      <span className="inline-flex flex-wrap gap-1">
+        {valueOptions.map((v, i) => (
+          <span key={i} className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-medium">
+            {v}
+          </span>
+        ))}
+      </span>
+    );
+  }
+  return <span className="text-(--ds-text-primary)">{valueText || "-"}</span>;
+}
+
+/** Compact star summary for an average rating (1-5). */
+function RatingSummary({ value }: { value: number }) {
+  const rounded = Math.round(value * 10) / 10;
+  return (
+    <span className="inline-flex items-center gap-1 text-amber-500" title={`${rounded} average rating`}>
+      <span className="text-[14px]">★</span>
+      <span className="font-semibold">{rounded}</span>
+    </span>
+  );
+}
+
 export default function MessagesPage() {
   const { messages, loading } = useMessages();
   const [selected, setSelected] = useState<Message | null>(null);
@@ -143,6 +196,11 @@ export default function MessagesPage() {
   const [dateFilter, setDateFilter] = useState<DateFilter>("ALL");
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
+  const [branchFilter, setBranchFilter] = useState<string>("ALL");
+  const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
+  // Custom-selection filter: pick a select/multi-select field, then a value.
+  const [customField, setCustomField] = useState<string>("ALL");
+  const [customValue, setCustomValue] = useState<string>("ALL");
 
   const productOptions = useMemo(() => {
     const set = new Set<string>();
@@ -152,12 +210,51 @@ export default function MessagesPage() {
     return Array.from(set).sort((a, b) => a.localeCompare(b));
   }, [messages]);
 
+  const branchOptions = useMemo(() => {
+    const set = new Set<string>();
+    messages.forEach((m) => m.branchName && set.add(m.branchName));
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [messages]);
+
+  const categoryOptions = useMemo(() => {
+    const set = new Set<string>();
+    messages.forEach((m) => m.categoryName && set.add(m.categoryName));
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [messages]);
+
+  // Map each select/multi-select field label to the set of values seen across
+  // all feedback, powering the two-step "custom selection" filter.
+  const customSelections = useMemo(() => {
+    const map = new Map<string, Set<string>>();
+    messages.forEach((m) =>
+      m.answers.forEach((a) => {
+        if ((a.fieldType === "select" || a.fieldType === "multiselect") && a.valueOptions.length > 0) {
+          if (!map.has(a.label)) map.set(a.label, new Set());
+          a.valueOptions.forEach((v) => map.get(a.label)!.add(v));
+        }
+      }),
+    );
+    return map;
+  }, [messages]);
+
+  const customValueOptions = useMemo(() => {
+    if (customField === "ALL") return [];
+    return Array.from(customSelections.get(customField) ?? []).sort((a, b) => a.localeCompare(b));
+  }, [customField, customSelections]);
+
   const filtered = useMemo(() => {
     const now = Date.now();
     const dayMs = 24 * 60 * 60 * 1000;
     return messages.filter((m) => {
       if (productFilter !== "ALL" && m.productName !== productFilter) return false;
       if (typeFilter !== "ALL" && m.type !== typeFilter) return false;
+      if (branchFilter !== "ALL" && m.branchName !== branchFilter) return false;
+      if (categoryFilter !== "ALL" && m.categoryName !== categoryFilter) return false;
+      if (customField !== "ALL") {
+        const matches = m.answers.filter((a) => a.label === customField && a.valueOptions.length > 0);
+        if (matches.length === 0) return false;
+        if (customValue !== "ALL" && !matches.some((a) => a.valueOptions.includes(customValue))) return false;
+      }
       if (dateFilter !== "ALL") {
         const created = new Date(m.createdAt).getTime();
         if (dateFilter === "TODAY") {
@@ -183,10 +280,22 @@ export default function MessagesPage() {
       }
       return true;
     });
-  }, [messages, productFilter, typeFilter, dateFilter, dateFrom, dateTo]);
+  }, [messages, productFilter, typeFilter, dateFilter, dateFrom, dateTo, branchFilter, categoryFilter, customField, customValue]);
+
+  // Average rating across the currently-filtered feedback (1-5 scale).
+  const avgRating = useMemo(() => {
+    const scores = filtered.map((m) => m.ratingScore).filter((s): s is number => s != null);
+    if (scores.length === 0) return null;
+    return { value: scores.reduce((a, b) => a + b, 0) / scores.length, count: scores.length };
+  }, [filtered]);
 
   const hasActiveFilter =
-    productFilter !== "ALL" || typeFilter !== "ALL" || dateFilter !== "ALL";
+    productFilter !== "ALL" ||
+    typeFilter !== "ALL" ||
+    dateFilter !== "ALL" ||
+    branchFilter !== "ALL" ||
+    categoryFilter !== "ALL" ||
+    customField !== "ALL";
 
   const clearFilters = () => {
     setProductFilter("ALL");
@@ -194,6 +303,10 @@ export default function MessagesPage() {
     setDateFilter("ALL");
     setDateFrom("");
     setDateTo("");
+    setBranchFilter("ALL");
+    setCategoryFilter("ALL");
+    setCustomField("ALL");
+    setCustomValue("ALL");
   };
 
   return (
@@ -201,7 +314,15 @@ export default function MessagesPage() {
       <DashboardHeader />
       <section className="section mt-0!">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-          <h2 className="text-xl font-bold text-(--ds-text-primary)">Customer Feedbacks</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-xl font-bold text-(--ds-text-primary)">Customer Feedbacks</h2>
+            {avgRating && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 text-[12px]">
+                <RatingSummary value={avgRating.value} />
+                <span className="text-(--ds-text-secondary)">· {avgRating.count} rated</span>
+              </span>
+            )}
+          </div>
           <div className="flex flex-wrap items-center gap-2">
             <div className="hidden sm:flex items-center gap-1.5 text-[12px] text-(--ds-text-secondary)">
               <Filter size={14} />
@@ -215,6 +336,51 @@ export default function MessagesPage() {
                 ...productOptions.map((p) => ({ value: p, label: p })),
               ]}
             />
+            {branchOptions.length > 0 && (
+              <FilterSelect
+                value={branchFilter}
+                onChange={setBranchFilter}
+                options={[
+                  { value: "ALL", label: "All branches" },
+                  ...branchOptions.map((b) => ({ value: b, label: b })),
+                ]}
+              />
+            )}
+            {categoryOptions.length > 0 && (
+              <FilterSelect
+                value={categoryFilter}
+                onChange={setCategoryFilter}
+                options={[
+                  { value: "ALL", label: "All categories" },
+                  ...categoryOptions.map((c) => ({ value: c, label: c })),
+                ]}
+              />
+            )}
+            {customSelections.size > 0 && (
+              <>
+                <FilterSelect
+                  value={customField}
+                  onChange={(v) => {
+                    setCustomField(v);
+                    setCustomValue("ALL");
+                  }}
+                  options={[
+                    { value: "ALL", label: "All custom fields" },
+                    ...Array.from(customSelections.keys()).map((k) => ({ value: k, label: k })),
+                  ]}
+                />
+                {customField !== "ALL" && (
+                  <FilterSelect
+                    value={customValue}
+                    onChange={setCustomValue}
+                    options={[
+                      { value: "ALL", label: "Any value" },
+                      ...customValueOptions.map((v) => ({ value: v, label: v })),
+                    ]}
+                  />
+                )}
+              </>
+            )}
             <FilterSelect
               value={typeFilter}
               onChange={(v) => setTypeFilter(v as TypeFilter)}
@@ -326,7 +492,15 @@ export default function MessagesPage() {
                           {msg.type} {msg.feedbackType ? `- ${msg.feedbackType}` : ""}
                         </span>
                       </td>
-                      <td className="p-4 text-(--ds-text-secondary)">{msg.productName}</td>
+                      <td className="p-4 text-(--ds-text-secondary)">
+                        <div className="flex items-center gap-2">
+                          <span>{msg.productName}</span>
+                          {msg.ratingScore != null && <RatingSummary value={msg.ratingScore} />}
+                        </div>
+                        {msg.branchName && (
+                          <div className="text-[12px] text-(--ds-text-secondary)/70">{msg.branchName}</div>
+                        )}
+                      </td>
                       <td className="p-4">
                         <span className={`px-2.5 py-1 rounded-full text-[11px] font-medium uppercase tracking-tight ${
                           msg.status === 'NEW' ? 'bg-primary/10 text-primary' :
@@ -483,6 +657,21 @@ function FeedbackModal({ message, onClose }: { message: Message | null; onClose:
             <DetailRow icon={<PackageIcon size={15} />} label="Product">
               <span className="text-(--ds-text-primary)">{message.productName}</span>
             </DetailRow>
+            {message.branchName && (
+              <DetailRow icon={<MapPin size={15} />} label="Branch">
+                <span className="text-(--ds-text-primary)">{message.branchName}</span>
+              </DetailRow>
+            )}
+            {message.categoryName && (
+              <DetailRow icon={<Layers size={15} />} label="Category">
+                <span className="text-(--ds-text-primary)">{message.categoryName}</span>
+              </DetailRow>
+            )}
+            {message.ratingScore != null && (
+              <DetailRow icon={<Tag size={15} />} label="Average rating">
+                <RatingSummary value={message.ratingScore} />
+              </DetailRow>
+            )}
             {message.feedbackType && (
               <DetailRow icon={<Tag size={15} />} label="Feedback type">
                 <span className="text-(--ds-text-primary)">{message.feedbackType}</span>
@@ -508,6 +697,25 @@ function FeedbackModal({ message, onClose }: { message: Message | null; onClose:
                 )}
               </div>
             </div>
+
+            {message.answers.length > 0 && (
+              <div className="pt-1">
+                <div className="text-[11px] uppercase tracking-wider text-(--ds-text-secondary) font-medium mb-2 flex items-center gap-1.5">
+                  <ListChecks size={12} />
+                  Responses ({message.answers.length})
+                </div>
+                <div className="rounded-xl border border-(--ds-border) divide-y divide-(--ds-border) overflow-hidden">
+                  {message.answers.map((a, i) => (
+                    <div key={`${a.fieldId}-${i}`} className="flex items-start justify-between gap-3 px-4 py-2.5">
+                      <span className="text-[13px] text-(--ds-text-secondary) shrink-0">{a.label}</span>
+                      <span className="text-[13px] text-right min-w-0">
+                        <AnswerValue answer={a} />
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {attachments.length > 0 && (
               <div className="pt-1">

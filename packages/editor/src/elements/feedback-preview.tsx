@@ -1,17 +1,18 @@
 /* ─────────────────────────────────────────────
- * Feedback Form Preview - Live, non-interactive
- * preview shown next to the canvas while the
- * author is editing a Feedback element.
+ * Feedback Popup Builder - the editable popup shown
+ * beside the canvas while a Feedback button is
+ * selected. The author drags / arranges the form's
+ * field blocks here (free 12-col layout); it mirrors
+ * how the bottom-sheet popup looks on the live page.
  * ──────────────────────────────────────────── */
 
 "use client";
 
 import React from "react";
-import { Eye, ImagePlus } from "lucide-react";
+import { LayoutTemplate } from "lucide-react";
 import { useCanvasStore } from "../engine/canvas-store";
-import { getDefaultFeedbackLabels, type CustomField, type FeedbackSheetFields, type FeedbackSheetLabels } from "./feedback-sheet";
-
-const DEFAULT_FIELDS: FeedbackSheetFields = { name: true, phone: true, email: true, details: true };
+import { FeedbackFreeCanvas } from "./feedback-free-canvas";
+import { getDefaultFeedbackLabels, type FeedbackSheetLabels } from "./feedback-sheet";
 
 function resolveLabels(props: Record<string, unknown>): FeedbackSheetLabels {
   const d = getDefaultFeedbackLabels();
@@ -37,12 +38,13 @@ function resolveLabels(props: Record<string, unknown>): FeedbackSheetLabels {
 export function FeedbackFormPreview() {
   const selectedIds = useCanvasStore((s) => s.selectedIds);
   const elements = useCanvasStore((s) => s.document.elements);
+  const updateElementProps = useCanvasStore((s) => s.updateElementProps);
 
-  // Show the preview when exactly one Feedback element is selected.
+  // Show the builder when exactly one Feedback (button → popup) element is selected.
   if (selectedIds.length !== 1) return null;
-  const firstId = selectedIds[0];
-  if (!firstId) return null;
-  const el = elements[firstId];
+  const elementId = selectedIds[0];
+  if (!elementId) return null;
+  const el = elements[elementId];
   if (!el || el.type !== "feedback") return null;
 
   const props = el.props;
@@ -53,43 +55,13 @@ export function FeedbackFormPreview() {
   const submitRadius = typeof props.submitBorderRadius === "number" ? (props.submitBorderRadius as number) : 14;
   const submitFontSize = typeof props.submitFontSize === "number" ? (props.submitFontSize as number) : 15;
   const submitFontWeight = (props.submitFontWeight as string) || "600";
-  // Scale the configured submit font size down to match the mini-preview's typography.
   const submitPreviewFontSize = Math.max(11, Math.round((submitFontSize / 15) * 13));
   const submitPreviewRadius = Math.max(4, Math.round((submitRadius / 14) * 12));
-  const fields: FeedbackSheetFields = {
-    name: props.showNameField !== false,
-    phone: props.showPhoneField !== false,
-    email: props.showEmailField !== false,
-    details: props.showDetailsField !== false,
-  };
-  const customFields: CustomField[] = Array.isArray(props.customFields) ? (props.customFields as CustomField[]) : [];
-  const visible: FeedbackSheetFields = { ...DEFAULT_FIELDS, ...fields };
-
-  const inputStyle: React.CSSProperties = {
-    width: "100%",
-    padding: "10px 12px",
-    borderRadius: 10,
-    border: "1px solid #e5e7eb",
-    fontSize: 13,
-    fontFamily: "inherit",
-    background: "#f9fafb",
-    color: "#94a3b8",
-    outline: "none",
-    boxSizing: "border-box",
-  };
-  const labelStyle: React.CSSProperties = {
-    display: "block",
-    fontSize: 11,
-    fontWeight: 600,
-    color: "#475569",
-    marginBottom: 5,
-    letterSpacing: "0.01em",
-  };
 
   return (
     <div
       style={{
-        width: 280,
+        width: 320,
         flexShrink: 0,
         background: "linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%)",
         borderRadius: 18,
@@ -124,15 +96,15 @@ export function FeedbackFormPreview() {
             justifyContent: "center",
           }}
         >
-          <Eye size={13} />
+          <LayoutTemplate size={13} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#1e1e2e", letterSpacing: "-0.005em" }}>Form preview</div>
-          <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 1 }}>How the sheet will look on the live page</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#1e1e2e", letterSpacing: "-0.005em" }}>Popup builder</div>
+          <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 1 }}>Drag fields to arrange · resize for columns</div>
         </div>
       </div>
 
-      {/* Phone-frame mock */}
+      {/* Phone-frame mock with the editable form */}
       <div style={{ padding: "14px 12px", overflowY: "auto" }}>
         <div
           style={{
@@ -151,7 +123,7 @@ export function FeedbackFormPreview() {
               overflow: "hidden",
               display: "flex",
               flexDirection: "column",
-              maxHeight: 480,
+              maxHeight: 520,
             }}
           >
             <div style={{ display: "flex", justifyContent: "center", padding: "8px 0 4px" }}>
@@ -161,65 +133,20 @@ export function FeedbackFormPreview() {
               <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.01em" }}>{labels.title}</h3>
               {labels.subtitle && <p style={{ margin: "3px 0 0", fontSize: 11.5, color: "#64748b", lineHeight: 1.4 }}>{labels.subtitle}</p>}
             </div>
-            <div style={{ padding: "8px 14px 14px", display: "flex", flexDirection: "column", gap: 10, overflowY: "auto" }}>
-              {visible.name && (
-                <div>
-                  <label style={labelStyle}>{labels.nameLabel}</label>
-                  <div style={inputStyle}>{labels.namePlaceholder}</div>
-                </div>
-              )}
-              {visible.phone && (
-                <div>
-                  <label style={labelStyle}>{labels.phoneLabel}</label>
-                  <div style={inputStyle}>{labels.phonePlaceholder}</div>
-                </div>
-              )}
-              {visible.email && (
-                <div>
-                  <label style={labelStyle}>{labels.emailLabel}</label>
-                  <div style={inputStyle}>{labels.emailPlaceholder}</div>
-                </div>
-              )}
-              {visible.details && (
-                <div>
-                  <label style={labelStyle}>{labels.detailsLabel}</label>
-                  <div style={{ ...inputStyle, minHeight: 64 }}>{labels.detailsPlaceholder}</div>
-                </div>
-              )}
-              {customFields.map((f) => (
-                <div key={f.id}>
-                  <label style={labelStyle}>
-                    {f.label || "Untitled field"}
-                    {!f.required && <span style={{ color: "#cbd5e1", fontWeight: 400, marginLeft: 4 }}>(optional)</span>}
-                  </label>
-                  {f.type === "image" ? (
-                    <div
-                      style={{
-                        ...inputStyle,
-                        border: "1.5px dashed #e5e7eb",
-                        background: "#fafafa",
-                        padding: "12px",
-                        minHeight: 56,
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 4,
-                      }}
-                    >
-                      <ImagePlus size={16} style={{ color: accent }} />
-                      <span style={{ fontSize: 11, color: "#94a3b8" }}>{f.placeholder || "Choose an image"}</span>
-                    </div>
-                  ) : (
-                    <div style={{ ...inputStyle, minHeight: f.type === "textarea" ? 56 : undefined }}>{f.placeholder || (f.type === "textarea" ? "Long answer" : "Short answer")}</div>
-                  )}
-                </div>
-              ))}
+
+            <div style={{ padding: "10px 14px 14px", overflowY: "auto" }}>
+              <FeedbackFreeCanvas
+                elementId={elementId}
+                props={props}
+                labels={labels}
+                accentColor={accent}
+                onChange={(changes) => updateElementProps(elementId, changes)}
+              />
 
               {/* Submit button preview */}
               <div
                 style={{
-                  marginTop: 4,
+                  marginTop: 14,
                   padding: "10px 14px",
                   borderRadius: submitPreviewRadius,
                   background: submitBg,
@@ -232,12 +159,6 @@ export function FeedbackFormPreview() {
               >
                 {labels.submitLabel}
               </div>
-
-              {!visible.name && !visible.phone && !visible.email && !visible.details && customFields.length === 0 && (
-                <div style={{ padding: "12px 14px", borderRadius: 10, background: "#fef2f2", border: "1px solid #fecaca", color: "#b91c1c", fontSize: 11.5 }}>
-                  No fields are enabled. Toggle at least one field or add a custom field in the Fields tab.
-                </div>
-              )}
             </div>
           </div>
         </div>

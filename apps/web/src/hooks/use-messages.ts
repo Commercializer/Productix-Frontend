@@ -3,6 +3,15 @@
 import { useState, useEffect, useCallback } from "react";
 import { getCompanyMessagesAction } from "@/lib/dashboard/actions";
 
+export interface FeedbackAnswer {
+  fieldId: string;
+  label: string;
+  fieldType: string;
+  valueText: string | null;
+  valueNumber: number | null;
+  valueOptions: string[];
+}
+
 export interface Message {
   id: string;
   name: string;
@@ -14,6 +23,10 @@ export interface Message {
   description: string;
   createdAt: string;
   productName: string;
+  branchName: string | null;
+  categoryName: string | null;
+  ratingScore: number | null;
+  answers: FeedbackAnswer[];
 }
 
 export function useMessages() {

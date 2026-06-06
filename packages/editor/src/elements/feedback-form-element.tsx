@@ -1,17 +1,24 @@
 /* ─────────────────────────────────────────────
- * Feedback Element - A button that opens a
- * native-app-style bottom sheet for visitors to
- * submit feedback against the current product.
+ * Feedback Form Element - a standalone feedback
+ * form rendered inline directly on the page (no
+ * trigger button / popup). Authors build and style
+ * it on the editor canvas like any other element;
+ * visitors fill it in and submit on the live page.
+ *
+ * Shares its form body (FeedbackFormCore) and field
+ * builder (feedback-fields-config) with the Feedback
+ * (button → bottom-sheet) element.
  * ──────────────────────────────────────────── */
 
 "use client";
 
 import React, { useState } from "react";
-import { MessageSquareHeart } from "lucide-react";
+import { ClipboardList } from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
 import { HexColorPopover } from "./hex-color-popover";
-import { FeedbackSheet, getDefaultFeedbackLabels, resolveFields, type FeedbackSheetLabels, type FeedbackSubmitStyle } from "./feedback-sheet";
-import { FeedbackFieldsBuilder } from "./feedback-fields-config";
+import { FeedbackFormCore, type FeedbackFormStatus } from "./feedback-form-core";
+import { BuiltInFieldToggles, CustomFieldsEditor } from "./feedback-fields-config";
+import { getDefaultFeedbackLabels, resolveFields, type CustomField, type FeedbackSheetLabels, type FeedbackSubmitStyle } from "./feedback-sheet";
 import { usePublicPage } from "../renderer/public-page-context";
 
 function isInsideEditor(): boolean {
@@ -44,17 +51,16 @@ function getLabels(props: Record<string, unknown>): FeedbackSheetLabels {
   };
 }
 
-function FeedbackElementComponent({ props, isEditing, scaleFactor = 1 }: ElementRenderProps) {
-  const text = (props.text as string) || "Send Feedback";
-  const bgColor = (props.bgColor as string) || "#0ea5e9";
-  const textColor = (props.textColor as string) || "#ffffff";
-  const borderRadius = (props.borderRadius as number) ?? 12;
-  const fontSize = (props.fontSize as number) ?? 15;
-  const fontWeight = (props.fontWeight as string) || "600";
-  const variant = (props.variant as string) || "filled";
+function FeedbackFormElementComponent({ props, isEditing }: ElementRenderProps) {
+  const accentColor = (props.accentColor as string) || "#0ea5e9";
+  const cardBg = (props.cardBg as string) || "#ffffff";
+  const cardRadius = (props.cardRadius as number) ?? 18;
+  const cardPadding = (props.cardPadding as number) ?? 24;
+  const showCard = props.showCard !== false;
+  const align = (props.titleAlign as string) || "left";
 
-  const [open, setOpen] = useState(false);
-  const { productId, portalRoot } = usePublicPage();
+  const [status, setStatus] = useState<FeedbackFormStatus>("idle");
+  const { productId } = usePublicPage();
 
   const submitStyle: FeedbackSubmitStyle = {
     bgColor: (props.submitBgColor as string) || undefined,
@@ -64,82 +70,73 @@ function FeedbackElementComponent({ props, isEditing, scaleFactor = 1 }: Element
     fontWeight: (props.submitFontWeight as string) || undefined,
   };
 
-  const scaledFontSize = Math.round(fontSize * scaleFactor);
-  const scaledPadH = Math.round(18 * scaleFactor);
-  const scaledRadius = Math.round(borderRadius * scaleFactor);
-
-  const style: React.CSSProperties = {
-    width: "100%",
-    height: "100%",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: scaledRadius,
-    fontSize: scaledFontSize,
-    fontWeight,
-    cursor: isInsideEditor() ? "inherit" : isEditing ? "default" : "pointer",
-    transition: "all 0.15s ease",
-    letterSpacing: "0.01em",
-    padding: `0 ${scaledPadH}px`,
-    textDecoration: "none",
-    border: "none",
-    boxSizing: "border-box",
-    ...(variant === "filled"
-      ? { background: bgColor, color: textColor }
-      : variant === "outline"
-        ? { background: "transparent", color: bgColor, border: `2px solid ${bgColor}` }
-        : { background: "transparent", color: bgColor }),
-  };
-
-  const interactive = !isEditing && !isInsideEditor();
-
   const labels = getLabels(props);
+  const interactive = !isEditing && !isInsideEditor();
   const resolved = resolveFields(props, labels);
 
-  return (
-    <>
-      <button
-        type="button"
-        style={style}
-        draggable={false}
-        onClick={interactive ? () => setOpen(true) : undefined}
-      >
-        <span>{text}</span>
-      </button>
+  const cardStyle: React.CSSProperties = {
+    width: "100%",
+    height: "100%",
+    boxSizing: "border-box",
+    display: "flex",
+    flexDirection: "column",
+    overflowY: "auto",
+    fontFamily: "var(--font-sans), system-ui, -apple-system, Segoe UI, Roboto, sans-serif",
+    background: showCard ? cardBg : "transparent",
+    borderRadius: showCard ? cardRadius : 0,
+    border: showCard ? "1px solid rgba(15,23,42,0.08)" : "none",
+    boxShadow: showCard ? "0 8px 28px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04)" : "none",
+    padding: showCard ? cardPadding : 0,
+  };
 
-      {interactive && (
-        <FeedbackSheet
-          open={open}
-          onClose={() => setOpen(false)}
-          productId={productId}
-          labels={labels}
-          accentColor={bgColor}
-          fields={resolved}
-          layout="free"
-          submitStyle={submitStyle}
-          portalRoot={portalRoot ?? null}
-        />
-      )}
-    </>
+  return (
+    <div style={cardStyle}>
+      {/* Header */}
+      <div style={{ marginBottom: 16, textAlign: align as React.CSSProperties["textAlign"] }}>
+        <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.01em" }}>
+          {status === "success" ? labels.successTitle : labels.title}
+        </h2>
+        {status !== "success" && labels.subtitle && (
+          <p style={{ margin: "5px 0 0", fontSize: 13.5, color: "#64748b", lineHeight: 1.45 }}>{labels.subtitle}</p>
+        )}
+      </div>
+
+      <FeedbackFormCore
+        productId={productId}
+        labels={labels}
+        accentColor={accentColor}
+        fields={resolved}
+        layout="stack"
+        submitStyle={submitStyle}
+        interactive={interactive}
+        onStatusChange={setStatus}
+      />
+    </div>
   );
 }
 
 /* ─── Property Panel ────────────────────────── */
 
-function FeedbackPropertyPanel({ props, onChange }: PropertyPanelProps) {
-  const [section, setSection] = useState<"style" | "fields" | "form" | "submit">("style");
+function FeedbackFormPropertyPanel({ props, onChange }: PropertyPanelProps) {
+  const [section, setSection] = useState<"card" | "fields" | "copy" | "submit">("card");
 
   const labelCls = "text-xs font-medium text-gray-500 uppercase tracking-wide";
   const inputCls = "mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none";
 
-  const tabLabel = (s: "style" | "fields" | "form" | "submit") =>
-    s === "style" ? "Button" : s === "fields" ? "Fields" : s === "form" ? "Copy" : "Submit";
+  const showName = props.showNameField !== false;
+  const showPhone = props.showPhoneField !== false;
+  const showEmail = props.showEmailField !== false;
+  const showDetails = props.showDetailsField !== false;
+  const customFields = Array.isArray(props.customFields) ? (props.customFields as CustomField[]) : [];
+
+  const tabLabel = (s: "card" | "fields" | "copy" | "submit") =>
+    s === "card" ? "Card" : s === "fields" ? "Fields" : s === "copy" ? "Copy" : "Submit";
 
   return (
     <div className="space-y-3">
       {/* Tabs */}
       <div style={{ display: "flex", gap: 4, padding: 3, background: "#f3f4f6", borderRadius: 8 }}>
-        {(["style", "fields", "form", "submit"] as const).map((s) => (
+        {(["card", "fields", "copy", "submit"] as const).map((s) => (
           <button
             key={s}
             type="button"
@@ -164,99 +161,84 @@ function FeedbackPropertyPanel({ props, onChange }: PropertyPanelProps) {
         ))}
       </div>
 
-      {section === "style" && (
+      {section === "card" && (
         <>
-          <label className="block">
-            <span className={labelCls}>Button label</span>
+          <label className="flex items-center justify-between gap-2 py-1">
+            <span className={labelCls}>Show card background</span>
             <input
-              type="text"
-              className={inputCls}
-              value={(props.text as string) || ""}
-              onChange={(e) => onChange({ text: e.target.value })}
+              type="checkbox"
+              checked={props.showCard !== false}
+              onChange={(e) => onChange({ showCard: e.target.checked })}
             />
           </label>
           <label className="block">
-            <span className={labelCls}>Variant</span>
-            <select
-              className={inputCls}
-              value={(props.variant as string) || "filled"}
-              onChange={(e) => onChange({ variant: e.target.value })}
-            >
-              <option value="filled">Filled</option>
-              <option value="outline">Outline</option>
-              <option value="link">Link</option>
+            <span className={labelCls}>Accent color</span>
+            <div className="mt-1 flex gap-2 items-center">
+              <HexColorPopover value={(props.accentColor as string) || ""} onChange={(hex) => onChange({ accentColor: hex })} fallback="#0ea5e9" />
+              <input
+                type="text"
+                className="flex-1 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
+                value={(props.accentColor as string) || "#0ea5e9"}
+                onChange={(e) => onChange({ accentColor: e.target.value })}
+              />
+            </div>
+          </label>
+          <label className="block">
+            <span className={labelCls}>Card background</span>
+            <div className="mt-1 flex gap-2 items-center">
+              <HexColorPopover value={(props.cardBg as string) || ""} onChange={(hex) => onChange({ cardBg: hex })} fallback="#ffffff" />
+              <input
+                type="text"
+                className="flex-1 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
+                value={(props.cardBg as string) || "#ffffff"}
+                onChange={(e) => onChange({ cardBg: e.target.value })}
+              />
+            </div>
+          </label>
+          <label className="block">
+            <span className={labelCls}>Title alignment</span>
+            <select className={inputCls} value={(props.titleAlign as string) || "left"} onChange={(e) => onChange({ titleAlign: e.target.value })}>
+              <option value="left">Left</option>
+              <option value="center">Center</option>
             </select>
           </label>
           <label className="block">
-            <span className={labelCls}>Background / Accent</span>
-            <div className="mt-1 flex gap-2 items-center">
-              <HexColorPopover
-                value={(props.bgColor as string) || ""}
-                onChange={(hex) => onChange({ bgColor: hex })}
-                fallback="#0ea5e9"
-              />
-              <input
-                type="text"
-                className="flex-1 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
-                value={(props.bgColor as string) || "#0ea5e9"}
-                onChange={(e) => onChange({ bgColor: e.target.value })}
-              />
-            </div>
+            <span className={labelCls}>Corner radius</span>
+            <input type="number" className={inputCls} value={(props.cardRadius as number) ?? 18} onChange={(e) => onChange({ cardRadius: Number(e.target.value) })} min={0} max={64} />
           </label>
           <label className="block">
-            <span className={labelCls}>Text color</span>
-            <div className="mt-1 flex gap-2 items-center">
-              <HexColorPopover
-                value={(props.textColor as string) || ""}
-                onChange={(hex) => onChange({ textColor: hex })}
-                fallback="#ffffff"
-              />
-              <input
-                type="text"
-                className="flex-1 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
-                value={(props.textColor as string) || "#ffffff"}
-                onChange={(e) => onChange({ textColor: e.target.value })}
-              />
-            </div>
-          </label>
-          <label className="block">
-            <span className={labelCls}>Border radius</span>
-            <input
-              type="number"
-              className={inputCls}
-              value={(props.borderRadius as number) ?? 12}
-              onChange={(e) => onChange({ borderRadius: Number(e.target.value) })}
-              min={0}
-              max={999}
-            />
-          </label>
-          <label className="block">
-            <span className={labelCls}>Font size</span>
-            <input
-              type="number"
-              className={inputCls}
-              value={(props.fontSize as number) ?? 15}
-              onChange={(e) => onChange({ fontSize: Number(e.target.value) })}
-              min={8}
-              max={48}
-            />
+            <span className={labelCls}>Padding</span>
+            <input type="number" className={inputCls} value={(props.cardPadding as number) ?? 24} onChange={(e) => onChange({ cardPadding: Number(e.target.value) })} min={0} max={80} />
           </label>
         </>
       )}
 
       {section === "fields" && (
         <>
-          <div style={{ padding: "9px 11px", borderRadius: 8, background: "#f8fafc", border: "1px solid #e2e8f0", fontSize: 11.5, color: "#64748b", lineHeight: 1.4 }}>
-            Add fields here, then <strong>drag</strong> them in the popup preview to arrange — resize a field's width with its right handle to place two side by side.
+          <div>
+            <span className={labelCls}>Built-in fields</span>
+            <BuiltInFieldToggles
+              fields={{ name: showName, phone: showPhone, email: showEmail, details: showDetails }}
+              onChange={(patch) =>
+                onChange({
+                  ...(patch.name !== undefined ? { showNameField: patch.name } : {}),
+                  ...(patch.phone !== undefined ? { showPhoneField: patch.phone } : {}),
+                  ...(patch.email !== undefined ? { showEmailField: patch.email } : {}),
+                  ...(patch.details !== undefined ? { showDetailsField: patch.details } : {}),
+                })
+              }
+            />
           </div>
-          <FeedbackFieldsBuilder props={props} onChange={onChange} />
+          <div style={{ marginTop: 14 }}>
+            <CustomFieldsEditor customFields={customFields} onChange={(next) => onChange({ customFields: next })} />
+          </div>
         </>
       )}
 
-      {section === "form" && (
+      {section === "copy" && (
         <>
           <label className="block">
-            <span className={labelCls}>Sheet title</span>
+            <span className={labelCls}>Form title</span>
             <input type="text" className={inputCls} value={(props.formTitle as string) || ""} onChange={(e) => onChange({ formTitle: e.target.value })} placeholder="Share your feedback" />
           </label>
           <label className="block">
@@ -268,6 +250,10 @@ function FeedbackPropertyPanel({ props, onChange }: PropertyPanelProps) {
             <input type="text" className={inputCls} value={(props.submitLabel as string) || ""} onChange={(e) => onChange({ submitLabel: e.target.value })} placeholder="Send feedback" />
           </label>
           <label className="block">
+            <span className={labelCls}>Success title</span>
+            <input type="text" className={inputCls} value={(props.successTitle as string) || ""} onChange={(e) => onChange({ successTitle: e.target.value })} placeholder="Thank you!" />
+          </label>
+          <label className="block">
             <span className={labelCls}>Success message</span>
             <textarea className={inputCls} rows={3} value={(props.successMessage as string) || ""} onChange={(e) => onChange({ successMessage: e.target.value })} placeholder="Your feedback has been received." />
           </label>
@@ -277,33 +263,25 @@ function FeedbackPropertyPanel({ props, onChange }: PropertyPanelProps) {
       {section === "submit" && (
         <>
           <div style={{ padding: "10px 12px", borderRadius: 8, background: "#f8fafc", border: "1px solid #e2e8f0", fontSize: 11.5, color: "#64748b", lineHeight: 1.4 }}>
-            Style the <strong>Send feedback</strong> button inside the popup. Leave colors blank to inherit from the trigger button.
+            Style the <strong>submit</strong> button. Leave colors blank to inherit from the accent color.
           </div>
           <label className="block">
             <span className={labelCls}>Background color</span>
             <div className="mt-1 flex gap-2 items-center">
-              <HexColorPopover
-                value={(props.submitBgColor as string) || ""}
-                onChange={(hex) => onChange({ submitBgColor: hex })}
-                fallback={(props.bgColor as string) || "#0ea5e9"}
-              />
+              <HexColorPopover value={(props.submitBgColor as string) || ""} onChange={(hex) => onChange({ submitBgColor: hex })} fallback={(props.accentColor as string) || "#0ea5e9"} />
               <input
                 type="text"
                 className="flex-1 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
                 value={(props.submitBgColor as string) || ""}
                 onChange={(e) => onChange({ submitBgColor: e.target.value })}
-                placeholder={(props.bgColor as string) || "#0ea5e9"}
+                placeholder={(props.accentColor as string) || "#0ea5e9"}
               />
             </div>
           </label>
           <label className="block">
             <span className={labelCls}>Text color</span>
             <div className="mt-1 flex gap-2 items-center">
-              <HexColorPopover
-                value={(props.submitTextColor as string) || ""}
-                onChange={(hex) => onChange({ submitTextColor: hex })}
-                fallback="#ffffff"
-              />
+              <HexColorPopover value={(props.submitTextColor as string) || ""} onChange={(hex) => onChange({ submitTextColor: hex })} fallback="#ffffff" />
               <input
                 type="text"
                 className="flex-1 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
@@ -337,11 +315,7 @@ function FeedbackPropertyPanel({ props, onChange }: PropertyPanelProps) {
           </label>
           <label className="block">
             <span className={labelCls}>Font weight</span>
-            <select
-              className={inputCls}
-              value={(props.submitFontWeight as string) || "600"}
-              onChange={(e) => onChange({ submitFontWeight: e.target.value })}
-            >
+            <select className={inputCls} value={(props.submitFontWeight as string) || "600"} onChange={(e) => onChange({ submitFontWeight: e.target.value })}>
               <option value="400">Regular (400)</option>
               <option value="500">Medium (500)</option>
               <option value="600">Semibold (600)</option>
@@ -358,21 +332,21 @@ function FeedbackPropertyPanel({ props, onChange }: PropertyPanelProps) {
 /* ─── Registration ──────────────────────────── */
 
 registerElement({
-  type: "feedback",
-  label: "Feedback",
-  icon: <MessageSquareHeart size={16} />,
+  type: "feedbackForm",
+  label: "Feedback Form",
+  icon: <ClipboardList size={16} />,
   category: "feedback",
   defaultProps: {
-    text: "Send Feedback",
-    variant: "filled",
-    bgColor: "#0ea5e9",
-    textColor: "#ffffff",
-    borderRadius: 12,
-    fontSize: 15,
-    fontWeight: "600",
+    accentColor: "#0ea5e9",
+    cardBg: "#ffffff",
+    cardRadius: 18,
+    cardPadding: 24,
+    showCard: true,
+    titleAlign: "left",
     formTitle: "Share your feedback",
     formSubtitle: "We'd love to hear about your experience.",
     submitLabel: "Send feedback",
+    successTitle: "Thank you!",
     successMessage: "Your feedback has been received. We'll get back to you soon.",
     showNameField: true,
     showPhoneField: true,
@@ -385,7 +359,7 @@ registerElement({
     submitFontSize: 15,
     submitFontWeight: "600",
   },
-  defaultTransform: { width: 220, height: 52 },
-  component: FeedbackElementComponent,
-  propertyPanel: FeedbackPropertyPanel,
+  defaultTransform: { width: 380, height: 560 },
+  component: FeedbackFormElementComponent,
+  propertyPanel: FeedbackFormPropertyPanel,
 });

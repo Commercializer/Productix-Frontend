@@ -2,6 +2,7 @@
 
 import { useSettings } from "@/hooks/use-settings";
 import { DashboardHeader } from "@/components/dashboard/header";
+import { BranchManager } from "@/components/dashboard/branch-manager";
 
 export default function SettingsPage() {
   const { settings, loading } = useSettings();
@@ -86,6 +87,10 @@ export default function SettingsPage() {
             Failed to load settings.
           </div>
         )}
+
+        <div className="mt-6">
+          <BranchManager />
+        </div>
       </section>
     </div>
   );
