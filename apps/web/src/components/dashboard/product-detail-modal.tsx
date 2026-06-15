@@ -53,6 +53,13 @@ interface ProductAnalyticsData {
   browsers: { browser: string; count: number }[];
   sources: { source: string; count: number }[];
   qrScanTypes: { qrScanType: string; count: number }[];
+  branches: { branch: string; count: number }[];
+}
+
+interface BranchOption {
+  id: string;
+  name: string;
+  city: string | null;
 }
 
 const DEVICE_LABEL: Record<string, string> = {
@@ -128,6 +135,8 @@ interface ProductDetailModalProps {
   productId: string | null;
   productName: string;
   slug: string;
+  branches?: BranchOption[];
+  defaultBranchId?: string;
 }
 
 export function ProductDetailModal({
@@ -136,23 +145,31 @@ export function ProductDetailModal({
   productId,
   productName,
   slug,
+  branches = [],
+  defaultBranchId,
 }: ProductDetailModalProps) {
   const [range, setRange] = useState<ProductAnalyticsRange>("monthly");
+  const [branchId, setBranchId] = useState<string>(defaultBranchId ?? "");
   const [data, setData] = useState<ProductAnalyticsData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const chartTheme = useModalChartTheme();
 
+  // On open (or when switching products), reset the range and inherit the
+  // page-level branch filter so the popup opens scoped to the same context.
   useEffect(() => {
-    if (isOpen) setRange("monthly");
-  }, [isOpen, productId]);
+    if (isOpen) {
+      setRange("monthly");
+      setBranchId(defaultBranchId ?? "");
+    }
+  }, [isOpen, productId, defaultBranchId]);
 
   useEffect(() => {
     if (!isOpen || !productId) return;
     let cancelled = false;
     setLoading(true);
     setError(null);
-    getProductAnalyticsAction(productId, range)
+    getProductAnalyticsAction(productId, range, branchId || undefined)
       .then((res) => {
         if (cancelled) return;
         if (res.error) {
@@ -172,7 +189,7 @@ export function ProductDetailModal({
     return () => {
       cancelled = true;
     };
-  }, [isOpen, productId, range]);
+  }, [isOpen, productId, range, branchId]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -234,7 +251,7 @@ export function ProductDetailModal({
             </button>
           </div>
 
-          <div className="px-6 pt-5">
+          <div className="px-6 pt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="inline-flex gap-1 p-1 rounded-xl bg-(--ds-bg) border border-(--ds-border)">
               {RANGES.map(({ id, label }) => {
                 const active = range === id;
@@ -254,6 +271,23 @@ export function ProductDetailModal({
                 );
               })}
             </div>
+            {branches.length > 0 && (
+              <label className="flex items-center gap-2 text-[12px] text-[#64748b]">
+                <span className="font-medium">Branch</span>
+                <select
+                  value={branchId}
+                  onChange={(e) => setBranchId(e.target.value)}
+                  className="h-8 px-2.5 pr-7 text-[12px] bg-(--ds-bg) border border-(--ds-border) rounded-lg text-(--ds-text-primary) focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition"
+                >
+                  <option value="">All branches</option>
+                  {branches.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.city ? `${b.name} — ${b.city}` : b.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
           </div>
 
           <div className="px-6 pt-5 grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -356,8 +390,14 @@ export function ProductDetailModal({
             </div>
           </div>
 
-          {data && (data.devices.length > 0 || data.countries.length > 0 || data.browsers.length > 0 || data.sources.length > 0 || data.qrScanTypes.length > 0) && (
+          {data && (data.devices.length > 0 || data.countries.length > 0 || data.browsers.length > 0 || data.sources.length > 0 || data.qrScanTypes.length > 0 || data.branches.length > 0) && (
             <div className="px-6 pb-6 space-y-4">
+              {data.branches.length > 0 && (
+                <BreakdownCard
+                  title="Branches"
+                  items={data.branches.map((b) => ({ key: b.branch, count: b.count }))}
+                />
+              )}
               {data.qrScanTypes.length > 0 && (
                 <BreakdownCard
                   title="QR Source (On Pack / Link / Social)"

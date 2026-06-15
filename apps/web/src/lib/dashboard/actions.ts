@@ -2167,6 +2167,7 @@ export type ProductAnalyticsRange = "weekly" | "monthly" | "yearly" | "lifetime"
 export async function getProductAnalyticsAction(
   productId: string,
   range: ProductAnalyticsRange,
+  branchId?: string,
 ) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
@@ -2180,6 +2181,18 @@ export async function getProductAnalyticsAction(
     select: { id: true, createdAt: true },
   });
   if (!product) return { error: "Product not found" };
+
+  // Optional branch filter. Validate ownership so a foreign/invalid id can't
+  // leak another company's data — an unrecognized id degrades to "all branches".
+  // When set, every scan/feedback query below re-scopes to that branch.
+  let branchScope: { branchId?: string } = {};
+  if (branchId && isUUID(branchId)) {
+    const ownedBranch = await prisma.branch.findFirst({
+      where: { id: branchId, companyId },
+      select: { id: true },
+    });
+    if (ownedBranch) branchScope = { branchId };
+  }
 
   try {
     const now = new Date();
@@ -2205,12 +2218,12 @@ export async function getProductAnalyticsAction(
     } else {
       const [firstView, firstFeedback] = await Promise.all([
         prisma.pageView.findFirst({
-          where: { companyId, productId },
+          where: { companyId, productId, ...branchScope },
           select: { viewedAt: true },
           orderBy: { viewedAt: "asc" },
         }).catch(() => null),
         prisma.feedbackInquiry.findFirst({
-          where: { companyId, productId },
+          where: { companyId, productId, ...branchScope },
           select: { createdAt: true },
           orderBy: { createdAt: "asc" },
         }),
@@ -2234,11 +2247,12 @@ export async function getProductAnalyticsAction(
       browser: string | null;
       referrer: string | null;
       qrScanType: QrScanType | null;
+      branchId: string | null;
     };
     let viewRows: RangeView[] = [];
     try {
       viewRows = await prisma.pageView.findMany({
-        where: { companyId, productId, viewedAt: { gte: startDate } },
+        where: { companyId, productId, ...branchScope, viewedAt: { gte: startDate } },
         select: {
           viewedAt: true,
           deviceType: true,
@@ -2246,6 +2260,7 @@ export async function getProductAnalyticsAction(
           browser: true,
           referrer: true,
           qrScanType: true,
+          branchId: true,
         },
       });
     } catch (viewErr) {
@@ -2253,18 +2268,18 @@ export async function getProductAnalyticsAction(
     }
 
     const feedbackRows = await prisma.feedbackInquiry.findMany({
-      where: { companyId, productId, createdAt: { gte: startDate } },
+      where: { companyId, productId, ...branchScope, createdAt: { gte: startDate } },
       select: { createdAt: true },
     });
 
     let totalScans = 0;
     try {
-      totalScans = await prisma.pageView.count({ where: { companyId, productId } });
+      totalScans = await prisma.pageView.count({ where: { companyId, productId, ...branchScope } });
     } catch (viewErr) {
       console.error("[getProductAnalyticsAction] page-view count failed", viewErr);
     }
     const totalFeedback = await prisma.feedbackInquiry.count({
-      where: { companyId, productId },
+      where: { companyId, productId, ...branchScope },
     });
 
     // Lifetime active time-on-page for this product (total + average across
@@ -2274,7 +2289,7 @@ export async function getProductAnalyticsAction(
     let avgDurationMs: number | null = null;
     try {
       const durationAgg = await prisma.pageView.aggregate({
-        where: { companyId, productId, durationMs: { not: null } },
+        where: { companyId, productId, ...branchScope, durationMs: { not: null } },
         _sum: { durationMs: true },
         _avg: { durationMs: true },
       });
@@ -2379,6 +2394,34 @@ export async function getProductAnalyticsAction(
       count: q.count,
     }));
 
+    // Per-branch scan split for this product. Only meaningful when the company
+    // actually has branches; otherwise every scan is "no branch" and the
+    // breakdown adds nothing, so we omit it (empty array → card hidden).
+    const NO_BRANCH = "__none__";
+    let branchNameById = new Map<string, string>();
+    let companyHasBranches = false;
+    try {
+      const branchRows = await prisma.branch.findMany({
+        where: { companyId },
+        select: { id: true, name: true, city: true },
+      });
+      companyHasBranches = branchRows.length > 0;
+      branchNameById = new Map(
+        branchRows.map((b) => [b.id, b.city ? `${b.name} — ${b.city}` : b.name]),
+      );
+    } catch (branchErr) {
+      console.error("[getProductAnalyticsAction] branch query failed", branchErr);
+    }
+    const branches = companyHasBranches
+      ? tallyTop(viewRows, (r) => r.branchId, NO_BRANCH).map((b) => ({
+          branch:
+            b.key === NO_BRANCH
+              ? "Direct / No branch"
+              : branchNameById.get(b.key) ?? "Unknown branch",
+          count: b.count,
+        }))
+      : [];
+
     return {
       success: true,
       data: {
@@ -2397,6 +2440,7 @@ export async function getProductAnalyticsAction(
         browsers,
         sources,
         qrScanTypes,
+        branches,
       },
     };
   } catch (error: any) {

@@ -214,7 +214,15 @@ export function AnalyticsCharts({ stats }: { stats: AnalyticsStats | null }) {
   );
 }
 
-export function ProductBreakdownGrid({ stats }: { stats: AnalyticsStats | null }) {
+export function ProductBreakdownGrid({
+  stats,
+  branches = [],
+  selectedBranchId,
+}: {
+  stats: AnalyticsStats | null;
+  branches?: { id: string; name: string; city: string | null }[];
+  selectedBranchId?: string;
+}) {
   const products = stats?.productBreakdowns ?? [];
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<{
@@ -322,6 +330,8 @@ export function ProductBreakdownGrid({ stats }: { stats: AnalyticsStats | null }
         productId={selected?.productId ?? null}
         productName={selected?.productName ?? ""}
         slug={selected?.slug ?? ""}
+        branches={branches}
+        defaultBranchId={selectedBranchId}
       />
     </section>
   );

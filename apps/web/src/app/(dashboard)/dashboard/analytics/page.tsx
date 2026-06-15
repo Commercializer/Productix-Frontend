@@ -85,7 +85,11 @@ export default function AnalyticsPage() {
 
         <AnalyticsCharts stats={stats} />
 
-        <ProductBreakdownGrid stats={stats} />
+        <ProductBreakdownGrid
+          stats={stats}
+          branches={branches}
+          selectedBranchId={branchId || undefined}
+        />
 
       </section>
     </div>
