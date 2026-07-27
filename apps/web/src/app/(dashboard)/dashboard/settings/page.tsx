@@ -5,6 +5,7 @@ import { DashboardHeader } from "@/components/dashboard/header";
 import { BranchManager } from "@/components/dashboard/branch-manager";
 import { ChangePasswordCard } from "@/components/dashboard/change-password-card";
 import { LinkTypesCard } from "@/components/dashboard/link-types-card";
+import { GtinPolicyCard } from "@/components/dashboard/gtin-policy-card";
 
 export default function SettingsPage() {
   const { settings, loading } = useSettings();
@@ -84,6 +85,8 @@ export default function SettingsPage() {
             </div>
 
             <LinkTypesCard />
+
+            <GtinPolicyCard />
 
             <ChangePasswordCard />
 

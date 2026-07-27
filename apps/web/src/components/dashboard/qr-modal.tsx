@@ -1,15 +1,28 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { X, Download, Copy, Check, ExternalLink, Package, Link2, Share2, Tag, ChevronDown, MapPin } from "lucide-react";
+import { X, Download, Copy, Check, ExternalLink, Package, Link2, Share2, Tag, ChevronDown, MapPin, ScanBarcode, Info } from "lucide-react";
 import QRCode from "qrcode";
+import type { Gs1VerificationStatus } from "@productix/db";
 import { getCompanyLinkTypesAction, getBranchesAction } from "@/lib/dashboard/actions";
+import { buildGs1DigitalLinkUrl } from "@/lib/gs1/digital-link";
+
+// Statuses acceptable for the "require valid GTIN" company policy — anything
+// past local check-digit validation, whether or not GS1's registry has it.
+const GTIN_POLICY_OK: ReadonlyArray<Gs1VerificationStatus> = ["VALID_FORMAT", "GS1_NOT_FOUND", "GS1_VERIFIED"];
 
 interface QrModalProps {
   isOpen: boolean;
   onClose: () => void;
   productName: string;
   shortCode: string;
+  /** Canonical 14-digit GTIN, if the product has one — unlocks the GS1 Digital Link QR format. */
+  gtin?: string | null;
+  gtinStatus?: Gs1VerificationStatus | null;
+  /** Company's custom domain, if set — used as the GS1 QR's resolver host instead of this app's own origin. */
+  companyCustomDomain?: string | null;
+  /** Company-wide "require a valid GTIN" policy — blocks QR issuance entirely when the product doesn't satisfy it. */
+  requireValidGtin?: boolean;
 }
 
 interface QrTab {
@@ -37,10 +50,22 @@ const BUILTIN_TABS: ReadonlyArray<QrTab> = [
   { id: "social", label: "Social", prefix: "/s", Icon: Share2 },
 ];
 
-export function QrModal({ isOpen, onClose, productName, shortCode }: QrModalProps) {
+export function QrModal({
+  isOpen,
+  onClose,
+  productName,
+  shortCode,
+  gtin,
+  gtinStatus,
+  companyCustomDomain,
+  requireValidGtin,
+}: QrModalProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [copied, setCopied] = useState(false);
   const [qrTypeId, setQrTypeId] = useState<string>("onpack");
+  // "general" = today's /p|/l|/s|/<custom>/<shortCode> format, unchanged.
+  // "gs1" = the new GS1 Digital Link format (/01/{gtin}), only selectable once a GTIN is set.
+  const [format, setFormat] = useState<"general" | "gs1">("general");
   const [customTabs, setCustomTabs] = useState<QrTab[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
   const selectorRef = useRef<HTMLDivElement>(null);
@@ -107,7 +132,30 @@ export function QrModal({ isOpen, onClose, productName, shortCode }: QrModalProp
   const branchSlug = selectedBranch
     ? `-${selectedBranch.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 24)}`
     : "";
-  const publicUrl = `${typeof window !== "undefined" ? window.location.origin : ""}${prefix}/${shortCode}${branchQuery}`;
+
+  // Whether this product's GTIN satisfies the company's requireValidGtin policy
+  // (or the policy is off) - gates QR issuance entirely, not just the GS1 format.
+  const gtinSatisfiesPolicy = !requireValidGtin || (!!gtinStatus && GTIN_POLICY_OK.includes(gtinStatus));
+  const canUseGs1Format = !!gtin && !!gtinStatus && GTIN_POLICY_OK.includes(gtinStatus);
+
+  // The channel/traffic-source label carried in the GS1 URL's ?ch= extension
+  // param — reuses the same channel the general-format tabs represent
+  // (on-pack / link / social / a custom link type's prefix).
+  const gs1Channel = activeTab
+    ? activeTab.id.startsWith("custom:")
+      ? activeTab.prefix.replace(/^\//, "")
+      : activeTab.id
+    : null;
+
+  const publicUrl =
+    format === "gs1" && gtin
+      ? buildGs1DigitalLinkUrl({
+          domain: companyCustomDomain || (typeof window !== "undefined" ? window.location.origin : ""),
+          gtin,
+          branchCode: selectedBranch?.code ?? null,
+          channel: gs1Channel,
+        })
+      : `${typeof window !== "undefined" ? window.location.origin : ""}${prefix}/${shortCode}${branchQuery}`;
 
   useEffect(() => {
     if (!isOpen || !canvasRef.current) return;
@@ -128,6 +176,7 @@ export function QrModal({ isOpen, onClose, productName, shortCode }: QrModalProp
   useEffect(() => {
     if (isOpen) {
       setQrTypeId("onpack");
+      setFormat("general");
       setMenuOpen(false);
       setBranchId(ALL_BRANCHES);
       setBranchMenuOpen(false);
@@ -159,10 +208,12 @@ export function QrModal({ isOpen, onClose, productName, shortCode }: QrModalProp
     };
   }, [menuOpen, branchMenuOpen]);
 
+  const filenameBase = `${format === "gs1" ? gtin ?? shortCode : shortCode}-${format === "gs1" ? `gs1-${typeSlug}` : typeSlug}${branchSlug}`;
+
   const handleDownloadPng = () => {
     if (!canvasRef.current) return;
     const link = document.createElement("a");
-    link.download = `${shortCode}-${typeSlug}${branchSlug}-qr.png`;
+    link.download = `${filenameBase}-qr.png`;
     link.href = canvasRef.current.toDataURL("image/png");
     link.click();
   };
@@ -180,7 +231,7 @@ export function QrModal({ isOpen, onClose, productName, shortCode }: QrModalProp
     const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.download = `${shortCode}-${typeSlug}${branchSlug}-qr.svg`;
+    link.download = `${filenameBase}-qr.svg`;
     link.href = url;
     link.click();
     URL.revokeObjectURL(url);
@@ -285,6 +336,61 @@ export function QrModal({ isOpen, onClose, productName, shortCode }: QrModalProp
             </div>
           </div>
 
+          {/* Format toggle — General QR (today's shortCode-based link) vs GS1
+              Digital Link QR (spec-compliant /01/{gtin} URL). The channel
+              selector above applies to both: for GS1 it's carried as a ?ch=
+              extension param instead of a path prefix. */}
+          <div className="px-6 pt-3">
+            <div className="grid grid-cols-2 gap-1.5 p-1 rounded-xl bg-[#f1f5f9] dark:bg-[#0f172a] border border-[#e2e8f0] dark:border-[#334155]">
+              <button
+                type="button"
+                onClick={() => setFormat("general")}
+                className={`h-8 rounded-lg text-[12px] font-semibold transition-colors ${
+                  format === "general"
+                    ? "bg-white dark:bg-[#1e293b] text-[#0f172a] dark:text-white shadow-xs"
+                    : "text-[#64748b] dark:text-[#94a3b8]"
+                }`}
+              >
+                General QR
+              </button>
+              <button
+                type="button"
+                onClick={() => canUseGs1Format && setFormat("gs1")}
+                disabled={!canUseGs1Format}
+                title={canUseGs1Format ? undefined : "Add a GTIN to this product to generate a GS1 Digital Link QR"}
+                className={`h-8 rounded-lg text-[12px] font-semibold flex items-center justify-center gap-1.5 transition-colors ${
+                  format === "gs1"
+                    ? "bg-white dark:bg-[#1e293b] text-[#0f172a] dark:text-white shadow-xs"
+                    : canUseGs1Format
+                      ? "text-[#64748b] dark:text-[#94a3b8]"
+                      : "text-[#cbd5e1] dark:text-[#475569] cursor-not-allowed"
+                }`}
+              >
+                <ScanBarcode size={13} />
+                GS1 Digital Link
+              </button>
+            </div>
+            {!gtin && (
+              <p className="mt-1.5 flex items-center gap-1 text-[11px] text-[#94a3b8]">
+                <Info size={11} className="shrink-0" />
+                Add a GTIN to this product to unlock the GS1 Digital Link QR format.
+              </p>
+            )}
+          </div>
+
+          {!gtinSatisfiesPolicy ? (
+            <div className="px-6 pt-4 pb-6">
+              <div className="rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 flex items-start gap-2.5">
+                <Info size={16} className="shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+                <p className="text-[13px] text-amber-800 dark:text-amber-300 leading-snug">
+                  This company requires a valid GTIN before QR codes can be issued, and this
+                  product doesn&apos;t have one. Ask an admin to add a GTIN when recreating this
+                  product, or turn off the requirement in Settings.
+                </p>
+              </div>
+            </div>
+          ) : (
+          <>
           {/* Branch Selector — optional. Scopes the QR to one location so every
               feedback submission scanned through it is attributed to that branch.
               Only shown when the company has active branches. */}
@@ -395,6 +501,8 @@ export function QrModal({ isOpen, onClose, productName, shortCode }: QrModalProp
               Visit link
             </a>
           </div>
+          </>
+          )}
         </div>
       </div>
 

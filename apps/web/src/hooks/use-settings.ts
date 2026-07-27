@@ -13,6 +13,7 @@ export interface CompanySettings {
   maximumProducts: number;
   maximumBrandProfiles: number;
   createdAt: string;
+  requireValidGtin: boolean;
 }
 
 export function useSettings() {

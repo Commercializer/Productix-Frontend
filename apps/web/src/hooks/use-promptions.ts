@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import type { Gs1VerificationStatus } from "@productix/db";
 import {
   getMyPromptionsAction,
   deletePromptionAction as deleteAction,
@@ -10,6 +11,8 @@ import {
   updateSlugAction,
   updateRedirectAction,
   updateProductNameAction,
+  updateProductGtinAction,
+  refreshGtinVerificationAction,
   setPinLockAction,
   revealProductPinAction,
 } from "@/lib/dashboard/actions";
@@ -33,6 +36,14 @@ export interface Promption {
   redirectEnabled: boolean;
   pinEnabled: boolean;
   hasPinCode: boolean;
+  gtin: string | null;
+  gtinStatus: Gs1VerificationStatus;
+  gtinVerifiedAt: string | null;
+  /** Raw response from the external GS1 verification API, captured at the
+   * moment gtinStatus was set to GS1_VERIFIED. Null otherwise. */
+  gtinData: Record<string, unknown> | null;
+  companyCustomDomain: string | null;
+  companyRequireValidGtin: boolean;
 }
 
 export function usePromptions() {
@@ -137,6 +148,53 @@ export function usePromptions() {
     []
   );
 
+  const updateProductGtin = useCallback(
+    async (productId: string, gtin: string) => {
+      const result = await updateProductGtinAction(productId, gtin);
+      if (result.error) return { error: result.error };
+      if (result.success && result.gtin && result.gtinStatus) {
+        setPromptions((prev) =>
+          prev.map((p) =>
+            p.productId === productId
+              ? {
+                  ...p,
+                  gtin: result.gtin!,
+                  gtinStatus: result.gtinStatus!,
+                  gtinVerifiedAt: new Date().toISOString(),
+                  gtinData: result.gtinData ?? null,
+                }
+              : p,
+          ),
+        );
+      }
+      return { success: true, gtin: result.gtin, gtinStatus: result.gtinStatus };
+    },
+    []
+  );
+
+  const refreshGtinVerification = useCallback(
+    async (productId: string) => {
+      const result = await refreshGtinVerificationAction(productId);
+      if (result.error) return { error: result.error };
+      if (result.success && result.gtinStatus) {
+        setPromptions((prev) =>
+          prev.map((p) =>
+            p.productId === productId
+              ? {
+                  ...p,
+                  gtinStatus: result.gtinStatus!,
+                  gtinData: result.gtinData ?? null,
+                  gtinVerifiedAt: new Date().toISOString(),
+                }
+              : p,
+          ),
+        );
+      }
+      return { success: true, gtinStatus: result.gtinStatus, gtinData: result.gtinData };
+    },
+    []
+  );
+
   const updateRedirect = useCallback(
     async (profileId: string, redirectUrl: string | null, redirectEnabled: boolean) => {
       const result = await updateRedirectAction(profileId, redirectUrl, redirectEnabled);
@@ -188,6 +246,8 @@ export function usePromptions() {
     updateSlug,
     updateRedirect,
     updateProductName,
+    updateProductGtin,
+    refreshGtinVerification,
     updatePinLock,
     revealPin,
   };

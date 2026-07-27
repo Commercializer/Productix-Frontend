@@ -19,7 +19,7 @@ interface PageProps {
 }
 
 /** Serialize resolved searchParams back into a `?a=b&c=d` query string (or ""). */
-function serializeSearch(sp: Record<string, string | string[] | undefined>): string {
+export function serializeSearch(sp: Record<string, string | string[] | undefined>): string {
   const qs = new URLSearchParams();
   for (const [key, value] of Object.entries(sp)) {
     if (Array.isArray(value)) value.forEach((v) => qs.append(key, v));
@@ -47,7 +47,7 @@ const getPage = cache(async (handle: string) => {
  * The artboard wins because that is what actually paints behind the rendered design,
  * and we want the browser address bar / status bar to visually merge with the page.
  */
-function resolveThemeColor(page: {
+export function resolveThemeColor(page: {
   content?: unknown;
   themeColor?: string | null;
   brand?: { themeColor: string | null } | null;
@@ -60,13 +60,21 @@ function resolveThemeColor(page: {
 }
 
 /**
- * Build page metadata for a given handle. `pathPrefix` is the route prefix the
- * visitor arrived through ("p", "l", "s", or "x/<custom>"), used so the
- * canonical/og URL points back at the same surface.
+ * Build page metadata for an already-resolved page. `pathPrefix` is the route
+ * prefix the visitor arrived through ("p", "l", "s", "x/<custom>", or "01" for
+ * the GS1 Digital Link route), used so the canonical/og URL points back at
+ * the same surface. Split out from buildPublicMetadata so the GTIN resolver
+ * route can reuse it without duplicating this logic or depending on
+ * getPage()'s handle-based (slug/shortCode) lookup.
  */
-export async function buildPublicMetadata(handle: string, pathPrefix: string): Promise<Metadata> {
-  const page = await getPage(handle);
-
+export async function buildPublicMetadataFromPage(
+  page: Awaited<ReturnType<typeof getPage>>,
+  pathPrefix: string,
+  // Override the canonical path's final segment. Needed by the GS1 Digital
+  // Link route (/01/{gtin}), whose canonical URL is the GTIN itself, not the
+  // page's shortCode/slug (which the default computation below assumes).
+  canonicalHandle?: string,
+): Promise<Metadata> {
   if (!page) {
     return {
       title: "Page Not Found | Productix",
@@ -85,7 +93,7 @@ export async function buildPublicMetadata(handle: string, pathPrefix: string): P
   // Canonical/og URL follows the same rule as the route: slug when visible AND
   // the user has set a real slug; otherwise fall back to the shortCode so we
   // never canonicalize to the placeholder UUID.
-  const canonicalPath = `/${pathPrefix}/${page.slugVisible && isCustomSlug(page.slug) ? page.slug : page.shortCode}`;
+  const canonicalPath = `/${pathPrefix}/${canonicalHandle ?? (page.slugVisible && isCustomSlug(page.slug) ? page.slug : page.shortCode)}`;
 
   return {
     title,
@@ -137,6 +145,16 @@ export async function buildPublicMetadata(handle: string, pathPrefix: string): P
   };
 }
 
+/**
+ * Build page metadata for a given handle (slug or shortCode). Thin wrapper
+ * around buildPublicMetadataFromPage - kept so existing call sites (/p, /l,
+ * /s, /[prefix]) are completely unaffected by the refactor above.
+ */
+export async function buildPublicMetadata(handle: string, pathPrefix: string): Promise<Metadata> {
+  const page = await getPage(handle);
+  return buildPublicMetadataFromPage(page, pathPrefix);
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   return buildPublicMetadata(slug, "p");
@@ -163,20 +181,34 @@ export async function generateViewport({ params }: PageProps): Promise<Viewport>
 // Page Component (Server Component)
 // ═══════════════════════════════════════════════════════════════
 
-export async function renderPublicPage(
-  handle: string,
+/**
+ * Render an already-resolved page. Split out from renderPublicPage so the GS1
+ * Digital Link route (/01/{gtin}) can share the exact same PIN-gate /
+ * redirect / trackPageView pipeline without duplicating it, despite
+ * resolving its page a different way (by GTIN, not by handle).
+ */
+export async function renderResolvedPage(
+  page: Awaited<ReturnType<typeof getPage>>,
   qrScanType: QrScanType,
-  // Route prefix the visitor arrived through: "p" | "l" | "s" for built-ins, or
-  // "x/<custom>" for a company-defined link type. Used for the slug redirect.
+  // Route prefix the visitor arrived through: "p" | "l" | "s" for built-ins,
+  // "x/<custom>" for a company-defined link type, or "01" for GS1 Digital Link.
+  // Used for the slug redirect below.
   urlPrefix: string,
-  // For CUSTOM scans: the company-defined prefix to record in analytics.
-  qrScanPrefix?: string | null,
+  // For CUSTOM/GS1 scans: the company-defined or ?ch= channel prefix to
+  // record in analytics.
+  qrScanPrefix: string | null | undefined,
   // Raw query string (e.g. "?b=<branchId>") to carry across the slug redirect so
   // branch-specific QR params survive the shortCode → pretty-slug swap.
   search: string = "",
+  // When true, never redirect away from the current URL even if the product
+  // has a visible slug — used by the GS1 route, where the GTIN URL itself is
+  // meant to be the stable, machine-addressable surface.
+  disableSlugRedirect: boolean = false,
+  // The raw handle segment the visitor arrived through (slug or shortCode),
+  // used only to detect "arrived via shortCode" for the redirect below. Left
+  // undefined by callers with no such concept (the GS1 route).
+  arrivedViaHandle?: string,
 ) {
-  const page = await getPage(handle);
-
   if (!page) {
     return <NotFoundView />;
   }
@@ -226,17 +258,36 @@ export async function renderPublicPage(
   // If the visitor arrived via the 8-char short code and the product opted to
   // show pretty URLs, swap them to the slug. Skip when the slug is still the
   // placeholder UUID - that isn't a real URL, so we render the shortCode in
-  // place instead of redirecting to /p/<uuid>.
+  // place instead of redirecting to /p/<uuid>. Also skipped entirely when
+  // disableSlugRedirect is set (the GS1 route: the GTIN URL is meant to stay
+  // in the address bar as the stable, machine-addressable surface).
   if (
+    !disableSlugRedirect &&
     page.slugVisible &&
-    handle === page.shortCode &&
-    page.slug !== handle &&
+    arrivedViaHandle === page.shortCode &&
+    page.slug !== arrivedViaHandle &&
     isCustomSlug(page.slug)
   ) {
     redirect(`/${urlPrefix}/${page.slug}${search}`);
   }
 
   return <PublicPageClient page={page} />;
+}
+
+/**
+ * Render a page by handle (slug or shortCode). Thin wrapper around
+ * renderResolvedPage - kept so existing call sites (/p, /l, /s, /[prefix])
+ * are completely unaffected by the refactor above.
+ */
+export async function renderPublicPage(
+  handle: string,
+  qrScanType: QrScanType,
+  urlPrefix: string,
+  qrScanPrefix?: string | null,
+  search: string = "",
+) {
+  const page = await getPage(handle);
+  return renderResolvedPage(page, qrScanType, urlPrefix, qrScanPrefix, search, false, handle);
 }
 
 export default async function PublicPage({ params, searchParams }: PageProps) {
@@ -248,7 +299,7 @@ export default async function PublicPage({ params, searchParams }: PageProps) {
 // 404 View
 // ═══════════════════════════════════════════════════════════════
 
-function NotFoundView() {
+export function NotFoundView() {
   return (
     <div
       style={{

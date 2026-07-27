@@ -80,6 +80,20 @@ enum QrScanType {
   LINK
   SOCIAL
   CUSTOM
+  GS1
+}
+
+/// Result of validating/verifying a product's GTIN. FORMAT states are computed
+/// locally (mod-10 check digit, no network call); GS1_* states require a
+/// call to the external GS1 API (apps/web/src/lib/gs1/client.ts) and are what
+/// unlocks the "Verified by GS1" trust badge - a plain valid check digit is
+/// labelled "Valid GTIN format" instead, a distinct and weaker claim.
+enum Gs1VerificationStatus {
+  UNVERIFIED
+  INVALID_FORMAT
+  VALID_FORMAT
+  GS1_VERIFIED
+  GS1_NOT_FOUND
 }
 
 enum DeviceType {
@@ -204,6 +218,10 @@ model Company {
   maximumUsers         Int                @default(3) @map("maximum_users")
   subscriptionAmount   Decimal?           @map("subscription_amount") @db.Decimal(10, 2)
   isActive             Boolean            @default(true) @map("is_active")
+  /// When true, product creation and publishing are blocked unless the
+  /// product has at least a check-digit-valid GTIN. See GtinPolicyCard /
+  /// updateGtinPolicyAction.
+  requireValidGtin     Boolean            @default(false) @map("require_valid_gtin")
   createdAt            DateTime           @default(now()) @map("created_at") @db.Timestamptz
   updatedAt            DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -376,6 +394,20 @@ model Product {
   /// When true, visitors landing via shortCode are redirected to the slug URL.
   slugVisible         Boolean  @default(true) @map("slug_visible")
   isActive            Boolean  @default(true) @map("is_active")
+  /// Canonical 14-digit, zero-padded GTIN (GS1 Application Identifier 01
+  /// value). Set once at creation and immutable thereafter - see
+  /// GS1_DIGITAL_LINK_ROADMAP.md for the rationale.
+  gtin                String?  @unique @db.VarChar(14)
+  /// Local check-digit + external GS1-API verification result. Drives the
+  /// "Verified by GS1" vs "Valid GTIN format" badge everywhere.
+  gtinStatus          Gs1VerificationStatus @default(UNVERIFIED) @map("gtin_status")
+  /// Timestamp of the last verifyGtinAction attempt (success or failure).
+  gtinVerifiedAt      DateTime? @map("gtin_verified_at") @db.Timestamptz
+  /// Raw data returned by the external GS1 verification API at the moment
+  /// gtinStatus was set to GS1_VERIFIED (null otherwise). Persisted so the
+  /// "view GTIN details" UI never has to re-hit the external API - it's a
+  /// point-in-time snapshot, not a live lookup.
+  gtinData            Json?     @map("gtin_data")
   createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt           DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 

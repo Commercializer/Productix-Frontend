@@ -31,8 +31,16 @@ import {
   Globe,
   History,
   Lock,
+  BadgeCheck,
+  CircleCheck,
+  CircleAlert,
+  ScanBarcode,
+  Loader2,
+  RefreshCw,
 } from "lucide-react";
 import type { Promption } from "@/hooks/use-promptions";
+import { verifyGtinAction } from "@/lib/dashboard/actions";
+import { availableGtinDetailEntries } from "@/lib/gs1";
 import { QrModal } from "./qr-modal";
 import { SeoSettingsModal } from "./seo-settings-modal";
 import { VersionHistoryModal } from "./version-history-modal";
@@ -53,6 +61,18 @@ interface PromptionTableProps {
     profileId: string,
     productName: string,
   ) => Promise<{ success?: boolean; error?: string; productName?: string }>;
+  onUpdateProductGtin?: (
+    productId: string,
+    gtin: string,
+  ) => Promise<{ success?: boolean; error?: string; gtin?: string; gtinStatus?: Promption["gtinStatus"] }>;
+  onRefreshGtinVerification?: (
+    productId: string,
+  ) => Promise<{
+    success?: boolean;
+    error?: string;
+    gtinStatus?: Promption["gtinStatus"];
+    gtinData?: Record<string, unknown> | null;
+  }>;
   onUpdatePinLock?: (
     profileId: string,
     pin: string | null,
@@ -82,15 +102,26 @@ export function PromptionTable({
   onRenameSlug,
   onUpdateRedirect,
   onRenameProduct,
+  onUpdateProductGtin,
+  onRefreshGtinVerification,
   onUpdatePinLock,
   onRevealPin,
   readOnly = false,
 }: PromptionTableProps) {
   const [search, setSearch] = useState("");
   const [selectedIDs, setSelectedIDs] = useState<Set<string>>(new Set());
-  const [qrModal, setQrModal] = useState<{ name: string; shortCode: string } | null>(null);
+  const [qrModal, setQrModal] = useState<{
+    name: string;
+    shortCode: string;
+    gtin: string | null;
+    gtinStatus: Promption["gtinStatus"];
+    companyCustomDomain: string | null;
+    companyRequireValidGtin: boolean;
+  } | null>(null);
   const [slugEditor, setSlugEditor] = useState<{ profileId: string; currentSlug: string } | null>(null);
   const [nameEditor, setNameEditor] = useState<{ profileId: string; currentName: string } | null>(null);
+  const [gtinEditor, setGtinEditor] = useState<{ productId: string; productName: string } | null>(null);
+  const [gtinDetails, setGtinDetails] = useState<Promption | null>(null);
   const [seoEditor, setSeoEditor] = useState<{ profileId: string; slug: string } | null>(null);
   const [versionHistory, setVersionHistory] = useState<{ profileId: string; slug: string } | null>(null);
   const [redirectEditor, setRedirectEditor] = useState<{
@@ -234,6 +265,11 @@ export function PromptionTable({
                 </th>
                 <th className="py-4 px-4 text-left">
                   <div className="flex items-center gap-2">
+                    GTIN <span className="text-[10px]">↕</span>
+                  </div>
+                </th>
+                <th className="py-4 px-4 text-left">
+                  <div className="flex items-center gap-2">
                     Link <span className="text-[10px]">↕</span>
                   </div>
                 </th>
@@ -258,7 +294,7 @@ export function PromptionTable({
               {filtered.length === 0 ? (
                 <tr className="block sm:table-row">
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className="py-12 text-center text-(--ds-text-muted) block sm:table-cell"
                   >
                     No products found.
@@ -341,6 +377,58 @@ export function PromptionTable({
                         </div>
                       </td>
 
+                      {/* GTIN */}
+                      <td className="block sm:table-cell py-1.5 sm:py-3 px-0 sm:px-4">
+                        <div className="flex items-center gap-2">
+                          <span className="sm:hidden font-medium text-[11px] text-(--ds-text-secondary) mr-1">GTIN:</span>
+                          {p.gtin ? (
+                            <>
+                              {p.gtinStatus === "GS1_VERIFIED" && (
+                                <button
+                                  onClick={() => setGtinDetails(p)}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium leading-none bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 hover:opacity-80 transition-opacity"
+                                  title={`Confirmed by the GS1 GTIN Check API · ${p.gtin} · click to view details`}
+                                >
+                                  <BadgeCheck size={11} />
+                                  GTIN Verified
+                                </button>
+                              )}
+                              {p.gtinStatus === "VALID_FORMAT" && (
+                                <button
+                                  onClick={() => setGtinDetails(p)}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium leading-none bg-sky-50 dark:bg-sky-950/30 text-sky-700 dark:text-sky-400 hover:opacity-80 transition-opacity"
+                                  title={`Passed local GS1 check-digit validation, not yet confirmed against the GS1 registry · ${p.gtin} · click to view details`}
+                                >
+                                  <CircleCheck size={11} />
+                                  Valid Format
+                                </button>
+                              )}
+                              {p.gtinStatus === "GS1_NOT_FOUND" && (
+                                <button
+                                  onClick={() => setGtinDetails(p)}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium leading-none bg-transparent border border-[#e2e8f0] dark:border-[#334155] text-(--ds-text-secondary) hover:opacity-80 transition-opacity"
+                                  title={`Valid GTIN format, but no confirmed active match in the GS1 registry · ${p.gtin} · click to view details`}
+                                >
+                                  <ScanBarcode size={11} />
+                                  Not in Registry
+                                </button>
+                              )}
+                            </>
+                          ) : onUpdateProductGtin ? (
+                            <button
+                              onClick={() => setGtinEditor({ productId: p.productId, productName: p.productName })}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium leading-none border border-dashed border-[#cbd5e1] dark:border-[#475569] text-(--ds-text-secondary) hover:text-[#0284c7] hover:border-[#7dd3fc] transition-colors"
+                              title="Add a GTIN to this product"
+                            >
+                              <ScanBarcode size={11} />
+                              Add GTIN
+                            </button>
+                          ) : (
+                            <span className="text-[12px] text-(--ds-text-muted)">—</span>
+                          )}
+                        </div>
+                      </td>
+
                       {/* Public URL */}
                       <td className="block sm:table-cell py-1.5 sm:py-3 px-0 sm:px-4">
                         <div className="flex items-center gap-2">
@@ -415,6 +503,10 @@ export function PromptionTable({
                               setQrModal({
                                 name: p.productName,
                                 shortCode: p.shortCode,
+                                gtin: p.gtin,
+                                gtinStatus: p.gtinStatus,
+                                companyCustomDomain: p.companyCustomDomain,
+                                companyRequireValidGtin: p.companyRequireValidGtin,
                               })
                             }
                             className="w-9 h-9 flex items-center justify-center text-[#0f172a] dark:text-white bg-white dark:bg-[#0f172a] sm:dark:bg-[#1e293b] rounded-[10px] border-[1.5px] border-[#e2e8f0] dark:border-[#334155] hover:border-[#bae6fd] hover:text-[#0284c7] hover:bg-[#f0f9ff] dark:hover:bg-[#334155] shadow-xs transition-all"
@@ -626,6 +718,10 @@ export function PromptionTable({
           onClose={() => setQrModal(null)}
           productName={qrModal.name}
           shortCode={qrModal.shortCode}
+          gtin={qrModal.gtin}
+          gtinStatus={qrModal.gtinStatus}
+          companyCustomDomain={qrModal.companyCustomDomain}
+          requireValidGtin={qrModal.companyRequireValidGtin}
         />
       )}
 
@@ -636,6 +732,25 @@ export function PromptionTable({
           currentName={nameEditor.currentName}
           onClose={() => setNameEditor(null)}
           onSave={onRenameProduct}
+        />
+      )}
+
+      {/* Product GTIN Add Modal */}
+      {gtinEditor && onUpdateProductGtin && (
+        <ProductGtinEditModal
+          productId={gtinEditor.productId}
+          productName={gtinEditor.productName}
+          onClose={() => setGtinEditor(null)}
+          onSave={onUpdateProductGtin}
+        />
+      )}
+
+      {/* GTIN Details Modal (read-only, with an optional re-check action) */}
+      {gtinDetails && (
+        <GtinDetailsModal
+          promption={gtinDetails}
+          onClose={() => setGtinDetails(null)}
+          onRefresh={onRefreshGtinVerification}
         />
       )}
 
@@ -785,6 +900,374 @@ function ProductNameEditModal({ profileId, currentName, onClose, onSave }: Produ
               className="flex-1 h-[42px] rounded-xl bg-[#0f172a] dark:bg-white text-white dark:text-[#0f172a] font-semibold text-[13px] hover:opacity-90 transition-opacity disabled:opacity-50"
             >
               {saving ? "Saving…" : "Save"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </>,
+    document.body
+  );
+}
+
+type GtinCheckState =
+  | { status: "idle" }
+  | { status: "checking" }
+  | { status: "invalid"; message: string }
+  | { status: "valid_format" }
+  | { status: "gs1_not_found"; data?: Record<string, unknown> }
+  | { status: "gs1_verified"; data?: Record<string, unknown> };
+
+const GTIN_POLICY_OK: GtinCheckState["status"][] = ["valid_format", "gs1_not_found", "gs1_verified"];
+
+interface ProductGtinEditModalProps {
+  productId: string;
+  productName: string;
+  onClose: () => void;
+  onSave: (
+    productId: string,
+    gtin: string,
+  ) => Promise<{ success?: boolean; error?: string; gtin?: string; gtinStatus?: Promption["gtinStatus"] }>;
+}
+
+// Adds a GTIN to a product that doesn't have one yet - mirrors the live-validation
+// UX from the Add-Product page (apps/web/src/app/(dashboard)/dashboard/new/page.tsx).
+// Only supports the null -> set transition; an already-set GTIN isn't editable here.
+function ProductGtinEditModal({ productId, productName, onClose, onSave }: ProductGtinEditModalProps) {
+  const [value, setValue] = useState("");
+  const [check, setCheck] = useState<GtinCheckState>({ status: "idle" });
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+
+  const handleBlur = async () => {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      setCheck({ status: "idle" });
+      return;
+    }
+    setCheck({ status: "checking" });
+    const res = await verifyGtinAction(trimmed);
+    if (!("status" in res)) {
+      setCheck({ status: "invalid", message: res.error ?? "Could not check this GTIN" });
+      return;
+    }
+    if (res.status === "INVALID_FORMAT") {
+      setCheck({ status: "invalid", message: res.error ?? "Invalid GTIN" });
+    } else if (res.status === "GS1_VERIFIED") {
+      setCheck({ status: "gs1_verified", data: res.data });
+    } else if (res.status === "GS1_NOT_FOUND") {
+      setCheck({ status: "gs1_not_found", data: res.data });
+    } else {
+      setCheck({ status: "valid_format" });
+    }
+  };
+
+  const dirty = value.trim().length > 0;
+  const canSave = dirty && check.status !== "checking" && GTIN_POLICY_OK.includes(check.status);
+
+  const handleSave = async () => {
+    if (!canSave) return;
+    setError(null);
+    setSaving(true);
+    const result = await onSave(productId, value.trim());
+    setSaving(false);
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
+    onClose();
+  };
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <>
+      <div className="fixed inset-0 z-[9998] bg-black/40 backdrop-blur-xs" onClick={onClose} />
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" onClick={onClose}>
+        <div
+          className="relative w-full max-w-[440px] rounded-2xl bg-white dark:bg-[#1e293b] shadow-2xl border border-[#e2e8f0] dark:border-[#334155] overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between px-6 pt-6 pb-2">
+            <div>
+              <h3 className="text-lg font-bold text-[#0f172a] dark:text-white">Add GTIN</h3>
+              <p className="text-[13px] text-[#64748b] dark:text-[#94a3b8] mt-0.5">{productName}</p>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-white hover:bg-[#f1f5f9] dark:hover:bg-[#334155] transition-colors"
+            >
+              <X size={18} />
+            </button>
+          </div>
+          <div className="px-6 py-4">
+            <label className="block text-[12px] font-medium text-[#64748b] dark:text-[#94a3b8] mb-1.5">
+              GTIN (Barcode Number)
+            </label>
+            <div className="relative">
+              <ScanBarcode
+                size={15}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8]"
+              />
+              <input
+                value={value}
+                onChange={(e) => {
+                  setValue(e.target.value);
+                  setCheck({ status: "idle" });
+                }}
+                onBlur={handleBlur}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && canSave && !saving) handleSave();
+                }}
+                placeholder="e.g. 00614141123452"
+                autoFocus
+                inputMode="numeric"
+                className="w-full h-[42px] pl-9 pr-3 rounded-lg border border-[#e2e8f0] dark:border-[#334155] bg-transparent text-[13px] text-[#0f172a] dark:text-white placeholder-[#94a3b8] outline-hidden focus:border-[#93c5fd]"
+              />
+            </div>
+            <p className="mt-1.5 text-[11px] text-[#94a3b8]">
+              8, 12, 13 or 14-digit GS1 barcode number. Can only be set once — it can&apos;t be
+              changed after saving.
+            </p>
+
+            {check.status === "checking" && (
+              <div className="mt-2 flex items-center gap-1.5 text-[12px] text-[#94a3b8]">
+                <Loader2 size={13} className="animate-spin" /> Checking…
+              </div>
+            )}
+            {check.status === "invalid" && (
+              <div className="mt-2 flex items-start gap-1.5 text-[12px] text-red-600 dark:text-red-400">
+                <CircleAlert size={13} className="mt-0.5 shrink-0" />
+                {check.message}
+              </div>
+            )}
+            {check.status === "valid_format" && (
+              <div className="mt-2 flex items-center gap-1.5 text-[12px] text-[#64748b] dark:text-[#94a3b8]">
+                <CircleCheck size={13} className="text-sky-500" /> Valid GTIN format
+              </div>
+            )}
+            {check.status === "gs1_not_found" && (
+              <div className="mt-2 space-y-2">
+                <div className="flex items-center gap-1.5 text-[12px] text-[#64748b] dark:text-[#94a3b8]">
+                  <CircleCheck size={13} className="text-sky-500" />
+                  Valid GTIN format (no confirmed active match in the GS1 registry)
+                </div>
+                <GtinDetailEntriesList data={check.data} />
+              </div>
+            )}
+            {check.status === "gs1_verified" && (
+              <div className="mt-2 space-y-2">
+                <div className="flex items-center gap-1.5 text-[12px] font-semibold text-emerald-600 dark:text-emerald-400">
+                  <BadgeCheck size={14} /> GTIN Verified
+                </div>
+                <GtinDetailEntriesList data={check.data} />
+              </div>
+            )}
+            {error && (
+              <p className="mt-2 text-[12px] text-red-600 dark:text-red-400">{error}</p>
+            )}
+          </div>
+          <div className="px-6 pb-6 flex gap-3">
+            <button
+              onClick={onClose}
+              className="flex-1 h-[42px] rounded-xl border border-[#e2e8f0] dark:border-[#334155] text-[#0f172a] dark:text-white font-semibold text-[13px] hover:bg-[#f8fafc] dark:hover:bg-[#334155] transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving || !canSave}
+              className="flex-1 h-[42px] rounded-xl bg-[#0f172a] dark:bg-white text-white dark:text-[#0f172a] font-semibold text-[13px] hover:opacity-90 transition-opacity disabled:opacity-50"
+            >
+              {saving ? "Saving…" : "Save"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </>,
+    document.body
+  );
+}
+
+const GTIN_STATUS_LABEL: Partial<Record<Promption["gtinStatus"], string>> = {
+  GS1_VERIFIED: "GTIN Verified",
+  VALID_FORMAT: "Valid GTIN format (not yet confirmed by GS1)",
+  GS1_NOT_FOUND: "Valid GTIN format (no confirmed active match in the GS1 registry)",
+  INVALID_FORMAT: "Invalid format",
+  UNVERIFIED: "Not checked",
+};
+
+/**
+ * Renders availableGtinDetailEntries() output as a bordered key/value list -
+ * shared between GtinDetailsModal and ProductGtinEditModal so both surfaces
+ * render whatever the GS1 API returned identically. Renders nothing if empty
+ * (callers decide what, if anything, to show in that case).
+ */
+function GtinDetailEntriesList({ data }: { data?: Record<string, unknown> | null }) {
+  const entries = availableGtinDetailEntries(data);
+  if (entries.length === 0) return null;
+
+  return (
+    <div className="rounded-lg border border-[#e2e8f0] dark:border-[#334155] divide-y divide-[#e2e8f0] dark:divide-[#334155]">
+      {entries.map(([label, value]) => (
+        <div key={label} className="px-3.5 py-2.5 flex items-start justify-between gap-3">
+          <span className="text-[12px] text-[#64748b] dark:text-[#94a3b8] shrink-0">{label}</span>
+          {label === "Product Image Url" && /^https?:\/\//i.test(value) ? (
+            <a href={value} target="_blank" rel="noopener noreferrer" className="shrink-0">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={value}
+                alt=""
+                className="h-10 w-10 rounded object-cover border border-[#e2e8f0] dark:border-[#334155]"
+              />
+            </a>
+          ) : (
+            <span className="text-[13px] text-[#0f172a] dark:text-white text-right break-words">{value}</span>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+interface GtinDetailsModalProps {
+  promption: Promption;
+  onClose: () => void;
+  onRefresh?: (
+    productId: string,
+  ) => Promise<{
+    success?: boolean;
+    error?: string;
+    gtinStatus?: Promption["gtinStatus"];
+    gtinData?: Record<string, unknown> | null;
+  }>;
+}
+
+// Read-only view of a product's GTIN status + whatever the external GS1 API
+// returned at verification time. Only ever shows fields that actually have a
+// value - never renders an empty/null row. Optionally offers a "Re-check with
+// GS1" action - the stored status/data is a point-in-time snapshot, so it can
+// go stale (the GS1 registry's own data changes over time, and anything
+// checked while this integration was still being finished only ever got
+// "Valid GTIN format" regardless of what GS1 actually had on file).
+function GtinDetailsModal({ promption, onClose, onRefresh }: GtinDetailsModalProps) {
+  const [mounted, setMounted] = useState(false);
+  const [current, setCurrent] = useState(promption);
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshError, setRefreshError] = useState<string | null>(null);
+  useEffect(() => setMounted(true), []);
+
+  const hasEntries = availableGtinDetailEntries(current.gtinData).length > 0;
+
+  const handleRefresh = async () => {
+    if (!onRefresh) return;
+    setRefreshing(true);
+    setRefreshError(null);
+    const res = await onRefresh(current.productId);
+    setRefreshing(false);
+    if (res.error) {
+      setRefreshError(res.error);
+      return;
+    }
+    if (res.gtinStatus) {
+      setCurrent((prev) => ({
+        ...prev,
+        gtinStatus: res.gtinStatus!,
+        gtinData: res.gtinData ?? null,
+        gtinVerifiedAt: new Date().toISOString(),
+      }));
+    }
+  };
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <>
+      <div className="fixed inset-0 z-[9998] bg-black/40 backdrop-blur-xs" onClick={onClose} />
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" onClick={onClose}>
+        <div
+          className="relative w-full max-w-[440px] rounded-2xl bg-white dark:bg-[#1e293b] shadow-2xl border border-[#e2e8f0] dark:border-[#334155] overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between px-6 pt-6 pb-2">
+            <div>
+              <h3 className="text-lg font-bold text-[#0f172a] dark:text-white">GTIN details</h3>
+              <p className="text-[13px] text-[#64748b] dark:text-[#94a3b8] mt-0.5">{current.productName}</p>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-white hover:bg-[#f1f5f9] dark:hover:bg-[#334155] transition-colors"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="px-6 py-4 space-y-3 max-h-[60vh] overflow-y-auto">
+            <div className="rounded-lg border border-[#e2e8f0] dark:border-[#334155] divide-y divide-[#e2e8f0] dark:divide-[#334155]">
+              <div className="px-3.5 py-2.5 flex items-center justify-between gap-3">
+                <span className="text-[12px] text-[#64748b] dark:text-[#94a3b8]">GTIN</span>
+                <span className="text-[13px] font-mono text-[#0f172a] dark:text-white">{current.gtin}</span>
+              </div>
+              <div className="px-3.5 py-2.5 flex items-center justify-between gap-3">
+                <span className="text-[12px] text-[#64748b] dark:text-[#94a3b8]">Status</span>
+                <span className="text-[13px] text-[#0f172a] dark:text-white text-right">
+                  {GTIN_STATUS_LABEL[current.gtinStatus] ?? current.gtinStatus}
+                </span>
+              </div>
+              {current.gtinVerifiedAt && (
+                <div className="px-3.5 py-2.5 flex items-center justify-between gap-3">
+                  <span className="text-[12px] text-[#64748b] dark:text-[#94a3b8]">Checked</span>
+                  <span className="text-[13px] text-[#0f172a] dark:text-white">
+                    {formatDate(current.gtinVerifiedAt)}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {hasEntries ? (
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8] mb-1.5">
+                  From the GS1 registry
+                </p>
+                <GtinDetailEntriesList data={current.gtinData} />
+              </div>
+            ) : (
+              <p className="text-[12px] text-[#94a3b8]">
+                {current.gtinStatus === "GS1_VERIFIED"
+                  ? "GS1 confirmed this GTIN but returned no additional details."
+                  : "No additional details available from GS1 for this GTIN yet."}
+              </p>
+            )}
+
+            {onRefresh && (
+              <div>
+                <button
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className="w-full h-9 rounded-lg border border-[#e2e8f0] dark:border-[#334155] text-[12px] font-medium text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-white hover:bg-[#f8fafc] dark:hover:bg-[#334155] transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
+                >
+                  {refreshing ? (
+                    <Loader2 size={13} className="animate-spin" />
+                  ) : (
+                    <RefreshCw size={13} />
+                  )}
+                  {refreshing ? "Checking…" : "Re-check with GS1"}
+                </button>
+                {refreshError && (
+                  <p className="mt-1.5 text-[12px] text-red-600 dark:text-red-400">{refreshError}</p>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="px-6 pb-6">
+            <button
+              onClick={onClose}
+              className="w-full h-[42px] rounded-xl bg-[#0f172a] dark:bg-white text-white dark:text-[#0f172a] font-semibold text-[13px] hover:opacity-90 transition-opacity"
+            >
+              Close
             </button>
           </div>
         </div>

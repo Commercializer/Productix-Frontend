@@ -1,10 +1,13 @@
 "use server";
 
 import { prisma } from "@productix/db";
-import type { DeviceType, QrScanType } from "@productix/db";
+import type { DeviceType, QrScanType, Gs1VerificationStatus } from "@productix/db";
 import { auth } from "@/auth";
 import bcrypt from "bcryptjs";
 import { createHash, createHmac, timingSafeEqual } from "crypto";
+import { validateGtinFormat } from "@/lib/gs1/check-digit";
+import type { GtinFormatResult, Gs1VerificationResult } from "@/lib/gs1/types";
+import { verifyGtin } from "@/lib/gs1/client";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 function isUUID(val: string): boolean {
@@ -56,7 +59,21 @@ export async function getMyPromptionsAction() {
 
   const profiles = await prisma.productProfile.findMany({
     where: { product: { companyId: { in: companyIds } } },
-    include: { product: { select: { companyId: true, id: true, shortCode: true, slugVisible: true } } },
+    include: {
+      product: {
+        select: {
+          companyId: true,
+          id: true,
+          shortCode: true,
+          slugVisible: true,
+          gtin: true,
+          gtinStatus: true,
+          gtinVerifiedAt: true,
+          gtinData: true,
+          company: { select: { customDomain: true, requireValidGtin: true } },
+        },
+      },
+    },
     orderBy: { updatedAt: 'desc' }
   });
 
@@ -83,6 +100,12 @@ export async function getMyPromptionsAction() {
       // this payload — it's only returned by revealProductPinAction after the
       // owner re-enters their account password.
       hasPinCode: !!p.pinCode,
+      gtin: p.product.gtin,
+      gtinStatus: p.product.gtinStatus,
+      gtinVerifiedAt: p.product.gtinVerifiedAt?.toISOString() ?? null,
+      gtinData: (p.product.gtinData as Record<string, unknown> | null) ?? null,
+      companyCustomDomain: p.product.company.customDomain,
+      companyRequireValidGtin: p.product.company.requireValidGtin,
     }))
   };
 }
@@ -480,6 +503,51 @@ export async function setSlugVisibleAction(productId: string, visible: boolean) 
   }
 }
 
+/**
+ * Adds a GTIN to an existing product that doesn't have one yet. Only supports
+ * the null -> set transition — an already-set GTIN can't be changed here (see
+ * GS1_DIGITAL_LINK_ROADMAP.md for why GTIN is treated as set-once). Re-runs
+ * the same format + external-verification pipeline as createPromptionAction,
+ * never trusting a client-supplied status.
+ */
+export async function updateProductGtinAction(productId: string, gtin: string) {
+  if (!isUUID(productId)) return { error: "Invalid product ID" };
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const companyId = await getUserCompanyId(session.user.id);
+  if (!companyId) return { error: "No company found for user" };
+
+  const product = await prisma.product.findFirst({
+    where: { id: productId, companyId },
+    select: { id: true, gtin: true },
+  });
+  if (!product) return { error: "Product not found" };
+  if (product.gtin) return { error: "This product already has a GTIN and it can't be changed." };
+
+  const gtinResult = await resolveGtinForCreate(gtin);
+  if (!gtinResult.ok) return { error: gtinResult.error };
+  if (!gtinResult.gtin) return { error: "GTIN is required" };
+
+  try {
+    await prisma.product.update({
+      where: { id: productId },
+      data: {
+        gtin: gtinResult.gtin,
+        gtinStatus: gtinResult.status,
+        gtinVerifiedAt: new Date(),
+        gtinData: gtinResult.data as any,
+      },
+    });
+    return { success: true, gtin: gtinResult.gtin, gtinStatus: gtinResult.status, gtinData: gtinResult.data ?? null };
+  } catch (error: any) {
+    if (error?.code === "P2002" && error?.meta?.target?.includes?.("gtin")) {
+      return { error: "This GTIN is already registered to another product." };
+    }
+    return { error: error.message };
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════
 // DELETE PROMPTION
 // ═══════════════════════════════════════════════════════════════
@@ -508,6 +576,165 @@ export async function checkSlugAction(slug: string) {
   return { available: !existing };
 }
 
+// ═══════════════════════════════════════════════════════════════
+// GTIN VALIDATION / VERIFICATION
+// ═══════════════════════════════════════════════════════════════
+
+function gtinFormatErrorMessage(reason: GtinFormatResult["reason"]): string {
+  switch (reason) {
+    case "non_numeric":
+      return "GTIN must contain only digits.";
+    case "wrong_length":
+      return "GTIN must be 8, 12, 13, or 14 digits long.";
+    case "bad_check_digit":
+      return "This GTIN's check digit doesn't match — double-check the number.";
+    default:
+      return "Invalid GTIN.";
+  }
+}
+
+/** Maps a raw verifyGtin() result to the stored Gs1VerificationStatus + data blob. */
+function mapVerificationToStatus(
+  verification: Gs1VerificationResult,
+): { status: Gs1VerificationStatus; data?: Record<string, unknown> } {
+  const status: Gs1VerificationStatus =
+    verification.ok && verification.verified
+      ? "GS1_VERIFIED"
+      : verification.ok && !verification.verified
+        ? "GS1_NOT_FOUND"
+        : "VALID_FORMAT";
+  return { status, data: verification.ok ? verification.data : undefined };
+}
+
+/** Local-only format check, used for live validation as the user types. No DB write. */
+export async function checkGtinAction(gtin: string) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const format = validateGtinFormat(gtin);
+  if (!format.valid) {
+    return { valid: false, canonical14: format.canonical14, error: gtinFormatErrorMessage(format.reason) };
+  }
+  return { valid: true, canonical14: format.canonical14 };
+}
+
+/**
+ * Format check + (if GS1_API_KEY is configured) a live external verification
+ * call, for the Add-Product preview panel. Does not take a productId (the
+ * product doesn't exist yet at this point) and does not write to the DB —
+ * the same validation runs again, authoritatively, inside
+ * createPromptionAction at submit time.
+ */
+export async function verifyGtinAction(gtin: string) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const format = validateGtinFormat(gtin);
+  if (!format.valid) {
+    return {
+      formatValid: false,
+      status: "INVALID_FORMAT" as Gs1VerificationStatus,
+      error: gtinFormatErrorMessage(format.reason),
+    };
+  }
+
+  const dupe = await prisma.product.findFirst({
+    where: { gtin: format.canonical14! },
+    select: { id: true },
+  });
+  if (dupe) {
+    return {
+      formatValid: false,
+      status: "INVALID_FORMAT" as Gs1VerificationStatus,
+      error: "This GTIN is already registered to another product.",
+    };
+  }
+
+  const verification = await verifyGtin(format.canonical14!);
+  if (verification.ok && verification.verified) {
+    return { formatValid: true, status: "GS1_VERIFIED" as Gs1VerificationStatus, data: verification.data };
+  }
+  if (verification.ok && !verification.verified) {
+    return { formatValid: true, status: "GS1_NOT_FOUND" as Gs1VerificationStatus, data: verification.data };
+  }
+  // External API not configured / unreachable — still a locally valid GTIN.
+  return { formatValid: true, status: "VALID_FORMAT" as Gs1VerificationStatus };
+}
+
+/**
+ * Re-runs GTIN validation server-side for createPromptionAction. Never trusts
+ * a client-supplied status — always recomputes it here — so a tampered
+ * client request can't fake GS1_VERIFIED. GS1_NOT_FOUND is still treated as
+ * an acceptable ("gtin set") outcome for the requireValidGtin gate below: it
+ * means the GTIN is locally well-formed but wasn't found in GS1's index,
+ * which can just as easily mean incomplete registry data as a bad GTIN, so
+ * it shouldn't block a merchant from publishing.
+ */
+async function resolveGtinForCreate(
+  rawGtin: string | undefined | null
+): Promise<
+  | { ok: true; gtin: string | null; status: Gs1VerificationStatus; data?: Record<string, unknown> }
+  | { ok: false; error: string }
+> {
+  if (!rawGtin || !rawGtin.trim()) {
+    return { ok: true, gtin: null, status: "UNVERIFIED" };
+  }
+
+  const format = validateGtinFormat(rawGtin);
+  if (!format.valid) {
+    return { ok: false, error: gtinFormatErrorMessage(format.reason) };
+  }
+
+  const dupe = await prisma.product.findFirst({
+    where: { gtin: format.canonical14! },
+    select: { id: true },
+  });
+  if (dupe) {
+    return { ok: false, error: "This GTIN is already registered to another product." };
+  }
+
+  const verification = await verifyGtin(format.canonical14!);
+  return { ok: true, gtin: format.canonical14!, ...mapVerificationToStatus(verification) };
+}
+
+/**
+ * Re-runs GS1 verification for a product that already has a GTIN set, and
+ * persists the refreshed status/data. Never changes the GTIN value itself
+ * (that's still immutable once set) - only the verification snapshot, which
+ * legitimately goes stale: the GS1 registry's own data can change over time
+ * (e.g. a registration becomes active), and any GTIN checked while the API
+ * integration was still being finished only ever got "Valid GTIN format"
+ * regardless of what GS1 actually had on file.
+ */
+export async function refreshGtinVerificationAction(productId: string) {
+  if (!isUUID(productId)) return { error: "Invalid product ID" };
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const companyId = await getUserCompanyId(session.user.id);
+  if (!companyId) return { error: "No company found for user" };
+
+  const product = await prisma.product.findFirst({
+    where: { id: productId, companyId },
+    select: { id: true, gtin: true },
+  });
+  if (!product) return { error: "Product not found" };
+  if (!product.gtin) return { error: "This product doesn't have a GTIN yet" };
+
+  const verification = await verifyGtin(product.gtin);
+  const { status, data } = mapVerificationToStatus(verification);
+
+  try {
+    await prisma.product.update({
+      where: { id: productId },
+      data: { gtinStatus: status, gtinVerifiedAt: new Date(), gtinData: data as any },
+    });
+    return { success: true, gtinStatus: status, gtinData: data ?? null };
+  } catch (error: any) {
+    return { error: error.message };
+  }
+}
+
 export async function createPromptionAction(data: {
   productName: string;
   slug: string;
@@ -517,6 +744,7 @@ export async function createPromptionAction(data: {
   categoryId?: string | null;
   subCategoryId?: string | null;
   brandProfileId?: string | null;
+  gtin?: string | null;
 }) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
@@ -549,38 +777,57 @@ export async function createPromptionAction(data: {
     if (!brand) return { error: "Selected brand not found" };
   }
 
+  const gtinResult = await resolveGtinForCreate(data.gtin);
+  if (!gtinResult.ok) return { error: gtinResult.error };
+
+  const company = await prisma.company.findUnique({ where: { id: companyId }, select: { requireValidGtin: true } });
+  if (company?.requireValidGtin && !gtinResult.gtin) {
+    return { error: "This company requires a valid GTIN before creating a product. Add one above." };
+  }
+
   const shortCode = await generateUniqueShortCode();
 
-  // Create Product + ProductProfile in a transaction
-  const result = await prisma.$transaction(async (tx) => {
-    const product = await tx.product.create({
-      data: {
-        companyId,
-        categoryId: data.categoryId && isUUID(data.categoryId) ? data.categoryId : null,
-        subCategoryId: data.subCategoryId && isUUID(data.subCategoryId) ? data.subCategoryId : null,
-        brandProfileId: data.brandProfileId && isUUID(data.brandProfileId) ? data.brandProfileId : null,
-        shortCode,
-        isActive: true,
-      },
+  try {
+    // Create Product + ProductProfile in a transaction
+    const result = await prisma.$transaction(async (tx) => {
+      const product = await tx.product.create({
+        data: {
+          companyId,
+          categoryId: data.categoryId && isUUID(data.categoryId) ? data.categoryId : null,
+          subCategoryId: data.subCategoryId && isUUID(data.subCategoryId) ? data.subCategoryId : null,
+          brandProfileId: data.brandProfileId && isUUID(data.brandProfileId) ? data.brandProfileId : null,
+          shortCode,
+          isActive: true,
+          gtin: gtinResult.gtin,
+          gtinStatus: gtinResult.status,
+          gtinVerifiedAt: gtinResult.gtin ? new Date() : null,
+          gtinData: gtinResult.data as any,
+        },
+      });
+
+      const profile = await tx.productProfile.create({
+        data: {
+          productId: product.id,
+          languageCode: "en",
+          slug: data.slug,
+          productName: data.productName,
+          description: data.description || "",
+          metaDescription: data.metaDescription || null,
+          ogImageUrl: data.ogImageUrl || null,
+          content: {},
+        },
+      });
+
+      return { productId: product.id, profileId: profile.id, slug: profile.slug };
     });
 
-    const profile = await tx.productProfile.create({
-      data: {
-        productId: product.id,
-        languageCode: "en",
-        slug: data.slug,
-        productName: data.productName,
-        description: data.description || "",
-        metaDescription: data.metaDescription || null,
-        ogImageUrl: data.ogImageUrl || null,
-        content: {},
-      },
-    });
-
-    return { productId: product.id, profileId: profile.id, slug: profile.slug };
-  });
-
-  return { success: true, ...result };
+    return { success: true, ...result };
+  } catch (error: any) {
+    if (error?.code === "P2002" && error?.meta?.target?.includes?.("gtin")) {
+      return { error: "This GTIN is already registered to another product." };
+    }
+    return { error: error.message };
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1212,6 +1459,22 @@ export async function publishPageAction(profileId: string) {
   if (!session?.user?.id) return { error: "Not authenticated" };
 
   try {
+    const gtinCheck = await prisma.productProfile.findUnique({
+      where: { id: profileId },
+      select: {
+        product: {
+          select: { gtin: true, company: { select: { requireValidGtin: true } } },
+        },
+      },
+    });
+    if (!gtinCheck) return { error: "Page not found" };
+    if (gtinCheck.product.company.requireValidGtin && !gtinCheck.product.gtin) {
+      return {
+        error:
+          "This company requires a valid GTIN before publishing, and this product was created without one. GTIN can only be set when a product is created — add one by recreating the product, or ask an admin to turn off the GTIN requirement in Settings.",
+      };
+    }
+
     const profile = await prisma.productProfile.update({
       where: { id: profileId },
       data: {
@@ -1537,6 +1800,33 @@ export async function getPublicPageByHandleAction(handle: string) {
   return { kind: "slug" as const, page: publicProfileShape(profile) };
 }
 
+/**
+ * Resolve a public page from a canonical 14-digit GTIN — the /01/{gtin} GS1
+ * Digital Link resolver route. Mirrors the shortCode branch of
+ * getPublicPageByHandleAction above.
+ */
+export async function getPublicPageByGtinAction(gtin: string) {
+  const product = await prisma.product.findFirst({
+    where: { gtin },
+    select: { id: true, defaultLanguageCode: true },
+  });
+  if (!product) return null;
+
+  const profile =
+    (await prisma.productProfile.findUnique({
+      where: { productId_languageCode: { productId: product.id, languageCode: product.defaultLanguageCode } },
+      include: productProfileInclude,
+    })) ??
+    (await prisma.productProfile.findFirst({
+      where: { productId: product.id },
+      include: productProfileInclude,
+      orderBy: { createdAt: "asc" },
+    }));
+  if (!profile || !profile.isPublished) return null;
+
+  return publicProfileShape(profile);
+}
+
 // ═══════════════════════════════════════════════════════════════
 // PREVIEW PAGE - Authenticated access for previewing pages
 // ═══════════════════════════════════════════════════════════════
@@ -1790,6 +2080,9 @@ export async function getCompanyAnalyticsAction(branchId?: string) {
     const qrScanKey = (qrScanType: QrScanType | null, qrScanPrefix: string | null): string => {
       if (qrScanType === "CUSTOM") {
         return qrScanPrefix ? linkTypeLabel.get(qrScanPrefix) ?? qrScanPrefix : "Custom";
+      }
+      if (qrScanType === "GS1") {
+        return qrScanPrefix ? `GS1 · ${qrScanPrefix}` : "GS1 Digital Link";
       }
       return qrScanType ?? "UNTAGGED";
     };
@@ -2526,9 +2819,26 @@ export async function getCompanySettingsAction() {
         subscriptionStatus: company.subscriptionStatus,
         maximumProducts: company.maximumProducts,
         maximumBrandProfiles: company.maximumBrandProfiles,
-        createdAt: company.createdAt.toISOString()
+        createdAt: company.createdAt.toISOString(),
+        requireValidGtin: company.requireValidGtin,
       }
     };
+  } catch (error: any) {
+    return { error: error.message };
+  }
+}
+
+/** Toggles the "require a valid GTIN before publishing" company-wide policy. */
+export async function updateGtinPolicyAction(requireValidGtin: boolean) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const companyId = await getUserCompanyId(session.user.id);
+  if (!companyId) return { error: "No company found for user" };
+
+  try {
+    await prisma.company.update({ where: { id: companyId }, data: { requireValidGtin } });
+    return { success: true, requireValidGtin };
   } catch (error: any) {
     return { error: error.message };
   }
@@ -2550,6 +2860,10 @@ const RESERVED_LINK_PREFIXES = new Set([
   // Reserved / likely-future
   "tenant", "signup", "register", "logout", "auth", "settings", "account",
   "_next", "__next", "public", "static", "assets", "favicon", "robots", "sitemap",
+  // GS1 Digital Link resolver route (/01/{gtin}) - LINK_PREFIX_RE already
+  // requires a leading letter so "01" can never match, but reserve it
+  // defensively in case that regex is ever loosened.
+  "01",
 ]);
 
 const LINK_PREFIX_RE = /^[a-z][a-z0-9-]{0,39}$/;

@@ -37,6 +37,7 @@ export type {
   QrType,
   QrSource,
   QrScanType,
+  Gs1VerificationStatus,
   DeviceType,
   FeedbackInquiryType,
   FeedbackType,
