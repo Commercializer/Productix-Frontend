@@ -77,6 +77,7 @@ interface CategoryMeta {
 const CATEGORY_LABEL_FALLBACK: Record<string, string> = {
   feedback: "Feedback",
   shape: "Shapes",
+  verification: "Verification",
 };
 
 const CATEGORY_META: Record<string, CategoryMeta> = {
@@ -128,9 +129,15 @@ const CATEGORY_META: Record<string, CategoryMeta> = {
     glow: "rgba(139, 92, 246, 0.15)",
     iconBg: "rgba(139, 92, 246, 0.08)",
   },
+  verification: {
+    icon: <ShieldCheck size={15} />,
+    gradient: "linear-gradient(135deg, #10b981 0%, #6ee7b7 100%)",
+    glow: "rgba(16, 185, 129, 0.15)",
+    iconBg: "rgba(16, 185, 129, 0.08)",
+  },
 };
 
-const CATEGORY_ORDER = ["feedback", "content", "media", "interactive", "shape", "layout", "promotional", "social"];
+const CATEGORY_ORDER = ["verification", "feedback", "content", "media", "interactive", "shape", "layout", "promotional", "social"];
 
 /* ─── Block visual icons (Lucide) ────────────── */
 

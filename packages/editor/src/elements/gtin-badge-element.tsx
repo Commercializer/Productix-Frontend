@@ -5,10 +5,10 @@
  * verification status - who owns the manufacturer's
  * GS1 company prefix, territory, etc.
  *
- * The badge's status is never editable in the property
- * panel - it always reflects Product.gtinStatus /
- * gtinData from the database (threaded down via
- * PublicPageContext), so it stays an honest signal.
+ * Text and styling default to the product's real
+ * Product.gtinStatus / gtinData (threaded down via
+ * PublicPageContext) but are fully overridable from
+ * the property panel, like any other block.
  * ──────────────────────────────────────────── */
 
 "use client";
@@ -18,6 +18,7 @@ import { createPortal } from "react-dom";
 import { ShieldCheck, BadgeCheck, ScanBarcode, X } from "lucide-react";
 import { registerElement, type ElementRenderProps, type PropertyPanelProps } from "./registry";
 import { usePublicPage } from "../renderer/public-page-context";
+import { HexColorPopover } from "./hex-color-popover";
 
 function isInsideEditor(): boolean {
   if (typeof window === "undefined") return false;
@@ -72,11 +73,10 @@ function hasManufacturerOnlyMatch(data: Record<string, unknown> | null | undefin
   return Boolean(data && typeof data === "object" && (data as Record<string, unknown>).GCPOwner);
 }
 
-type Tone = "verified" | "manufacturer" | "neutral";
+type Tone = "verified" | "neutral";
 
 const TONE_COLORS: Record<Tone, { bg: string; bgDark: string; text: string; border: string }> = {
   verified: { bg: "#ecfdf5", bgDark: "#052e1f", text: "#047857", border: "#a7f3d0" },
-  manufacturer: { bg: "#fffbeb", bgDark: "#3a2a06", text: "#b45309", border: "#fde68a" },
   neutral: { bg: "#f8fafc", bgDark: "#1e293b", text: "#475569", border: "#e2e8f0" },
 };
 
@@ -89,7 +89,7 @@ interface StatusInfo {
 function statusInfo(status: string | null | undefined, data: Record<string, unknown> | null | undefined): StatusInfo {
   if (status === "GS1_VERIFIED") return { label: "GTIN Verified", tone: "verified", Icon: ShieldCheck };
   if (status === "GS1_NOT_FOUND" && hasManufacturerOnlyMatch(data)) {
-    return { label: "Manufacturer Verified", tone: "manufacturer", Icon: BadgeCheck };
+    return { label: "Manufacturer Verified", tone: "verified", Icon: BadgeCheck };
   }
   if (status === "VALID_FORMAT") return { label: "Valid Barcode Format", tone: "neutral", Icon: ScanBarcode };
   if (status === "GS1_NOT_FOUND") return { label: "Not in GS1 Registry", tone: "neutral", Icon: ScanBarcode };
@@ -120,8 +120,18 @@ function GtinVerificationBadgeComponent({ props, isEditing }: ElementRenderProps
     : statusInfo(gtinStatus, gtinData);
 
   const colors = TONE_COLORS[info.tone];
-  const bg = theme === "dark" ? colors.bgDark : colors.bg;
-  const textColor = theme === "dark" ? "#ffffff" : colors.text;
+  const defaultBg = theme === "dark" ? colors.bgDark : colors.bg;
+  const defaultTextColor = theme === "dark" ? "#ffffff" : colors.text;
+
+  // Everything below defaults to the live verification status/tone but can be
+  // freely overridden per-instance from the property panel.
+  const label = ((props.text as string) || "").trim() || info.label;
+  const bg = (props.bgColor as string) || defaultBg;
+  const textColor = (props.textColor as string) || defaultTextColor;
+  const fontSize = (props.fontSize as number) || 13;
+  const fontWeight = (props.fontWeight as string) || "600";
+  const borderRadius = (props.borderRadius as number) ?? 999;
+  const showIcon = props.showIcon !== false;
   const Icon = info.Icon;
 
   const pill = (
@@ -134,12 +144,12 @@ function GtinVerificationBadgeComponent({ props, isEditing }: ElementRenderProps
         alignItems: "center",
         gap: 6,
         padding: "9px 14px",
-        borderRadius: 999,
+        borderRadius,
         border: `1px solid ${theme === "dark" ? "rgba(255,255,255,0.15)" : colors.border}`,
         background: bg,
         color: textColor,
-        fontSize: 13,
-        fontWeight: 600,
+        fontSize,
+        fontWeight,
         letterSpacing: "0.01em",
         boxShadow: "0 6px 20px rgba(15, 23, 42, 0.14)",
         cursor: editing ? "default" : "pointer",
@@ -147,8 +157,8 @@ function GtinVerificationBadgeComponent({ props, isEditing }: ElementRenderProps
         fontFamily: FONT_STACK,
       }}
     >
-      <Icon size={15} />
-      {info.label}
+      {showIcon && <Icon size={15} />}
+      {label}
     </button>
   );
 
@@ -178,6 +188,7 @@ function GtinVerificationBadgeComponent({ props, isEditing }: ElementRenderProps
           gtin={gtin}
           gtinVerifiedAt={gtinVerifiedAt}
           info={info}
+          label={label}
           data={gtinData}
           contained={contained}
         />
@@ -192,6 +203,7 @@ function GtinDetailsPopup({
   gtin,
   gtinVerifiedAt,
   info,
+  label,
   data,
   contained,
 }: {
@@ -199,6 +211,7 @@ function GtinDetailsPopup({
   gtin?: string | null;
   gtinVerifiedAt?: string | null;
   info: StatusInfo;
+  label: string;
   data?: Record<string, unknown> | null;
   contained: boolean;
 }) {
@@ -268,7 +281,7 @@ function GtinDetailsPopup({
               <Icon size={15} />
             </span>
             <div>
-              <div style={{ fontSize: 13.5, fontWeight: 700, color: "#0f172a" }}>{info.label}</div>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: "#0f172a" }}>{label}</div>
               {gtin && <div style={{ fontSize: 11.5, color: "#94a3b8", fontFamily: "monospace", marginTop: 1 }}>{gtin}</div>}
             </div>
           </div>
@@ -351,9 +364,19 @@ function GtinBadgePropertyPanel({ props, onChange }: PropertyPanelProps) {
           lineHeight: 1.5,
         }}
       >
-        Shows automatically at the bottom-right of the live page whenever this product has a GTIN. Its status
-        reflects the product&apos;s real GS1 verification and can&apos;t be edited here — only its appearance can.
+        Shows automatically at the bottom-right of the live page whenever this product has a GTIN. Text and
+        colors default to the product&apos;s real GS1 verification status, but can be fully overridden below.
       </div>
+      <label className="block">
+        <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Text</span>
+        <input
+          type="text"
+          className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
+          value={(props.text as string) || ""}
+          onChange={(e) => onChange({ text: e.target.value })}
+          placeholder="Auto (matches verification status)"
+        />
+      </label>
       <label className="block">
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Style</span>
         <select
@@ -365,6 +388,76 @@ function GtinBadgePropertyPanel({ props, onChange }: PropertyPanelProps) {
           <option value="dark">Dark</option>
         </select>
       </label>
+      <label className="block">
+        <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Background Color</span>
+        <div className="mt-1 flex gap-2 items-center">
+          <HexColorPopover value={(props.bgColor as string) || ""} onChange={(hex) => onChange({ bgColor: hex })} fallback="#ecfdf5" />
+          <input
+            type="text"
+            className="flex-1 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
+            value={(props.bgColor as string) || ""}
+            placeholder="Auto"
+            onChange={(e) => onChange({ bgColor: e.target.value })}
+          />
+        </div>
+      </label>
+      <label className="block">
+        <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Text Color</span>
+        <div className="mt-1 flex gap-2 items-center">
+          <HexColorPopover value={(props.textColor as string) || ""} onChange={(hex) => onChange({ textColor: hex })} fallback="#047857" />
+          <input
+            type="text"
+            className="flex-1 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
+            value={(props.textColor as string) || ""}
+            placeholder="Auto"
+            onChange={(e) => onChange({ textColor: e.target.value })}
+          />
+        </div>
+      </label>
+      <label className="block">
+        <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Font Size</span>
+        <input
+          type="number"
+          className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
+          value={(props.fontSize as number) || 13}
+          onChange={(e) => onChange({ fontSize: Number(e.target.value) })}
+          min={8}
+          max={48}
+        />
+      </label>
+      <label className="block">
+        <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Font Weight</span>
+        <select
+          className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
+          value={(props.fontWeight as string) || "600"}
+          onChange={(e) => onChange({ fontWeight: e.target.value })}
+        >
+          <option value="400">Regular</option>
+          <option value="500">Medium</option>
+          <option value="600">Semibold</option>
+          <option value="700">Bold</option>
+          <option value="800">Extra Bold</option>
+        </select>
+      </label>
+      <label className="block">
+        <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Border Radius</span>
+        <input
+          type="number"
+          className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
+          value={(props.borderRadius as number) ?? 999}
+          onChange={(e) => onChange({ borderRadius: Number(e.target.value) })}
+          min={0}
+          max={999}
+        />
+      </label>
+      <label className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          checked={props.showIcon !== false}
+          onChange={(e) => onChange({ showIcon: e.target.checked })}
+        />
+        <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Show Icon</span>
+      </label>
     </div>
   );
 }
@@ -375,8 +468,17 @@ registerElement({
   type: "gtin-badge",
   label: "GTIN Verification",
   icon: <ShieldCheck size={16} />,
-  category: "interactive",
-  defaultProps: { theme: "light" },
+  category: "verification",
+  defaultProps: {
+    theme: "light",
+    text: "",
+    bgColor: "",
+    textColor: "",
+    fontSize: 13,
+    fontWeight: "600",
+    borderRadius: 999,
+    showIcon: true,
+  },
   defaultTransform: { width: 220, height: 48 },
   component: GtinVerificationBadgeComponent,
   propertyPanel: GtinBadgePropertyPanel,
