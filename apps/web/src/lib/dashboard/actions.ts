@@ -1424,7 +1424,7 @@ export async function getPageContentAction(profileId: string) {
       productName: true,
       content: true,
       isPublished: true,
-      gtin: true,
+      product: { select: { gtin: true } },
     },
   });
 
@@ -1447,7 +1447,7 @@ export async function getPageContentAction(profileId: string) {
     productName: profile.productName,
     content,
     isPublished: profile.isPublished,
-    hasGtin: Boolean(profile.gtin),
+    hasGtin: Boolean(profile.product.gtin),
   };
 }
 
