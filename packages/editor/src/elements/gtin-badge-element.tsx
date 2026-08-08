@@ -398,7 +398,7 @@ function GtinDetailsPopup({
                 textDecoration: "none",
               }}
             >
-              Check real data on GS1.org &rarr;
+              Verify through the official GS1 Registry &rarr;
             </a>
           )}
         </div>
