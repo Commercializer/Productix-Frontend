@@ -20,7 +20,7 @@ export default function EditorPage() {
   const templateId = searchParams.get("template");
   const profileId = searchParams.get("profileId");
   const [initialDoc, setInitialDoc] = useState<CanvasDocument | null>(null);
-  const [pageInfo, setPageInfo] = useState<{ slug: string; productName: string } | null>(null);
+  const [pageInfo, setPageInfo] = useState<{ slug: string; productName: string; hasGtin: boolean } | null>(null);
   const [seoOpen, setSeoOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
 
@@ -40,14 +40,14 @@ export default function EditorPage() {
           const content = contentObj as CanvasDocument;
           if (content.version && content.artboards) {
             setInitialDoc(content);
-            setPageInfo({ slug: result.slug!, productName: result.productName! });
+            setPageInfo({ slug: result.slug!, productName: result.productName!, hasGtin: Boolean("hasGtin" in result && result.hasGtin) });
             return;
           }
         }
         // Profile exists but no saved content yet - start with empty or template
         if (result && "productName" in result) {
           productName = result.productName!;
-          setPageInfo({ slug: result.slug!, productName: result.productName! });
+          setPageInfo({ slug: result.slug!, productName: result.productName!, hasGtin: Boolean("hasGtin" in result && result.hasGtin) });
         }
       } catch {
         // Fall through
@@ -203,6 +203,7 @@ export default function EditorPage() {
         previewSlug={pageInfo?.slug}
         onEditSeo={profileId ? () => setSeoOpen(true) : undefined}
         onViewHistory={profileId ? () => setHistoryOpen(true) : undefined}
+        productHasGtin={pageInfo?.hasGtin}
       />
       {seoOpen && profileId && (
         <SeoSettingsModal

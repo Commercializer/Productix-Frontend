@@ -67,6 +67,17 @@ function gtinDetailEntries(data: Record<string, unknown> | null | undefined): Ar
     .filter((entry): entry is [string, string] => entry[1] !== null);
 }
 
+/** True when a formatted detail value is a direct link to an image, e.g. GS1's
+ * "Product Image Url" - render it as a preview instead of a raw link string. */
+function isLikelyImageUrl(value: string): boolean {
+  if (!/^https?:\/\//i.test(value)) return false;
+  try {
+    return /\.(png|jpe?g|gif|webp|svg|avif)$/i.test(new URL(value).pathname);
+  } catch {
+    return /\.(png|jpe?g|gif|webp|svg|avif)$/i.test(value);
+  }
+}
+
 /** True when GS1 found a real, licensed manufacturer (GCP) for this GTIN but no
  * full product-level record for the exact GTIN. See apps/web/src/lib/gs1/client.ts. */
 function hasManufacturerOnlyMatch(data: Record<string, unknown> | null | undefined): boolean {
@@ -198,6 +209,49 @@ function GtinVerificationBadgeComponent({ props, isEditing }: ElementRenderProps
   );
 }
 
+function GtinDetailRow({ label, value, first }: Readonly<{ label: string; value: string; first: boolean }>) {
+  const [imgError, setImgError] = useState(false);
+  const showImage = isLikelyImageUrl(value) && !imgError;
+
+  if (showImage) {
+    return (
+      <div style={{ padding: "10px", borderTop: first ? "none" : "1px solid #e2e8f0" }}>
+        <span style={{ fontSize: 11.5, color: "#64748b", display: "block", marginBottom: 6 }}>{label}</span>
+        <img
+          src={value}
+          alt={label}
+          onError={() => setImgError(true)}
+          style={{
+            width: "100%",
+            maxHeight: 160,
+            objectFit: "contain",
+            borderRadius: 8,
+            background: "#f8fafc",
+            border: "1px solid #e2e8f0",
+            display: "block",
+          }}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        padding: "8px 10px",
+        display: "flex",
+        alignItems: "flex-start",
+        justifyContent: "space-between",
+        gap: 10,
+        borderTop: first ? "none" : "1px solid #e2e8f0",
+      }}
+    >
+      <span style={{ fontSize: 11.5, color: "#64748b", flexShrink: 0 }}>{label}</span>
+      <span style={{ fontSize: 12.5, color: "#0f172a", textAlign: "right", wordBreak: "break-word" }}>{value}</span>
+    </div>
+  );
+}
+
 function GtinDetailsPopup({
   onClose,
   gtin,
@@ -319,22 +373,9 @@ function GtinDetailsPopup({
               <p style={{ fontSize: 10.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "#94a3b8", margin: "0 0 6px" }}>
                 From the GS1 registry
               </p>
-              <div style={{ borderRadius: 10, border: "1px solid #e2e8f0" }}>
-                {entries.map(([label, value], idx) => (
-                  <div
-                    key={label}
-                    style={{
-                      padding: "8px 10px",
-                      display: "flex",
-                      alignItems: "flex-start",
-                      justifyContent: "space-between",
-                      gap: 10,
-                      borderTop: idx === 0 ? "none" : "1px solid #e2e8f0",
-                    }}
-                  >
-                    <span style={{ fontSize: 11.5, color: "#64748b", flexShrink: 0 }}>{label}</span>
-                    <span style={{ fontSize: 12.5, color: "#0f172a", textAlign: "right", wordBreak: "break-word" }}>{value}</span>
-                  </div>
+              <div style={{ borderRadius: 10, border: "1px solid #e2e8f0", overflow: "hidden" }}>
+                {entries.map(([entryLabel, value], idx) => (
+                  <GtinDetailRow key={entryLabel} label={entryLabel} value={value} first={idx === 0} />
                 ))}
               </div>
             </div>

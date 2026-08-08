@@ -9,7 +9,7 @@
 "use client";
 
 import React from "react";
-import { MousePointer, ArrowUp, ArrowDown, Copy, Trash2, Globe, Link as LinkIcon } from "lucide-react";
+import { MousePointer, ArrowUp, ArrowDown, Copy, Trash2, Globe, Link as LinkIcon, TriangleAlert } from "lucide-react";
 import { useCanvasStore } from "../engine/canvas-store";
 import { getElementDefinition } from "../elements/registry";
 import { useTranslation } from "../i18n";
@@ -31,6 +31,7 @@ const BLOCK_LABELS: Record<string, string> = {
 export function PropertiesPanel() {
   const selectedIds = useCanvasStore((s) => s.selectedIds);
   const elements = useCanvasStore((s) => s.document.elements);
+  const productHasGtin = useCanvasStore((s) => s.productHasGtin);
   const updateElementProps = useCanvasStore((s) => s.updateElementProps);
   const updateElement = useCanvasStore((s) => s.updateElement);
   const updateElementTransform = useCanvasStore((s) => s.updateElementTransform);
@@ -135,6 +136,24 @@ export function PropertiesPanel() {
           <p style={{ fontSize:10,color:"#9ca3af",margin:0 }}>{t("blockSettings.title")}</p>
         </div>
       </div>
+
+      {/* No-GTIN warning - this block reads live from the product record and
+          renders nothing on the live page until one is set. */}
+      {el.type === "gtin-badge" && !productHasGtin && (
+        <div style={{
+          display: "flex",
+          alignItems: "flex-start",
+          gap: 8,
+          padding: "10px 16px",
+          background: "#fffbeb",
+          borderBottom: "1px solid #fde68a",
+        }}>
+          <TriangleAlert size={13} style={{ color: "#b45309", flexShrink: 0, marginTop: 1 }} />
+          <span style={{ fontSize: 11, color: "#92400e", lineHeight: 1.5 }}>
+            This product doesn&apos;t have a GTIN yet, so this badge won&apos;t appear on the live page. Add a GTIN in the product&apos;s settings first.
+          </span>
+        </div>
+      )}
 
       {/* Language indicator banner when editing non-EN */}
       {isNonEnglish && (

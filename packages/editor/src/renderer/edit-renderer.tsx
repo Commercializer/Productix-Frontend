@@ -76,6 +76,11 @@ interface EditRendererProps {
   /** Open the version history / edit log. The host app owns the modal.
    *  If omitted the button is hidden. */
   onViewHistory?: () => void;
+  /** Whether the product this page belongs to currently has a GTIN set.
+   *  Drives the "no GTIN yet" notice in the Block Settings panel for the
+   *  GTIN Verification block. Omit (or leave undefined) to suppress the
+   *  notice, e.g. while the host app's product data is still loading. */
+  productHasGtin?: boolean;
 }
 
 const CANVAS_H_PADDING = 120;
@@ -97,8 +102,9 @@ function computeFitZoom(
   return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, Math.min(viewportWidth / totalW, viewportHeight / totalH, 1)));
 }
 
-export function EditRenderer({ initialDocument, profileId, onSave, onPublish, previewSlug, onExportFile, onImportFile, onEditSeo, onViewHistory }: EditRendererProps) {
+export function EditRenderer({ initialDocument, profileId, onSave, onPublish, previewSlug, onExportFile, onImportFile, onEditSeo, onViewHistory, productHasGtin }: EditRendererProps) {
   const loadDocument = useCanvasStore((s) => s.loadDocument);
+  const setProductHasGtin = useCanvasStore((s) => s.setProductHasGtin);
   const document = useCanvasStore((s) => s.document);
   const zoom = useCanvasStore((s) => s.zoom);
   const setZoom = useCanvasStore((s) => s.setZoom);
@@ -158,6 +164,10 @@ export function EditRenderer({ initialDocument, profileId, onSave, onPublish, pr
       hasAutoFit.current = false;
     }
   }, [initialDocument, loadDocument]);
+
+  useEffect(() => {
+    setProductHasGtin(productHasGtin ?? true);
+  }, [productHasGtin, setProductHasGtin]);
 
   const centerCanvas = useCallback(() => {
     requestAnimationFrame(() => {

@@ -52,6 +52,13 @@ export interface CanvasState {
   past: HistoryEntry[];
   future: HistoryEntry[];
 
+  /** Whether the product this page belongs to has a GTIN set. Threaded in from
+   *  the host app (see EditRenderer's `productHasGtin` prop) so panels can warn
+   *  when a GTIN Verification block is added to a product with none. Defaults
+   *  to true so the warning never flashes before the host app's data loads. */
+  productHasGtin: boolean;
+  setProductHasGtin: (hasGtin: boolean) => void;
+
   // ── Document actions ──
   loadDocument: (doc: CanvasDocument) => void;
   setPageTitle: (title: string) => void;
@@ -186,6 +193,12 @@ export const useCanvasStore = create<CanvasState>()(
     contentLocale: "en" as ContentLocale,
     past: [],
     future: [],
+    productHasGtin: true,
+
+    setProductHasGtin: (hasGtin) =>
+      set((s) => {
+        s.productHasGtin = hasGtin;
+      }),
 
     // ── Document ──
     loadDocument: (doc) =>
