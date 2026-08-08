@@ -1742,6 +1742,10 @@ function publicProfileShape(profile: any) {
     pinEnabled: profile.pinEnabled as boolean,
     pinLength: profile.pinLength as number | null,
     publishedAt: profile.publishedAt?.toISOString() ?? null,
+    gtin: profile.product.gtin as string | null,
+    gtinStatus: profile.product.gtinStatus as string | null,
+    gtinVerifiedAt: profile.product.gtinVerifiedAt?.toISOString() ?? null,
+    gtinData: (profile.product.gtinData as Record<string, unknown> | null) ?? null,
     company: {
       name: profile.product.company.name,
       logoUrl: profile.product.company.logoUrl,

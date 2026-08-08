@@ -34,6 +34,7 @@ import {
   BadgeCheck,
   CircleCheck,
   CircleAlert,
+  TriangleAlert,
   ScanBarcode,
   Loader2,
   RefreshCw,
@@ -403,7 +404,23 @@ export function PromptionTable({
                                   Valid Format
                                 </button>
                               )}
-                              {p.gtinStatus === "GS1_NOT_FOUND" && (
+                              {p.gtinStatus === "GS1_NOT_FOUND" && hasManufacturerOnlyMatch(p.gtinData) && (
+                                <button
+                                  onClick={() => setGtinDetails(p)}
+                                  className="inline-flex flex-col items-start gap-1 hover:opacity-80 transition-opacity"
+                                  title={`Manufacturer confirmed by GS1, but no registered product record for this exact GTIN · ${p.gtin} · click to view details`}
+                                >
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium leading-none bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400">
+                                    <BadgeCheck size={11} />
+                                    Manufacturer
+                                  </span>
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium leading-none bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400">
+                                    <TriangleAlert size={11} />
+                                    Product GTIN
+                                  </span>
+                                </button>
+                              )}
+                              {p.gtinStatus === "GS1_NOT_FOUND" && !hasManufacturerOnlyMatch(p.gtinData) && (
                                 <button
                                   onClick={() => setGtinDetails(p)}
                                   className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium leading-none bg-transparent border border-[#e2e8f0] dark:border-[#334155] text-(--ds-text-secondary) hover:opacity-80 transition-opacity"
@@ -1050,10 +1067,17 @@ function ProductGtinEditModal({ productId, productName, onClose, onSave }: Produ
             )}
             {check.status === "gs1_not_found" && (
               <div className="mt-2 space-y-2">
-                <div className="flex items-center gap-1.5 text-[12px] text-[#64748b] dark:text-[#94a3b8]">
-                  <CircleCheck size={13} className="text-sky-500" />
-                  Valid GTIN format (no confirmed active match in the GS1 registry)
-                </div>
+                {hasManufacturerOnlyMatch(check.data) ? (
+                  <div className="flex items-center gap-1.5 text-[12px] text-amber-700 dark:text-amber-400">
+                    <CircleAlert size={13} />
+                    {gtinNotFoundLabel(check.data)}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 text-[12px] text-[#64748b] dark:text-[#94a3b8]">
+                    <CircleCheck size={13} className="text-sky-500" />
+                    Valid GTIN format (no confirmed active match in the GS1 registry)
+                  </div>
+                )}
                 <GtinDetailEntriesList data={check.data} />
               </div>
             )}
@@ -1098,6 +1122,20 @@ const GTIN_STATUS_LABEL: Partial<Record<Promption["gtinStatus"], string>> = {
   INVALID_FORMAT: "Invalid format",
   UNVERIFIED: "Not checked",
 };
+
+/** True when GS1 found a real, licensed company (GCP) owner for this GTIN but has
+ * no full product-level record for the exact GTIN (CertaintyValue 2 - see
+ * apps/web/src/lib/gs1/client.ts). Distinguishes "manufacturer is real, product
+ * just isn't registered" from a genuine dead-end (CertaintyValue 0/1). */
+function hasManufacturerOnlyMatch(data?: Record<string, unknown> | null): boolean {
+  return Boolean(data?.GCPOwner);
+}
+
+function gtinNotFoundLabel(data?: Record<string, unknown> | null): string {
+  return hasManufacturerOnlyMatch(data)
+    ? "Manufacturer verified with GS1 — this specific product isn't registered in GS1's product database yet."
+    : GTIN_STATUS_LABEL.GS1_NOT_FOUND!;
+}
 
 /**
  * Renders availableGtinDetailEntries() output as a bordered key/value list -
@@ -1213,7 +1251,9 @@ function GtinDetailsModal({ promption, onClose, onRefresh }: GtinDetailsModalPro
               <div className="px-3.5 py-2.5 flex items-center justify-between gap-3">
                 <span className="text-[12px] text-[#64748b] dark:text-[#94a3b8]">Status</span>
                 <span className="text-[13px] text-[#0f172a] dark:text-white text-right">
-                  {GTIN_STATUS_LABEL[current.gtinStatus] ?? current.gtinStatus}
+                  {current.gtinStatus === "GS1_NOT_FOUND"
+                    ? gtinNotFoundLabel(current.gtinData)
+                    : (GTIN_STATUS_LABEL[current.gtinStatus] ?? current.gtinStatus)}
                 </span>
               </div>
               {current.gtinVerifiedAt && (

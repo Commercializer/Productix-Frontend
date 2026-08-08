@@ -19,6 +19,13 @@ export interface PublicPageContextValue {
    * The element should be `position: relative` (or similar).
    */
   portalRoot?: HTMLElement | null;
+  /** The product's GS1 barcode number, if it has one. Powers the GTIN verification badge element. */
+  gtin?: string | null;
+  /** e.g. "GS1_VERIFIED" | "GS1_NOT_FOUND" | "VALID_FORMAT" | "UNVERIFIED" | "INVALID_FORMAT" - see Gs1VerificationStatus in packages/db/prisma/schema.prisma. */
+  gtinStatus?: string | null;
+  gtinVerifiedAt?: string | null;
+  /** Raw GS1 GTIN Check API response fields (GCPOwner, GS1Territory, BrandName, ...) captured at verification time. */
+  gtinData?: Record<string, unknown> | null;
 }
 
 const PublicPageContext = createContext<PublicPageContextValue>({});

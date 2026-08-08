@@ -46,6 +46,11 @@ export interface PublicRendererProps {
   productId?: string;
   /** Short branch code from the QR/share URL (`?b=<code>`); feedback is attributed to it. */
   forcedBranchCode?: string;
+  /** The product's GS1 barcode number, if it has one. Powers the GTIN verification badge element. */
+  gtin?: string | null;
+  gtinStatus?: string | null;
+  gtinVerifiedAt?: string | null;
+  gtinData?: Record<string, unknown> | null;
 }
 
 /** Detect the breakpoint from a pixel width */
@@ -56,7 +61,17 @@ function detectBreakpoint(width: number): Breakpoint {
   return "desktop";
 }
 
-export function PublicRenderer({ document: doc, className, contentLocale = "en", productId, forcedBranchCode }: PublicRendererProps) {
+export function PublicRenderer({
+  document: doc,
+  className,
+  contentLocale = "en",
+  productId,
+  forcedBranchCode,
+  gtin,
+  gtinStatus,
+  gtinVerifiedAt,
+  gtinData,
+}: PublicRendererProps) {
   const containerRef = useRef<HTMLElement>(null);
   // Default to 1440 to match SSR output and avoid hydration mismatch.
   // After mount, the ResizeObserver below switches to the real container width.
@@ -85,7 +100,7 @@ export function PublicRenderer({ document: doc, className, contentLocale = "en",
   const responsiveCSS = useMemo(() => generateResponsiveStylesheet(doc), [doc]);
 
   return (
-    <PublicPageProvider value={{ productId, forcedBranchCode }}>
+    <PublicPageProvider value={{ productId, forcedBranchCode, gtin, gtinStatus, gtinVerifiedAt, gtinData }}>
       {/* Inject responsive stylesheet */}
       <style dangerouslySetInnerHTML={{ __html: responsiveCSS }} />
 

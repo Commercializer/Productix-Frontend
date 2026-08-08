@@ -23,6 +23,10 @@ interface PublicPageData {
   metaDescription: string | null;
   ogImageUrl: string | null;
   publishedAt: string | null;
+  gtin: string | null;
+  gtinStatus: string | null;
+  gtinVerifiedAt: string | null;
+  gtinData: Record<string, unknown> | null;
   company: {
     name: string;
     logoUrl: string | null;
@@ -263,7 +267,16 @@ export function PublicPageClient({ page }: PublicPageClientProps) {
 
       {/* Rendered page content */}
       <div ref={searchTargetRef}>
-        <PublicRenderer document={doc} contentLocale={contentLocale} productId={page.productId} forcedBranchCode={forcedBranchCode} />
+        <PublicRenderer
+          document={doc}
+          contentLocale={contentLocale}
+          productId={page.productId}
+          forcedBranchCode={forcedBranchCode}
+          gtin={page.gtin}
+          gtinStatus={page.gtinStatus}
+          gtinVerifiedAt={page.gtinVerifiedAt}
+          gtinData={page.gtinData}
+        />
       </div>
 
       {/* Powered-by footer badge */}

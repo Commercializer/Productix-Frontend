@@ -47,6 +47,7 @@ import {
   ChevronLeft,
   FileText,
   ClipboardList,
+  ShieldCheck,
 } from "lucide-react";
 import { getAllElements, type ElementDefinition } from "../elements/registry";
 import { SHAPES, getShapeDefaultProps, ShapeRender } from "../elements/shapes-catalog";
@@ -169,6 +170,7 @@ const BLOCK_CONFIG: Record<string, { label: string; icon: React.ReactNode }> = {
   feedbackForm:  { label: "Feedback Form",   icon: <ClipboardList size={16} />     },
   search:        { label: "Page Search",     icon: <Search size={16} />            },
   shape:         { label: "Shape",            icon: <Shapes size={16} />            },
+  "gtin-badge":  { label: "GTIN Verification", icon: <ShieldCheck size={16} />      },
 };
 
 /* ─── Component ──────────────────────────────── */

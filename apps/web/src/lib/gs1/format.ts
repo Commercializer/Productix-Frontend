@@ -13,10 +13,22 @@ export function humanizeGtinKey(key: string): string {
     .trim();
 }
 
+/** GS1 sometimes appends a stray language tag after the real URL, e.g.
+ * ".../Product.png%20(en-GB)" or ".../Product.png (en-GB)" - either a literal
+ * space or an already-percent-encoded one. Keep only the URL portion, or the
+ * image request 404s on the trailing junk. */
+function stripTrailingUrlJunk(url: string): string {
+  return url.split(/\s|%20/i)[0]!;
+}
+
 /** Renders a raw GS1-response value as display text, or null if there's nothing worth showing. */
 export function formatGtinValue(value: unknown): string | null {
   if (value === null || value === undefined) return null;
-  if (typeof value === "string") return value.trim() || null;
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    return /^https?:\/\//i.test(trimmed) ? stripTrailingUrlJunk(trimmed) : trimmed;
+  }
   if (typeof value === "number" || typeof value === "boolean") return String(value);
   if (Array.isArray(value)) {
     const joined = value.filter((v) => v !== null && v !== undefined && v !== "").join(", ");
