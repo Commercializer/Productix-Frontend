@@ -382,6 +382,25 @@ function GtinDetailsPopup({
           ) : (
             <p style={{ fontSize: 12, color: "#94a3b8", margin: 0 }}>No additional details available from GS1 for this barcode yet.</p>
           )}
+
+          {gtin && (
+            <a
+              href={`https://www.gs1.org/services/verified-by-gs1?gtin=${encodeURIComponent(gtin)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "block",
+                marginTop: 12,
+                textAlign: "center",
+                fontSize: 12,
+                fontWeight: 600,
+                color: "#047857",
+                textDecoration: "none",
+              }}
+            >
+              Check real data on GS1.org &rarr;
+            </a>
+          )}
         </div>
       </div>
     </div>
