@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { X, Download, Copy, Check, ExternalLink, Package, Link2, Share2, Tag, ChevronDown, MapPin, ScanBarcode, Info } from "lucide-react";
 import QRCode from "qrcode";
-import type { Gs1VerificationStatus } from "@productix/db";
+import type { DppDisplayMode, Gs1VerificationStatus } from "@productix/db";
 import { getCompanyLinkTypesAction, getBranchesAction } from "@/lib/dashboard/actions";
 import { buildGs1DigitalLinkUrl } from "@/lib/gs1/digital-link";
 
@@ -23,6 +23,16 @@ interface QrModalProps {
   companyCustomDomain?: string | null;
   /** Company-wide "require a valid GTIN" policy — blocks QR issuance entirely when the product doesn't satisfy it. */
   requireValidGtin?: boolean;
+  /** What /01/{gtin} shows to visitors - see DppDisplayMode's doc comment in
+   * schema.prisma. Used only to decide the smarter default QR format below;
+   * doesn't otherwise change what this modal renders. */
+  dppDisplayMode?: DppDisplayMode | null;
+  /** Whether this product has a published GS1 showcase (ProductProfile).
+   * The "General QR" format encodes /p/{shortCode}, which 404s if this is
+   * false - so a product with no published showcase should default to the
+   * GS1 Digital Link format instead, since /01/{gtin} can still resolve to
+   * the DPP passport even with nothing published on the showcase side. */
+  isPublished?: boolean;
 }
 
 interface QrTab {
@@ -59,6 +69,8 @@ export function QrModal({
   gtinStatus,
   companyCustomDomain,
   requireValidGtin,
+  dppDisplayMode,
+  isPublished,
 }: QrModalProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [copied, setCopied] = useState(false);
@@ -138,6 +150,15 @@ export function QrModal({
   const gtinSatisfiesPolicy = !requireValidGtin || (!!gtinStatus && GTIN_POLICY_OK.includes(gtinStatus));
   const canUseGs1Format = !!gtin && !!gtinStatus && GTIN_POLICY_OK.includes(gtinStatus);
 
+  // The General QR encodes /p/{shortCode}, which 404s whenever there's no
+  // published showcase to resolve to - true for a DPP-only product
+  // (dppDisplayMode "DPP") regardless of publish state, and true for any
+  // product that simply hasn't published its showcase yet. In both cases
+  // /01/{gtin} still resolves (to the DPP passport, or to whatever the mode
+  // allows), so default there instead of handing out a QR that 404s.
+  const generalFormatWouldFail = dppDisplayMode === "DPP" || isPublished === false;
+  const shouldDefaultToGs1 = canUseGs1Format && generalFormatWouldFail;
+
   // The channel/traffic-source label carried in the GS1 URL's ?ch= extension
   // param — reuses the same channel the general-format tabs represent
   // (on-pack / link / social / a custom link type's prefix).
@@ -172,11 +193,13 @@ export function QrModal({
   }, [isOpen, publicUrl]);
 
   // Reset to default type whenever the modal is reopened so each session starts
-  // on On Pack rather than whatever the user picked last time.
+  // on On Pack rather than whatever the user picked last time - except the
+  // format, which defaults to GS1 instead of General when General would just
+  // 404 (see shouldDefaultToGs1 above).
   useEffect(() => {
     if (isOpen) {
       setQrTypeId("onpack");
-      setFormat("general");
+      setFormat(shouldDefaultToGs1 ? "gs1" : "general");
       setMenuOpen(false);
       setBranchId(ALL_BRANCHES);
       setBranchMenuOpen(false);
@@ -374,6 +397,14 @@ export function QrModal({
               <p className="mt-1.5 flex items-center gap-1 text-[11px] text-[#94a3b8]">
                 <Info size={11} className="shrink-0" />
                 Add a GTIN to this product to unlock the GS1 Digital Link QR format.
+              </p>
+            )}
+            {gtin && format === "general" && generalFormatWouldFail && (
+              <p className="mt-1.5 flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400">
+                <Info size={11} className="shrink-0" />
+                {dppDisplayMode === "DPP"
+                  ? "This product's live page is set to DPP-only, so the General QR link won't show anything - use GS1 Digital Link instead."
+                  : "This product has no published showcase yet, so the General QR link will 404 - use GS1 Digital Link instead."}
               </p>
             )}
           </div>

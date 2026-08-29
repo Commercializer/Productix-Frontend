@@ -133,6 +133,8 @@ export function PromptionTable({
     gtinStatus: Promption["gtinStatus"];
     companyCustomDomain: string | null;
     companyRequireValidGtin: boolean;
+    dppDisplayMode: Promption["dppDisplayMode"];
+    isPublished: boolean;
   } | null>(null);
   const [slugEditor, setSlugEditor] = useState<{ profileId: string; currentSlug: string } | null>(null);
   const [nameEditor, setNameEditor] = useState<{ profileId: string; currentName: string } | null>(null);
@@ -544,6 +546,8 @@ export function PromptionTable({
                                 gtinStatus: p.gtinStatus,
                                 companyCustomDomain: p.companyCustomDomain,
                                 companyRequireValidGtin: p.companyRequireValidGtin,
+                                dppDisplayMode: p.dppDisplayMode,
+                                isPublished: p.isPublished,
                               })
                             }
                             className="w-9 h-9 flex items-center justify-center text-[#0f172a] dark:text-white bg-white dark:bg-[#0f172a] sm:dark:bg-[#1e293b] rounded-[10px] border-[1.5px] border-[#e2e8f0] dark:border-[#334155] hover:border-[#bae6fd] hover:text-[#0284c7] hover:bg-[#f0f9ff] dark:hover:bg-[#334155] shadow-xs transition-all"
@@ -800,6 +804,8 @@ export function PromptionTable({
           gtinStatus={qrModal.gtinStatus}
           companyCustomDomain={qrModal.companyCustomDomain}
           requireValidGtin={qrModal.companyRequireValidGtin}
+          dppDisplayMode={qrModal.dppDisplayMode}
+          isPublished={qrModal.isPublished}
         />
       )}
 
