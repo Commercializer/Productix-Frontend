@@ -8,6 +8,7 @@ import { createHash, createHmac, timingSafeEqual } from "crypto";
 import { validateGtinFormat } from "@/lib/gs1/check-digit";
 import type { GtinFormatResult, Gs1VerificationResult } from "@/lib/gs1/types";
 import { verifyGtin } from "@/lib/gs1/client";
+import { prunePackagingLayers } from "@/lib/dpp/packaging-layers";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 function isUUID(val: string): boolean {
@@ -896,17 +897,20 @@ export async function getProductForDppAction(productId: string) {
  * single source of truth (identifierValue stays null on the DPP row in that
  * case, see ProductDpp.identifierValue doc comment in schema.prisma).
  *
- * sectionAnswers is a free-text map: section key -> field text -> value,
- * covering every section in apps/web/src/lib/dpp/dpp-sections.ts plus the
- * sector-specific section (under the fixed key "sector"). Pruned recursively
- * so empty strings and empty sections never get persisted.
+ * sectionAnswers is mostly a free-text map: section key -> field text ->
+ * value, covering every section in apps/web/src/lib/dpp/dpp-sections.ts plus
+ * the sector-specific section (under the fixed key "sector"). Pruned
+ * recursively so empty strings and empty sections never get persisted. The
+ * "packaging" key is the one exception - it's `{ layers: PackagingLayer[] }`
+ * (see packaging-layers.ts's doc comment for why), pruned by
+ * prunePackagingLayers instead of the flat-map logic below.
  */
 export async function createProductDppAction(data: {
   productId: string;
   identifierType: DppIdentifierType;
   identifierValue?: string | null;
   sector?: DppSector | null;
-  sectionAnswers?: Record<string, Record<string, string>> | null;
+  sectionAnswers?: Record<string, unknown> | null;
 }) {
   if (!isUUID(data.productId)) return { error: "Invalid product ID" };
   const session = await auth();
@@ -943,16 +947,22 @@ export async function createProductDppAction(data: {
     identifierValue = trimmed;
   }
 
-  const sectionAnswers: Record<string, Record<string, string>> = {};
+  const sectionAnswers: Record<string, unknown> = {};
   for (const [sectionKey, answers] of Object.entries(data.sectionAnswers ?? {})) {
+    if (sectionKey === "packaging") {
+      const layers = prunePackagingLayers((answers as { layers?: unknown })?.layers);
+      if (layers.length > 0) sectionAnswers.packaging = { layers };
+      continue;
+    }
     const trimmed = Object.fromEntries(
-      Object.entries(answers)
+      Object.entries(answers as Record<string, string>)
         .map(([key, value]) => [key, value?.trim() ?? ""])
         .filter(([, value]) => value !== "")
     );
     if (Object.keys(trimmed).length > 0) sectionAnswers[sectionKey] = trimmed;
   }
-  const sectionAnswersValue = Object.keys(sectionAnswers).length > 0 ? sectionAnswers : Prisma.DbNull;
+  const sectionAnswersValue =
+    Object.keys(sectionAnswers).length > 0 ? (sectionAnswers as Prisma.InputJsonValue) : Prisma.DbNull;
 
   try {
     const dpp = await prisma.$transaction(async (tx) => {
@@ -2051,7 +2061,7 @@ export async function getPublicDppByGtinAction(gtin: string) {
     gtinVerifiedAt: product.gtinVerifiedAt?.toISOString() ?? null,
     identifierType: product.dpp.identifierType,
     sector: product.dpp.sector,
-    sectionAnswers: (product.dpp.sectionAnswers as Record<string, Record<string, string>> | null) ?? {},
+    sectionAnswers: (product.dpp.sectionAnswers as Record<string, unknown> | null) ?? {},
     gallery: product.galleryImages,
   };
 }

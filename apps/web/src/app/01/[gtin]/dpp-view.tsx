@@ -8,7 +8,9 @@ import type { CSSProperties } from "react";
 import type { DppSector } from "@productix/db";
 import { getOrderedDppSections, type DppSectionField, type DppSectionSpec } from "@/lib/dpp/dpp-sections";
 import { DPP_SECTOR_LABELS } from "@/lib/dpp/sector-sections";
+import type { PackagingLayer } from "@/lib/dpp/packaging-layers";
 import { GalleryCarousel } from "./gallery-carousel";
+import { PackagingLayersView } from "./packaging-layers-view";
 
 export interface PublicDppData {
   productName: string;
@@ -22,7 +24,9 @@ export interface PublicDppData {
   gtinVerifiedAt: string | null;
   identifierType: string;
   sector: DppSector | null;
-  sectionAnswers: Record<string, Record<string, string>>;
+  // "packaging" holds `{ layers: PackagingLayer[] }` instead of the flat
+  // field map every other section uses - see packaging-layers.ts.
+  sectionAnswers: Record<string, unknown>;
   gallery: { url: string; name: string }[];
 }
 
@@ -199,9 +203,24 @@ export function DppPassportView({ data, batch }: { data: PublicDppData; batch: s
 
         {/* Compliance sections */}
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {sections.map((spec, i) => (
-            <SectionCard key={spec.key} spec={spec} answers={data.sectionAnswers[spec.key] ?? {}} defaultOpen={i === 0} />
-          ))}
+          {sections.map((spec, i) =>
+            spec.key === "packaging" ? (
+              <PackagingLayersView
+                key={spec.key}
+                title={spec.title}
+                directive={spec.directive}
+                layers={(data.sectionAnswers.packaging as { layers?: PackagingLayer[] } | undefined)?.layers ?? []}
+                defaultOpen={i === 0}
+              />
+            ) : (
+              <SectionCard
+                key={spec.key}
+                spec={spec}
+                answers={(data.sectionAnswers[spec.key] as Record<string, string> | undefined) ?? {}}
+                defaultOpen={i === 0}
+              />
+            )
+          )}
         </div>
 
         <footer style={{ marginTop: 32, textAlign: "center" }}>

@@ -274,12 +274,16 @@ export const DPP_SECTIONS: DppSectionSpec[] = [
       }
     ]
   },
+  // Renders via PackagingLayersPanel/PackagingLayersView (see
+  // packaging-layers.ts), not the generic field-list renderer - the
+  // `fields` below are unused for rendering, kept only so this stays a
+  // valid DppSectionSpec.
   {
     "key": "packaging",
     "sidebarLabel": "Product packaging",
     "icon": "PackageCheck",
-    "title": "Packaging Data",
-    "directive": "PPWR — Packaging and Packaging Waste Regulation (EU) 2025/40 (applies from 12 Aug 2026). NOTE: PPWR does not itself mandate a Digital Product Passport — it requires identification ON the packaging (Art 15/18) and an EU Declaration of Conformity (Art 38/39 + Annex VIII). dpp.gs provides the DPP / GS1 Digital Link QR as the carrier for those obligations · Art 5 PFAS + heavy-metal limits · Art 6-11 design-for-recycling + recycled content + minimisation · Art 12 packaging labelling (from Aug 2028) · Art 26 + Annex VI reusable systems · Art 44/45 EPR registration",
+    "title": "Packaging Layers (PPWR Art. 12)",
+    "directive": "Packaging Regulation (EU) 2025/40, Art. 12 — declaration per packaging layer. Max. 15 layers.",
     "fields": [
       {
         "text": "Producer identification — name, registered trade name/trademark, postal address; on the packaging OR via a QR code/data carrier (Art 15(6), from 12 Aug 2026)",
@@ -468,18 +472,53 @@ export const DPP_SECTIONS: DppSectionSpec[] = [
   }
 ];
 
-/** DPP_SECTIONS with the sector-specific section (if any) spliced in right
- * after "materials", mirroring the dashboard editor's sidebar ordering
- * (see products/[productId]/dpp/page.tsx's sidebarItems). PACKAGING has no
- * dedicated sector section of its own (see sector-sections.ts). Shared so the
- * public passport view doesn't have to duplicate this ordering logic. */
-export function getOrderedDppSections(sector: DppSector | null): DppSectionSpec[] {
-  const sectorSpec = sector ? DPP_SECTOR_SECTIONS[sector] : undefined;
-  if (!sectorSpec || sector === "PACKAGING") return DPP_SECTIONS;
+/** Generic ESPR sections to drop for sectors that admin.dpp.gs's own
+ * per-sector notes (see packages/db/prisma/seed-data/dpp-section-info/
+ * <sector>.json) mark as sitting outside the ESPR Digital Product Passport
+ * mandate: food.json's "food" entry says "Food is excluded from the ESPR
+ * Digital Product Passport"; cosmetics.json's "cosmetics" entry says
+ * "Cosmetics are outside the ESPR DPP mandate"; medical.json's "medical"
+ * entry says medical devices "are outside the ESPR DPP" (they run on
+ * UDI/EUDAMED instead). Every one of these generic sections' directive
+ * cites "EU Regulation 2024/1781 (ESPR)" as its basis, so once a sector
+ * opts out of ESPR they stop applying - the sector's own section already
+ * carries the equivalent domain data (nutrition/allergens, INCI/CPNP,
+ * UDI/IFU). Medical keeps "specifications" and "documents": CE marking, the
+ * Declaration of Conformity and Technical Documentation are still hard
+ * MDR/IVDR requirements even though the rest of ESPR doesn't apply to it. */
+const ESPR_EXCLUDED_GENERIC_SECTIONS: Partial<Record<DppSector, string[]>> = {
+  FOOD: ["specifications", "carbon", "recycled", "materials", "substances", "repairability", "eol", "documents"],
+  COSMETICS: ["specifications", "carbon", "recycled", "materials", "substances", "repairability", "eol", "documents"],
+  MEDICAL: ["carbon", "recycled", "materials", "substances", "repairability", "eol"],
+};
 
-  const materialsIdx = DPP_SECTIONS.findIndex((s) => s.key === "materials");
-  const before = DPP_SECTIONS.slice(0, materialsIdx + 1);
-  const after = DPP_SECTIONS.slice(materialsIdx + 1);
+/** The generic sections that normally precede the spliced-in sector section,
+ * in DPP_SECTIONS order - used to re-anchor the splice point when one or
+ * more of them has been dropped by ESPR_EXCLUDED_GENERIC_SECTIONS (see
+ * getOrderedDppSections). */
+const PRE_SECTOR_KEYS = ["manufacturer", "specifications", "physical", "carbon", "recycled", "materials"];
+
+/** DPP_SECTIONS filtered to what actually applies to `sector` (see
+ * ESPR_EXCLUDED_GENERIC_SECTIONS), with the sector-specific section (if any)
+ * spliced in right after the last remaining section among PRE_SECTOR_KEYS -
+ * normally "materials", but for a sector that drops "materials" this falls
+ * back to whichever of manufacturer/specifications/physical survived.
+ * Mirrors the dashboard editor's sidebar ordering (see
+ * products/[productId]/dpp/page.tsx's sidebarItems). PACKAGING has no
+ * dedicated sector section of its own (see sector-sections.ts). Shared so the
+ * public passport view doesn't have to duplicate this filtering/ordering
+ * logic. */
+export function getOrderedDppSections(sector: DppSector | null): DppSectionSpec[] {
+  const excludedKeys = new Set(sector ? (ESPR_EXCLUDED_GENERIC_SECTIONS[sector] ?? []) : []);
+  const sections = excludedKeys.size ? DPP_SECTIONS.filter((s) => !excludedKeys.has(s.key)) : DPP_SECTIONS;
+
+  const sectorSpec = sector ? DPP_SECTOR_SECTIONS[sector] : undefined;
+  if (!sectorSpec || sector === "PACKAGING") return sections;
+
+  const anchorKey = [...PRE_SECTOR_KEYS].reverse().find((key) => sections.some((s) => s.key === key));
+  const anchorIdx = anchorKey ? sections.findIndex((s) => s.key === anchorKey) : -1;
+  const before = sections.slice(0, anchorIdx + 1);
+  const after = sections.slice(anchorIdx + 1);
   const sectorSection: DppSectionSpec = {
     key: "sector",
     sidebarLabel: sectorSpec.title,

@@ -43,10 +43,13 @@ import { DashboardHeader } from "@/components/dashboard/header";
 import { getProductForDppAction, createProductDppAction } from "@/lib/dashboard/actions";
 import { GtinField, type GtinCheckState } from "@/components/dashboard/gtin-field";
 import { IconSelect, type IconSelectOption } from "@/components/dashboard/icon-select";
+import { SearchableSelect } from "@/components/dashboard/searchable-select";
 import { ProductGallery } from "@/components/dashboard/product-gallery";
+import { PackagingLayersPanel } from "@/components/dashboard/packaging-layers-panel";
 import { DPP_SECTOR_SECTIONS, trimFieldLabel, type DppSectionField } from "@/lib/dpp/sector-sections";
-import { DPP_SECTIONS, type DppSectionSpec } from "@/lib/dpp/dpp-sections";
+import { DPP_SECTIONS, getOrderedDppSections, type DppSectionSpec } from "@/lib/dpp/dpp-sections";
 import { COUNTRY_OPTIONS } from "@/lib/dpp/countries";
+import { countMissingRequiredLayerFields, type PackagingLayer } from "@/lib/dpp/packaging-layers";
 import type { DppIdentifierType, DppSector } from "@productix/db";
 
 interface PageProps {
@@ -152,6 +155,7 @@ export default function ProductDppPage({ params }: PageProps) {
   const [productName, setProductName] = useState("");
   const [existingGtin, setExistingGtin] = useState<string | null>(null);
   const [existingGtinVerified, setExistingGtinVerified] = useState(false);
+  const [existingGtinData, setExistingGtinData] = useState<Record<string, unknown> | null>(null);
 
   const [identifierType, setIdentifierType] = useState<DppIdentifierType>("GS1_GTIN");
   const [gtin, setGtin] = useState("");
@@ -160,6 +164,7 @@ export default function ProductDppPage({ params }: PageProps) {
   const [sector, setSector] = useState<DppSector | null>(null);
 
   const [sectionAnswers, setSectionAnswers] = useState<Record<string, Record<string, string>>>({});
+  const [packagingLayers, setPackagingLayers] = useState<PackagingLayer[]>([]);
   const [showOptional, setShowOptional] = useState<Record<string, boolean>>({});
   const [activeKey, setActiveKey] = useState<string>("identification");
 
@@ -185,6 +190,7 @@ export default function ProductDppPage({ params }: PageProps) {
       if (product.gtin) {
         setExistingGtin(product.gtin);
         setExistingGtinVerified(product.gtinStatus === "GS1_VERIFIED");
+        setExistingGtinData((product.gtinData as Record<string, unknown> | null) ?? null);
         setIdentifierType("GS1_GTIN");
       } else if (product.dpp) {
         setIdentifierType(product.dpp.identifierType);
@@ -198,8 +204,14 @@ export default function ProductDppPage({ params }: PageProps) {
       }
 
       if (product.dpp?.sectionAnswers) {
-        const answers = product.dpp.sectionAnswers as Record<string, Record<string, string>>;
+        const raw = product.dpp.sectionAnswers as Record<string, unknown>;
+        // "packaging" isn't a flat field map like every other section (see
+        // packaging-layers.ts) - it gets its own state, loaded separately.
+        const { packaging, ...answers } = raw as Record<string, Record<string, string>> & {
+          packaging?: { layers?: PackagingLayer[] };
+        };
         setSectionAnswers(answers);
+        if (Array.isArray(packaging?.layers)) setPackagingLayers(packaging.layers);
 
         // Auto-reveal a section's optional fields if it already has one
         // filled in, so returning to edit doesn't hide existing answers.
@@ -233,9 +245,6 @@ export default function ProductDppPage({ params }: PageProps) {
       ? gtinLocked || (gtin.trim() !== "" && gtinCheck.status !== "checking" && gtinSatisfiesPolicy)
       : identifierValue.trim() !== "";
 
-  const sectorSpec = sector ? DPP_SECTOR_SECTIONS[sector] : undefined;
-  const showSectorSection = !!sectorSpec && sector !== "PACKAGING";
-
   const sidebarItems: SidebarItem[] = useMemo(() => {
     const identification: SidebarItem = { key: "identification", kind: "identification" };
     const gallery: SidebarItem = { key: "gallery", kind: "gallery" };
@@ -246,26 +255,22 @@ export default function ProductDppPage({ params }: PageProps) {
     // rest of the DPP has been saved yet, so it stays reachable either way.
     if (!sector) return [identification, gallery];
 
-    const materialsIdx = DPP_SECTIONS.findIndex((s) => s.key === "materials");
-    const eolIdx = DPP_SECTIONS.findIndex((s) => s.key === "eol");
-    const before = DPP_SECTIONS.slice(0, materialsIdx + 1);
-    const middle = DPP_SECTIONS.slice(materialsIdx + 1, eolIdx + 1);
-    const after = DPP_SECTIONS.slice(eolIdx + 1);
+    // getOrderedDppSections already drops the generic ESPR sections that
+    // don't apply to this sector (food/cosmetics/medical) and splices in the
+    // sector-specific section - see its doc comment. Gallery goes right
+    // before "documents" (or at the end, for sectors where "documents" was
+    // dropped too), matching where it always sat before this was shared.
+    const ordered = getOrderedDppSections(sector);
+    const documentsIdx = ordered.findIndex((s) => s.key === "documents");
+    const before = documentsIdx === -1 ? ordered : ordered.slice(0, documentsIdx);
+    const after = documentsIdx === -1 ? [] : ordered.slice(documentsIdx);
 
     const items: SidebarItem[] = [identification];
     for (const spec of before) items.push({ key: spec.key, kind: "section", spec });
-    if (showSectorSection && sectorSpec) {
-      items.push({
-        key: "sector",
-        kind: "section",
-        spec: { key: "sector", sidebarLabel: sectorSpec.title, icon: "Boxes", title: sectorSpec.title, directive: sectorSpec.directive, fields: sectorSpec.fields },
-      });
-    }
-    for (const spec of middle) items.push({ key: spec.key, kind: "section", spec });
-    items.push({ key: "gallery", kind: "gallery" });
+    items.push(gallery);
     for (const spec of after) items.push({ key: spec.key, kind: "section", spec });
     return items;
-  }, [sector, showSectorSection, sectorSpec]);
+  }, [sector]);
 
   const setFieldAnswer = (sectionKey: string, fieldText: string, value: string) => {
     setSectionAnswers((prev) => ({
@@ -280,6 +285,9 @@ export default function ProductDppPage({ params }: PageProps) {
       return identifierMissing || !sector;
     }
     if (item.kind === "gallery") return false;
+    if (item.key === "packaging") {
+      return packagingLayers.length === 0 || packagingLayers.some((l) => countMissingRequiredLayerFields(l) > 0);
+    }
     const answers = sectionAnswers[item.key] ?? {};
     return flattenFields(item.spec).some((f) => f.required && !answers[f.text]?.trim());
   };
@@ -299,7 +307,10 @@ export default function ProductDppPage({ params }: PageProps) {
         identifierType,
         identifierValue: identifierType === "GS1_GTIN" ? gtin.trim() : identifierValue.trim(),
         sector,
-        sectionAnswers,
+        sectionAnswers: {
+          ...sectionAnswers,
+          ...(packagingLayers.length > 0 ? { packaging: { layers: packagingLayers } } : {}),
+        },
       });
 
       if (result.error) {
@@ -494,7 +505,23 @@ export default function ProductDppPage({ params }: PageProps) {
               </div>
             )}
 
-            {activeItem.kind === "section" && (
+            {activeItem.kind === "section" && activeItem.key === "packaging" && (
+              <div className="space-y-6">
+                <SectionHeading title={activeItem.spec.title} directive={activeItem.spec.directive} />
+                <PackagingLayersPanel
+                  layers={packagingLayers}
+                  onChange={setPackagingLayers}
+                  productGtin={gtinLocked ? existingGtin : gtin.trim() || null}
+                  productGtinData={
+                    gtinCheck.status === "gs1_verified" || gtinCheck.status === "gs1_not_found"
+                      ? (gtinCheck.data ?? null)
+                      : existingGtinData
+                  }
+                />
+              </div>
+            )}
+
+            {activeItem.kind === "section" && activeItem.key !== "packaging" && (
               <SectionPanel
                 spec={activeItem.spec}
                 answers={sectionAnswers[activeItem.key] ?? {}}
@@ -554,14 +581,7 @@ function ManufacturerCountryField({ value, onChange }: { value: string; onChange
       <label className="block text-[12px] font-medium text-(--ds-text-primary) mb-1">
         Manufacturer country <span className="text-red-400">*</span>
       </label>
-      <select className={`${selectClass} h-[38px] text-[13px]`} value={value} onChange={(e) => onChange(e.target.value)}>
-        <option value="">— Select —</option>
-        {COUNTRY_OPTIONS.map((c) => (
-          <option key={c} value={c}>
-            {c}
-          </option>
-        ))}
-      </select>
+      <SearchableSelect options={COUNTRY_OPTIONS} value={value} onChange={onChange} searchPlaceholder="Search countries…" />
     </div>
   );
 }
