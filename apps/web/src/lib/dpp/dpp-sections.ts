@@ -502,18 +502,19 @@ const PRE_SECTOR_KEYS = ["manufacturer", "specifications", "physical", "carbon",
  * ESPR_EXCLUDED_GENERIC_SECTIONS), with the sector-specific section (if any)
  * spliced in right after the last remaining section among PRE_SECTOR_KEYS -
  * normally "materials", but for a sector that drops "materials" this falls
- * back to whichever of manufacturer/specifications/physical survived.
- * Mirrors the dashboard editor's sidebar ordering (see
- * products/[productId]/dpp/page.tsx's sidebarItems). PACKAGING has no
- * dedicated sector section of its own (see sector-sections.ts). Shared so the
- * public passport view doesn't have to duplicate this filtering/ordering
- * logic. */
+ * back to whichever of manufacturer/specifications/physical survived. The
+ * sector section's `groups` (its numbered §1, §2... sub-sections - see
+ * sector-sections.ts) render via the same group-rendering path as
+ * "Manufacturer & Importer"'s Manufacturer/Importer sub-groups; the editor
+ * additionally splits each group into its own sidebar sub-item (see
+ * products/[productId]/dpp/page.tsx's sidebarItems). Shared so the public
+ * passport view doesn't have to duplicate this filtering/ordering logic. */
 export function getOrderedDppSections(sector: DppSector | null): DppSectionSpec[] {
   const excludedKeys = new Set(sector ? (ESPR_EXCLUDED_GENERIC_SECTIONS[sector] ?? []) : []);
   const sections = excludedKeys.size ? DPP_SECTIONS.filter((s) => !excludedKeys.has(s.key)) : DPP_SECTIONS;
 
   const sectorSpec = sector ? DPP_SECTOR_SECTIONS[sector] : undefined;
-  if (!sectorSpec || sector === "PACKAGING") return sections;
+  if (!sectorSpec) return sections;
 
   const anchorKey = [...PRE_SECTOR_KEYS].reverse().find((key) => sections.some((s) => s.key === key));
   const anchorIdx = anchorKey ? sections.findIndex((s) => s.key === anchorKey) : -1;
@@ -525,7 +526,7 @@ export function getOrderedDppSections(sector: DppSector | null): DppSectionSpec[
     icon: "Boxes",
     title: sectorSpec.title,
     directive: sectorSpec.directive,
-    fields: sectorSpec.fields,
+    groups: sectorSpec.groups,
   };
   return [...before, sectorSection, ...after];
 }

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft,
+  ChevronDown,
   Package,
   Building2,
   ClipboardList,
@@ -109,10 +110,27 @@ const inputClass =
 type SidebarItem =
   | { key: "identification"; kind: "identification" }
   | { key: "gallery"; kind: "gallery" }
-  | { key: string; kind: "section"; spec: DppSectionSpec };
+  // answersKey defaults to `key` when absent - only set (to "sector") for a
+  // sector sub-section item, whose several sidebar rows all read/write the
+  // same underlying sectionAnswers.sector map (see sidebarItems below).
+  | { key: string; kind: "section"; spec: DppSectionSpec; answersKey?: string }
+  // The sector's own row - toggles whether its §N sub-items (kind
+  // "section", key "sector:0" etc.) are shown at all, rather than a panel
+  // of its own.
+  | { key: "sector"; kind: "sector-parent"; title: string };
 
 function flattenFields(spec: { fields?: DppSectionField[]; groups?: { fields: DppSectionField[] }[] }): DppSectionField[] {
   return spec.fields ?? spec.groups?.flatMap((g) => g.fields) ?? [];
+}
+
+/** Sector sub-section labels are "§3 Critical Raw Materials (...)" - fine as
+ * a citation-style heading in the read-only public passport, but "§3" reads
+ * as a stray symbol in a clickable sidebar row. Split it into a step number
+ * (rendered as a numbered badge, matching the packaging layers list) and the
+ * plain label text. */
+function splitSubSectionLabel(label: string): { number: string | null; text: string } {
+  const match = label.match(/^§(\d+)\s+(.*)$/);
+  return match ? { number: match[1]!, text: match[2]! } : { number: null, text: label };
 }
 
 /** One field from a section's data. Label is a trimmed version of the raw
@@ -167,6 +185,10 @@ export default function ProductDppPage({ params }: PageProps) {
   const [packagingLayers, setPackagingLayers] = useState<PackagingLayer[]>([]);
   const [showOptional, setShowOptional] = useState<Record<string, boolean>>({});
   const [activeKey, setActiveKey] = useState<string>("identification");
+  // Whether the sector's §N sub-sections are expanded in the sidebar -
+  // collapsed by default; clicking the sector's own row reveals them (see
+  // sidebarItems / the sidebar's onClick below).
+  const [sectorGroupOpen, setSectorGroupOpen] = useState(false);
 
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -214,15 +236,22 @@ export default function ProductDppPage({ params }: PageProps) {
         if (Array.isArray(packaging?.layers)) setPackagingLayers(packaging.layers);
 
         // Auto-reveal a section's optional fields if it already has one
-        // filled in, so returning to edit doesn't hide existing answers.
+        // filled in, so returning to edit doesn't hide existing answers. The
+        // sector section is split into one sidebar row per §N sub-section
+        // (see sidebarItems), each with its own show/hide toggle, so it's
+        // checked group-by-group under keys "sector:0", "sector:1"... rather
+        // than the single "sector" key the answers themselves are stored
+        // under.
         const nextShow: Record<string, boolean> = {};
         for (const [key, ans] of Object.entries(answers)) {
-          const spec =
-            key === "sector"
-              ? loadedSector
-                ? DPP_SECTOR_SECTIONS[loadedSector]
-                : undefined
-              : DPP_SECTIONS.find((s) => s.key === key);
+          if (key === "sector") {
+            const groups = loadedSector ? DPP_SECTOR_SECTIONS[loadedSector]?.groups : undefined;
+            groups?.forEach((g, i) => {
+              if (g.fields.some((f) => !f.required && ans[f.text]?.trim())) nextShow[`sector:${i}`] = true;
+            });
+            continue;
+          }
+          const spec = DPP_SECTIONS.find((s) => s.key === key);
           if (!spec) continue;
           const hasOptionalAnswered = flattenFields(spec).some((f) => !f.required && ans[f.text]?.trim());
           if (hasOptionalAnswered) nextShow[key] = true;
@@ -265,12 +294,36 @@ export default function ProductDppPage({ params }: PageProps) {
     const before = documentsIdx === -1 ? ordered : ordered.slice(0, documentsIdx);
     const after = documentsIdx === -1 ? [] : ordered.slice(documentsIdx);
 
+    // The sector section's own numbered sub-sections (§1, §2...) each get
+    // their own sidebar row instead of being stacked in one long panel -
+    // matching the reference editor's per-§ navigation. They all still read/
+    // write the single flat sectionAnswers.sector map (answersKey), so this
+    // is purely a navigation split, not a data-model one. The sector's own
+    // row is a toggle - its sub-items only appear while sectorGroupOpen.
+    const pushSpec = (items: SidebarItem[], spec: DppSectionSpec) => {
+      if (spec.key === "sector" && spec.groups && spec.groups.length > 0) {
+        items.push({ key: "sector", kind: "sector-parent", title: spec.title });
+        if (sectorGroupOpen) {
+          spec.groups.forEach((g, i) => {
+            items.push({
+              key: `sector:${i}`,
+              kind: "section",
+              spec: { key: `sector:${i}`, sidebarLabel: g.label, icon: spec.icon, title: g.label, directive: spec.directive, fields: g.fields },
+              answersKey: "sector",
+            });
+          });
+        }
+        return;
+      }
+      items.push({ key: spec.key, kind: "section", spec });
+    };
+
     const items: SidebarItem[] = [identification];
-    for (const spec of before) items.push({ key: spec.key, kind: "section", spec });
+    for (const spec of before) pushSpec(items, spec);
     items.push(gallery);
-    for (const spec of after) items.push({ key: spec.key, kind: "section", spec });
+    for (const spec of after) pushSpec(items, spec);
     return items;
-  }, [sector]);
+  }, [sector, sectorGroupOpen]);
 
   const setFieldAnswer = (sectionKey: string, fieldText: string, value: string) => {
     setSectionAnswers((prev) => ({
@@ -285,10 +338,15 @@ export default function ProductDppPage({ params }: PageProps) {
       return identifierMissing || !sector;
     }
     if (item.kind === "gallery") return false;
+    if (item.kind === "sector-parent") {
+      const groups = sector ? DPP_SECTOR_SECTIONS[sector]?.groups : undefined;
+      const answers = sectionAnswers.sector ?? {};
+      return !!groups?.some((g) => g.fields.some((f) => f.required && !answers[f.text]?.trim()));
+    }
     if (item.key === "packaging") {
       return packagingLayers.length === 0 || packagingLayers.some((l) => countMissingRequiredLayerFields(l) > 0);
     }
-    const answers = sectionAnswers[item.key] ?? {};
+    const answers = sectionAnswers[item.answersKey ?? item.key] ?? {};
     return flattenFields(item.spec).some((f) => f.required && !answers[f.text]?.trim());
   };
 
@@ -369,21 +427,62 @@ export default function ProductDppPage({ params }: PageProps) {
           {/* Sidebar */}
           <div className="w-full md:w-[220px] shrink-0 flex flex-col gap-1.5">
             {sidebarItems.map((item) => {
+              if (item.kind === "sector-parent") {
+                const Icon = sector ? SECTOR_ICON_MAP[sector] : Boxes;
+                const missing = hasMissingRequired(item);
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => {
+                      setSectorGroupOpen((open) => {
+                        const next = !open;
+                        if (next) setActiveKey("sector:0");
+                        return next;
+                      });
+                    }}
+                    aria-expanded={sectorGroupOpen}
+                    className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-left text-[13px] font-medium transition-colors ${
+                      sectorGroupOpen
+                        ? "bg-[#0284c7] text-white"
+                        : "text-(--ds-text-primary) hover:bg-(--ds-surface-2) border border-(--ds-border)"
+                    }`}
+                  >
+                    <Icon size={16} className={sectorGroupOpen ? "text-white" : "text-(--ds-text-muted)"} />
+                    <span className="flex-1">{item.title}</span>
+                    {missing && (
+                      <span className={`h-1.5 w-1.5 rounded-full ${sectorGroupOpen ? "bg-white" : "bg-amber-500"}`} />
+                    )}
+                    <ChevronDown
+                      size={14}
+                      className={`transition-transform ${sectorGroupOpen ? "rotate-180 text-white" : "text-(--ds-text-muted)"}`}
+                    />
+                  </button>
+                );
+              }
+
               const isActive = item.key === activeKey;
+              // A sector sub-section's own row (e.g. "§3 Critical Raw
+              // Materials") - indented under the sector's own row above it,
+              // with a numbered badge instead of the raw "§N" text.
+              const isSectorSub = item.key.startsWith("sector:");
+              const subLabel = isSectorSub && item.kind === "section" ? splitSubSectionLabel(item.spec.sidebarLabel) : null;
               const label =
                 item.kind === "identification"
                   ? "Product identification"
                   : item.kind === "gallery"
                     ? "Product gallery"
-                    : item.spec.sidebarLabel;
+                    : subLabel
+                      ? subLabel.text
+                      : item.spec.sidebarLabel;
               const Icon =
                 item.kind === "identification"
                   ? Package
                   : item.kind === "gallery"
                     ? ImageIcon
-                    : item.key === "sector" && sector
-                      ? SECTOR_ICON_MAP[sector]
-                      : SECTION_ICONS[item.spec.icon] ?? Boxes;
+                    : item.kind === "section"
+                      ? SECTION_ICONS[item.spec.icon] ?? Boxes
+                      : Boxes;
               const missing = hasMissingRequired(item);
 
               return (
@@ -391,13 +490,25 @@ export default function ProductDppPage({ params }: PageProps) {
                   key={item.key}
                   type="button"
                   onClick={() => setActiveKey(item.key)}
-                  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-[13px] font-medium text-left transition-colors ${
+                  className={`flex items-center rounded-xl text-left transition-colors animate-in fade-in slide-in-from-left-2 duration-200 ${
+                    isSectorSub ? "gap-1.5 pl-9 pr-2.5 py-2 text-[11px]" : "gap-2 px-3 py-2.5 text-[13px] font-medium"
+                  } ${
                     isActive
                       ? "bg-[#0284c7] text-white"
                       : "text-(--ds-text-primary) hover:bg-(--ds-surface-2) border border-(--ds-border)"
                   }`}
                 >
-                  <Icon size={16} className={isActive ? "text-white" : "text-(--ds-text-muted)"} />
+                  {isSectorSub && subLabel?.number ? (
+                    <span
+                      className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[9px] font-semibold ${
+                        isActive ? "bg-white/20 text-white" : "bg-(--ds-surface-2) text-(--ds-text-secondary)"
+                      }`}
+                    >
+                      {subLabel.number}
+                    </span>
+                  ) : (
+                    !isSectorSub && <Icon size={16} className={isActive ? "text-white" : "text-(--ds-text-muted)"} />
+                  )}
                   <span className="flex-1">{label}</span>
                   {missing && (
                     <span className={`h-1.5 w-1.5 rounded-full ${isActive ? "bg-white" : "bg-amber-500"}`} />
@@ -524,10 +635,10 @@ export default function ProductDppPage({ params }: PageProps) {
             {activeItem.kind === "section" && activeItem.key !== "packaging" && (
               <SectionPanel
                 spec={activeItem.spec}
-                answers={sectionAnswers[activeItem.key] ?? {}}
+                answers={sectionAnswers[activeItem.answersKey ?? activeItem.key] ?? {}}
                 showOptional={!!showOptional[activeItem.key]}
                 onToggleOptional={(v) => setShowOptional((prev) => ({ ...prev, [activeItem.key]: v }))}
-                onFieldChange={(text, value) => setFieldAnswer(activeItem.key, text, value)}
+                onFieldChange={(text, value) => setFieldAnswer(activeItem.answersKey ?? activeItem.key, text, value)}
                 extraFieldsBefore={
                   activeItem.key === "manufacturer" ? (
                     <ManufacturerCountryField
