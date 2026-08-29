@@ -1,0 +1,671 @@
+{
+    "product": {
+        "title": "Product Details",
+        "directive": "EU Regulation 2024/1781 (ESPR) · Art. 7, Annex I",
+        "mandatory": [
+            "GTIN",
+            "Product name",
+            "Manufacturer name",
+            "Manufacturer country",
+            "Sector"
+        ],
+        "optional": [
+            "Brand name",
+            "Model number",
+            "HS Code",
+            "Weight",
+            "Dimensions",
+            "Manufacture date",
+            "Expiry date",
+            "Expected lifetime",
+            "Warranty"
+        ],
+        "notes": "All products sold on the EU market must carry a unique product identifier and basic manufacturer information.",
+        "why": "A unique GTIN-anchored identity plus a single responsible legal entity makes it possible for consumers, recyclers and market-surveillance authorities to look the product up unambiguously and hold someone accountable for non-compliance."
+    },
+    "manufacturer": {
+        "title": "Manufacturer & Importer",
+        "directive": "EU Regulation 2024/1781 (ESPR) · Art. 7(2)(a) · EU Battery Regulation 2023/1542 · Art. 38 · Market Surveillance Regulation 2019/1020",
+        "mandatory": [
+            "Manufacturer legal name",
+            "Manufacturer country",
+            "Importer name & address (if manufacturer outside EU)"
+        ],
+        "optional": [
+            "Manufacturer postal address",
+            "Compliance contact email/phone",
+            "Authorized representative in the EU"
+        ],
+        "notes": "Products manufactured outside the EU must have a designated EU importer or authorized representative who is jointly liable for compliance. The manufacturer's identity must be physically present on the product or its packaging.",
+        "why": "Reg. 2019/1020 requires every product on the EU market to have a clearly identifiable economic operator established inside the Union, so authorities have someone to address recalls, fines and corrective actions to — even when the actual factory is outside the EU."
+    },
+    "physical": {
+        "title": "Physical Characteristics",
+        "directive": "EU Regulation 2024/1781 (ESPR) · Art. 7(1) · Packaging & Packaging Waste Regulation 2025/40",
+        "mandatory": [
+            "Total weight in kg — required for waste-stream calculations",
+            "Manufacture date (batteries, perishables, food, cosmetics)"
+        ],
+        "optional": [
+            "Width × Height × Depth (mm)",
+            "Expected lifetime (years)",
+            "Warranty period",
+            "Expiry / best-before date"
+        ],
+        "notes": "Weight is mandatory for EPR fee calculation (packaging, batteries, WEEE). Expected lifetime feeds into the durability index defined per delegated act.",
+        "units": "Weight in kg. Dimensions in mm. Expected lifetime, warranty and expiry in years/dates.",
+        "why": "Producer-responsibility schemes (WEEE, Batteries, Packaging) bill members per kilogram of product placed on the market — without an accurate weight, EPR fees cannot be calculated and the producer cannot legally place the product on the market."
+    },
+    "compliance": {
+        "title": "Compliance & Certifications",
+        "directive": "EU Regulation 2024/1781 (ESPR) · Art. 7(2)(d) · CE Marking Directive 93/68/EEC · REACH Reg. 1907/2006 · RoHS Directive 2011/65/EU",
+        "mandatory": [
+            "CE marking (if applicable)",
+            "Declaration of Conformity"
+        ],
+        "optional": [
+            "REACH compliance",
+            "RoHS compliance",
+            "Energy efficiency class",
+            "IP rating",
+            "Third party certifications"
+        ],
+        "notes": "CE marking is mandatory for most products sold in the EU. REACH and RoHS compliance must be declared for relevant product categories.",
+        "why": "CE marking + a signed Declaration of Conformity is the manufacturer's legal statement that they have applied every relevant EU directive — without it the product may not be placed on the market and the manufacturer faces fines under Reg. 2019/1020."
+    },
+    "carbon": {
+        "title": "Carbon Footprint",
+        "directive": "EU Regulation 2024/1781 (ESPR) · Art. 7(2)(b) · EU Battery Regulation 2023/1542 · Art. 7 (batteries ≥2 kWh mandatory from Feb 2027)",
+        "mandatory": [
+            "Total CO₂ equivalent (batteries mandatory, others phased)"
+        ],
+        "optional": [
+            "Manufacturing phase",
+            "Transport phase",
+            "Use phase",
+            "End of life phase",
+            "Methodology",
+            "EPD declaration URL"
+        ],
+        "notes": "For EV and industrial batteries, carbon footprint declaration is mandatory from 18 Feb 2027. Maximum lifecycle-CF thresholds are to be set later by a delegated act (Art. 7(3)); no numeric EU limit is in force yet.",
+        "units": "Total carbon footprint expressed in kg CO₂-equivalent over the full life cycle. For batteries also in kg CO₂-eq per kWh of energy delivered over service life (Annex II BatReg). Methodology must follow EU PEF where a category rule exists.",
+        "tolerance": "EV batteries: max lifecycle CF limit per category → to be set by a future delegated act (Art. 7(3)); no fixed EU value in force yet",
+        "why": "The carbon-footprint figure must be comparable between products of the same category — that is what lets consumers choose the lower-emission option and pushes manufacturers to decarbonise the production chain (rationale set out in Recital 30 ESPR)."
+    },
+    "recycled": {
+        "title": "Recycled Content",
+        "directive": "EU Battery Regulation 2023/1542 · Art. 8 · EU Regulation 2024/1781 (ESPR) · Art. 7(2)(c)",
+        "mandatory": [
+            "Total recycled content as % by weight of the product (batteries mandatory from 2031)"
+        ],
+        "optional": [
+            "Pre-consumer recycled %",
+            "Post-consumer recycled %",
+            "Renewable content %",
+            "Recyclability %"
+        ],
+        "notes": "Battery Regulation minimum recycled content targets: Cobalt 16% (2031) → 26% (2036) · Lithium 6% (2031) → 12% (2036) · Nickel 6% (2031) → 15% (2036).",
+        "units": "All percentages on this card are by mass (% w/w of the finished product). Recyclability % is the share of the product mass that can be recycled with current EU technology, measured per EN 45555.",
+        "tolerance": "Cobalt: ≥16% (2031), ≥26% (2036) · Lithium: ≥6% (2031), ≥12% (2036) · Nickel: ≥6% (2031), ≥15% (2036)",
+        "why": "Mandatory recycled content closes the loop on critical raw materials — every percent of post-consumer cobalt or lithium is a percent that does not have to be mined again. Targets force the supply chain to invest in collection and recycling capacity."
+    },
+    "materials": {
+        "title": "Material Composition",
+        "directive": "EU Regulation 2024/1781 (ESPR) · Art. 7(5) · EU Battery Regulation 2023/1542 · Art. 13 · Critical Raw Materials Act (CRMA) 2024/1252",
+        "mandatory": [
+            "All materials >0.1% by weight (SVHC threshold)",
+            "Critical Raw Materials with country of origin"
+        ],
+        "optional": [
+            "CAS numbers",
+            "Recycled content per material",
+            "Material category"
+        ],
+        "notes": "Critical Raw Materials (CRM) include: lithium, cobalt, nickel, manganese, graphite, rare earths. Country of origin is mandatory for CRM under CRMA.",
+        "units": "Material share in % by weight (% w/w of finished product). Country of origin as ISO 3166-1 alpha-2 (e.g. CN, CD, AU).",
+        "why": "Knowing exactly what is inside the product — and where critical minerals were mined — lets recyclers recover them, lets authorities check sanctions and due-diligence compliance, and lets the EU monitor its strategic dependency on third-country suppliers under the CRMA."
+    },
+    "substances": {
+        "title": "Substances of Concern",
+        "directive": "REACH Regulation 1907/2006 · Art. 33 · EU Regulation 2024/1781 (ESPR) · Art. 7(5)(b) · SVHC Candidate List (ECHA)",
+        "mandatory": [
+            "All SVHC substances >0.1% by weight (w/w) in the product"
+        ],
+        "optional": [
+            "Non-SVHC substances of concern",
+            "Location in product",
+            "Safe handling URL"
+        ],
+        "notes": "SVHC = Substance of Very High Concern. Must be declared if concentration >0.1% w/w. ECHA updates the Candidate List twice per year. Consumers have right to request this information within 45 days.",
+        "units": "Concentration in ppm (parts per million) or % w/w (by weight). 0.1% w/w = 1000 ppm. Threshold is calculated per article, not per kit.",
+        "tolerance": "Threshold: 0.1% w/w (1000 ppm) per article",
+        "why": "Article 33 REACH gives every consumer the right to know within 45 days whether a product they bought contains a hazardous substance. Listing SVHCs here delivers that right automatically and protects recyclers from being exposed during dismantling."
+    },
+    "repairability": {
+        "title": "Repairability",
+        "directive": "EU Regulation 2024/1781 (ESPR) · Art. 7(2)(e) · Right to Repair Directive 2024/1799/EU",
+        "mandatory": [
+            "Repairability score (phased by product category)",
+            "Spare parts availability period"
+        ],
+        "optional": [
+            "Repair manual URL",
+            "Repair network URL",
+            "Disassembly time"
+        ],
+        "notes": "Right to Repair Directive requires manufacturers to make spare parts available for minimum 5–10 years depending on product type. Repairability index 0–10 scale.",
+        "units": "Score on the EU repairability index scale 1–10 (10 = most repairable). Spare-parts availability in years from last unit sold. Disassembly time in minutes.",
+        "tolerance": "Score 1–10 (10 = most repairable). Minimum spare-parts availability: 5 years (small appliances), 7 years (medium), 10 years (large).",
+        "why": "A repairable product stays out of the waste stream longer. The 2024 Right to Repair Directive makes manufacturers liable for repair affordability and parts availability, and the index lets consumers compare two competing products at a glance."
+    },
+    "eol": {
+        "title": "End of Life",
+        "directive": "EU Regulation 2024/1781 (ESPR) · Art. 7(2)(f) · Waste Framework Directive 2008/98/EC · Battery Regulation 2023/1542 · Art. 60-61",
+        "mandatory": [
+            "Recyclability % by weight (batteries mandatory)",
+            "EU Waste code (if applicable)",
+            "Disassembly instructions"
+        ],
+        "optional": [
+            "Recycling instructions",
+            "Deposit return scheme",
+            "Take-back information"
+        ],
+        "notes": "Battery Regulation requires minimum collection rates and mandatory take-back schemes. EU waste codes follow the European Waste Catalogue (EWC).",
+        "units": "Recyclability and recycling efficiency are expressed as % of product mass (by weight) recoverable per EN 45555. Collection rates are per Art. 59 BatReg, measured per calendar year on member-state level.",
+        "tolerance": "Battery collection targets: 63% by 2027 · 73% by 2030. EV-battery recycling efficiency: 70% by 2030.",
+        "why": "Recyclers need a machine-readable EWC code and disassembly steps to route the product to the correct treatment line. Without this data the product gets landfilled or incinerated even when materials inside are recoverable — which is exactly what the Waste Framework Directive's hierarchy aims to prevent."
+    },
+    "battery": {
+        "title": "Battery Data",
+        "directive": "EU Battery Regulation 2023/1542 · Art. 3 (categories) · Art. 7 (carbon footprint declaration + class A-G, phased via delegated acts) · Art. 13-14 · Annex IV (performance & durability) · Annex VI.A (label) · Annex XIII (battery passport)",
+        "mandatory": [
+            "Battery category (portable / LMT / SLI / industrial / EV)",
+            "Battery chemistry",
+            "Capacity (kWh)",
+            "Nominal voltage",
+            "Cycle life",
+            "Operating temperature range",
+            "UN number + hazmat class",
+            "Extinguishing agent",
+            "Cathode material",
+            "Content of critical materials (Li, Co, Ni, Mn) in kg",
+            "Place of manufacture (Annex VI.A.3)",
+            "Recycled content: Co, Li, Ni, Pb (% w/w, Annex XIII)"
+        ],
+        "optional": [
+            "Anode material",
+            "Electrolyte type",
+            "State of health & cycle count (Art. 14 — BMS API)",
+            "Round-trip efficiency (Annex IV)",
+            "Internal resistance",
+            "Self-discharge rate",
+            "Capacity threshold for 2nd life",
+            "Calendar warranty"
+        ],
+        "notes": "Battery Passport mandatory from 18 Feb 2027 for all EV batteries, LMT batteries and industrial batteries >2 kWh. Must be accessible via QR code (ISO/IEC 15459 unique identifier) for 10 years after market placement. Per-unit SoH data accessible via BMS API (Art. 14) for independent aggregators and recyclers. Carbon footprint performance classes (A-G) will follow later via a delegated act; the exact dates depend on that act.",
+        "units": "Capacity in kWh (energy) or mAh (charge). Voltage in V. Critical-material content in kg per battery (absolute). Recycled content in % by weight. Operating temperature in °C. Round-trip efficiency, self-discharge and recycled content in %. Internal resistance in mΩ.",
+        "tolerance": "Recycled content targets (2031 → 2036): Cobalt 16% → 26% · Lithium 6% → 12% · Nickel 6% → 15% · Lead 85% → 85%. Recycling efficiency (2025 → 2030): Lead 75% → 80% · Lithium 65% → 70%. Collection rates for portable: 45% → 63% → 73% (2023/2027/2030). LMT: 51% → 61% (2028/2031).",
+        "why": "Batteries are the highest-risk product category on the EU market: thermal runaway, critical-mineral supply chains, second-life trading. The mandatory Annex XIII fields give first responders the hazmat profile, give recyclers the disassembly route, and give buyers a tamper-evident SoH so the second-hand market actually works."
+    },
+    "removability": {
+        "title": "Removability & Replacement",
+        "directive": "EU Battery Regulation 2023/1542 · Art. 11 · Mandatory from 18 Feb 2027",
+        "mandatory": [
+            "Removable by end-user (portable batteries) — without specialized tools",
+            "Removable by independent professional (LMT batteries)",
+            "Tools required for removal",
+            "Replacement battery availability — minimum 5 years after last unit sold"
+        ],
+        "optional": [
+            "Removal instructions URL",
+            "Exemption reason (only for waterproof/continuous-water-exposure devices per Art. 11(2)(a) or medical devices per Art. 11(2)(b))"
+        ],
+        "notes": "From 18 Feb 2027 all portable batteries must be removable and replaceable by the end user with commercially available tools. LMT batteries must be removable by independent professionals. Software must not prevent replacement with compatible batteries (Art. 11(8)). Exemptions limited to: (a) devices designed for continuous water/dust exposure (IP68+ washable), (b) medical imaging/radiotherapy/IVD equipment.",
+        "tolerance": "Spare battery availability: ≥5 years after last unit placed on market. Price must be reasonable and non-discriminatory.",
+        "why": "Glued-in batteries shorten a device's life and create avoidable e-waste. Art. 11 forces designers to build for serviceability so that a working device is not scrapped just because its cell aged — extending product life is the single biggest lever the EU has on electronics carbon footprint."
+    },
+    "disassembly": {
+        "title": "Disassembly Instructions",
+        "directive": "EU Battery Regulation 2023/1542 · Annex XIII point 2 · Art. 74 (transport) · ESPR 2024/1781 · Art. 7(2)(e)",
+        "mandatory": [
+            "Step-by-step disassembly sequence",
+            "Tools required per step",
+            "Type and number of fasteners",
+            "Safety warnings (electrical, chemical, fire)"
+        ],
+        "optional": [
+            "Estimated time per step",
+            "Photos / diagrams URL",
+            "Specialist training requirement"
+        ],
+        "notes": "Disassembly information must be available to professional repairers, recyclers, and waste-treatment operators in machine-readable form (Annex XIII §2). Required for both repair and recycling operations. Must be kept accessible for the entire lifetime of the product on the EU market.",
+        "why": "A recycler that cannot find the right fastener wastes time, damages the cell or skips disassembly altogether and shreds the whole pack. The Annex XIII step list is what makes battery recycling efficient enough to hit the 70%-by-2030 recovery target."
+    },
+    "documents": {
+        "title": "Documents & Links",
+        "directive": "EU Regulation 2024/1781 (ESPR) · Art. 7(2)(g) · CE Marking Directive · Machinery Regulation 2023/1230",
+        "mandatory": [
+            "Declaration of Conformity",
+            "Technical Documentation (for authorities)",
+            "User Manual (in all EU languages)"
+        ],
+        "optional": [
+            "Repair manual",
+            "Spare parts catalogue",
+            "Product datasheet",
+            "Safety instructions",
+            "Energy label",
+            "Disassembly instructions",
+            "EPD (Environmental Product Declaration)"
+        ],
+        "notes": "From 2027 the EU Machinery Regulation requires all documentation to be digital-first. Technical documentation must be kept for 10 years after last production.",
+        "why": "When market surveillance opens an investigation, they need the technical file and DoC the same day — not in two weeks by post. Hosting the documents at a permanent URL behind the GS1 Digital Link removes that friction and shortens enforcement cycles."
+    },
+    "annex_xiii": {
+        "title": "Annex XIII — Battery Passport Technical Fields",
+        "directive": "EU Battery Regulation 2023/1542 · Annex XIII §1–§7 · Mandatory from 18 Feb 2027 for EV, LMT and industrial batteries ≥2 kWh",
+        "mandatory": [
+            "§1 Rated capacity (Ah), usable capacity %, rated power (W), peak power (W), initial thermal-runaway temperature, cycle-life test method",
+            "§2 Cathode and anode active material composition (with mass fractions), separator, electrolyte solvent + salt, current collectors, binder",
+            "§3 Critical Raw Materials present and recoverable as % by weight",
+            "§4 Carbon footprint per life-cycle stage (cradle-to-gate, distribution, use, end-of-life) and third-party verification details",
+            "§5 Recycled content verification (auditor, accreditation, audit URL, date)",
+            "§6 SoH threshold for second life, collection / recycling / repurposing URLs",
+            "§7 Safety Data Sheet URL, thermal-runaway propagation test, fire-response class, gases on runaway, recommended suppression agents"
+        ],
+        "optional": [
+            "Cycle-life test conditions (C-rate, depth of discharge, temperature)"
+        ],
+        "notes": "These fields are the technical heart of the Battery Passport. They split into seven thematic sections in Annex XIII. Producers must publish them via the QR-linked passport and keep them accessible for at least 10 years after the last unit is placed on the market.",
+        "units": "Capacity in Ah. Power in W. Temperature in °C. Mass fractions as decimals (0.80 = 80%). Carbon footprint stages in kg CO₂-eq per kWh. SoH and recycled content in %.",
+        "why": "Without these standardised fields a battery passport is decorative. They are what enables a recycler to know whether to dismantle or shred, what enables a second-life buyer to assess a pack honestly, and what enables a first responder to fight a fire safely."
+    },
+    "recycled_audits": {
+        "title": "Recycled-Content Audits",
+        "directive": "EU Battery Regulation 2023/1542 · Art. 8 · Annex XIII §3 · OECD Due Diligence Guidance",
+        "mandatory": [
+            "Substance covered (cobalt, lithium, nickel, lead, graphite)",
+            "Verifier name",
+            "Issued date",
+            "Audit scope (mine-to-refiner / refiner-to-cell / cell-to-pack / full-chain)"
+        ],
+        "optional": [
+            "Verifier accreditation (ISO 17025, ISO 17021, etc.)",
+            "Notified body reference",
+            "Audit report URL",
+            "Report SHA-256 hash for tamper-evidence",
+            "Expiry date",
+            "Recycled % declared in this audit"
+        ],
+        "notes": "A producer's recycled-content percentage on the battery passport (e.g. 'cobalt 12%') is only credible if backed by a third-party audit. Each substance can have its own audit chain depending on supplier setup.",
+        "why": "Without the verification chain, recycled-content claims are unverifiable marketing. Article 8 makes audits compulsory so that the mandatory 2031 recycled-content targets cannot be reached on paper alone."
+    },
+    "furniture": {
+        "title": "Furniture Data",
+        "directive": "EU Regulation 2024/1781 (ESPR) — furniture is a Tier-1 priority product group, delegated act expected 2027–2028 · EU Deforestation Regulation (EU) 2023/1115 (EUDR) — mandatory wood traceability · EN 16516 / E1 / CARB Phase 2 — formaldehyde emissions from wood-based panels · Decopaint Directive 2004/42/EC — VOC content of coatings · FR Loi AGEC — Repairability Index mandatory for furniture from 2024",
+        "mandatory": [
+            "Country of origin for solid wood and wood-based panels (EUDR Reg. 2023/1115 — applies since 30 Dec 2024)",
+            "Formaldehyde class for any wood-based panel — E1 is the EU minimum since the 2020 CLP Carc.1B reclassification",
+            "Repairability Index for furniture sold in France (Loi AGEC, 1.0–10.0 scale)",
+            "Care / cleaning instructions"
+        ],
+        "optional": [
+            "Furniture category and intended use (residential / contract / outdoor / kitchen / bathroom / healthcare / educational)",
+            "Assembly: required, time, tools, flat-pack, modular design flag",
+            "Wood composition with species, %, country of origin, FSC + PEFC certifications and chain-of-custody IDs",
+            "Panel type (particleboard / MDF / HDF / OSB / plywood / solid / laminate / veneer)",
+            "EUDR due-diligence statement URL",
+            "Formaldehyde emission (mg/m³ via EN 16516 chamber test) + VOC class (FR A+ to C) + total VOC (mg/m³)",
+            "Flame-retardants-free / PFAS-free / phthalates-free flags",
+            "Upholstery layered composition + fire-resistance class (EN 1021, BS 5852, CA TB 117) + leather LWG grade + origin",
+            "Durability test (EN 1728 seating, EN 16139 contract, EN 12521 table), cycles passed, load capacity, scratch + light fastness, warranty",
+            "Repair kit availability + URLs, spare parts URL, availability years, modular replaceable parts list",
+            "Recycled content per material (wood / metal / plastic) + total + recyclability % per EN 45555",
+            "Disassembly time, tools, take-back URL, donation / second-hand partner",
+            "Carbon + water footprint per item + PEFCR Furniture (in development) + manufacturing energy source",
+            "Certifications: EU Ecolabel, Blauer Engel, Nordic Swan, GREENGUARD Gold, Cradle to Cradle, ISO 14001, BSCI"
+        ],
+        "notes": "EUDR (Reg. 2023/1115) deforestation traceability applies to seven commodities, of which wood + wood-based products cover the majority of furniture. Operators must submit a due-diligence statement before placing the product on the EU market, with country of origin and geolocation at plot level for solid wood. FR Loi AGEC has extended the Repairability Index from electronics to furniture from 2024. PEFCR Furniture is in development and will feed the ESPR delegated act expected 2027–2028.",
+        "units": "Wood share in % by weight (% w/w). Panel thickness in mm. Formaldehyde emission in mg/m³ (chamber test air concentration, 28-day equilibrium). VOC in mg/m³ total. Load capacity in kg. Scratch resistance on ISO 2409 1–5 scale. Light fastness on ISO 105-B02 Blue Wool 1–8 scale. FR Repairability Index on 1.0–10.0 scale (10 = most repairable). Carbon footprint in kg CO₂-eq per finished item. Water footprint in litres per item.",
+        "tolerance": "Formaldehyde E1 = ≤0.1 ppm (≤0.124 mg/m³) is the EU minimum since 2020 (CLP Class 1B carcinogen reclassification). E0.5 / NAF and CARB Phase 2 are stricter targets. FR Repairability Index minimum target: 7.0/10 from 2027 for furniture.",
+        "why": "Furniture lives in EU households for an average of 8 years today vs 15+ years a generation ago. The combination of EUDR for raw-wood traceability, mandatory formaldehyde class on wood-based panels, FR Repairability Index, and standardised durability tests is what enables a second-hand market that actually trusts the materials inside — which is the single biggest lever on the sector's environmental footprint."
+    },
+    "tyre": {
+        "title": "Tyre Data",
+        "directive": "EU Tyre Labelling Regulation (EU) 2020/740 (mandatory since 1 May 2021, EV pictogram from 1 May 2024) · EU EPREL database · Reg. 552/2009 (high-aromatic oils ban) · UNECE GRBP draft tyre-abrasion test method · ESPR delegated act for tyres (expected 2027)",
+        "mandatory": [
+            "Vehicle class (C1 passenger / C2 light truck / C3 heavy truck)",
+            "Fuel-efficiency class A-E (rolling resistance)",
+            "Wet-grip class A-E",
+            "External rolling noise: measured dB(A) and class A-B-C",
+            "Snow-grip pictogram (3PMSF) if winter/all-season",
+            "Ice-grip Nordic pictogram if applicable",
+            "EV-optimised pictogram (from May 2024)",
+            "EPREL database registration ID"
+        ],
+        "optional": [
+            "Size designation, load index, speed rating",
+            "Tread depth (new) and legal minimum tread",
+            "Tread pattern (symmetric / asymmetric / directional)",
+            "Season (summer / winter / all-season / all-weather)",
+            "Rubber blend composition (NR / SBR / BR …) with %",
+            "Carbon black, silica, steel-belt, textile-cord percentages",
+            "Recycled rubber % and bio-based content %",
+            "High-aromatic-oils-free confirmation (Reg. 552/2009)",
+            "Abrasion in mg/km + UNECE GRBP method + anticipated A-E class (from 2027)",
+            "UTQG treadwear index",
+            "Country of manufacture, DOT plant code, full DOT code, manufacture week/year",
+            "Retreadable flag + retread URL",
+            "Recycling pathway (mechanical / devulcanisation / pyrolysis / energy recovery / retread)",
+            "Run-flat / self-sealing / studdable flags",
+            "Type-approval / homologation codes"
+        ],
+        "notes": "The EU Tyre Label has been mandatory since 1 May 2021 (Reg. 2020/740) for all C1/C2/C3 tyres sold in the Union. Every passenger-car tyre must publish its label and register it in the EPREL database. The 2024 amendment added the EV-optimised pictogram. An A-E class for tread abrasion (microplastic emissions) is expected on the label from 2027, following the UNECE GRBP test-method work.",
+        "units": "Fuel-efficiency and wet-grip classes are A-E pictograms. External noise in dB(A) plus A/B/C class. Tread depth and legal minimum in mm. Tyre abrasion in mg of tread mass lost per km driven, per UNECE GRBP. UTQG treadwear is the US relative scale (100-700+) currently used informally in the EU. Load index is the standardised ETRTO load table (e.g. 91 = 615 kg).",
+        "tolerance": "EU C1 legal minimum tread depth: 1.6 mm. Winter tyres recognised in alpine countries: 3PMSF marking (M+S alone insufficient). EU prohibition of polycyclic-aromatic-hydrocarbon (PAH) oils above 1 mg/kg BaP since 1 Jan 2010 (Reg. 552/2009).",
+        "why": "Tyres are the second-largest source of microplastics in the EU (~1.3 Mt/year) after textiles, and a key lever for transport fuel consumption — a single class step on the EU Tyre Label is worth ~0.1 L/100 km. Machine-readable label data lets fleet operators, importers and ELV recyclers verify compliance instantly and lets buyers compare tyres on rolling resistance, wet grip and forthcoming abrasion class side by side."
+    },
+    "textile": {
+        "title": "Textile Data",
+        "directive": "Textile Labelling Regulation (EU) 1007/2011 (mandatory now) · ESPR 2024/1781 (delegated act for textiles in preparation, expected late 2026 / 2027) · PEFCR Apparel and Footwear v1.1 · EU Strategy for Sustainable and Circular Textiles 2022/COM 141",
+        "mandatory": [
+            "Fibre composition with % by weight (Reg. 1007/2011 — already mandatory in physical labels)",
+            "Origin / country information for the dominant fibre",
+            "Care instructions (ISO 3758) — washing, bleaching, drying, ironing, dry-cleaning"
+        ],
+        "optional": [
+            "Fabric weight (g/m²)",
+            "Weave type",
+            "Yarn count",
+            "Country of dyeing / weaving / cutting / sewing / finishing",
+            "Factory ID (Higg FEM, Open Apparel Registry)",
+            "Carbon, water and land footprint per garment (PEFCR Apparel)",
+            "Dye class, Oeko-Tex / ZDHC MRSL / PFAS-free / formaldehyde-free flags",
+            "Durability test results: Martindale abrasion, pilling, colour fastness, wash cycles, tear strength",
+            "Microfibre shedding rate (TMC / AATCC TM212)",
+            "Total recycled content %, mono-material flag, recyclability %, recycling pathway",
+            "Repair kit availability + URL, reuse / second-hand URL",
+            "Certifications: GOTS, Fairtrade, Bluesign, Cradle to Cradle, RWS, RDS, LWG, EU Ecolabel"
+        ],
+        "notes": "Fibre composition is already mandatory under Reg. 1007/2011 — the DPP renders the physical label as structured data. ESPR identifies textiles as a Tier-1 priority product group; the delegated act is in preparation. Microfibre shedding, mono-material flagging and recyclability % are likely to become mandatory in the act.",
+        "units": "Fibre share in % by weight (% w/w). Fabric weight in g/m². Carbon footprint in kg CO₂-eq per garment. Water in L per garment. Land use in m²·yr per garment. Durability scores per the cited ISO methods. Microfibre shedding in mg per kg of textile per wash.",
+        "why": "Textiles are the fourth-largest source of pressure on the EU environment after food, housing and mobility, and the second-largest after construction for land and water use. Making the inputs and the recycling pathway machine-readable is what lets sorters separate mono-material polyester from blended fabrics and route the right fibres to chemical recycling instead of incineration."
+    },
+    "packaging": {
+        "title": "Packaging Data",
+        "directive": "PPWR — Packaging and Packaging Waste Regulation (EU) 2025/40 (applies from 12 Aug 2026). NOTE: PPWR does not itself mandate a Digital Product Passport — it requires identification ON the packaging (Art 15/18) and an EU Declaration of Conformity (Art 38/39 + Annex VIII). dpp.gs provides the DPP / GS1 Digital Link QR as the carrier for those obligations · Art 5 PFAS + heavy-metal limits · Art 6-11 design-for-recycling + recycled content + minimisation · Art 12 packaging labelling (from Aug 2028) · Art 26 + Annex VI reusable systems · Art 44/45 EPR registration",
+        "mandatory": [
+            "Producer identification — name, registered trade name/trademark, postal address; on the packaging OR via a QR code/data carrier (Art 15(6), from 12 Aug 2026)",
+            "Importer identification where applicable — name/trademark + postal address (Art 18)",
+            "A type/batch/serial number or other element enabling identification of the packaging, on the pack or in an accompanying document (Art 15(5)) — a GS1 Digital Link satisfies this",
+            "EU Declaration of Conformity per packaging type, backed by a technical file (Art 38/39 + Annex VII)",
+            "PFAS limits in food-contact packaging + heavy-metal sum ≤ 100 mg/kg (Art 5)",
+            "EPR registration in every member state where the packaging is first placed on the market (Art 44/45)"
+        ],
+        "optional": [
+            "Packaging category (plastic rigid/flexible, paper-board, glass, metal, composite, wood, biopolymer) + format + level (primary/secondary/tertiary)",
+            "Material composition with per-material weight, recycled %, recyclability (basis for Art 12 labelling from 2028)",
+            "Total + empty weight + packaging ratio (Art 10 minimisation)",
+            "Mono-material flag",
+            "PFAS individual/sum ppb + total fluorine ppm + PFAS-free / bisphenol-free flags",
+            "SVHC presence (REACH > 0.1% w/w)",
+            "Recyclability class + % + recycled content % + recycling stream (PET/HDPE/paper/glass/aluminium/steel)",
+            "Separable components + compostability (EN 13432 / OK Compost)",
+            "Reuse: designed cycles, deposit scheme + amount, return points (Art 26 + Annex VI)",
+            "EPR registration numbers per country",
+            "Declaration of Conformity URL + assessment date + test reports + retention period",
+            "Carbon footprint + PEF declaration + certifications (FSC / PEFC / Blue Angel / OK Compost)"
+        ],
+        "notes": "PPWR is directly applicable across the EU from 12 Aug 2026. The first wave of obligations is economic-operator identification (Art 15/18) and the EU Declaration of Conformity (Art 38/39). Packaging labelling with material composition + harmonised sorting pictograms (Art 12) follows in Aug 2028. A DPP is not legally required, but a GS1 Digital Link QR is the cleanest way to carry the Art 15(5) identifier and the Art 15(6) producer details, plus a link to the Declaration of Conformity and the EPR registration data, rather than printing everything on the packaging itself.",
+        "units": "Weights in grams per packaging unit. Packaging ratio = packaging mass ÷ product mass (dimensionless). PFAS individual/sum in ppb (µg/kg); total fluorine in ppm (mg/kg). Heavy-metal sum (Pb+Cd+Hg+Cr VI) in mg/kg. Recyclability + recycled content in % by weight. Deposit amount in EUR. Carbon footprint in g CO₂-eq per packaging unit.",
+        "tolerance": "Art 5 limits (food-contact, from 12 Aug 2026): individual non-polymeric PFAS ≤ 25 ppb, sum of non-polymeric PFAS ≤ 250 ppb, total fluorine ≤ 50 ppm (polymeric + non-polymeric). Heavy-metal sum Pb+Cd+Hg+Cr(VI) ≤ 100 mg/kg. Documentation retention: 5 years single-use, 10 years reusable (Annex VII).",
+        "why": "Packaging is ~36% of municipal solid waste in the EU and the most visible everyday waste stream for consumers. PPWR forces clear producer accountability (Art 15(6) identification), removes the worst chemistries (Art 5 PFAS / heavy metals), and drives design-for-recycling + recycled content targets. A machine-readable passport lets distributors verify Art 19 obligations, lets authorities check the Declaration of Conformity instantly, and lets DRS / EPR schemes attribute each unit to the right producer."
+    },
+    "electronics": {
+        "title": "Electronics / ICT Data",
+        "directive": "ESPR 2024/1781 — electronics & ICT is a Tier-1 priority product group (delegated act in preparation) · Ecodesign for smartphones & tablets Reg (EU) 2023/1670 (applies from 20 Jun 2025) · Energy Labelling Reg (EU) 2017/1369 + EPREL database · RoHS 2011/65/EU · WEEE 2012/19/EU · Right to Repair Directive (EU) 2024/1799 · USB-C common charger Reg (EU) 2022/2380 (from 28 Dec 2024) · REACH 1907/2006 · FR Repairability / Durability Index (Loi AGEC)",
+        "mandatory": [
+            "CE marking + EU Declaration of Conformity",
+            "Energy efficiency class + EPREL registration where an energy label applies (Reg 2017/1369)",
+            "RoHS compliance (restricted substances ≤ limits)",
+            "USB-C common charger for in-scope portable electronics (Reg 2022/2380, since 28 Dec 2024)",
+            "WEEE producer registration + e-waste category",
+            "OS & security update availability period for smartphones/tablets (Reg 2023/1670)"
+        ],
+        "optional": [
+            "Device type, form factor, operating system + version",
+            "Power consumption (on-mode / networked standby) + annual energy",
+            "FR Repairability & Durability Index (0–10) + EU repairability class A–E",
+            "Spare-part availability (years) + price list + repair manual + self-repair programme",
+            "Steps to reach the battery",
+            "Battery capacity (mAh) + rated cycles to 80% + user-replaceability",
+            "Charging port + max charging power + wireless charging + connectivity",
+            "REACH SVHC presence, recycled content %, critical raw materials, 3TG conflict-minerals policy",
+            "IP rating, drop resistance, MTBF, scratch resistance, warranty",
+            "Carbon footprint, take-back / trade-in URL, certifications (Energy Star / EPEAT / TCO / Blue Angel)"
+        ],
+        "notes": "Reg (EU) 2023/1670 (Ecodesign for smartphones & tablets) sets binding minimums from 20 Jun 2025: ≥5 years of OS updates after the last unit is placed on the market, spare parts available ≥7 years, batteries enduring ≥800 cycles at ≥80% capacity, and a published EU repairability class. The forthcoming ESPR delegated act for electronics will define the mandatory DPP data set; the fields here anticipate it.",
+        "units": "Power in W; annual energy in kWh. Repairability / Durability Index 0.0–10.0. Battery capacity in mAh; cycles as a count to 80% capacity. Charging power in W. Recycled content in % by weight. Drop resistance in metres; MTBF in hours. Carbon footprint in kg CO₂-eq (cradle-to-gate). Spare-part price in EUR.",
+        "tolerance": "Reg 2023/1670 minimums: ≥800 charge cycles retaining ≥80% capacity; OS updates ≥5 years; spare parts ≥7 years; ingress + drop resistance per the reliability class. USB-C PD mandatory for most portable electronics since 28 Dec 2024 (laptops from 28 Apr 2026).",
+        "why": "Electronics are the fastest-growing waste stream in the EU (~5 Mt/year of e-waste) and carry a heavy embodied carbon and critical-raw-material footprint. Machine-readable repairability, spare-part availability and update-support data let consumers buy for longevity, let repairers source parts, and let recyclers route devices and recover gold, cobalt and rare earths instead of shredding them."
+    },
+    "construction": {
+        "title": "Construction Product Data",
+        "directive": "Construction Products Regulation (EU) 305/2011 (CPR) + revision Reg (EU) 2024/3110 (in force, phased to 2039) · Declaration of Performance (DoP, Art 4-6 + Annex III) · CE marking against a harmonised standard (hEN) or European Technical Assessment (ETA) · AVCP system 1+/1/2+/3/4 · ESPR 2024/1781 (construction is a Tier-1 priority group) · EN 15804 EPD · EN 13501-1 reaction to fire · REACH 1907/2006",
+        "mandatory": [
+            "Declaration of Performance (DoP) with a unique identification code (CPR Art 4-6)",
+            "CE marking + the harmonised standard (hEN) or ETA the product is declared against",
+            "AVCP system (1+/1/2+/3/4) + notified body where the system requires one",
+            "Declared performance for each essential characteristic covered by the hEN",
+            "Dangerous-substance information (REACH Art 31/33)"
+        ],
+        "optional": [
+            "Product category + intended use",
+            "Reaction to fire (EN 13501-1 Euroclass)",
+            "Thermal conductivity λ + U-value, compressive / flexural strength, sound reduction Rw, water-vapour resistance µ",
+            "Load-bearing flag + dimensional tolerance class",
+            "EPD per EN 15804 — GWP (kg CO₂e) + EPD programme + service life",
+            "Recycled / reused / bio-based content %, recyclability %, recycling pathway",
+            "Main materials, country of manufacture, plant ID",
+            "SVHC presence + details, formaldehyde class (E1/E0/NAF), VOC emission class (A+/A/B/C)",
+            "DoP / CE certificate / EPD / SDS / installation manual / datasheet URLs",
+            "Certifications (BREEAM, LEED, Cradle to Cradle, FSC, natureplus)"
+        ],
+        "notes": "The CPR is unusual: it does not declare a product 'safe' but obliges the manufacturer to declare its performance against the essential characteristics of the applicable harmonised standard, in a Declaration of Performance, and to CE-mark accordingly. The 2024 revision (Reg 2024/3110) modernises this and introduces a mandatory construction-product Digital Product Passport carrying the DoP and environmental data — which is exactly what this section captures.",
+        "units": "Thermal conductivity λ in W/(m·K); U-value in W/(m²·K). Strength in MPa. Sound reduction Rw in dB. Water-vapour resistance µ dimensionless. GWP in kg CO₂-eq per EN 15804 declared unit. Content shares and recyclability in % by mass. Service life in years.",
+        "why": "The built environment is ~40% of EU energy use and material extraction and the largest waste stream by mass. Machine-readable performance + EPD data lets designers specify for energy and carbon, lets authorities verify the DoP instantly at the border or on site, and lets demolition contractors identify what can be reused or recycled instead of landfilled."
+    },
+    "chemicals": {
+        "title": "Chemical Product Data",
+        "directive": "REACH Reg (EC) 1907/2006 — registration, SVHC (Art 33/59), authorisation (Annex XIV), restriction (Annex XVII), Safety Data Sheet (Art 31 + Annex II) · CLP Reg (EC) 1272/2008 — GHS classification, labelling, pictograms, signal word, H/P statements, Poison Centre Notification + UFI (Annex VIII) · Detergents Reg 648/2004 · Biocidal Products Reg 528/2012 · ADR/UN transport",
+        "mandatory": [
+            "Identity — substance vs mixture, chemical name, CAS / EC number",
+            "GHS/CLP classification: signal word, hazard pictograms, H (hazard) + P (precautionary) statements",
+            "Safety Data Sheet (REACH Art 31 + Annex II) for hazardous substances/mixtures",
+            "SVHC disclosure (> 0.1% w/w, REACH Art 33)",
+            "UFI + Poison Centre Notification for hazardous mixtures (CLP Annex VIII)"
+        ],
+        "optional": [
+            "REACH registration number + status",
+            "UFI code",
+            "Physical state + concentration + pH + flash/boiling point",
+            "Hazardous components table (SDS section 3): name, CAS, EC, %, classification",
+            "Authorisation required (Annex XIV) / restriction (Annex XVII) flags",
+            "Storage conditions, incompatible materials, shelf life",
+            "PBT/vPvB, aquatic toxicity class, biodegradability %, waste code, disposal",
+            "Transport (ADR/UN): UN number, hazard class, packing group, shipping name",
+            "Detergent ingredient data sheet, biocidal authorisation, certifications"
+        ],
+        "notes": "REACH and CLP already impose extensive structured data (the Safety Data Sheet, the CLP label, the Poison Centre Notification). This section renders those as a machine-readable passport — the SDS, the GHS hazard communication and the hazardous-component breakdown — so downstream users, emergency responders and authorities can read them from a single QR code. ESPR brings chemicals into the broader sustainable-product framework.",
+        "units": "Concentrations in % by weight. pH dimensionless (0–14). Flash/boiling point in °C. Biodegradability in %. Hazard statements as H-codes, precautionary as P-codes (CLP). UN number + packing group per ADR.",
+        "why": "Chemicals carry acute and chronic risks to health and the environment, and the data needed to handle, store, transport and dispose of them safely is exactly the kind of information that gets lost when it stays on a paper SDS in a filing cabinet. A scannable chemical passport puts the hazard pictograms, H/P statements and emergency data in the hand of whoever is holding the container."
+    },
+    "toys": {
+        "title": "Toy Safety Data",
+        "directive": "Toy Safety Directive 2009/48/EC + the Toy Safety Regulation (adopted 2025 — introduces a mandatory toy Digital Product Passport, stricter chemical bans and digital labelling) · EN 71 series (mechanical, flammability, element migration, organic compounds) · EN IEC 62115 (electric toys) · REACH Annex XVII (phthalates) · CMR / SVHC substance bans",
+        "mandatory": [
+            "CE marking + EU Declaration of Conformity",
+            "Age grading + mandatory warnings (e.g. 'not suitable for children under 36 months' + crossed 0-3 pictogram where applicable)",
+            "Small-parts / choking-hazard warning where relevant",
+            "EN 71 conformity (at least EN 71-1 mechanical, EN 71-2 flammability, EN 71-3 element migration)",
+            "Phthalate restriction compliance (REACH Annex XVII) + no banned CMR substances"
+        ],
+        "optional": [
+            "Toy category + intended age range",
+            "EN 71 parts tested (table) + EN 62115 for electric toys",
+            "Notified body + EC type-examination certificate",
+            "Element-migration / formaldehyde / allergenic-fragrance disclosure",
+            "Sharp-edge, magnet and projectile safety, acoustic level (EN 71-1)",
+            "Electric toy: battery type, voltage, button-cell accessibility",
+            "Main materials, recycled content %, recyclability, packaging recyclability",
+            "Test report / instructions URLs, certifications (GS mark, Spiel gut, OEKO-TEX)"
+        ],
+        "notes": "The Toy Safety Directive is one of the strictest pieces of EU product law — toys must be safe by design and third-party tested against the EN 71 series. The 2025 Toy Safety Regulation modernises it: it bans more chemicals (endocrine disruptors, PFAS, more CMRs), tightens button-cell rules, and makes a digital product passport mandatory for every toy. This section is built around that passport.",
+        "units": "Age in months (min) + grading string. Sound level in dB(A) per EN 71-1. Voltage in V. Recycled content / recyclability in % by mass.",
+        "why": "Children are the most vulnerable consumers and cannot read a warning label. A scannable toy passport puts the age grading, the small-parts and button-cell warnings, the chemical-safety status and the EN 71 test record in front of a parent before purchase — and lets market-surveillance authorities pull a non-compliant toy from sale fast."
+    },
+    "machinery": {
+        "title": "Machinery Data",
+        "directive": "Machinery Regulation (EU) 2023/1230 (applies from 20 Jan 2027, replaces Machinery Directive 2006/42/EC): Essential Health & Safety Requirements (Annex III), conformity-assessment procedures (Annex VI–IX), CE marking, EU Declaration of Conformity, instructions · new digital / AI-safety, cybersecurity and substantial-modification provisions · high-risk Annex I machinery needs a notified body · EN ISO 12100 risk assessment · noise EN ISO 3744 / vibration EN ISO 5349/2631",
+        "mandatory": [
+            "CE marking + EU Declaration of Conformity",
+            "Compliance with the Essential Health & Safety Requirements (Annex III)",
+            "Conformity-assessment procedure (internal checks, EU type-examination or full quality assurance) + notified body for Annex I high-risk machinery",
+            "Instructions for use + technical file",
+            "Noise / vibration emission declaration where above the threshold"
+        ],
+        "optional": [
+            "Machinery type + category + intended use + Annex I high-risk flag",
+            "Power / voltage / speed / pressure / capacity",
+            "Safety components table (light curtains, e-stops, interlocks) with PL/SIL + standard",
+            "Residual risks + required PPE, guards, emergency stop",
+            "Digital: safety software + version, cybersecurity measures, AI safety function",
+            "Service life, maintenance interval, spare parts + maintenance manual URLs",
+            "Materials, recyclability %, hazardous substances, disassembly URL",
+            "Certifications (TÜV, GS mark, ATEX)"
+        ],
+        "notes": "The new Machinery Regulation 2023/1230 is the first to explicitly address software-defined and AI-driven safety functions, cybersecurity, and 'substantial modification' (when modifying a machine makes the modifier the new manufacturer). High-risk machinery in Annex I (e.g. presses, certain saws, vehicle lifts) must go through a notified body. A machinery passport carries the DoC, the EHSR status and the safety/maintenance data for the machine's whole life.",
+        "units": "Power in kW; voltage in V; speed in rpm; pressure in bar. Noise as A-weighted sound power in dB. Vibration in m/s². Service life in years. Recyclability in % by mass.",
+        "why": "Industrial machinery is long-lived, frequently rebuilt and resold, and a leading source of serious workplace injury. A passport that keeps the safety-component list, residual risks, software version and maintenance history with the machine — not just in the original manual — is what lets the next operator, integrator or refurbisher run it safely and lawfully."
+    },
+    "vehicles": {
+        "title": "Vehicle Data",
+        "directive": "End-of-Life Vehicles Directive 2000/53/EC (+ the proposed ELV Regulation on circularity requirements for vehicle design) · Directive 2005/64/EC — type approval re recyclability (≥85%) / recoverability (≥95%) · Reg (EU) 2018/858 — whole-vehicle type approval, Certificate of Conformity, repair & maintenance information access · Euro 6 / Euro 7 emissions · EV traction batteries also under Battery Reg 2023/1542",
+        "mandatory": [
+            "Whole-vehicle type approval + Certificate of Conformity (Reg 2018/858)",
+            "Vehicle category (M/N/L/O) + make/model",
+            "Emission standard (Euro 6d/7) + CO₂ (WLTP)",
+            "Recyclability ≥85% + recoverability ≥95% (Dir 2005/64)",
+            "ELV heavy-metal compliance (Pb/Hg/Cd/Cr VI — Dir 2000/53 Annex II) + depollution information"
+        ],
+        "optional": [
+            "WMI / VIN prefix",
+            "Powertrain: fuel type, engine power, EV battery capacity + electric range, transmission",
+            "Recycled-content %, hazardous substances",
+            "Dismantling information (IDIS), refrigerant type, ATF requirement",
+            "Material composition table + kerb weight + ISO 1043 plastics marking",
+            "Warranty, service interval, spare-parts + repair-info (RMI) URLs",
+            "Owner manual, certifications"
+        ],
+        "notes": "Vehicles sit at the intersection of several regimes: type approval (Reg 2018/858) to be placed on the market, Dir 2005/64 recyclability/recoverability thresholds to get that approval, and the ELV Directive 2000/53 for what happens at end of life. The proposed ELV Regulation will add recycled-content targets and a circularity passport. EVs additionally carry a Battery Passport. This section captures the vehicle-level data; the EV battery uses the battery sector.",
+        "units": "CO₂ in g/km (WLTP). Engine power in kW. Battery capacity in kWh, electric range in km. Recyclability/recoverability/recycled content in % by mass. Kerb weight in kg.",
+        "why": "A car is the most material-intensive consumer product most people ever own, and ~6–7 million vehicles reach end of life in the EU each year. A vehicle passport that carries the depollution and dismantling information, the material composition and the heavy-metal status lets Authorised Treatment Facilities depollute and recover materials correctly instead of shredding everything to landfill."
+    },
+    "cosmetics": {
+        "title": "Cosmetic Product Data",
+        "directive": "Cosmetics Regulation (EC) 1223/2009: Responsible Person (Art 4), CPNP notification (Art 13), Product Information File (Art 11), safety assessment (Art 10 + Annex I), INCI ingredient labelling (Art 19), 26 listed fragrance allergens, nanomaterial declaration (Art 16), CMR restrictions, Period After Opening · animal-testing ban (Art 18) · microplastics restriction (REACH Annex XVII / Reg 2023/2055)",
+        "mandatory": [
+            "Responsible Person name + EU address (Art 4)",
+            "CPNP notification before placing on the market (Art 13)",
+            "Full INCI ingredient list in descending order (Art 19)",
+            "Declared nanomaterials ([nano]) and listed fragrance allergens",
+            "Product Information File + safety assessment held (Art 10/11)",
+            "Period After Opening / shelf life + warnings"
+        ],
+        "optional": [
+            "Product type + country of origin",
+            "Structured ingredient table (INCI, function, %)",
+            "CMR presence flag, safety assessor, microbiological / challenge-test results",
+            "Usage instructions, target skin type",
+            "Claims + substantiation (dermatologically/clinically tested, hypoallergenic), vegan / organic / not-tested-on-animals",
+            "Packaging recyclability, recycled content, microplastics-free, biodegradability, refillable",
+            "Certifications (COSMOS, NATRUE, Leaping Bunny, Vegan Society)"
+        ],
+        "notes": "The Cosmetics Regulation already mandates a lot of structured data — the CPNP notification, the INCI list, the allergen and nanomaterial declarations, the Product Information File and a qualified safety assessment. A cosmetics passport renders that on the pack: the consumer scans for the full ingredient list, allergens and PAO, while authorities can reach the CPNP reference and safety file. Cosmetics are outside the ESPR DPP mandate, so this is a voluntary carrier.",
+        "units": "Ingredient concentrations in % w/w. Period After Opening + shelf life in months. Recycled content / biodegradability in %.",
+        "why": "Consumers increasingly choose cosmetics on ingredients, allergens and ethical claims, and the printed INCI list on a small package is hard to read and impossible to search. A scannable passport gives the full INCI list, the 26 allergens and the safety/PAO data in the buyer's language — and gives authorities a direct line to the CPNP file."
+    },
+    "food": {
+        "title": "Food Product Data",
+        "directive": "Food Information to Consumers Reg (EU) 1169/2011 (FIC): legal name, ingredient list + QUID (Art 22), the 14 listed allergens (Annex II), mandatory nutrition declaration per 100 g/ml (Annex XV), net quantity, date of minimum durability / use-by (Art 24), storage, food business operator (Art 8), country of origin / place of provenance · Food Additives Reg 1333/2008 (E-numbers) · Claims Reg 1924/2006 · Organic Reg (EU) 2018/848 · Nutri-Score (voluntary)",
+        "mandatory": [
+            "Legal/customary name + net quantity",
+            "Full ingredient list in descending order + QUID for emphasised ingredients",
+            "The 14 listed allergens (Annex II), emphasised",
+            "Mandatory nutrition declaration per 100 g/ml (energy, fat, saturates, carbohydrate, sugars, protein, salt)",
+            "Date of minimum durability ('best before') or 'use by' + storage conditions",
+            "Food business operator name + address (Art 8)"
+        ],
+        "optional": [
+            "Food category + country of origin / place of provenance",
+            "E-number additives, GMO flag",
+            "Fibre, Nutri-Score (A–E)",
+            "Preparation instructions, lot number",
+            "Diet/ethical: organic (+ cert no.), vegan, vegetarian, gluten-free, halal, kosher",
+            "Nutrition & health claims (Reg 1924/2006)",
+            "Packaging recyclability + recycling info, carbon footprint",
+            "Certifications (Fairtrade, MSC, Rainforest Alliance, PDO/PGI)"
+        ],
+        "notes": "Food is excluded from the ESPR Digital Product Passport, but the FIC already mandates a rich set of structured information that is hard to fit (legibly, in every language) on a small label. A food passport renders the full ingredient list, the 14 allergens, the nutrition table and the durability/storage data on scan, in the consumer's language — and carries the operator and origin data authorities need for traceability.",
+        "units": "Nutrition per 100 g or 100 ml: energy in kJ + kcal, macronutrients in g, salt in g. Net quantity as labelled. Carbon footprint in kg CO₂e.",
+        "why": "Allergen and nutrition information is a matter of consumer safety and health, and the printed label is size-limited and single-language. A scannable food passport gives allergy sufferers the Annex II allergens and the full ingredient list in their own language, surfaces the nutrition table and Nutri-Score for healthier choices, and gives the origin + lot data needed for recalls."
+    },
+    "medical": {
+        "title": "Medical Device Data",
+        "directive": "Medical Device Regulation (EU) 2017/745 (MDR) / In-Vitro Diagnostic Regulation (EU) 2017/746 (IVDR): risk classification (MDR I/IIa/IIb/III · IVDR A–D), conformity assessment + notified body, CE marking, UDI (Basic UDI-DI + UDI-DI, Art 27), EUDAMED registration, manufacturer Single Registration Number, authorised representative, clinical evaluation, Instructions For Use, implant card (Art 18), CMR/endocrine substances (Annex I 10.4)",
+        "mandatory": [
+            "CE marking + EU conformity (notified body for class IIa and above)",
+            "UDI — Basic UDI-DI + UDI-DI on the device label (Art 27)",
+            "Risk class + intended purpose",
+            "Manufacturer SRN + authorised representative (for non-EU manufacturers)",
+            "EUDAMED registration",
+            "Instructions For Use; implant card for implantable devices (Art 18)"
+        ],
+        "optional": [
+            "Device type, model, GMDN code",
+            "EC certificate number",
+            "Sterile + sterilization method, single-use, latex-free, MR safety",
+            "Shelf life / expiry, lot / serial",
+            "Contraindications + warnings",
+            "CMR / endocrine-disruptor + phthalate content (Annex I 10.4), materials, substances of concern",
+            "Clinical evaluation, certifications (ISO 13485, ISO 14971)"
+        ],
+        "notes": "Medical devices already run on a dedicated identification system — the UDI (Unique Device Identification) and the EUDAMED database — so they are outside the ESPR DPP. But the UDI carrier on the label is exactly a machine-readable code, and a GS1 Digital Link can carry both the Basic UDI-DI and the production UDI-DI (lot, serial, expiry) plus a link to the electronic IFU and the implant card. This section mirrors that.",
+        "units": "Shelf life in months; expiry as a date. Risk class per MDR (I/IIa/IIb/III) or IVDR (A/B/C/D). MR safety as MR Safe / MR Conditional / MR Unsafe.",
+        "why": "For a clinician or patient, instant access to the Instructions For Use, the implant card, the sterility/expiry status and the MR-safety of a device — in their language, from the device's own code — is a direct patient-safety benefit. For authorities and hospitals it ties each unit to its UDI and EUDAMED record for recalls and traceability."
+    },
+    "due_diligence": {
+        "title": "Supply-Chain Due Diligence",
+        "directive": "EU Battery Regulation 2023/1542 · Chapter VII · Art. 47–53 · Mandatory from 18 Aug 2027 (postponed from 18 Aug 2025 by Reg (EU) 2025/1561; scope limited to companies with net turnover > €150m) — for cobalt, natural graphite, lithium and nickel",
+        "mandatory": [
+            "Substance covered",
+            "Issued date",
+            "Verifier name",
+            "Scope (mine-to-refiner / refiner-to-cell / cell-to-pack / full-chain)",
+            "OECD-Due-Diligence-Guidance compliance flag"
+        ],
+        "optional": [
+            "Producer due-diligence policy URL (Art. 49)",
+            "Third-party audit report URL (Art. 51)",
+            "Risk areas assessed (Annex X categories)",
+            "CAHRAS exposure — ISO 3166-1 alpha-2 country codes of Conflict-Affected and High-Risk Areas the supply chain touches",
+            "Mitigation measures (Art. 50)",
+            "Grievance mechanism URL",
+            "Notified-body reference",
+            "Audit report SHA-256 hash"
+        ],
+        "notes": "Chapter VII applies to economic operators placing batteries on the EU market that contain cobalt, natural graphite, lithium or nickel above the Annex X thresholds. The producer must run an OECD-aligned management system, identify and mitigate risks, and have it independently audited.",
+        "why": "Battery supply chains touch conflict-affected mining regions and have a long, well-documented record of child labour, forced labour and corruption. Mandatory due diligence at EU border level is what stops those externalities being silently imported with every cell."
+    }
+}

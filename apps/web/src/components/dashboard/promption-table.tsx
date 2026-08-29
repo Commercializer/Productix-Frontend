@@ -38,7 +38,10 @@ import {
   ScanBarcode,
   Loader2,
   RefreshCw,
+  ShieldCheck,
+  Layers,
 } from "lucide-react";
+import type { DppDisplayMode } from "@productix/db";
 import type { Promption } from "@/hooks/use-promptions";
 import { verifyGtinAction } from "@/lib/dashboard/actions";
 import { availableGtinDetailEntries } from "@/lib/gs1";
@@ -83,8 +86,19 @@ interface PromptionTableProps {
     profileId: string,
     password: string,
   ) => Promise<{ success?: boolean; error?: string; pinCode?: string }>;
+  onUpdateDppDisplayMode?: (
+    productId: string,
+    mode: DppDisplayMode,
+    previousMode: DppDisplayMode,
+  ) => Promise<{ success?: boolean; error?: string }>;
   readOnly?: boolean;
 }
+
+const DPP_DISPLAY_MODE_LABEL: Record<DppDisplayMode, string> = {
+  GS1: "GS1 only",
+  DPP: "DPP only",
+  BOTH: "Toggle",
+};
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", {
@@ -107,6 +121,7 @@ export function PromptionTable({
   onRefreshGtinVerification,
   onUpdatePinLock,
   onRevealPin,
+  onUpdateDppDisplayMode,
   readOnly = false,
 }: PromptionTableProps) {
   const [search, setSearch] = useState("");
@@ -136,6 +151,11 @@ export function PromptionTable({
     productName: string;
     currentEnabled: boolean;
     hasPinCode: boolean;
+  } | null>(null);
+  const [displayModeEditor, setDisplayModeEditor] = useState<{
+    productId: string;
+    productName: string;
+    currentMode: DppDisplayMode;
   } | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
@@ -532,6 +552,15 @@ export function PromptionTable({
                             <QrCode size={17} strokeWidth={2.5} />
                           </button>
 
+                          {/* Edit DPP */}
+                          <Link
+                            href={`/dashboard/products/${p.productId}/dpp`}
+                            className="w-9 h-9 flex items-center justify-center text-[#0f172a] dark:text-white bg-white dark:bg-[#0f172a] sm:dark:bg-[#1e293b] rounded-[10px] border-[1.5px] border-[#e2e8f0] dark:border-[#334155] hover:border-[#bae6fd] hover:text-[#0284c7] hover:bg-[#f0f9ff] dark:hover:bg-[#334155] shadow-xs transition-all"
+                            title={p.hasDpp ? "Edit DPP" : "Add DPP"}
+                          >
+                            <ShieldCheck size={17} strokeWidth={2.5} />
+                          </Link>
+
                           {/* More menu */}
                           <div className="relative">
                             <button
@@ -587,6 +616,38 @@ export function PromptionTable({
                                     <Eye size={15} className="text-[#64748b]" />
                                     Preview
                                   </a>
+
+                                  <Link
+                                    href={`/dashboard/products/${p.productId}/dpp`}
+                                    onClick={() => setActiveMenu(null)}
+                                    className="w-full px-3 py-2 text-left text-[13px] hover:bg-[#f8fafc] dark:hover:bg-[#334155] flex items-center gap-2 transition-colors text-(--ds-text-primary)"
+                                  >
+                                    <ShieldCheck size={15} className="text-[#64748b]" />
+                                    {p.hasDpp ? "Edit DPP" : "Add DPP"}
+                                  </Link>
+
+                                  {onUpdateDppDisplayMode && p.gtin && (
+                                    <button
+                                      onClick={() => {
+                                        setActiveMenu(null);
+                                        setDisplayModeEditor({
+                                          productId: p.productId,
+                                          productName: p.productName,
+                                          currentMode: p.dppDisplayMode,
+                                        });
+                                      }}
+                                      className="w-full px-3 py-2 text-left text-[13px] hover:bg-[#f8fafc] dark:hover:bg-[#334155] flex items-start gap-2 transition-colors text-(--ds-text-primary)"
+                                      title="Choose what the /01/{gtin} live link shows to visitors."
+                                    >
+                                      <Layers size={15} className="text-[#64748b] mt-0.5 shrink-0" />
+                                      <span className="flex-1 min-w-0">
+                                        <span className="block">Live page shows</span>
+                                        <span className="block text-[11px] text-(--ds-text-muted) mt-0.5">
+                                          {DPP_DISPLAY_MODE_LABEL[p.dppDisplayMode]}
+                                        </span>
+                                      </span>
+                                    </button>
+                                  )}
 
                                   <button
                                     onClick={() => {
@@ -821,6 +882,17 @@ export function PromptionTable({
           onClose={() => setPinEditor(null)}
           onSave={onUpdatePinLock}
           onReveal={onRevealPin}
+        />
+      )}
+
+      {/* DPP Display Mode Modal */}
+      {displayModeEditor && onUpdateDppDisplayMode && (
+        <DppDisplayModeModal
+          productId={displayModeEditor.productId}
+          productName={displayModeEditor.productName}
+          currentMode={displayModeEditor.currentMode}
+          onClose={() => setDisplayModeEditor(null)}
+          onSave={onUpdateDppDisplayMode}
         />
       )}
     </div>
@@ -1812,6 +1884,133 @@ function PinLockModal({ profileId, productName, currentEnabled, hasPinCode, onCl
             <button
               onClick={handleSave}
               disabled={saving || !canSave}
+              className="flex-1 h-[42px] rounded-xl bg-[#0f172a] dark:bg-white text-white dark:text-[#0f172a] font-semibold text-[13px] hover:opacity-90 transition-opacity disabled:opacity-50"
+            >
+              {saving ? "Saving…" : "Save"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </>,
+    document.body
+  );
+}
+
+interface DppDisplayModeModalProps {
+  productId: string;
+  productName: string;
+  currentMode: DppDisplayMode;
+  onClose: () => void;
+  onSave: (
+    productId: string,
+    mode: DppDisplayMode,
+    previousMode: DppDisplayMode,
+  ) => Promise<{ success?: boolean; error?: string }>;
+}
+
+const DPP_DISPLAY_MODE_OPTIONS: { mode: DppDisplayMode; label: string; description: string; icon: typeof ScanBarcode }[] = [
+  { mode: "GS1", label: "GS1 only", description: "Visitors always see the marketing showcase.", icon: ScanBarcode },
+  { mode: "DPP", label: "DPP only", description: "Visitors always see the compliance passport.", icon: ShieldCheck },
+  { mode: "BOTH", label: "GS1 + DPP toggle", description: "Visitors can switch between both.", icon: Layers },
+];
+
+// Lets a merchant choose what the /01/{gtin} live link shows - opened from
+// the row menu's "Live page shows" item instead of applying inline, so the
+// change gets a visible confirmation (Save) rather than a silent click.
+function DppDisplayModeModal({ productId, productName, currentMode, onClose, onSave }: DppDisplayModeModalProps) {
+  const [mode, setMode] = useState<DppDisplayMode>(currentMode);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+
+  const dirty = mode !== currentMode;
+
+  const handleSave = async () => {
+    if (!dirty) {
+      onClose();
+      return;
+    }
+    setError(null);
+    setSaving(true);
+    const result = await onSave(productId, mode, currentMode);
+    setSaving(false);
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
+    onClose();
+  };
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <>
+      <div className="fixed inset-0 z-[9998] bg-black/40 backdrop-blur-xs" onClick={onClose} />
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" onClick={onClose}>
+        <div
+          className="relative w-full max-w-[460px] rounded-2xl bg-white dark:bg-[#1e293b] shadow-2xl border border-[#e2e8f0] dark:border-[#334155] overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between px-6 pt-6 pb-2">
+            <div>
+              <h3 className="text-lg font-bold text-[#0f172a] dark:text-white">Live page shows</h3>
+              <p className="text-[13px] text-[#64748b] dark:text-[#94a3b8] mt-0.5">
+                What visitors of <span className="font-medium text-(--ds-text-primary)">{productName}</span> see when they scan its GS1 link.
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-white hover:bg-[#f1f5f9] dark:hover:bg-[#334155] transition-colors"
+            >
+              <X size={18} />
+            </button>
+          </div>
+          <div className="px-6 py-4 space-y-2">
+            {DPP_DISPLAY_MODE_OPTIONS.map(({ mode: optionMode, label, description, icon: Icon }) => {
+              const isSelected = mode === optionMode;
+              return (
+                <button
+                  key={optionMode}
+                  type="button"
+                  onClick={() => setMode(optionMode)}
+                  className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl border text-left transition-colors ${
+                    isSelected
+                      ? "border-[#0284c7] bg-[#f0f9ff] dark:bg-[#0c4a6e]/20"
+                      : "border-[#e2e8f0] dark:border-[#334155] hover:bg-[#f8fafc] dark:hover:bg-[#334155]"
+                  }`}
+                >
+                  <span
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+                      isSelected ? "bg-[#0284c7] text-white" : "bg-[#f1f5f9] dark:bg-[#0f172a] text-[#64748b]"
+                    }`}
+                  >
+                    <Icon size={16} />
+                  </span>
+                  <span className="flex-1 min-w-0">
+                    <span className="block text-[13px] font-semibold text-(--ds-text-primary)">{label}</span>
+                    <span className="block text-[11px] text-[#94a3b8] mt-0.5">{description}</span>
+                  </span>
+                  {isSelected && <Check size={16} className="text-[#0284c7] shrink-0" />}
+                </button>
+              );
+            })}
+
+            {error && (
+              <p className="text-[12px] text-red-600 dark:text-red-400">{error}</p>
+            )}
+          </div>
+          <div className="px-6 pb-6 flex gap-3">
+            <button
+              onClick={onClose}
+              className="flex-1 h-[42px] rounded-xl border border-[#e2e8f0] dark:border-[#334155] text-[#0f172a] dark:text-white font-semibold text-[13px] hover:bg-[#f8fafc] dark:hover:bg-[#334155] transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
               className="flex-1 h-[42px] rounded-xl bg-[#0f172a] dark:bg-white text-white dark:text-[#0f172a] font-semibold text-[13px] hover:opacity-90 transition-opacity disabled:opacity-50"
             >
               {saving ? "Saving…" : "Save"}

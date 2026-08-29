@@ -7,7 +7,7 @@ import { DashboardHeader } from "@/components/dashboard/header";
 
 export default function ProductsPage() {
   const { isCompanyUser } = useAuth();
-  const { promptions, loading, deletePromption, publishPromption, unpublishPromption, setSlugVisible, updateSlug, updateRedirect, updateProductName, updateProductGtin, refreshGtinVerification, updatePinLock, revealPin } = usePromptions();
+  const { promptions, loading, deletePromption, publishPromption, unpublishPromption, setSlugVisible, updateSlug, updateRedirect, updateProductName, updateProductGtin, refreshGtinVerification, updatePinLock, revealPin, updateDppDisplayMode } = usePromptions();
 
   return (
     <div className="page-content bg-(--ds-bg)">
@@ -34,6 +34,7 @@ export default function ProductsPage() {
             onRefreshGtinVerification={refreshGtinVerification}
             onUpdatePinLock={updatePinLock}
             onRevealPin={revealPin}
+            onUpdateDppDisplayMode={updateDppDisplayMode}
             readOnly={isCompanyUser}
           />
         )}

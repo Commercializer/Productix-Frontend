@@ -10,7 +10,7 @@
 // consumers (retailer apps, future resolvers), not just a human landing page.
 import { cache } from "react";
 import type { Metadata, Viewport } from "next";
-import { getPublicPageByGtinAction } from "@/lib/dashboard/actions";
+import { getPublicPageByGtinAction, getPublicDppByGtinAction, getPublicDppDisplayModeAction } from "@/lib/dashboard/actions";
 import {
   buildPublicMetadataFromPage,
   renderResolvedPage,
@@ -19,23 +19,51 @@ import {
   NotFoundView,
 } from "../../p/[slug]/page";
 import { parseGtinPathSegment } from "@/lib/gs1/digital-link";
+import { DppPassportView } from "./dpp-view";
+import { GtinModeSwitcher } from "./gtin-mode-switcher";
 
 interface PageProps {
   params: Promise<{ gtin: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
-// Dedupe the DB call across generateMetadata, generateViewport, and the page.
+// Dedupe the DB calls across generateMetadata, generateViewport, and the page.
 const getPageByGtin = cache(async (rawGtin: string) => {
   const gtin = parseGtinPathSegment(rawGtin);
   if (!gtin) return null;
   return getPublicPageByGtinAction(gtin);
 });
 
+const getDppByGtin = cache(async (rawGtin: string) => {
+  const gtin = parseGtinPathSegment(rawGtin);
+  if (!gtin) return null;
+  return getPublicDppByGtinAction(gtin);
+});
+
+const getDisplayModeByGtin = cache(async (rawGtin: string) => {
+  const gtin = parseGtinPathSegment(rawGtin);
+  if (!gtin) return null;
+  return getPublicDppDisplayModeAction(gtin);
+});
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { gtin } = await params;
   const page = await getPageByGtin(gtin);
-  return buildPublicMetadataFromPage(page, "01", gtin);
+  if (page) return buildPublicMetadataFromPage(page, "01", gtin);
+
+  // No published showcase - fall back to the DPP's own identity so a
+  // DPP-only product (see the default export below) still gets a real title
+  // instead of "Page Not Found".
+  const dpp = await getDppByGtin(gtin);
+  if (dpp) {
+    return {
+      title: `${dpp.productName} | ${dpp.company.name}`,
+      description: `Digital Product Passport for ${dpp.productName} by ${dpp.company.name}.`,
+      robots: { index: true, follow: true },
+    };
+  }
+
+  return buildPublicMetadataFromPage(null, "01", gtin);
 }
 
 // Can't re-export generateViewport from p/[slug]/page.tsx unchanged (that one
@@ -64,7 +92,30 @@ export default async function GtinDigitalLinkPage({ params, searchParams }: Page
 
   const sp = await searchParams;
   const channel = typeof sp.ch === "string" ? sp.ch : null;
+  // GS1 Digital Link AI 10 (batch/lot), passed straight through for display -
+  // it isn't a stored field, just context the passport shows back to the scanner.
+  const batch = typeof sp.batch === "string" ? sp.batch : null;
 
-  const page = await getPageByGtin(rawGtin);
-  return renderResolvedPage(page, "GS1", "01", channel, serializeSearch(sp), true);
+  const [page, dpp, mode] = await Promise.all([
+    getPageByGtin(rawGtin),
+    getDppByGtin(rawGtin),
+    getDisplayModeByGtin(rawGtin),
+  ]);
+
+  // The saved per-product setting (see DppDisplayMode) - GS1/DPP are hard
+  // restrictions to that one side even if the other side has content; BOTH
+  // (the default) degrades gracefully to whichever side actually exists.
+  const wantGs1 = mode !== "DPP";
+  const wantDpp = mode !== "GS1";
+  const showGs1 = wantGs1 && !!page;
+  const showDpp = wantDpp && !!dpp;
+
+  if (!showGs1 && !showDpp) return <NotFoundView />;
+
+  if (showDpp && !showGs1) return <DppPassportView data={dpp!} batch={batch} />;
+
+  const gs1Content = await renderResolvedPage(page, "GS1", "01", channel, serializeSearch(sp), true);
+  if (!showDpp) return gs1Content;
+
+  return <GtinModeSwitcher gs1={gs1Content} dpp={<DppPassportView data={dpp!} batch={batch} />} defaultMode="gs1" />;
 }

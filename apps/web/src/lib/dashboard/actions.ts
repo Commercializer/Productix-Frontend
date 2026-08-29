@@ -1,7 +1,7 @@
 "use server";
 
-import { prisma } from "@productix/db";
-import type { DeviceType, QrScanType, Gs1VerificationStatus } from "@productix/db";
+import { prisma, Prisma } from "@productix/db";
+import type { DeviceType, QrScanType, Gs1VerificationStatus, DppIdentifierType, DppSector, DppDisplayMode } from "@productix/db";
 import { auth } from "@/auth";
 import bcrypt from "bcryptjs";
 import { createHash, createHmac, timingSafeEqual } from "crypto";
@@ -70,6 +70,8 @@ export async function getMyPromptionsAction() {
           gtinStatus: true,
           gtinVerifiedAt: true,
           gtinData: true,
+          dppDisplayMode: true,
+          dpp: { select: { id: true } },
           company: { select: { customDomain: true, requireValidGtin: true } },
         },
       },
@@ -104,6 +106,8 @@ export async function getMyPromptionsAction() {
       gtinStatus: p.product.gtinStatus,
       gtinVerifiedAt: p.product.gtinVerifiedAt?.toISOString() ?? null,
       gtinData: (p.product.gtinData as Record<string, unknown> | null) ?? null,
+      dppDisplayMode: p.product.dppDisplayMode,
+      hasDpp: !!p.product.dpp,
       companyCustomDomain: p.product.company.customDomain,
       companyRequireValidGtin: p.product.company.requireValidGtin,
     }))
@@ -548,6 +552,26 @@ export async function updateProductGtinAction(productId: string, gtin: string) {
   }
 }
 
+/**
+ * Sets what /01/{gtin} shows to visitors for this product - see
+ * DppDisplayMode's doc comment in schema.prisma. Gated on the product
+ * belonging to the caller's company, same as every other row-action here.
+ */
+export async function updateDppDisplayModeAction(productId: string, mode: DppDisplayMode) {
+  if (!isUUID(productId)) return { error: "Invalid product ID" };
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const companyId = await getUserCompanyId(session.user.id);
+  if (!companyId) return { error: "No company found for user" };
+
+  const product = await prisma.product.findFirst({ where: { id: productId, companyId }, select: { id: true } });
+  if (!product) return { error: "Product not found" };
+
+  await prisma.product.update({ where: { id: productId }, data: { dppDisplayMode: mode } });
+  return { success: true, dppDisplayMode: mode };
+}
+
 // ═══════════════════════════════════════════════════════════════
 // DELETE PROMPTION
 // ═══════════════════════════════════════════════════════════════
@@ -822,6 +846,138 @@ export async function createPromptionAction(data: {
     });
 
     return { success: true, ...result };
+  } catch (error: any) {
+    if (error?.code === "P2002" && error?.meta?.target?.includes?.("gtin")) {
+      return { error: "This GTIN is already registered to another product." };
+    }
+    return { error: error.message };
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DIGITAL PRODUCT PASSPORT (DPP)
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Loads a product's current GTIN state plus its existing DPP record (if any),
+ * scoped to the caller's company - used to prefill the DPP identifier step,
+ * including deciding whether the GTIN field should be locked (already set).
+ */
+export async function getProductForDppAction(productId: string) {
+  if (!isUUID(productId)) return { error: "Invalid product ID" };
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const companyId = await getUserCompanyId(session.user.id);
+  if (!companyId) return { error: "No company found for user" };
+
+  const product = await prisma.product.findFirst({
+    where: { id: productId, companyId },
+    select: {
+      id: true,
+      gtin: true,
+      gtinStatus: true,
+      gtinVerifiedAt: true,
+      gtinData: true,
+      dpp: true,
+      profiles: { select: { productName: true }, orderBy: { createdAt: "asc" }, take: 1 },
+    },
+  });
+  if (!product) return { error: "Product not found" };
+
+  const { profiles, ...rest } = product;
+  return { success: true, product: { ...rest, productName: profiles[0]?.productName ?? "" } };
+}
+
+/**
+ * Creates or updates a product's DPP record. When identifierType is GS1_GTIN
+ * and the product doesn't have a GTIN yet, this also sets it via the same
+ * resolveGtinForCreate pipeline as createPromptionAction - GTIN remains the
+ * single source of truth (identifierValue stays null on the DPP row in that
+ * case, see ProductDpp.identifierValue doc comment in schema.prisma).
+ *
+ * sectionAnswers is a free-text map: section key -> field text -> value,
+ * covering every section in apps/web/src/lib/dpp/dpp-sections.ts plus the
+ * sector-specific section (under the fixed key "sector"). Pruned recursively
+ * so empty strings and empty sections never get persisted.
+ */
+export async function createProductDppAction(data: {
+  productId: string;
+  identifierType: DppIdentifierType;
+  identifierValue?: string | null;
+  sector?: DppSector | null;
+  sectionAnswers?: Record<string, Record<string, string>> | null;
+}) {
+  if (!isUUID(data.productId)) return { error: "Invalid product ID" };
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const companyId = await getUserCompanyId(session.user.id);
+  if (!companyId) return { error: "No company found for user" };
+
+  const product = await prisma.product.findFirst({
+    where: { id: data.productId, companyId },
+    select: { id: true, gtin: true },
+  });
+  if (!product) return { error: "Product not found" };
+
+  let identifierValue: string | null = null;
+  let gtinUpdate: { gtin: string; gtinStatus: Gs1VerificationStatus; gtinVerifiedAt: Date; gtinData: any } | null = null;
+
+  if (data.identifierType === "GS1_GTIN") {
+    if (!product.gtin) {
+      const gtinResult = await resolveGtinForCreate(data.identifierValue);
+      if (!gtinResult.ok) return { error: gtinResult.error };
+      if (!gtinResult.gtin) return { error: "GTIN is required" };
+      gtinUpdate = {
+        gtin: gtinResult.gtin,
+        gtinStatus: gtinResult.status,
+        gtinVerifiedAt: new Date(),
+        gtinData: gtinResult.data as any,
+      };
+    }
+    // identifierValue stays null either way - Product.gtin is the source of truth.
+  } else {
+    const trimmed = data.identifierValue?.trim();
+    if (!trimmed) return { error: "Identifier is required" };
+    identifierValue = trimmed;
+  }
+
+  const sectionAnswers: Record<string, Record<string, string>> = {};
+  for (const [sectionKey, answers] of Object.entries(data.sectionAnswers ?? {})) {
+    const trimmed = Object.fromEntries(
+      Object.entries(answers)
+        .map(([key, value]) => [key, value?.trim() ?? ""])
+        .filter(([, value]) => value !== "")
+    );
+    if (Object.keys(trimmed).length > 0) sectionAnswers[sectionKey] = trimmed;
+  }
+  const sectionAnswersValue = Object.keys(sectionAnswers).length > 0 ? sectionAnswers : Prisma.DbNull;
+
+  try {
+    const dpp = await prisma.$transaction(async (tx) => {
+      if (gtinUpdate) {
+        await tx.product.update({ where: { id: product.id }, data: gtinUpdate });
+      }
+      return tx.productDpp.upsert({
+        where: { productId: product.id },
+        create: {
+          productId: product.id,
+          identifierType: data.identifierType,
+          identifierValue,
+          sector: data.sector ?? null,
+          sectionAnswers: sectionAnswersValue,
+        },
+        update: {
+          identifierType: data.identifierType,
+          identifierValue,
+          sector: data.sector ?? null,
+          sectionAnswers: sectionAnswersValue,
+        },
+      });
+    });
+
+    return { success: true, dpp };
   } catch (error: any) {
     if (error?.code === "P2002" && error?.meta?.target?.includes?.("gtin")) {
       return { error: "This GTIN is already registered to another product." };
@@ -1831,6 +1987,73 @@ export async function getPublicPageByGtinAction(gtin: string) {
   if (!profile || !profile.isPublished) return null;
 
   return publicProfileShape(profile);
+}
+
+/**
+ * Resolve what /01/{gtin} should show for this product - GS1, DPP, or a
+ * toggle between both (default). Fetched independently of the page/DPP
+ * lookups below since the setting applies even when one side has no content
+ * yet (e.g. an explicit DPP-only restriction on a product with no published
+ * showcase).
+ */
+export async function getPublicDppDisplayModeAction(gtin: string): Promise<DppDisplayMode | null> {
+  const product = await prisma.product.findFirst({ where: { gtin }, select: { dppDisplayMode: true } });
+  return product?.dppDisplayMode ?? null;
+}
+
+/**
+ * Resolve a product's public Digital Product Passport data by GTIN - the
+ * data source for the "DPP" view offered alongside the GS1 showcase at
+ * /01/{gtin}. Returns null when the product has no GTIN or hasn't filled in
+ * a DPP yet (ProductDpp is created lazily, see createProductDppAction).
+ * Unlike getPublicPageByGtinAction, this doesn't require a published
+ * ProductProfile - the passport is its own surface, independent of whether
+ * the marketing showcase has been published.
+ */
+export async function getPublicDppByGtinAction(gtin: string) {
+  const product = await prisma.product.findFirst({
+    where: { gtin },
+    select: {
+      id: true,
+      gtin: true,
+      gtinStatus: true,
+      gtinVerifiedAt: true,
+      dpp: true,
+      company: { select: { name: true, logoUrl: true } },
+      brandProfile: { select: { brandName: true, brandLogoUrl: true, themeColor: true } },
+      profiles: {
+        select: { productName: true, tagline: true, logoUrl: true, themeColor: true },
+        orderBy: { createdAt: "asc" },
+        take: 1,
+      },
+      galleryImages: {
+        select: { url: true, name: true },
+        orderBy: { createdAt: "asc" },
+      },
+    },
+  });
+  if (!product || !product.dpp) return null;
+
+  const identity = product.profiles[0];
+
+  return {
+    productId: product.id,
+    productName: identity?.productName ?? "",
+    tagline: identity?.tagline ?? null,
+    logoUrl: identity?.logoUrl ?? product.brandProfile?.brandLogoUrl ?? product.company.logoUrl ?? null,
+    themeColor: identity?.themeColor ?? product.brandProfile?.themeColor ?? "#0284c7",
+    company: { name: product.company.name, logoUrl: product.company.logoUrl },
+    brand: product.brandProfile
+      ? { name: product.brandProfile.brandName, logoUrl: product.brandProfile.brandLogoUrl }
+      : null,
+    gtin: product.gtin as string,
+    gtinStatus: product.gtinStatus as string,
+    gtinVerifiedAt: product.gtinVerifiedAt?.toISOString() ?? null,
+    identifierType: product.dpp.identifierType,
+    sector: product.dpp.sector,
+    sectionAnswers: (product.dpp.sectionAnswers as Record<string, Record<string, string>> | null) ?? {},
+    gallery: product.galleryImages,
+  };
 }
 
 // ═══════════════════════════════════════════════════════════════

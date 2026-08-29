@@ -34,9 +34,14 @@ export async function GET(request: NextRequest) {
   const profileIdRaw = searchParams.get("profileId");
   const profileId =
     profileIdRaw && UUID_RE.test(profileIdRaw) ? profileIdRaw : null;
+  // Product-level context (not a specific language profile) - used for the
+  // DPP "Product gallery".
+  const productIdRaw = searchParams.get("productId");
+  const productId =
+    productIdRaw && UUID_RE.test(productIdRaw) ? productIdRaw : null;
   // Default to product scope when we have a product context, otherwise show
   // all of the user's uploads.
-  const scope = searchParams.get("scope") ?? (profileId ? "product" : "user");
+  const scope = searchParams.get("scope") ?? (profileId || productId ? "product" : "user");
   const typeParam = searchParams.get("type");
 
   const where: Prisma.MediaAssetWhereInput = {
@@ -44,6 +49,8 @@ export async function GET(request: NextRequest) {
   };
   if (scope === "product" && profileId) {
     where.productProfileId = profileId;
+  } else if (scope === "product" && productId) {
+    where.productId = productId;
   }
   if (typeParam && TYPE_MAP[typeParam]) {
     where.mediaType = TYPE_MAP[typeParam];

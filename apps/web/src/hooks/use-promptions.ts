@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { Gs1VerificationStatus } from "@productix/db";
+import type { Gs1VerificationStatus, DppDisplayMode } from "@productix/db";
 import {
   getMyPromptionsAction,
   deletePromptionAction as deleteAction,
@@ -15,6 +15,7 @@ import {
   refreshGtinVerificationAction,
   setPinLockAction,
   revealProductPinAction,
+  updateDppDisplayModeAction,
 } from "@/lib/dashboard/actions";
 
 export interface Promption {
@@ -42,6 +43,9 @@ export interface Promption {
   /** Raw response from the external GS1 verification API, captured at the
    * moment gtinStatus was set to GS1_VERIFIED. Null otherwise. */
   gtinData: Record<string, unknown> | null;
+  /** What /01/{gtin} shows to visitors - GS1, DPP, or a toggle (BOTH). */
+  dppDisplayMode: DppDisplayMode;
+  hasDpp: boolean;
   companyCustomDomain: string | null;
   companyRequireValidGtin: boolean;
 }
@@ -195,6 +199,20 @@ export function usePromptions() {
     []
   );
 
+  const updateDppDisplayMode = useCallback(
+    async (productId: string, mode: DppDisplayMode, previousMode: DppDisplayMode) => {
+      // Optimistic update - rolls back to previousMode on error, same pattern as setSlugVisible.
+      setPromptions((prev) => prev.map((p) => (p.productId === productId ? { ...p, dppDisplayMode: mode } : p)));
+      const result = await updateDppDisplayModeAction(productId, mode);
+      if (result.error) {
+        setPromptions((prev) => prev.map((p) => (p.productId === productId ? { ...p, dppDisplayMode: previousMode } : p)));
+        return { error: result.error };
+      }
+      return { success: true };
+    },
+    []
+  );
+
   const updateRedirect = useCallback(
     async (profileId: string, redirectUrl: string | null, redirectEnabled: boolean) => {
       const result = await updateRedirectAction(profileId, redirectUrl, redirectEnabled);
@@ -250,5 +268,6 @@ export function usePromptions() {
     refreshGtinVerification,
     updatePinLock,
     revealPin,
+    updateDppDisplayMode,
   };
 }

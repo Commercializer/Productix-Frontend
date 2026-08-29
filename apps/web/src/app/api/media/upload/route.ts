@@ -46,6 +46,14 @@ export async function POST(request: NextRequest) {
         ? profileIdRaw
         : null;
 
+    // Optional Product-level context (not a specific language profile) -
+    // used for the DPP "Product gallery".
+    const productIdRaw = formData.get("productId");
+    const productId =
+      typeof productIdRaw === "string" && UUID_RE.test(productIdRaw)
+        ? productIdRaw
+        : null;
+
     const contentType = file.type;
     const isImage = isAllowedImage(contentType);
     const isAudio = isAllowedAudio(contentType);
@@ -79,8 +87,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Resolve the owning company from the product (if a product context was
-    // given and the profile actually exists). Used for account-level queries;
-    // the asset stays user-scoped regardless.
+    // given and the profile/product actually exists). Used for account-level
+    // queries; the asset stays user-scoped regardless.
     let companyId: string | null = null;
     if (profileId) {
       const profile = await prisma.productProfile.findUnique({
@@ -88,6 +96,12 @@ export async function POST(request: NextRequest) {
         select: { product: { select: { companyId: true } } },
       });
       companyId = profile?.product.companyId ?? null;
+    } else if (productId) {
+      const product = await prisma.product.findUnique({
+        where: { id: productId },
+        select: { companyId: true },
+      });
+      companyId = product?.companyId ?? null;
     }
 
     // Upload to R2
@@ -109,6 +123,7 @@ export async function POST(request: NextRequest) {
           userId,
           companyId,
           productProfileId: profileId,
+          productId,
           r2Key: result.key,
           url: result.url,
           name: file.name,

@@ -96,6 +96,48 @@ enum Gs1VerificationStatus {
   GS1_NOT_FOUND
 }
 
+/// Identifier scheme a product's Digital Product Passport is keyed by.
+/// GS1_GTIN reuses Product.gtin/gtinStatus (see ProductDpp.identifierValue) -
+/// the rest are opaque, unverified identifiers.
+enum DppIdentifierType {
+  GS1_GTIN
+  MA_DPP
+  EPC
+  UUID
+  DID
+}
+
+/// What the /01/{gtin} live link shows to visitors - the GS1 showcase, the
+/// DPP passport, or a toggle between both. A saved setting (not just a
+/// default view), so a merchant can e.g. suppress the DPP tab while its data
+/// is still being filled in, or force DPP-only even if a showcase exists.
+enum DppDisplayMode {
+  GS1
+  DPP
+  BOTH
+}
+
+/// GS1 Digital Product Passport sector, per admin.dpp.gs's section-info
+/// schema (see packages/db/prisma/seed-data/dpp-section-info/).
+enum DppSector {
+  BATTERY
+  ELECTRONICS
+  TEXTILE
+  TYRE
+  FURNITURE
+  CONSTRUCTION
+  CHEMICALS
+  TOYS
+  MACHINERY
+  VEHICLES
+  PACKAGING
+  COSMETICS
+  FOOD
+  MEDICAL
+  INTERMEDIATE_PRODUCTS
+  OTHER
+}
+
 enum DeviceType {
   MOBILE
   TABLET
@@ -408,6 +450,10 @@ model Product {
   /// "view GTIN details" UI never has to re-hit the external API - it's a
   /// point-in-time snapshot, not a live lookup.
   gtinData            Json?     @map("gtin_data")
+  /// What /01/{gtin} shows to visitors - see DppDisplayMode doc comment.
+  /// BOTH degrades gracefully per-side (e.g. shows DPP alone if the showcase
+  /// isn't published yet); GS1/DPP are hard restrictions to that one side.
+  dppDisplayMode      DppDisplayMode @default(BOTH) @map("dpp_display_mode")
   createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt           DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -422,11 +468,44 @@ model Product {
   qrCodes           QrCode[]
   qrScans           QrScan[]
   feedbackInquiries FeedbackInquiry[]
+  dpp               ProductDpp?
+  galleryImages     MediaAsset[]
 
   @@index([companyId])
   @@index([categoryId])
   @@index([subCategoryId])
   @@map("products")
+}
+
+/// Digital Product Passport record - one per Product, covering every section
+/// of the section-info schema (see packages/db/prisma/seed-data/dpp-section-info/
+/// and apps/web/src/lib/dpp/dpp-sections.ts + sector-sections.ts).
+model ProductDpp {
+  id        String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productId String @unique @map("product_id") @db.Uuid
+
+  identifierType DppIdentifierType @map("identifier_type")
+  /// Raw value for non-GTIN schemes. NULL when identifierType is GS1_GTIN -
+  /// Product.gtin is the sole source of truth in that case, so there's no
+  /// duplicate copy that can drift out of sync on re-verification.
+  identifierValue String? @map("identifier_value") @db.VarChar(255)
+
+  sector DppSector?
+
+  /// Free-text answers across every DPP section, keyed by section key (see
+  /// apps/web/src/lib/dpp/dpp-sections.ts) then by the field's raw text. The
+  /// sector-specific section (sector-sections.ts) is stored under the fixed
+  /// key "sector". A section's entry is dropped once all its answers are
+  /// empty, and the sector section's entry is replaced wholesale whenever
+  /// the chosen sector changes.
+  sectionAnswers Json? @map("section_answers")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("product_dpp")
 }
 
 /// Localized product profile - one per language per product.
@@ -505,6 +584,9 @@ model MediaAsset {
   companyId        String?        @map("company_id") @db.Uuid
   /// Product page the asset was uploaded for. Null = uploaded outside a product.
   productProfileId String?        @map("product_profile_id") @db.Uuid
+  /// Product the asset was uploaded for at the Product level rather than a
+  /// specific language profile - currently just the DPP "Product gallery".
+  productId        String?        @map("product_id") @db.Uuid
   /// R2 object key - used for deletion. Unique per object.
   r2Key            String         @unique @map("r2_key") @db.VarChar(500)
   /// Public R2 URL - the canonical reference stored in page content.
@@ -522,9 +604,11 @@ model MediaAsset {
   user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   company        Company?        @relation(fields: [companyId], references: [id], onDelete: SetNull)
   productProfile ProductProfile? @relation(fields: [productProfileId], references: [id], onDelete: SetNull)
+  product        Product?        @relation(fields: [productId], references: [id], onDelete: SetNull)
 
   @@index([userId, createdAt])
   @@index([userId, productProfileId, createdAt])
+  @@index([userId, productId, createdAt])
   @@index([companyId])
   @@map("media_assets")
 }
