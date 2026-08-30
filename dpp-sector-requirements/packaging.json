@@ -35,6 +35,10 @@
       "label": "Manufacturer & importer",
       "fields": [
         {
+          "text": "Manufacturer",
+          "required": false
+        },
+        {
           "text": "Manufacturer name",
           "required": true
         },
@@ -145,8 +149,18 @@
           "type": "note"
         },
         {
+          "text": "Material composition (Art 10 / 12)",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
           "text": "Material composition (rows: Name · Material · Weight (g) · Recycled (%) · Recyclable · Colour)",
           "required": false
+        },
+        {
+          "text": "EPR registration (Art 44/45)",
+          "required": false,
+          "type": "subtitle"
         },
         {
           "text": "EPR registrations (rows: Country · Scheme · Registration number)",
@@ -155,6 +169,11 @@
         {
           "text": "SVHC substances (rows: Name · CAS / EC · Concentration · Safety · Document URL)",
           "required": false
+        },
+        {
+          "text": "Classification",
+          "required": false,
+          "type": "subtitle"
         },
         {
           "text": "Packaging category (Plastic-rigid / Plastic-flexible / Paper-board / Glass / Metal-aluminium / Metal-steel / Composite / Wood / Textile / Ceramic / Biopolymer / Other)",
@@ -215,6 +234,11 @@
           ]
         },
         {
+          "text": "Economic operators (PPWR Art 15 / 18)",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
           "text": "Producer name",
           "required": false
         },
@@ -262,6 +286,16 @@
             "Yes",
             "No"
           ]
+        },
+        {
+          "text": "Substances (PPWR Art 5)",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "I confirm that the total fluorine content of the packaging does not exceed the legal limit of 50 ppm.",
+          "required": false,
+          "type": "checkbox"
         },
         {
           "text": "Food contact (Yes / No)",
@@ -312,6 +346,11 @@
           ]
         },
         {
+          "text": "Substances of concern (SVHC)",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
           "text": "SVHC present (Yes / No)",
           "required": false,
           "type": "select",
@@ -323,6 +362,11 @@
         {
           "text": "SVHC details",
           "required": false
+        },
+        {
+          "text": "Recyclability & recycled content (Art 6-11)",
+          "required": false,
+          "type": "subtitle"
         },
         {
           "text": "Recyclability class (A–E)",
@@ -384,6 +428,11 @@
           "required": false
         },
         {
+          "text": "Reusable Packaging (Art. 11)",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
           "text": "Reuse system URL",
           "required": false
         },
@@ -404,8 +453,18 @@
           "required": false
         },
         {
+          "text": "Conformity Assessment & Declaration of Conformity (Art. 38 / 39)",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
           "text": "Declaration of conformity URL",
           "required": false
+        },
+        {
+          "text": "Supplementary — not part of the DoC (optional)",
+          "required": false,
+          "type": "subtitle"
         },
         {
           "text": "Conformity assessment date",
@@ -500,6 +559,11 @@
         {
           "text": "Input mode (Manual / Lookup by GTIN / Extract from DoC)",
           "required": false
+        },
+        {
+          "text": "Packaging layer (from library) - (Select a shared layer defined via CSV import; referenced, not copied - edit it once and every product using it updates)",
+          "required": false,
+          "type": "select"
         },
         {
           "text": "Packaging GTIN",
@@ -636,6 +700,11 @@
           "required": false
         },
         {
+          "text": "Reuse an existing DoC - (Pick a DoC already declared on another product to prefill this layer)",
+          "required": false,
+          "type": "select"
+        },
+        {
           "text": "Declaration of conformity URL",
           "required": false
         },
@@ -673,6 +742,130 @@
             "Yes",
             "No"
           ]
+        },
+        {
+          "text": "Packaging category",
+          "required": false
+        },
+        {
+          "text": "Packaging format",
+          "required": false
+        },
+        {
+          "text": "Total weight (g)",
+          "required": false
+        },
+        {
+          "text": "Empty weight (g)",
+          "required": false
+        },
+        {
+          "text": "Packaging ratio",
+          "required": false
+        },
+        {
+          "text": "Mono-material (Yes / No)",
+          "required": false,
+          "type": "select"
+        },
+        {
+          "text": "Producer trademark",
+          "required": false
+        },
+        {
+          "text": "Importer",
+          "required": false
+        },
+        {
+          "text": "Importer address",
+          "required": false
+        },
+        {
+          "text": "Food-contact (Yes / No)",
+          "required": false,
+          "type": "select"
+        },
+        {
+          "text": "PFAS-free (Yes / No)",
+          "required": false,
+          "type": "select"
+        },
+        {
+          "text": "Total fluorine (ppm)",
+          "required": false
+        },
+        {
+          "text": "Fluorine under limit (Yes / No)",
+          "required": false,
+          "type": "select"
+        },
+        {
+          "text": "Bisphenol-free (BPA) (Yes / No)",
+          "required": false,
+          "type": "select"
+        },
+        {
+          "text": "SVHC present (Yes / No)",
+          "required": false,
+          "type": "select"
+        },
+        {
+          "text": "SVHC details",
+          "required": false
+        },
+        {
+          "text": "Recyclability (%)",
+          "required": false
+        },
+        {
+          "text": "Recycling stream",
+          "required": false
+        },
+        {
+          "text": "Separable components (Yes / No)",
+          "required": false,
+          "type": "select"
+        },
+        {
+          "text": "Compostability standard",
+          "required": false
+        },
+        {
+          "text": "Deposit scheme (Yes / No)",
+          "required": false,
+          "type": "select"
+        },
+        {
+          "text": "Deposit amount (€)",
+          "required": false
+        },
+        {
+          "text": "Designed reuse cycles",
+          "required": false
+        },
+        {
+          "text": "Reuse system URL",
+          "required": false
+        },
+        {
+          "text": "Return points URL",
+          "required": false
+        },
+        {
+          "text": "Conformity assessment date",
+          "required": false
+        },
+        {
+          "text": "Retention (years)",
+          "required": false
+        },
+        {
+          "text": "Test reports URL",
+          "required": false
+        },
+        {
+          "text": "EPR registration (single, legacy)",
+          "required": false
         },
         {
           "text": "Extract from DoC (Button)",
@@ -725,6 +918,36 @@
       "label": "Documents & links",
       "fields": [
         {
+          "text": "DoC",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Generate the EU Declaration of Conformity from this product's data, in the languages you choose. Saved PDFs appear under the Documents sub-section (visible to authorities only).",
+          "required": false,
+          "type": "note"
+        },
+        {
+          "text": "Preview DoC (Button)",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Download (Word) (Button)",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Generate & save DoC (Button)",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Documents",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
           "text": "Technical documentation",
           "required": false,
           "type": "upload"
@@ -762,7 +985,37 @@
         {
           "text": "Add document (custom documents upload option)",
           "required": false,
-          "type": "button"
+          "type": "upload"
+        },
+        {
+          "text": "Redirect to producer's product page (Checkbox)",
+          "required": false,
+          "type": "checkbox"
+        },
+        {
+          "text": "Producer product page URL - (Must start with https://)",
+          "required": false
+        },
+        {
+          "text": "Links",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Repair manual URL",
+          "required": false
+        },
+        {
+          "text": "Repair network URL",
+          "required": false
+        },
+        {
+          "text": "Spare parts URL",
+          "required": false
+        },
+        {
+          "text": "Disassembly instructions URL",
+          "required": false
         }
       ]
     },
@@ -785,6 +1038,10 @@
         },
         {
           "text": "Effective from",
+          "required": false
+        },
+        {
+          "text": "Effective to",
           "required": false
         },
         {

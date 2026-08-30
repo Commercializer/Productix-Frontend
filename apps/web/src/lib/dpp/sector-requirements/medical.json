@@ -39,6 +39,10 @@
       "label": "Manufacturer & importer",
       "fields": [
         {
+          "text": "Manufacturer",
+          "required": false
+        },
+        {
           "text": "Manufacturer name",
           "required": true
         },
@@ -257,6 +261,11 @@
           "type": "note"
         },
         {
+          "text": "Identification & UDI",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
           "text": "Device name",
           "required": false
         },
@@ -279,6 +288,11 @@
         {
           "text": "GMDN code",
           "required": false
+        },
+        {
+          "text": "Classification & conformity",
+          "required": false,
+          "type": "subtitle"
         },
         {
           "text": "Device regulation (MDR (2017/745) / IVDR (2017/746))",
@@ -337,6 +351,11 @@
           "required": false
         },
         {
+          "text": "Economic operators",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
           "text": "Manufacturer SRN",
           "required": false
         },
@@ -347,6 +366,11 @@
         {
           "text": "Importer name",
           "required": false
+        },
+        {
+          "text": "Clinical & safety",
+          "required": false,
+          "type": "subtitle"
         },
         {
           "text": "Intended purpose",
@@ -410,6 +434,11 @@
           ]
         },
         {
+          "text": "Lifecycle",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
           "text": "Shelf life (months)",
           "required": false
         },
@@ -444,6 +473,11 @@
           "required": false
         },
         {
+          "text": "Materials & substances (Annex I 10.4)",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
           "text": "Contains CMR or endocrine disruptor (Yes / No)",
           "required": false,
           "type": "select",
@@ -468,6 +502,11 @@
         {
           "text": "Substances of concern",
           "required": false
+        },
+        {
+          "text": "Documents & certifications",
+          "required": false,
+          "type": "subtitle"
         },
         {
           "text": "Clinical evaluation URL",
@@ -604,6 +643,11 @@
           "required": false
         },
         {
+          "text": "Packaging layer (from library) - (Select a shared layer defined via CSV import; referenced, not copied - edit it once and every product using it updates)",
+          "required": false,
+          "type": "select"
+        },
+        {
           "text": "Packaging GTIN",
           "required": false
         },
@@ -738,6 +782,11 @@
           "required": false
         },
         {
+          "text": "Reuse an existing DoC - (Pick a DoC already declared on another product to prefill this layer)",
+          "required": false,
+          "type": "select"
+        },
+        {
           "text": "Declaration of conformity URL",
           "required": false
         },
@@ -775,6 +824,130 @@
             "Yes",
             "No"
           ]
+        },
+        {
+          "text": "Packaging category",
+          "required": false
+        },
+        {
+          "text": "Packaging format",
+          "required": false
+        },
+        {
+          "text": "Total weight (g)",
+          "required": false
+        },
+        {
+          "text": "Empty weight (g)",
+          "required": false
+        },
+        {
+          "text": "Packaging ratio",
+          "required": false
+        },
+        {
+          "text": "Mono-material (Yes / No)",
+          "required": false,
+          "type": "select"
+        },
+        {
+          "text": "Producer trademark",
+          "required": false
+        },
+        {
+          "text": "Importer",
+          "required": false
+        },
+        {
+          "text": "Importer address",
+          "required": false
+        },
+        {
+          "text": "Food-contact (Yes / No)",
+          "required": false,
+          "type": "select"
+        },
+        {
+          "text": "PFAS-free (Yes / No)",
+          "required": false,
+          "type": "select"
+        },
+        {
+          "text": "Total fluorine (ppm)",
+          "required": false
+        },
+        {
+          "text": "Fluorine under limit (Yes / No)",
+          "required": false,
+          "type": "select"
+        },
+        {
+          "text": "Bisphenol-free (BPA) (Yes / No)",
+          "required": false,
+          "type": "select"
+        },
+        {
+          "text": "SVHC present (Yes / No)",
+          "required": false,
+          "type": "select"
+        },
+        {
+          "text": "SVHC details",
+          "required": false
+        },
+        {
+          "text": "Recyclability (%)",
+          "required": false
+        },
+        {
+          "text": "Recycling stream",
+          "required": false
+        },
+        {
+          "text": "Separable components (Yes / No)",
+          "required": false,
+          "type": "select"
+        },
+        {
+          "text": "Compostability standard",
+          "required": false
+        },
+        {
+          "text": "Deposit scheme (Yes / No)",
+          "required": false,
+          "type": "select"
+        },
+        {
+          "text": "Deposit amount (€)",
+          "required": false
+        },
+        {
+          "text": "Designed reuse cycles",
+          "required": false
+        },
+        {
+          "text": "Reuse system URL",
+          "required": false
+        },
+        {
+          "text": "Return points URL",
+          "required": false
+        },
+        {
+          "text": "Conformity assessment date",
+          "required": false
+        },
+        {
+          "text": "Retention (years)",
+          "required": false
+        },
+        {
+          "text": "Test reports URL",
+          "required": false
+        },
+        {
+          "text": "EPR registration (single, legacy)",
+          "required": false
         },
         {
           "text": "Extract from DoC (Button)",
@@ -1041,6 +1214,36 @@
       "label": "Documents & links",
       "fields": [
         {
+          "text": "DoC",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Generate the EU Declaration of Conformity from this product's data, in the languages you choose. Saved PDFs appear under the Documents sub-section (visible to authorities only).",
+          "required": false,
+          "type": "note"
+        },
+        {
+          "text": "Preview DoC (Button)",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Download (Word) (Button)",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Generate & save DoC (Button)",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Documents",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
           "text": "Technical documentation",
           "required": false,
           "type": "upload"
@@ -1078,7 +1281,28 @@
         {
           "text": "Add document (custom documents upload option)",
           "required": false,
-          "type": "button"
+          "type": "upload"
+        },
+        {
+          "text": "Links",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Repair manual URL",
+          "required": false
+        },
+        {
+          "text": "Repair network URL",
+          "required": false
+        },
+        {
+          "text": "Spare parts URL",
+          "required": false
+        },
+        {
+          "text": "Disassembly instructions URL",
+          "required": false
         }
       ]
     },
@@ -1101,6 +1325,10 @@
         },
         {
           "text": "Effective from",
+          "required": false
+        },
+        {
+          "text": "Effective to",
           "required": false
         },
         {

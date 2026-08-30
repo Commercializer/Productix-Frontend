@@ -184,6 +184,18 @@ function getEolSpec(sector: DppSector): { fields?: DppSectionField[]; repeatable
   };
 }
 
+/** Documents & links: the spreadsheet's "DoC" subtitle marks the (currently
+ * action-only - preview/download/generate buttons, no answerable field) DoC
+ * sub-tab, which is why it never appears as a group below; "Documents" marks
+ * the upload fields and "Links" the repair/spare-parts URLs - see
+ * splitBySubtitle. */
+function getDocumentsSpec(sector: DppSector): { groups?: DppFieldGroup[] } | undefined {
+  const raw = getRawFields(sector, "documents-links");
+  if (!raw) return undefined;
+  const groups = splitBySubtitle(raw).map((s) => ({ label: s.label, fields: s.fields.map(toDppField) }));
+  return { groups: groups.length > 0 ? groups : undefined };
+}
+
 /** Repair & usage history: two independent repeatable logs, no flat fields -
  * a section with no pre-existing app equivalent before this rebuild. */
 function getRepairHistoryBlocks(sector: DppSector): DppRepeatableBlock[] | undefined {
@@ -314,7 +326,7 @@ export function getOrderedDppSections(sector: DppSector | null): DppSectionSpec[
   push("eol", "end-of-life", { fields: eolSpec?.fields, repeatable: eolSpec?.repeatable });
 
   push("repair-history", "repair-usage-history", { repeatable: getRepairHistoryBlocks(sector) });
-  push("documents", "documents-links", { fields: getFlatFields(sector, "documents-links") });
+  push("documents", "documents-links", { groups: getDocumentsSpec(sector)?.groups });
 
   return sections;
 }
