@@ -82,7 +82,7 @@ const SECTOR_OPTIONS: IconSelectOption<DppSector>[] = [
   { value: "VEHICLES", label: "Vehicles", icon: Car },
   { value: "PACKAGING", label: "Packaging", icon: Package },
   { value: "COSMETICS", label: "Cosmetics", icon: Sparkles },
-  { value: "FOOD", label: "Food", icon: UtensilsCrossed },
+  { value: "FOOD", label: "Food & Beverages", icon: UtensilsCrossed },
   { value: "MEDICAL", label: "Medical", icon: Stethoscope },
   { value: "INTERMEDIATE_PRODUCTS", label: "Intermediate Products", icon: Factory },
   { value: "OTHER", label: "Other", icon: MoreHorizontal },

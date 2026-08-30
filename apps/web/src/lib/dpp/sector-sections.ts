@@ -51,7 +51,7 @@ export const DPP_SECTOR_LABELS: Record<DppSector, string> = {
   VEHICLES: "Vehicles",
   PACKAGING: "Packaging",
   COSMETICS: "Cosmetics",
-  FOOD: "Food",
+  FOOD: "Food & Beverages",
   MEDICAL: "Medical",
   INTERMEDIATE_PRODUCTS: "Intermediate Products",
   OTHER: "Other",
@@ -809,7 +809,7 @@ export const DPP_SECTOR_SECTIONS: Partial<Record<DppSector, DppSectorSection>> =
     ]
   },
   "FOOD": {
-    "title": "Food Product Data",
+    "title": "Food & Beverages Product Data",
     "directive": "Food Information to Consumers Reg (EU) 1169/2011 (FIC): legal name, ingredient list + QUID (Art 22), the 14 listed allergens (Annex II), mandatory nutrition declaration per 100 g/ml (Annex XV), net quantity, date of minimum durability / use-by (Art 24), storage, food business operator (Art 8), country of origin / place of provenance · Food Additives Reg 1333/2008 (E-numbers) · Claims Reg 1924/2006 · Organic Reg (EU) 2018/848 · Nutri-Score (voluntary)",
     "groups": [
       {
