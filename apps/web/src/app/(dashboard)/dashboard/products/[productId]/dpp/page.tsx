@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useMemo, useState, useTransition } from "react";
+import { use, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -24,6 +24,7 @@ import {
   BadgeCheck,
   Hash,
   Loader2,
+  UploadCloud,
   BatteryFull,
   Cpu,
   Shirt,
@@ -39,6 +40,7 @@ import {
   Stethoscope,
   Factory,
   MoreHorizontal,
+  History,
 } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/header";
 import { getProductForDppAction, createProductDppAction } from "@/lib/dashboard/actions";
@@ -47,10 +49,12 @@ import { IconSelect, type IconSelectOption } from "@/components/dashboard/icon-s
 import { SearchableSelect } from "@/components/dashboard/searchable-select";
 import { ProductGallery } from "@/components/dashboard/product-gallery";
 import { PackagingLayersPanel } from "@/components/dashboard/packaging-layers-panel";
-import { DPP_SECTOR_SECTIONS, trimFieldLabel, type DppSectionField } from "@/lib/dpp/sector-sections";
-import { DPP_SECTIONS, IDENTIFICATION_EXTRA_FIELDS, getOrderedDppSections, type DppSectionSpec } from "@/lib/dpp/dpp-sections";
+import { RepeatableRowsPanel } from "@/components/dashboard/repeatable-rows-panel";
+import { trimFieldLabel, isLongTextField, isFullWidthField, type DppSectionField } from "@/lib/dpp/sector-sections";
+import { getIdentificationExtraFields, getOrderedDppSections, getSectorDataGroups, type DppSectionSpec } from "@/lib/dpp/dpp-sections";
 import { COUNTRY_OPTIONS } from "@/lib/dpp/countries";
 import { countMissingRequiredLayerFields, type PackagingLayer } from "@/lib/dpp/packaging-layers";
+import type { Row } from "@/lib/dpp/repeatable-rows";
 import type { DppIdentifierType, DppSector } from "@productix/db";
 
 interface PageProps {
@@ -100,6 +104,7 @@ const SECTION_ICONS: Record<string, React.ComponentType<{ size?: number; classNa
   Wrench,
   Trash2,
   FileText,
+  History,
 };
 
 const selectClass =
@@ -157,6 +162,94 @@ function ToggleFieldInput({ value, onChange }: { value: string; onChange: (value
   );
 }
 
+/** A `type: "upload"` field's control - a paste-a-link input (kept, so a
+ * manually-entered link never breaks) plus a real upload button backed by
+ * the same /api/media/upload route ProductGallery uses. The document is
+ * still stored as a bare URL string, same as before uploads existed - the
+ * upload button just fills that string with a real R2-hosted PDF's URL
+ * instead of requiring the producer to host the file elsewhere first. */
+function DocumentUploadInput({
+  productId,
+  value,
+  onChange,
+}: {
+  productId: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleFile(file: File) {
+    if (file.type !== "application/pdf") {
+      setError("Only PDF files are supported");
+      return;
+    }
+    setError(null);
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("productId", productId);
+      const res = await fetch("/api/media/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok || !data.url) throw new Error(data.error || "Upload failed");
+      onChange(data.url);
+    } catch (e: any) {
+      setError(e?.message ?? "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="application/pdf"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleFile(file);
+          e.target.value = "";
+        }}
+      />
+      <div className="flex items-center gap-2">
+        <input
+          type="url"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Paste a link, or upload a PDF"
+          className={`${inputClass} h-[38px] text-[13px] flex-1`}
+        />
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          title="Upload PDF"
+          className="shrink-0 h-[38px] w-[38px] flex items-center justify-center rounded-xl border border-(--ds-border) bg-(--ds-bg) hover:bg-(--ds-surface-2) transition-colors disabled:opacity-60"
+        >
+          {uploading ? <Loader2 size={15} className="animate-spin" /> : <UploadCloud size={15} />}
+        </button>
+        {value && (
+          <a
+            href={value}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="View file"
+            className="shrink-0 h-[38px] w-[38px] flex items-center justify-center rounded-xl border border-(--ds-border) bg-(--ds-bg) hover:bg-(--ds-surface-2) transition-colors"
+          >
+            <FileText size={15} />
+          </a>
+        )}
+      </div>
+      {error && <p className="mt-1 text-[11px] text-red-500">{error}</p>}
+    </div>
+  );
+}
+
 /** One field from a section's data. Label is a trimmed version of the raw
  * compliance text; when trimming actually changed something, the full
  * original text is kept visible as a caption so nothing is lost. The input
@@ -167,16 +260,20 @@ function DppFieldInput({
   field,
   value,
   onChange,
+  productId,
+  className,
 }: {
   field: DppSectionField;
   value: string;
   onChange: (value: string) => void;
+  productId: string;
+  className?: string;
 }) {
   const label = trimFieldLabel(field.text);
   const wasTrimmed = label !== field.text;
 
   return (
-    <div>
+    <div className={className}>
       <label className="block text-[12px] font-medium text-(--ds-text-primary) mb-1">
         {label} {field.required && <span className="text-red-400">*</span>}
       </label>
@@ -195,9 +292,18 @@ function DppFieldInput({
             </option>
           ))}
         </select>
+      ) : field.type === "upload" ? (
+        <DocumentUploadInput productId={productId} value={value} onChange={onChange} />
+      ) : isLongTextField(field) ? (
+        <textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          rows={3}
+          className={`${inputClass} h-auto py-2.5 text-[13px] resize-y`}
+        />
       ) : (
         <input
-          type={field.type === "number" || field.type === "date" || field.type === "url" ? field.type : "text"}
+          type={field.type === "number" || field.type === "date" ? field.type : field.type === "url" ? "url" : "text"}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className={`${inputClass} h-[38px] text-[13px]`}
@@ -226,6 +332,12 @@ export default function ProductDppPage({ params }: PageProps) {
   const [sector, setSector] = useState<DppSector | null>(null);
 
   const [sectionAnswers, setSectionAnswers] = useState<Record<string, Record<string, string>>>({});
+  // Repeatable-table rows (Materials, Substances' SVHC list, End-of-life
+  // assessment records, Repair & usage history's two logs, Product
+  // specifications) - kept separate from the flat sectionAnswers map, same
+  // idea as packagingLayers' own state below. Persisted under each section's
+  // reserved "__rows" key - see pruneSectionAnswers in dpp-sections.ts.
+  const [sectionRows, setSectionRows] = useState<Record<string, Record<string, Row[]>>>({});
   const [packagingLayers, setPackagingLayers] = useState<PackagingLayer[]>([]);
   // One global switch for every section's optional fields, rather than a
   // per-section toggle you'd have to flip again on every tab - see the
@@ -276,21 +388,40 @@ export default function ProductDppPage({ params }: PageProps) {
         const raw = product.dpp.sectionAnswers as Record<string, unknown>;
         // "packaging" isn't a flat field map like every other section (see
         // packaging-layers.ts) - it gets its own state, loaded separately.
-        const { packaging, ...answers } = raw as Record<string, Record<string, string>> & {
+        const { packaging, ...rest } = raw as Record<string, unknown> & {
           packaging?: { layers?: PackagingLayer[] };
         };
-        setSectionAnswers(answers);
         if (Array.isArray(packaging?.layers)) setPackagingLayers(packaging.layers);
+
+        // Every other section may additionally carry a reserved "__rows" key
+        // for its repeatable tables (see DppRepeatableBlock in
+        // dpp-sections.ts) alongside the flat field map every section has
+        // always used - split them into their own state, same idea as
+        // packaging above.
+        const answers: Record<string, Record<string, string>> = {};
+        const rows: Record<string, Record<string, Row[]>> = {};
+        for (const [key, value] of Object.entries(rest)) {
+          const { __rows, ...flat } = (value ?? {}) as Record<string, unknown> & { __rows?: Record<string, Row[]> };
+          answers[key] = flat as Record<string, string>;
+          if (__rows) rows[key] = __rows;
+        }
+        setSectionAnswers(answers);
+        setSectionRows(rows);
 
         // Auto-reveal optional fields globally if anything already has one
         // filled in, so returning to edit doesn't hide existing answers.
+        // Sourced from getOrderedDppSections so a sector-specific field
+        // resolution is checked against the right field list, not a stale
+        // generic default.
+        const orderedSections = loadedSector ? getOrderedDppSections(loadedSector) : [];
         const hasAnyOptionalAnswered = Object.entries(answers).some(([key, ans]) => {
-          if (key === "sector") {
-            const groups = loadedSector ? DPP_SECTOR_SECTIONS[loadedSector]?.groups : undefined;
-            return !!groups?.some((g) => g.fields.some((f) => !f.required && ans[f.text]?.trim()));
-          }
-          if (key === "specifications" && IDENTIFICATION_EXTRA_FIELDS.some((f) => ans[f.text]?.trim())) return true;
-          const spec = DPP_SECTIONS.find((s) => s.key === key);
+          // "sector" needs no special case here - orderedSections already
+          // carries its groups (see getOrderedDppSections' "sector" push),
+          // and flattenFields below already flattens groups as well as
+          // fields, so it falls straight through the generic branch.
+          if (key === "specifications" && getIdentificationExtraFields(loadedSector).some((f) => ans[f.text]?.trim()))
+            return true;
+          const spec = orderedSections.find((s) => s.key === key);
           return !!spec && flattenFields(spec).some((f) => !f.required && ans[f.text]?.trim());
         });
         if (hasAnyOptionalAnswered) setShowOptionalFields(true);
@@ -369,14 +500,23 @@ export default function ProductDppPage({ params }: PageProps) {
     }));
   };
 
+  const setBlockRows = (sectionKey: string, blockKey: string, rows: Row[]) => {
+    setSectionRows((prev) => ({
+      ...prev,
+      [sectionKey]: { ...prev[sectionKey], [blockKey]: rows },
+    }));
+  };
+
   const hasMissingRequired = (item: SidebarItem): boolean => {
     if (item.kind === "identification") {
       const identifierMissing = identifierType === "GS1_GTIN" ? !gtinLocked && !gtin.trim() : !identifierValue.trim();
-      return identifierMissing || !sector;
+      const extraAnswers = sectionAnswers.specifications ?? {};
+      const extraMissing = getIdentificationExtraFields(sector).some((f) => f.required && !extraAnswers[f.text]?.trim());
+      return identifierMissing || !sector || extraMissing;
     }
     if (item.kind === "gallery") return false;
     if (item.kind === "sector-parent") {
-      const groups = sector ? DPP_SECTOR_SECTIONS[sector]?.groups : undefined;
+      const groups = sector ? getSectorDataGroups(sector) : undefined;
       const answers = sectionAnswers.sector ?? {};
       return !!groups?.some((g) => g.fields.some((f) => f.required && !answers[f.text]?.trim()));
     }
@@ -397,13 +537,22 @@ export default function ProductDppPage({ params }: PageProps) {
     }
 
     startTransition(async () => {
+      // Merge each section's flat field answers back together with its
+      // repeatable-table rows (see sectionRows above) under the reserved
+      // "__rows" key - createProductDppAction/pruneSectionAnswers expects
+      // both on the same per-section object.
+      const mergedSectionAnswers: Record<string, unknown> = { ...sectionAnswers };
+      for (const [key, rows] of Object.entries(sectionRows)) {
+        mergedSectionAnswers[key] = { ...(mergedSectionAnswers[key] as Record<string, string> | undefined), __rows: rows };
+      }
+
       const result = await createProductDppAction({
         productId,
         identifierType,
         identifierValue: identifierType === "GS1_GTIN" ? gtin.trim() : identifierValue.trim(),
         sector,
         sectionAnswers: {
-          ...sectionAnswers,
+          ...mergedSectionAnswers,
           ...(packagingLayers.length > 0 ? { packaging: { layers: packagingLayers } } : {}),
         },
       });
@@ -659,18 +808,37 @@ export default function ProductDppPage({ params }: PageProps) {
                   </p>
                 )}
 
-                {showOptionalFields && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {IDENTIFICATION_EXTRA_FIELDS.map((f) => (
-                      <DppFieldInput
-                        key={f.text}
-                        field={f}
-                        value={sectionAnswers.specifications?.[f.text] ?? ""}
-                        onChange={(v) => setFieldAnswer("specifications", f.text, v)}
-                      />
-                    ))}
-                  </div>
-                )}
+                {(() => {
+                  const extraFields = getIdentificationExtraFields(sector);
+                  const requiredExtraFields = extraFields.filter((f) => f.required);
+                  const optionalExtraFields = extraFields.filter((f) => !f.required);
+                  if (requiredExtraFields.length === 0 && !showOptionalFields) return null;
+                  return (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {requiredExtraFields.map((f) => (
+                        <DppFieldInput
+                          key={f.text}
+                          field={f}
+                          value={sectionAnswers.specifications?.[f.text] ?? ""}
+                          onChange={(v) => setFieldAnswer("specifications", f.text, v)}
+                          productId={productId}
+                          className={isFullWidthField(f) ? "sm:col-span-2" : undefined}
+                        />
+                      ))}
+                      {showOptionalFields &&
+                        optionalExtraFields.map((f) => (
+                          <DppFieldInput
+                            key={f.text}
+                            field={f}
+                            value={sectionAnswers.specifications?.[f.text] ?? ""}
+                            onChange={(v) => setFieldAnswer("specifications", f.text, v)}
+                            productId={productId}
+                            className={isFullWidthField(f) ? "sm:col-span-2" : undefined}
+                          />
+                        ))}
+                    </div>
+                  );
+                })()}
               </div>
             )}
 
@@ -701,8 +869,11 @@ export default function ProductDppPage({ params }: PageProps) {
               <SectionPanel
                 spec={activeItem.spec}
                 answers={sectionAnswers[activeItem.answersKey ?? activeItem.key] ?? {}}
+                rows={sectionRows[activeItem.answersKey ?? activeItem.key] ?? {}}
                 showOptional={showOptionalFields}
+                productId={productId}
                 onFieldChange={(text, value) => setFieldAnswer(activeItem.answersKey ?? activeItem.key, text, value)}
+                onBlockRowsChange={(blockKey, rows) => setBlockRows(activeItem.answersKey ?? activeItem.key, blockKey, rows)}
                 extraFieldsBefore={
                   activeItem.key === "manufacturer" ? (
                     <ManufacturerCountryField
@@ -764,27 +935,34 @@ function ManufacturerCountryField({ value, onChange }: { value: string; onChange
 function SectionPanel({
   spec,
   answers,
+  rows,
   showOptional,
   onFieldChange,
+  onBlockRowsChange,
   extraFieldsBefore,
+  productId,
 }: {
   spec: DppSectionSpec;
   answers: Record<string, string>;
+  rows: Record<string, Row[]>;
   showOptional: boolean;
   onFieldChange: (fieldText: string, value: string) => void;
+  onBlockRowsChange: (blockKey: string, rows: Row[]) => void;
   extraFieldsBefore?: React.ReactNode;
+  productId: string;
 }) {
   const renderFields = (fields: DppSectionField[], skipTexts: Set<string> = new Set()) => {
     const required = fields.filter((f) => f.required && !skipTexts.has(f.text));
     const optional = fields.filter((f) => !f.required && !skipTexts.has(f.text));
+    const fieldClass = (f: DppSectionField) => (isFullWidthField(f) ? "sm:col-span-2" : undefined);
     return (
       <>
         {required.map((f) => (
-          <DppFieldInput key={f.text} field={f} value={answers[f.text] ?? ""} onChange={(v) => onFieldChange(f.text, v)} />
+          <DppFieldInput key={f.text} field={f} value={answers[f.text] ?? ""} onChange={(v) => onFieldChange(f.text, v)} productId={productId} className={fieldClass(f)} />
         ))}
         {showOptional &&
           optional.map((f) => (
-            <DppFieldInput key={f.text} field={f} value={answers[f.text] ?? ""} onChange={(v) => onFieldChange(f.text, v)} />
+            <DppFieldInput key={f.text} field={f} value={answers[f.text] ?? ""} onChange={(v) => onFieldChange(f.text, v)} productId={productId} className={fieldClass(f)} />
           ))}
       </>
     );
@@ -802,13 +980,31 @@ function SectionPanel({
         spec.groups.map((group) => (
           <div key={group.label} className="space-y-3">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-(--ds-text-muted)">{group.label}</p>
-            {group.label === "Manufacturer" && extraFieldsBefore}
-            {renderFields(group.fields, group.label === "Manufacturer" ? skipManufacturerCountry : undefined)}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {group.label === "Manufacturer" && extraFieldsBefore}
+              {renderFields(group.fields, group.label === "Manufacturer" ? skipManufacturerCountry : undefined)}
+            </div>
           </div>
         ))
-      ) : (
-        <div className="space-y-3">{renderFields(spec.fields ?? [])}</div>
-      )}
+      ) : spec.fields ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{renderFields(spec.fields)}</div>
+      ) : null}
+
+      {spec.repeatable?.map((block) => (
+        <div key={block.key} className="space-y-3">
+          {block.label && (
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-(--ds-text-muted)">{block.label}</p>
+          )}
+          <RepeatableRowsPanel
+            fields={block.fields}
+            rows={rows[block.key] ?? []}
+            onChange={(next) => onBlockRowsChange(block.key, next)}
+            addLabel={block.addLabel}
+            emptyLabel={block.emptyLabel}
+            max={block.max}
+          />
+        </div>
+      ))}
     </div>
   );
 }

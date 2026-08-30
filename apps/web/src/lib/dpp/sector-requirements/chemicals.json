@@ -1,0 +1,765 @@
+{
+  "sector": "CHEMICALS",
+  "sourceName": "Chemicals",
+  "sections": {
+    "product-identification": {
+      "label": "Product identification",
+      "fields": [
+        {
+          "text": "Product name",
+          "required": true
+        },
+        {
+          "text": "GTIN-14",
+          "required": true
+        },
+        {
+          "text": "Sector",
+          "required": true
+        },
+        {
+          "text": "Brand name",
+          "required": false
+        },
+        {
+          "text": "Model number",
+          "required": false
+        },
+        {
+          "text": "Product category",
+          "required": false
+        },
+        {
+          "text": "HS Code",
+          "required": false
+        }
+      ]
+    },
+    "manufacturer-importer": {
+      "label": "Manufacturer & importer",
+      "fields": [
+        {
+          "text": "Manufacturer name",
+          "required": true
+        },
+        {
+          "text": "Manufacturer country",
+          "required": true
+        },
+        {
+          "text": "Manufacturer address",
+          "required": false
+        },
+        {
+          "text": "Manufacturer contact",
+          "required": false
+        },
+        {
+          "text": "Manufacturing facility ID",
+          "required": false
+        },
+        {
+          "text": "Manufacturing facility / site (plant code or GS1 GLN). Optional - one of the 4 EU DPP Registry identifiers.",
+          "required": false
+        },
+        {
+          "text": "Facility ID scheme - None / GLN (GS1) / EU-OP / Other (Optional. Pick GLN only if the Facility ID is a GS1 GLN - it's then validated (13 digits).)",
+          "required": false
+        },
+        {
+          "text": "Importer",
+          "required": false
+        },
+        {
+          "text": "Importer name (Required if manufacturer is outside EU)",
+          "required": false
+        },
+        {
+          "text": "Importer country",
+          "required": false
+        }
+      ]
+    },
+    "product-specifications": {
+      "label": "Product specifications",
+      "fields": [
+        {
+          "text": "Add Spec (Custom rows)",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Field Title",
+          "required": false
+        },
+        {
+          "text": "Field Content",
+          "required": false
+        }
+      ]
+    },
+    "physical-properties": {
+      "label": "Physical properties",
+      "fields": [
+        {
+          "text": "Weight (kg)",
+          "required": true
+        },
+        {
+          "text": "Width (mm)",
+          "required": false
+        },
+        {
+          "text": "Height (mm)",
+          "required": false
+        },
+        {
+          "text": "Depth (mm)",
+          "required": false
+        },
+        {
+          "text": "Expected lifetime (years)",
+          "required": false
+        },
+        {
+          "text": "Warranty (years)",
+          "required": false
+        },
+        {
+          "text": "Manufacture date",
+          "required": false
+        },
+        {
+          "text": "Expiry date",
+          "required": false
+        }
+      ]
+    },
+    "chemical-product-data": {
+      "label": "Chemical product data",
+      "fields": [
+        {
+          "text": "Chemical product data",
+          "required": false,
+          "type": "section-heading"
+        },
+        {
+          "text": "Identification",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Substance / mixture - (Substance / Mixture)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Substance",
+            "Mixture"
+          ]
+        },
+        {
+          "text": "Physical state - (Solid, Liquid, Gas, Aerosol, Gel, Powder, Paste)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Solid",
+            "Liquid",
+            "Gas",
+            "Aerosol",
+            "Gel",
+            "Powder",
+            "Paste"
+          ]
+        },
+        {
+          "text": "Concentration (%)",
+          "required": false
+        },
+        {
+          "text": "Chemical / trade name (Ex: Acetone)",
+          "required": true
+        },
+        {
+          "text": "CAS number (Ex: 67-64-1)",
+          "required": false
+        },
+        {
+          "text": "EC number (Ex: 200-662-2)",
+          "required": false
+        },
+        {
+          "text": "REACH registration no. (Ex: 01-2119471299-...)",
+          "required": false
+        },
+        {
+          "text": "UFI code (Ex: E600-A0FV-N00M-WK0T) - (Poison centre (CLP Annex VIII))",
+          "required": false
+        },
+        {
+          "text": "REACH status (Ex: Registered)",
+          "required": false
+        },
+        {
+          "text": "GHS / CLP classification",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Signal word - (Danger, Warning, None)",
+          "required": true,
+          "type": "select",
+          "options": [
+            "Danger",
+            "Warning",
+            "None"
+          ]
+        },
+        {
+          "text": "GHS pictograms (GHS01 - GHS09, comma-separated)",
+          "required": false
+        },
+        {
+          "text": "Hazard class (Ex: Flam. Liq. 2; Eye Irrit. 2; STOT SE 3)",
+          "required": true
+        },
+        {
+          "text": "Hazard statements (H) (Ex: H225, H319, H336)",
+          "required": true,
+          "type": "select",
+          "options": [
+            "Ex: H225",
+            "H319",
+            "H336"
+          ]
+        },
+        {
+          "text": "Precautionary statements (P) - ( Ex: P210, P280, P305+P351+P338)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Ex: P210",
+            "P280",
+            "P305+P351+P338"
+          ]
+        },
+        {
+          "text": "Composition & properties (SDS 3/9)",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Component (Ex: Acetone)",
+          "required": false
+        },
+        {
+          "text": "CAS (Ex:  67-64-1)",
+          "required": false
+        },
+        {
+          "text": "%",
+          "required": false
+        },
+        {
+          "text": "Classification (H225)",
+          "required": false
+        },
+        {
+          "text": "Add Component (Button - New row, above fields again on new Component)",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "pH",
+          "required": false
+        },
+        {
+          "text": "Flash point (°C)",
+          "required": false
+        },
+        {
+          "text": "Boiling point (°C)",
+          "required": false
+        },
+        {
+          "text": "REACH status",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "SVHC present (Yes/ No) - (> 0.1% w/w (Art 33) )",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Authorisation (Annex XIV) - (Yes/No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Restriction (Annex XVII) - (Yes/No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "SVHC details",
+          "required": false
+        },
+        {
+          "text": "Safe handling & storage",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Safety Data Sheet URL",
+          "required": false
+        },
+        {
+          "text": "SDS revision date (date)",
+          "required": false,
+          "type": "date"
+        },
+        {
+          "text": "Shelf life (months)",
+          "required": false
+        },
+        {
+          "text": "Storage conditions (Ex: Cool, dry, well-ventilated; away from ignition)",
+          "required": false
+        },
+        {
+          "text": "Incompatible materials (Ex: Strong oxidisers, strong acids)",
+          "required": false
+        },
+        {
+          "text": "Environment & disposal",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "PBT / vPvB - (Yes/No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Aquatic toxicity class (Ex: Aquatic Chronic 2)",
+          "required": false
+        },
+        {
+          "text": "Biodegradability (%)",
+          "required": false
+        },
+        {
+          "text": "Waste code (EWC) - (Ex: 14 06 03)",
+          "required": false
+        },
+        {
+          "text": "Disposal instructions",
+          "required": false
+        },
+        {
+          "text": "Transport (ADR / UN)",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "UN number (Ex: 1090)",
+          "required": false
+        },
+        {
+          "text": "Transport hazard class (Ex: 3)",
+          "required": false
+        },
+        {
+          "text": "Packing group - (I (high danger), II, III (low danger) )",
+          "required": false
+        },
+        {
+          "text": "Proper shipping name (Ex: ACETONE)",
+          "required": false
+        },
+        {
+          "text": "Compliance & documents",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Poison Centre Notification (Yes/No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Biocidal authorisation no.",
+          "required": false
+        },
+        {
+          "text": "Detergent ingredient URL",
+          "required": false
+        },
+        {
+          "text": "Certifications (Ex: EU Ecolabel · Nordic Swan)",
+          "required": false
+        }
+      ]
+    },
+    "product-packaging": {
+      "label": "Product packaging",
+      "fields": [
+        {
+          "text": "Product packaging",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Packaging & Packaging Waste Regulation (EU) 2025/40 (PPWR) · ESPR 2024/1781. Declare one row per packaging layer (primary / secondary / tertiary). Look up a packaging DPP by GTIN to auto-fill, or extract from an uploaded Declaration of Conformity.",
+          "required": false,
+          "type": "note"
+        },
+        {
+          "text": "Layer order",
+          "required": false
+        },
+        {
+          "text": "Layer label",
+          "required": false
+        },
+        {
+          "text": "Input mode (Manual / Lookup by GTIN / Extract from DoC)",
+          "required": false
+        },
+        {
+          "text": "Packaging GTIN",
+          "required": false
+        },
+        {
+          "text": "Packaging DPP ID",
+          "required": false
+        },
+        {
+          "text": "Packaging DPP URL",
+          "required": false
+        },
+        {
+          "text": "Packaging name",
+          "required": false
+        },
+        {
+          "text": "Packaging manufacturer",
+          "required": false
+        },
+        {
+          "text": "Packaging manufacturer country",
+          "required": false
+        },
+        {
+          "text": "Manufacturer role",
+          "required": false
+        },
+        {
+          "text": "Packaging material",
+          "required": false
+        },
+        {
+          "text": "Packaging weight (kg)",
+          "required": false
+        },
+        {
+          "text": "Recyclable (Yes / No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Recyclability grade",
+          "required": false
+        },
+        {
+          "text": "Recycled content (%)",
+          "required": false
+        },
+        {
+          "text": "Reusable (Yes / No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Volume (L)",
+          "required": false
+        },
+        {
+          "text": "Dimensions",
+          "required": false
+        },
+        {
+          "text": "Heavy metals sum (ppm)",
+          "required": false
+        },
+        {
+          "text": "PFAS present (Yes / No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Compostable (Yes / No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Label material (Yes / No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Label – separate collection (Yes / No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "QR / digital carrier",
+          "required": false
+        },
+        {
+          "text": "Packaging identifier",
+          "required": false
+        },
+        {
+          "text": "Material components (rows: Component · Material · Weight (kg) · Recycled (%))",
+          "required": false
+        },
+        {
+          "text": "EPR registrations (rows: Country · Scheme · Registration number)",
+          "required": false
+        },
+        {
+          "text": "Carbon footprint (kg)",
+          "required": false
+        },
+        {
+          "text": "Carbon footprint source",
+          "required": false
+        },
+        {
+          "text": "Declaration of conformity URL",
+          "required": false
+        },
+        {
+          "text": "Declaration of conformity (Upload)",
+          "required": false,
+          "type": "upload"
+        },
+        {
+          "text": "DoC ID",
+          "required": false
+        },
+        {
+          "text": "DoC issue date",
+          "required": false
+        },
+        {
+          "text": "DoC signed by",
+          "required": false
+        },
+        {
+          "text": "EU DoC exists (Yes / No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "REACH compliant (Yes / No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Extract from DoC (Button)",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Generate layer Declaration of Conformity (Button)",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Add packaging layer (Button)",
+          "required": false,
+          "type": "button"
+        }
+      ]
+    },
+    "product-gallery": {
+      "label": "Product gallery",
+      "fields": [
+        {
+          "text": "Product gallery",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Product images shown on the public DPP page. Upload up to 10 MB per image; set one image as primary. Drag to reorder.",
+          "required": false,
+          "type": "note"
+        },
+        {
+          "text": "Image (Upload, max 10 MB)",
+          "required": false,
+          "type": "upload"
+        },
+        {
+          "text": "Set as primary (Button)",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Delete image (Button)",
+          "required": false,
+          "type": "button"
+        }
+      ]
+    },
+    "documents-links": {
+      "label": "Documents & links",
+      "fields": [
+        {
+          "text": "Technical documentation",
+          "required": false,
+          "type": "upload"
+        },
+        {
+          "text": "User manual",
+          "required": false,
+          "type": "upload"
+        },
+        {
+          "text": "Safety instructions",
+          "required": false,
+          "type": "upload"
+        },
+        {
+          "text": "Product datasheet",
+          "required": false,
+          "type": "upload"
+        },
+        {
+          "text": "Energy label",
+          "required": false,
+          "type": "upload"
+        },
+        {
+          "text": "Other documents",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Any additional document not covered above (e.g. warranty, conformity annex, spec sheet).",
+          "required": false,
+          "type": "note"
+        },
+        {
+          "text": "Add document (custom documents upload option)",
+          "required": false,
+          "type": "button"
+        }
+      ]
+    },
+    "version": {
+      "label": "Version",
+      "fields": [
+        {
+          "text": "Version history",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Every publish creates a new immutable, digitally-signed version shown to customers. Compare changes against the previous version, verify the signature (offline-verifiable Verifiable Credential), and review the audit trail.",
+          "required": false,
+          "type": "note"
+        },
+        {
+          "text": "Version number",
+          "required": false
+        },
+        {
+          "text": "Effective from",
+          "required": false
+        },
+        {
+          "text": "Change type",
+          "required": false
+        },
+        {
+          "text": "Note",
+          "required": false
+        },
+        {
+          "text": "Published by",
+          "required": false
+        },
+        {
+          "text": "View changes / diff (Button)",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Verify signature (Button)",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Publish new version (Button)",
+          "required": false,
+          "type": "button"
+        }
+      ]
+    }
+  }
+}

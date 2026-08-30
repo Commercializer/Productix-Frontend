@@ -1,0 +1,1067 @@
+{
+  "sector": "TYRE",
+  "sourceName": "Tyre",
+  "sections": {
+    "product-identification": {
+      "label": "Product identification",
+      "fields": [
+        {
+          "text": "Product name",
+          "required": true
+        },
+        {
+          "text": "GTIN-14",
+          "required": true
+        },
+        {
+          "text": "Sector",
+          "required": true
+        },
+        {
+          "text": "Brand name",
+          "required": false
+        },
+        {
+          "text": "Model number",
+          "required": false
+        },
+        {
+          "text": "Product category",
+          "required": false
+        },
+        {
+          "text": "HS Code",
+          "required": false
+        }
+      ]
+    },
+    "manufacturer-importer": {
+      "label": "Manufacturer & importer",
+      "fields": [
+        {
+          "text": "Manufacturer name",
+          "required": true
+        },
+        {
+          "text": "Manufacturer country",
+          "required": true
+        },
+        {
+          "text": "Manufacturer address",
+          "required": false
+        },
+        {
+          "text": "Manufacturer contact",
+          "required": false
+        },
+        {
+          "text": "Manufacturing facility ID",
+          "required": false
+        },
+        {
+          "text": "Manufacturing facility / site (plant code or GS1 GLN). Optional - one of the 4 EU DPP Registry identifiers.",
+          "required": false
+        },
+        {
+          "text": "Facility ID scheme - None / GLN (GS1) / EU-OP / Other (Optional. Pick GLN only if the Facility ID is a GS1 GLN - it's then validated (13 digits).)",
+          "required": false
+        },
+        {
+          "text": "Importer",
+          "required": false
+        },
+        {
+          "text": "Importer name (Required if manufacturer is outside EU)",
+          "required": false
+        },
+        {
+          "text": "Importer country",
+          "required": false
+        }
+      ]
+    },
+    "product-specifications": {
+      "label": "Product specifications",
+      "fields": [
+        {
+          "text": "Add Spec (Custom rows)",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Field Title",
+          "required": false
+        },
+        {
+          "text": "Field Content",
+          "required": false
+        }
+      ]
+    },
+    "physical-properties": {
+      "label": "Physical properties",
+      "fields": [
+        {
+          "text": "Weight (kg)",
+          "required": true
+        },
+        {
+          "text": "Width (mm)",
+          "required": false
+        },
+        {
+          "text": "Height (mm)",
+          "required": false
+        },
+        {
+          "text": "Depth (mm)",
+          "required": false
+        },
+        {
+          "text": "Expected lifetime (years)",
+          "required": false
+        },
+        {
+          "text": "Warranty (years)",
+          "required": false
+        },
+        {
+          "text": "Manufacture date",
+          "required": false
+        },
+        {
+          "text": "Expiry date",
+          "required": false
+        }
+      ]
+    },
+    "tyre-data": {
+      "label": "Tyre data",
+      "fields": [
+        {
+          "text": "Tyre data",
+          "required": false,
+          "type": "section-heading"
+        },
+        {
+          "text": "EU Tyre Label (Reg. 2020/740)",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Vehicle class (C1 - Passenger, C2 - Light truck, C3 - Heavy truck) - (C1 passenger · C2 light truck · C3 heavy truck)",
+          "required": true
+        },
+        {
+          "text": "Fuel efficiency class (A, B, C, D, E) - (A (lowest rolling resistance) → E)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "A",
+            "B",
+            "C",
+            "D",
+            "E"
+          ]
+        },
+        {
+          "text": "Wet grip class (A, B, C, D, E)",
+          "required": true,
+          "type": "select",
+          "options": [
+            "A",
+            "B",
+            "C",
+            "D",
+            "E"
+          ]
+        },
+        {
+          "text": "External noise (dB)",
+          "required": false
+        },
+        {
+          "text": "Noise class (A, B, C)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "A",
+            "B",
+            "C"
+          ]
+        },
+        {
+          "text": "EPREL database ID (Number from eprel.ec.europa.eu/screen/home — auto-creates a 'View on EPREL ↗' link in the public viewer)",
+          "required": true
+        },
+        {
+          "text": "EU Tyre Label (SVG/PDF/PNG from EPREL) - (Upload) - (Optional: upload the official label downloaded from EPREL. Renders as an image at the top of the public viewer.)",
+          "required": false,
+          "type": "upload"
+        },
+        {
+          "text": "Snow grip (3PMSF) - (Yes/No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Ice grip (Nordic) - (Yes/No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "EV-optimised - (Yes/No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Dimensions & speed/load rating",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Size designation (Ex: 205/55 R16 91V)",
+          "required": false
+        },
+        {
+          "text": "Load index",
+          "required": false
+        },
+        {
+          "text": "Speed rating",
+          "required": false
+        },
+        {
+          "text": "Tread depth, new (mm)",
+          "required": false
+        },
+        {
+          "text": "Legal min tread (mm) - (EU C1: 1.6 mm)",
+          "required": false
+        },
+        {
+          "text": "Tread pattern - (Symmetric, Asymmetric, Directional, Semi-slick, Off-road)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Symmetric",
+            "Asymmetric",
+            "Directional",
+            "Semi-slick",
+            "Off-road"
+          ]
+        },
+        {
+          "text": "Season (Summer, Winter, All-season, All-weather)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Summer",
+            "Winter",
+            "All-season",
+            "All-weather"
+          ]
+        },
+        {
+          "text": "Rubber compound & reinforcement (Typical passenger tyre: 40% NR + 35% SBR + 25% BR. Sum should = 100.)",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Polymer",
+          "required": false
+        },
+        {
+          "text": "Share %",
+          "required": false
+        },
+        {
+          "text": "Add Polymer (Button - New row, above fields again on new polymer)",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Carbon black %",
+          "required": false
+        },
+        {
+          "text": "Silica %",
+          "required": false
+        },
+        {
+          "text": "Steel belt %",
+          "required": false
+        },
+        {
+          "text": "Textile cord %",
+          "required": false
+        },
+        {
+          "text": "Bead wire type",
+          "required": false
+        },
+        {
+          "text": "Recycled rubber %",
+          "required": false
+        },
+        {
+          "text": "Bio-based content %",
+          "required": false
+        },
+        {
+          "text": "High-aromatic oils free - (Yes/No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Tyre abrasion & microplastic emissions",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "UTQG treadwear",
+          "required": false
+        },
+        {
+          "text": "Abrasion (mg/km) - (UNECE GRBP draft)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "mg",
+            "km"
+          ]
+        },
+        {
+          "text": "Anticipated abrasion class - (A, B, C, D, E)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "A",
+            "B",
+            "C",
+            "D",
+            "E"
+          ]
+        },
+        {
+          "text": "Test method (Ex: UNECE GRBP-2025 drum test)",
+          "required": false
+        },
+        {
+          "text": "Manufacturing & DOT traceability",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Country of manufacture (Country picker search and select)",
+          "required": false
+        },
+        {
+          "text": "Factory ID (DOT plant code)",
+          "required": false
+        },
+        {
+          "text": "Manufacture week/year (Ex: 2526)",
+          "required": false
+        },
+        {
+          "text": "Full DOT code (Ex: DOT B9 H1 ABCD 2526)",
+          "required": false
+        },
+        {
+          "text": "End-of-life",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Retreadable - (Yes/No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Recycling pathway - (Mechanical (crumb), Devulcanisation, Pyrolysis, Energy recovery, Retread first, Not recyclable)",
+          "required": false
+        },
+        {
+          "text": "Collection partner (PRO) (Ex: Eltma SAS)",
+          "required": false
+        },
+        {
+          "text": "Retread pathway URL",
+          "required": false
+        },
+        {
+          "text": "Performance & safety extras",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Run-flat (Yes/No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Self-sealing (Yes/No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Studdable (Yes / No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Homologation codes (Ex: E11 R30 + R117 (Type-Approval))",
+          "required": false
+        }
+      ]
+    },
+    "substances-of-concern-svhc": {
+      "label": "Substances of concern (SVHC)",
+      "fields": [
+        {
+          "text": "Substances of concern (SVHC)",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "REACH 1907/2006 · Art. 33 - mandatory if >0.1% w/w (1000 ppm), Mandatory declaration threshold: >0.1% w/w (1000 ppm) per article. SVHC = Substance of Very High Concern (ECHA Candidate List).",
+          "required": false,
+          "type": "note"
+        },
+        {
+          "text": "Substance name",
+          "required": false
+        },
+        {
+          "text": "CAS number",
+          "required": false
+        },
+        {
+          "text": "Conc. (ppm)",
+          "required": false
+        },
+        {
+          "text": "Location in product",
+          "required": false
+        },
+        {
+          "text": "SVHC",
+          "required": false,
+          "type": "checkbox"
+        },
+        {
+          "text": "Add substance (New row, above fields again on new substance)",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Compliance & certifications",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "CE Marking · REACH 1907/2006 · RoHS 2011/65/EU · ESPR 2024/1781",
+          "required": false,
+          "type": "note"
+        },
+        {
+          "text": "CE marking",
+          "required": false,
+          "type": "toggle"
+        },
+        {
+          "text": "REACH compliant",
+          "required": false,
+          "type": "toggle"
+        },
+        {
+          "text": "RoHS compliant",
+          "required": false,
+          "type": "toggle"
+        },
+        {
+          "text": "Energy efficiency class",
+          "required": false,
+          "type": "select",
+          "options": [
+            "A+++",
+            "A++",
+            "A+",
+            "A",
+            "B",
+            "C",
+            "D",
+            "E",
+            "F",
+            "G"
+          ]
+        },
+        {
+          "text": "Energy consumption (kWh/year)",
+          "required": false
+        },
+        {
+          "text": "IP rating (IEC 60529)",
+          "required": false
+        },
+        {
+          "text": "Third party certification",
+          "required": false
+        }
+      ]
+    },
+    "product-packaging": {
+      "label": "Product packaging",
+      "fields": [
+        {
+          "text": "Product packaging",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Packaging & Packaging Waste Regulation (EU) 2025/40 (PPWR) · ESPR 2024/1781. Declare one row per packaging layer (primary / secondary / tertiary). Look up a packaging DPP by GTIN to auto-fill, or extract from an uploaded Declaration of Conformity.",
+          "required": false,
+          "type": "note"
+        },
+        {
+          "text": "Layer order",
+          "required": false
+        },
+        {
+          "text": "Layer label",
+          "required": false
+        },
+        {
+          "text": "Input mode (Manual / Lookup by GTIN / Extract from DoC)",
+          "required": false
+        },
+        {
+          "text": "Packaging GTIN",
+          "required": false
+        },
+        {
+          "text": "Packaging DPP ID",
+          "required": false
+        },
+        {
+          "text": "Packaging DPP URL",
+          "required": false
+        },
+        {
+          "text": "Packaging name",
+          "required": false
+        },
+        {
+          "text": "Packaging manufacturer",
+          "required": false
+        },
+        {
+          "text": "Packaging manufacturer country",
+          "required": false
+        },
+        {
+          "text": "Manufacturer role",
+          "required": false
+        },
+        {
+          "text": "Packaging material",
+          "required": false
+        },
+        {
+          "text": "Packaging weight (kg)",
+          "required": false
+        },
+        {
+          "text": "Recyclable (Yes / No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Recyclability grade",
+          "required": false
+        },
+        {
+          "text": "Recycled content (%)",
+          "required": false
+        },
+        {
+          "text": "Reusable (Yes / No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Volume (L)",
+          "required": false
+        },
+        {
+          "text": "Dimensions",
+          "required": false
+        },
+        {
+          "text": "Heavy metals sum (ppm)",
+          "required": false
+        },
+        {
+          "text": "PFAS present (Yes / No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Compostable (Yes / No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Label material (Yes / No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Label – separate collection (Yes / No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "QR / digital carrier",
+          "required": false
+        },
+        {
+          "text": "Packaging identifier",
+          "required": false
+        },
+        {
+          "text": "Material components (rows: Component · Material · Weight (kg) · Recycled (%))",
+          "required": false
+        },
+        {
+          "text": "EPR registrations (rows: Country · Scheme · Registration number)",
+          "required": false
+        },
+        {
+          "text": "Carbon footprint (kg)",
+          "required": false
+        },
+        {
+          "text": "Carbon footprint source",
+          "required": false
+        },
+        {
+          "text": "Declaration of conformity URL",
+          "required": false
+        },
+        {
+          "text": "Declaration of conformity (Upload)",
+          "required": false,
+          "type": "upload"
+        },
+        {
+          "text": "DoC ID",
+          "required": false
+        },
+        {
+          "text": "DoC issue date",
+          "required": false
+        },
+        {
+          "text": "DoC signed by",
+          "required": false
+        },
+        {
+          "text": "EU DoC exists (Yes / No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "REACH compliant (Yes / No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Extract from DoC (Button)",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Generate layer Declaration of Conformity (Button)",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Add packaging layer (Button)",
+          "required": false,
+          "type": "button"
+        }
+      ]
+    },
+    "end-of-life": {
+      "label": "End of life",
+      "fields": [
+        {
+          "text": "End of life",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "ESPR 2024/1781 · Art. 7(2)(f) · Waste Framework Directive 2008/98/EC",
+          "required": false,
+          "type": "note"
+        },
+        {
+          "text": "EU waste code (EWC)",
+          "required": false
+        },
+        {
+          "text": "European Waste Catalogue code",
+          "required": false
+        },
+        {
+          "text": "Part of deposit return scheme",
+          "required": false,
+          "type": "toggle"
+        },
+        {
+          "text": "Recycling instructions",
+          "required": false
+        },
+        {
+          "text": "Disassembly instructions URL",
+          "required": false
+        },
+        {
+          "text": "End-of-life assessment records",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Assessments recorded by authorised service partners (e.g. repairability triage, end-of-life decision). Tick 'Sign' to issue a tamper-proof Verifiable Credential. Bind to a unit via Serial, or leave blank for model-level, if no records -> show -> No end-of-life assessment records yet.",
+          "required": false,
+          "type": "note"
+        },
+        {
+          "text": "Assessment result",
+          "required": false
+        },
+        {
+          "text": "Recommended action",
+          "required": false
+        },
+        {
+          "text": "Updated status",
+          "required": false
+        },
+        {
+          "text": "Date",
+          "required": false
+        },
+        {
+          "text": "Serial",
+          "required": false
+        },
+        {
+          "text": "Evidence URL",
+          "required": false
+        },
+        {
+          "text": "Assessed by",
+          "required": false
+        },
+        {
+          "text": "Verified by",
+          "required": false
+        },
+        {
+          "text": "Sign as Verifiable Credential (offline-verifiable)",
+          "required": false,
+          "type": "checkbox"
+        },
+        {
+          "text": "Add assessment record (Button)",
+          "required": false,
+          "type": "button"
+        }
+      ]
+    },
+    "repair-usage-history": {
+      "label": "Repair & usage history",
+      "fields": [
+        {
+          "text": "Lifecycle & usage events",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Important usage/lifecycle events (e.g. charge 20%–80%, flooding, emergency shutdown). Event type is free text - no fixed classifiers. GS1 EPCIS 2.0-compatible; machines/IoT can append via the API.",
+          "required": false,
+          "type": "note"
+        },
+        {
+          "text": "Event type",
+          "required": false
+        },
+        {
+          "text": "Serial",
+          "required": false
+        },
+        {
+          "text": "From",
+          "required": false
+        },
+        {
+          "text": "To",
+          "required": false
+        },
+        {
+          "text": "Unit(%)",
+          "required": false
+        },
+        {
+          "text": "Note",
+          "required": false
+        },
+        {
+          "text": "Add event (Button)",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Repair & refurbishment history",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Verified repair/refurbishment records a customer, authority or insurer can trust. Tick 'Sign' to issue a tamper-proof Verifiable Credential (offline-verifiable). Bind to a unit via Serial, or leave blank for model-level.",
+          "required": false,
+          "type": "note"
+        },
+        {
+          "text": "Type (Repair / Refurbished / Type)",
+          "required": false
+        },
+        {
+          "text": "Date",
+          "required": false
+        },
+        {
+          "text": "Serial",
+          "required": false
+        },
+        {
+          "text": "Evidence URL",
+          "required": false
+        },
+        {
+          "text": "Description",
+          "required": false
+        },
+        {
+          "text": "Performed by",
+          "required": false
+        },
+        {
+          "text": "Verified by",
+          "required": false
+        },
+        {
+          "text": "Sign as Verifiable Credential (offline-verifiable)",
+          "required": false,
+          "type": "checkbox"
+        },
+        {
+          "text": "Add Repair Record (Button)",
+          "required": false,
+          "type": "button"
+        }
+      ]
+    },
+    "product-gallery": {
+      "label": "Product gallery",
+      "fields": [
+        {
+          "text": "Product gallery",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Product images shown on the public DPP page. Upload up to 10 MB per image; set one image as primary. Drag to reorder.",
+          "required": false,
+          "type": "note"
+        },
+        {
+          "text": "Image (Upload, max 10 MB)",
+          "required": false,
+          "type": "upload"
+        },
+        {
+          "text": "Set as primary (Button)",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Delete image (Button)",
+          "required": false,
+          "type": "button"
+        }
+      ]
+    },
+    "documents-links": {
+      "label": "Documents & links",
+      "fields": [
+        {
+          "text": "Technical documentation",
+          "required": false,
+          "type": "upload"
+        },
+        {
+          "text": "User manual",
+          "required": false,
+          "type": "upload"
+        },
+        {
+          "text": "Safety instructions",
+          "required": false,
+          "type": "upload"
+        },
+        {
+          "text": "Product datasheet",
+          "required": false,
+          "type": "upload"
+        },
+        {
+          "text": "Energy label",
+          "required": false,
+          "type": "upload"
+        },
+        {
+          "text": "Other documents",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Any additional document not covered above (e.g. warranty, conformity annex, spec sheet).",
+          "required": false,
+          "type": "note"
+        },
+        {
+          "text": "Add document (custom documents upload option)",
+          "required": false,
+          "type": "button"
+        }
+      ]
+    },
+    "version": {
+      "label": "Version",
+      "fields": [
+        {
+          "text": "Version history",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Every publish creates a new immutable, digitally-signed version shown to customers. Compare changes against the previous version, verify the signature (offline-verifiable Verifiable Credential), and review the audit trail.",
+          "required": false,
+          "type": "note"
+        },
+        {
+          "text": "Version number",
+          "required": false
+        },
+        {
+          "text": "Effective from",
+          "required": false
+        },
+        {
+          "text": "Change type",
+          "required": false
+        },
+        {
+          "text": "Note",
+          "required": false
+        },
+        {
+          "text": "Published by",
+          "required": false
+        },
+        {
+          "text": "View changes / diff (Button)",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Verify signature (Button)",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Publish new version (Button)",
+          "required": false,
+          "type": "button"
+        }
+      ]
+    }
+  }
+}

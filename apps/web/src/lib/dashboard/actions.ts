@@ -9,6 +9,7 @@ import { validateGtinFormat } from "@/lib/gs1/check-digit";
 import type { GtinFormatResult, Gs1VerificationResult } from "@/lib/gs1/types";
 import { verifyGtin } from "@/lib/gs1/client";
 import { prunePackagingLayers } from "@/lib/dpp/packaging-layers";
+import { pruneSectionAnswers } from "@/lib/dpp/dpp-sections";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 function isUUID(val: string): boolean {
@@ -954,11 +955,19 @@ export async function createProductDppAction(data: {
       if (layers.length > 0) sectionAnswers.packaging = { layers };
       continue;
     }
-    const trimmed = Object.fromEntries(
-      Object.entries(answers as Record<string, string>)
-        .map(([key, value]) => [key, value?.trim() ?? ""])
-        .filter(([, value]) => value !== "")
-    );
+    // Every other section may carry a reserved "__rows" key for its
+    // repeatable tables (Materials, Substances, End-of-life records, Repair
+    // & usage history, Product specifications - see DppRepeatableBlock in
+    // dpp-sections.ts) alongside the flat field map every section has always
+    // used. pruneSectionAnswers handles both, resolving each block's row
+    // schema fresh from that sector's own spreadsheet.
+    const trimmed = data.sector
+      ? pruneSectionAnswers(data.sector, sectionKey, answers as Record<string, unknown>)
+      : Object.fromEntries(
+          Object.entries(answers as Record<string, string>)
+            .map(([key, value]) => [key, value?.trim() ?? ""])
+            .filter(([, value]) => value !== "")
+        );
     if (Object.keys(trimmed).length > 0) sectionAnswers[sectionKey] = trimmed;
   }
   const sectionAnswersValue =

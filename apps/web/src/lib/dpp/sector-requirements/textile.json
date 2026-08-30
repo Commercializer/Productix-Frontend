@@ -1,0 +1,1154 @@
+{
+  "sector": "TEXTILE",
+  "sourceName": "Textile & Footwear",
+  "sections": {
+    "product-identification": {
+      "label": "Product identification",
+      "fields": [
+        {
+          "text": "Product name",
+          "required": true
+        },
+        {
+          "text": "GTIN-14",
+          "required": true
+        },
+        {
+          "text": "Sector",
+          "required": true
+        },
+        {
+          "text": "Type (Textile / Footware)",
+          "required": true
+        },
+        {
+          "text": "Brand name",
+          "required": false
+        },
+        {
+          "text": "Model number",
+          "required": false
+        },
+        {
+          "text": "Product category",
+          "required": false
+        },
+        {
+          "text": "HS Code",
+          "required": false
+        },
+        {
+          "text": "Product variants - Add Variant (Variant GTIN, Size, Color, SKU)",
+          "required": false
+        }
+      ]
+    },
+    "manufacturer-importer": {
+      "label": "Manufacturer & importer",
+      "fields": [
+        {
+          "text": "Manufacturer name",
+          "required": true
+        },
+        {
+          "text": "Manufacturer country",
+          "required": true
+        },
+        {
+          "text": "Manufacturer address",
+          "required": false
+        },
+        {
+          "text": "Manufacturer contact",
+          "required": false
+        },
+        {
+          "text": "Manufacturing facility ID",
+          "required": false
+        },
+        {
+          "text": "Manufacturing facility / site (plant code or GS1 GLN). Optional - one of the 4 EU DPP Registry identifiers.",
+          "required": false
+        },
+        {
+          "text": "Facility ID scheme - None / GLN (GS1) / EU-OP / Other (Optional. Pick GLN only if the Facility ID is a GS1 GLN - it's then validated (13 digits).)",
+          "required": false
+        },
+        {
+          "text": "Importer",
+          "required": false
+        },
+        {
+          "text": "Importer name (Required if manufacturer is outside EU)",
+          "required": false
+        },
+        {
+          "text": "Importer country",
+          "required": false
+        }
+      ]
+    },
+    "product-specifications": {
+      "label": "Product specifications",
+      "fields": [
+        {
+          "text": "Add Spec (Custom rows)",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Field Title",
+          "required": false
+        },
+        {
+          "text": "Field Content",
+          "required": false
+        }
+      ]
+    },
+    "physical-properties": {
+      "label": "Physical properties",
+      "fields": [
+        {
+          "text": "Weight (kg)",
+          "required": true
+        },
+        {
+          "text": "Width (mm)",
+          "required": false
+        },
+        {
+          "text": "Height (mm)",
+          "required": false
+        },
+        {
+          "text": "Depth (mm)",
+          "required": false
+        },
+        {
+          "text": "Expected lifetime (years)",
+          "required": false
+        },
+        {
+          "text": "Warranty (years)",
+          "required": false
+        },
+        {
+          "text": "Manufacture date",
+          "required": false
+        },
+        {
+          "text": "Expiry date",
+          "required": false
+        }
+      ]
+    },
+    "textile-data": {
+      "label": "Textile data",
+      "fields": [
+        {
+          "text": "Textile data",
+          "required": false,
+          "type": "section-heading"
+        },
+        {
+          "text": "Fibre composition (Reg. 1007/2011) - (Order from highest to lowest %. Sum should equal 100.)",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Fibre name (Ex: Leather , Merino wool)",
+          "required": false
+        },
+        {
+          "text": "Share %",
+          "required": false
+        },
+        {
+          "text": "Recycled %",
+          "required": false
+        },
+        {
+          "text": "Origin (Country seach and pick)",
+          "required": false
+        },
+        {
+          "text": "Organic (checkbox)",
+          "required": false,
+          "type": "checkbox"
+        },
+        {
+          "text": "Component (Component groups fibres/layers into one part (e.g. a sole). )",
+          "required": false
+        },
+        {
+          "text": "Reusable (Mark Reusable to flag the whole component as reusable.)",
+          "required": false
+        },
+        {
+          "text": "Add fibre (Button - New row, above fields again on new fibre)",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Fabric weight (g/m²)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "g",
+            "m²"
+          ]
+        },
+        {
+          "text": "Weave type (Woven, Knitted, Non-woven, Felt, Mesh, Fleece, Quilted, Laminated)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Woven",
+            "Knitted",
+            "Non-woven",
+            "Felt",
+            "Mesh",
+            "Fleece",
+            "Quilted",
+            "Laminated"
+          ]
+        },
+        {
+          "text": "Yarn count",
+          "required": false
+        },
+        {
+          "text": "Origin & manufacturing chain",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Country of dyeing (Country picker search and select)",
+          "required": false
+        },
+        {
+          "text": "Country of weaving / knitting (Country picker search and select)",
+          "required": false
+        },
+        {
+          "text": "Country of cutting / sewing (Country picker search and select)",
+          "required": false
+        },
+        {
+          "text": "Country of finishing (Country picker search and select)",
+          "required": false
+        },
+        {
+          "text": "Factory ID - dyeing (Higg FEM, OAR …)",
+          "required": false
+        },
+        {
+          "text": "Factory ID - cutting / sewing",
+          "required": false
+        },
+        {
+          "text": "Environmental footprint (PEFCR Apparel v1.1)",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Carbon footprint per garment (kg CO₂)",
+          "required": false
+        },
+        {
+          "text": "Water footprint per garment (L)",
+          "required": false
+        },
+        {
+          "text": "Land use (m²·yr) - (Natural fibres only)",
+          "required": false
+        },
+        {
+          "text": "PEF methodology",
+          "required": false
+        },
+        {
+          "text": "PEF declaration URL",
+          "required": false
+        },
+        {
+          "text": "Chemicals & dyes",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Dye class (Reactive, Disperse, Direct, Vat, Sulfur, Acid, Pigment, Natural, None)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Reactive",
+            "Disperse",
+            "Direct",
+            "Vat",
+            "Sulfur",
+            "Acid",
+            "Pigment",
+            "Natural",
+            "None"
+          ]
+        },
+        {
+          "text": "Oeko-Tex class",
+          "required": false
+        },
+        {
+          "text": "REACH SVHC compliant (Yes/No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "ZDHC MRSL compliant (Yes/No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "PFAS-free (Yes/No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Formaldehyde-free (Yes/No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Durability",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Martindale abrasion cycles (ISO 12947-2)",
+          "required": false
+        },
+        {
+          "text": "Pilling resistance grade (1–5 per ISO 12945-2)",
+          "required": false
+        },
+        {
+          "text": "Colour fastness - wash (ISO 105-C06)",
+          "required": false
+        },
+        {
+          "text": "Colour fastness - light (1–8 per ISO 105-B02)",
+          "required": false
+        },
+        {
+          "text": "Wash cycles durability (Expected wash cycles before fade/shrink)",
+          "required": false
+        },
+        {
+          "text": "Tear strength (warp, N)",
+          "required": false
+        },
+        {
+          "text": "Microfibre shedding",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Shed rate (mg/kg per wash)",
+          "required": false
+        },
+        {
+          "text": "Test method (Ex: TMC 2024 / AATCC TM212)",
+          "required": false
+        },
+        {
+          "text": "Recyclability & repairability",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Total recycled content (%)",
+          "required": false
+        },
+        {
+          "text": "Mono-material (≥95%) (Yes/No) - Critical signal for chemical recycling",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Recyclability (%)",
+          "required": false
+        },
+        {
+          "text": "Recycling pathway (Mechanical, Chemical, Thermal, Energy recovery, Reuse first, Not recyclable)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Mechanical",
+            "Chemical",
+            "Thermal",
+            "Energy recovery",
+            "Reuse first",
+            "Not recyclable"
+          ]
+        },
+        {
+          "text": "Repair kit available (Yes/No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Repair manual URL",
+          "required": false
+        },
+        {
+          "text": "Reuse / second-hand URL",
+          "required": false
+        },
+        {
+          "text": "Care instructions (ISO 3758)",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Wash max (°C)",
+          "required": false
+        },
+        {
+          "text": "Bleach (Any bleach, Chlorine only, Non-chlorine only, Do not bleach)",
+          "required": false
+        },
+        {
+          "text": "Tumble dry (Low heat, Medium heat, High heat, Do not tumble dry)",
+          "required": false
+        },
+        {
+          "text": "Iron max (°C)",
+          "required": false
+        },
+        {
+          "text": "Dry-clean (Any solvent, P (perchloroethylene), F (petroleum), W (wet-cleaning), Do not dry-clean)",
+          "required": false
+        },
+        {
+          "text": "Free-text care notes (Ex: Wash inside-out, line dry, do not iron print.)",
+          "required": true
+        },
+        {
+          "text": "Certifications",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "GOTS (organic) - (Yes/No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Fairtrade - (Yes/No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Bluesign - (Yes/No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Cradle to Cradle - (Basic, Bronze, Silver, Gold, Platinum)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Basic",
+            "Bronze",
+            "Silver",
+            "Gold",
+            "Platinum"
+          ]
+        },
+        {
+          "text": "Responsible Wool Standard - (Yes/No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Responsible Down Standard (Yes/No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Leather Working Group ( Audited, Bronze, Silver, Gold)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Audited",
+            "Bronze",
+            "Silver",
+            "Gold"
+          ]
+        },
+        {
+          "text": "EU Ecolabel licence",
+          "required": false
+        }
+      ]
+    },
+    "substances-of-concern-svhc": {
+      "label": "Substances of concern (SVHC)",
+      "fields": [
+        {
+          "text": "Substances of concern (SVHC)",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "REACH 1907/2006 · Art. 33 - mandatory if >0.1% w/w (1000 ppm), Mandatory declaration threshold: >0.1% w/w (1000 ppm) per article. SVHC = Substance of Very High Concern (ECHA Candidate List).",
+          "required": false,
+          "type": "note"
+        },
+        {
+          "text": "Substance name",
+          "required": false
+        },
+        {
+          "text": "CAS number",
+          "required": false
+        },
+        {
+          "text": "Conc. (ppm)",
+          "required": false
+        },
+        {
+          "text": "Location in product",
+          "required": false
+        },
+        {
+          "text": "SVHC",
+          "required": false,
+          "type": "checkbox"
+        },
+        {
+          "text": "Add substance (New row, above fields again on new substance)",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Compliance & certifications",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "CE Marking · REACH 1907/2006 · RoHS 2011/65/EU · ESPR 2024/1781",
+          "required": false,
+          "type": "note"
+        },
+        {
+          "text": "CE marking",
+          "required": false,
+          "type": "toggle"
+        },
+        {
+          "text": "REACH compliant",
+          "required": false,
+          "type": "toggle"
+        },
+        {
+          "text": "RoHS compliant",
+          "required": false,
+          "type": "toggle"
+        },
+        {
+          "text": "Energy efficiency class",
+          "required": false,
+          "type": "select",
+          "options": [
+            "A+++",
+            "A++",
+            "A+",
+            "A",
+            "B",
+            "C",
+            "D",
+            "E",
+            "F",
+            "G"
+          ]
+        },
+        {
+          "text": "Energy consumption (kWh/year)",
+          "required": false
+        },
+        {
+          "text": "IP rating (IEC 60529)",
+          "required": false
+        },
+        {
+          "text": "Third party certification",
+          "required": false
+        }
+      ]
+    },
+    "product-packaging": {
+      "label": "Product packaging",
+      "fields": [
+        {
+          "text": "Product packaging",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Packaging & Packaging Waste Regulation (EU) 2025/40 (PPWR) · ESPR 2024/1781. Declare one row per packaging layer (primary / secondary / tertiary). Look up a packaging DPP by GTIN to auto-fill, or extract from an uploaded Declaration of Conformity.",
+          "required": false,
+          "type": "note"
+        },
+        {
+          "text": "Layer order",
+          "required": false
+        },
+        {
+          "text": "Layer label",
+          "required": false
+        },
+        {
+          "text": "Input mode (Manual / Lookup by GTIN / Extract from DoC)",
+          "required": false
+        },
+        {
+          "text": "Packaging GTIN",
+          "required": false
+        },
+        {
+          "text": "Packaging DPP ID",
+          "required": false
+        },
+        {
+          "text": "Packaging DPP URL",
+          "required": false
+        },
+        {
+          "text": "Packaging name",
+          "required": false
+        },
+        {
+          "text": "Packaging manufacturer",
+          "required": false
+        },
+        {
+          "text": "Packaging manufacturer country",
+          "required": false
+        },
+        {
+          "text": "Manufacturer role",
+          "required": false
+        },
+        {
+          "text": "Packaging material",
+          "required": false
+        },
+        {
+          "text": "Packaging weight (kg)",
+          "required": false
+        },
+        {
+          "text": "Recyclable (Yes / No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Recyclability grade",
+          "required": false
+        },
+        {
+          "text": "Recycled content (%)",
+          "required": false
+        },
+        {
+          "text": "Reusable (Yes / No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Volume (L)",
+          "required": false
+        },
+        {
+          "text": "Dimensions",
+          "required": false
+        },
+        {
+          "text": "Heavy metals sum (ppm)",
+          "required": false
+        },
+        {
+          "text": "PFAS present (Yes / No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Compostable (Yes / No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Label material (Yes / No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Label – separate collection (Yes / No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "QR / digital carrier",
+          "required": false
+        },
+        {
+          "text": "Packaging identifier",
+          "required": false
+        },
+        {
+          "text": "Material components (rows: Component · Material · Weight (kg) · Recycled (%))",
+          "required": false
+        },
+        {
+          "text": "EPR registrations (rows: Country · Scheme · Registration number)",
+          "required": false
+        },
+        {
+          "text": "Carbon footprint (kg)",
+          "required": false
+        },
+        {
+          "text": "Carbon footprint source",
+          "required": false
+        },
+        {
+          "text": "Declaration of conformity URL",
+          "required": false
+        },
+        {
+          "text": "Declaration of conformity (Upload)",
+          "required": false,
+          "type": "upload"
+        },
+        {
+          "text": "DoC ID",
+          "required": false
+        },
+        {
+          "text": "DoC issue date",
+          "required": false
+        },
+        {
+          "text": "DoC signed by",
+          "required": false
+        },
+        {
+          "text": "EU DoC exists (Yes / No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "REACH compliant (Yes / No)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Extract from DoC (Button)",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Generate layer Declaration of Conformity (Button)",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Add packaging layer (Button)",
+          "required": false,
+          "type": "button"
+        }
+      ]
+    },
+    "end-of-life": {
+      "label": "End of life",
+      "fields": [
+        {
+          "text": "End of life",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "ESPR 2024/1781 · Art. 7(2)(f) · Waste Framework Directive 2008/98/EC",
+          "required": false,
+          "type": "note"
+        },
+        {
+          "text": "EU waste code (EWC)",
+          "required": false
+        },
+        {
+          "text": "European Waste Catalogue code",
+          "required": false
+        },
+        {
+          "text": "Part of deposit return scheme",
+          "required": false,
+          "type": "toggle"
+        },
+        {
+          "text": "Recycling instructions",
+          "required": false
+        },
+        {
+          "text": "Disassembly instructions URL",
+          "required": false
+        },
+        {
+          "text": "End-of-life assessment records",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Assessments recorded by authorised service partners (e.g. repairability triage, end-of-life decision). Tick 'Sign' to issue a tamper-proof Verifiable Credential. Bind to a unit via Serial, or leave blank for model-level, if no records -> show -> No end-of-life assessment records yet.",
+          "required": false,
+          "type": "note"
+        },
+        {
+          "text": "Assessment result",
+          "required": false
+        },
+        {
+          "text": "Recommended action",
+          "required": false
+        },
+        {
+          "text": "Updated status",
+          "required": false
+        },
+        {
+          "text": "Date",
+          "required": false
+        },
+        {
+          "text": "Serial",
+          "required": false
+        },
+        {
+          "text": "Evidence URL",
+          "required": false
+        },
+        {
+          "text": "Assessed by",
+          "required": false
+        },
+        {
+          "text": "Verified by",
+          "required": false
+        },
+        {
+          "text": "Sign as Verifiable Credential (offline-verifiable)",
+          "required": false,
+          "type": "checkbox"
+        },
+        {
+          "text": "Add assessment record (Button)",
+          "required": false,
+          "type": "button"
+        }
+      ]
+    },
+    "repair-usage-history": {
+      "label": "Repair & usage history",
+      "fields": [
+        {
+          "text": "Lifecycle & usage events",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Important usage/lifecycle events (e.g. charge 20%–80%, flooding, emergency shutdown). Event type is free text - no fixed classifiers. GS1 EPCIS 2.0-compatible; machines/IoT can append via the API.",
+          "required": false,
+          "type": "note"
+        },
+        {
+          "text": "Event type",
+          "required": false
+        },
+        {
+          "text": "Serial",
+          "required": false
+        },
+        {
+          "text": "From",
+          "required": false
+        },
+        {
+          "text": "To",
+          "required": false
+        },
+        {
+          "text": "Unit(%)",
+          "required": false
+        },
+        {
+          "text": "Note",
+          "required": false
+        },
+        {
+          "text": "Add event (Button)",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Repair & refurbishment history",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Verified repair/refurbishment records a customer, authority or insurer can trust. Tick 'Sign' to issue a tamper-proof Verifiable Credential (offline-verifiable). Bind to a unit via Serial, or leave blank for model-level.",
+          "required": false,
+          "type": "note"
+        },
+        {
+          "text": "Type (Repair / Refurbished / Type)",
+          "required": false
+        },
+        {
+          "text": "Date",
+          "required": false
+        },
+        {
+          "text": "Serial",
+          "required": false
+        },
+        {
+          "text": "Evidence URL",
+          "required": false
+        },
+        {
+          "text": "Description",
+          "required": false
+        },
+        {
+          "text": "Performed by",
+          "required": false
+        },
+        {
+          "text": "Verified by",
+          "required": false
+        },
+        {
+          "text": "Sign as Verifiable Credential (offline-verifiable)",
+          "required": false,
+          "type": "checkbox"
+        },
+        {
+          "text": "Add Repair Record (Button)",
+          "required": false,
+          "type": "button"
+        }
+      ]
+    },
+    "product-gallery": {
+      "label": "Product gallery",
+      "fields": [
+        {
+          "text": "Product gallery",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Product images shown on the public DPP page. Upload up to 10 MB per image; set one image as primary. Drag to reorder.",
+          "required": false,
+          "type": "note"
+        },
+        {
+          "text": "Image (Upload, max 10 MB)",
+          "required": false,
+          "type": "upload"
+        },
+        {
+          "text": "Set as primary (Button)",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Delete image (Button)",
+          "required": false,
+          "type": "button"
+        }
+      ]
+    },
+    "documents-links": {
+      "label": "Documents & links",
+      "fields": [
+        {
+          "text": "Technical documentation",
+          "required": false,
+          "type": "upload"
+        },
+        {
+          "text": "User manual",
+          "required": false,
+          "type": "upload"
+        },
+        {
+          "text": "Safety instructions",
+          "required": false,
+          "type": "upload"
+        },
+        {
+          "text": "Product datasheet",
+          "required": false,
+          "type": "upload"
+        },
+        {
+          "text": "Energy label",
+          "required": false,
+          "type": "upload"
+        },
+        {
+          "text": "Other documents",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Any additional document not covered above (e.g. warranty, conformity annex, spec sheet).",
+          "required": false,
+          "type": "note"
+        },
+        {
+          "text": "Add document (custom documents upload option)",
+          "required": false,
+          "type": "button"
+        }
+      ]
+    },
+    "version": {
+      "label": "Version",
+      "fields": [
+        {
+          "text": "Version history",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Every publish creates a new immutable, digitally-signed version shown to customers. Compare changes against the previous version, verify the signature (offline-verifiable Verifiable Credential), and review the audit trail.",
+          "required": false,
+          "type": "note"
+        },
+        {
+          "text": "Version number",
+          "required": false
+        },
+        {
+          "text": "Effective from",
+          "required": false
+        },
+        {
+          "text": "Change type",
+          "required": false
+        },
+        {
+          "text": "Note",
+          "required": false
+        },
+        {
+          "text": "Published by",
+          "required": false
+        },
+        {
+          "text": "View changes / diff (Button)",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Verify signature (Button)",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Publish new version (Button)",
+          "required": false,
+          "type": "button"
+        }
+      ]
+    }
+  }
+}

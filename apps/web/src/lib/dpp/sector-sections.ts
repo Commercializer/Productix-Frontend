@@ -2,8 +2,14 @@ import type { DppSector } from "@productix/db";
 
 /** How a field's value should be captured. Omitted (or "text") renders a
  * plain text input - the only option that existed before this type was
- * introduced, so every pre-existing field stays valid untouched. */
-export type DppFieldType = "text" | "number" | "date" | "url" | "toggle" | "select";
+ * introduced, so every pre-existing field stays valid untouched. "upload"
+ * (documents-links fields in the spreadsheet) still stores a bare URL
+ * string like "url" does, but the dashboard control (DocumentUploadInput in
+ * the DPP editor page) also lets the producer upload a PDF directly via
+ * /api/media/upload (same route ProductGallery uses for images), which
+ * fills that same string with the resulting file's R2 URL - pasting a link
+ * to an already-hosted file still works as a fallback. */
+export type DppFieldType = "text" | "number" | "date" | "url" | "toggle" | "select" | "upload";
 
 export interface DppSectionField {
   text: string;
@@ -932,4 +938,43 @@ export function trimFieldLabel(text: string): string {
     return base.trim();
   }
   return text;
+}
+
+/** The shape both a section field (`text`) and a repeatable-row field
+ * (`label`, passed in as `text` by its caller) share for layout purposes. */
+interface LabeledField {
+  text: string;
+  type?: string;
+}
+
+const URL_LABEL_RE = /\burl\b/i;
+const LONG_TEXT_KEYWORD_RE = /\b(instructions?|declaration|description|statement|warnings?|notes?|list|table)\b/i;
+
+/** Whether a field's expected answer is long/compound enough to need a
+ * multi-line textarea instead of a single-line input. Only plain text
+ * fields qualify - every other control type (toggle/select/date/number/url/
+ * upload) is compact by nature. A label counts as "long" when it names
+ * several sub-values (3+ "+"/"," separators, e.g. "A + B + C, D"), uses a
+ * keyword implying free-flowing prose ("instructions", "description", ...),
+ * or is simply long - except a URL-ish label, which stays single-line
+ * however it's described. */
+export function isLongTextField(field: LabeledField): boolean {
+  if (field.type && field.type !== "text") return false;
+  const label = trimFieldLabel(field.text);
+  if (URL_LABEL_RE.test(label)) return false;
+  if ((label.match(/[+,]/g)?.length ?? 0) >= 3) return true;
+  if (LONG_TEXT_KEYWORD_RE.test(label)) return true;
+  return label.length > 85;
+}
+
+/** Whether a field should occupy a full row in its section's grid rather
+ * than sharing one with a neighboring field - textareas (see
+ * isLongTextField above), document uploads, and URL fields all need the
+ * extra width; everything else (toggle/select/date/number/short text) is
+ * compact enough to sit two-up. */
+export function isFullWidthField(field: LabeledField): boolean {
+  if (field.type === "upload" || field.type === "url") return true;
+  if (isLongTextField(field)) return true;
+  if (!field.type || field.type === "text") return URL_LABEL_RE.test(trimFieldLabel(field.text));
+  return false;
 }
