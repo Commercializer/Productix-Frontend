@@ -1,8 +1,16 @@
 import type { DppSector } from "@productix/db";
 
+/** How a field's value should be captured. Omitted (or "text") renders a
+ * plain text input - the only option that existed before this type was
+ * introduced, so every pre-existing field stays valid untouched. */
+export type DppFieldType = "text" | "number" | "date" | "url" | "toggle" | "select";
+
 export interface DppSectionField {
   text: string;
   required: boolean;
+  type?: DppFieldType;
+  /** Only meaningful for type: "select" - the fixed list of choices. */
+  options?: string[];
 }
 
 /** One numbered sub-section (e.g. "§1 Performance & durability") within a

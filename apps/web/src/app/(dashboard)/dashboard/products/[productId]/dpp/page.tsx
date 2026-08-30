@@ -48,7 +48,7 @@ import { SearchableSelect } from "@/components/dashboard/searchable-select";
 import { ProductGallery } from "@/components/dashboard/product-gallery";
 import { PackagingLayersPanel } from "@/components/dashboard/packaging-layers-panel";
 import { DPP_SECTOR_SECTIONS, trimFieldLabel, type DppSectionField } from "@/lib/dpp/sector-sections";
-import { DPP_SECTIONS, getOrderedDppSections, type DppSectionSpec } from "@/lib/dpp/dpp-sections";
+import { DPP_SECTIONS, IDENTIFICATION_EXTRA_FIELDS, getOrderedDppSections, type DppSectionSpec } from "@/lib/dpp/dpp-sections";
 import { COUNTRY_OPTIONS } from "@/lib/dpp/countries";
 import { countMissingRequiredLayerFields, type PackagingLayer } from "@/lib/dpp/packaging-layers";
 import type { DppIdentifierType, DppSector } from "@productix/db";
@@ -133,9 +133,36 @@ function splitSubSectionLabel(label: string): { number: string | null; text: str
   return match ? { number: match[1]!, text: match[2]! } : { number: null, text: label };
 }
 
+/** A Yes/No switch for `type: "toggle"` fields - same visual as the
+ * "Show optional fields" switch elsewhere on this page, bound to the field's
+ * string value ("Yes" | "No") rather than a boolean, so it stores the same
+ * way every other field does. */
+function ToggleFieldInput({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const isYes = value === "Yes";
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(isYes ? "No" : "Yes")}
+      className={`inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+        isYes ? "bg-(--ds-accent)" : "bg-[#cbd5e1] dark:bg-[#475569]"
+      }`}
+      aria-pressed={isYes}
+    >
+      <span
+        className={`inline-block h-5 w-5 rounded-full bg-white transition-transform ${
+          isYes ? "translate-x-5" : "translate-x-0.5"
+        }`}
+      />
+    </button>
+  );
+}
+
 /** One field from a section's data. Label is a trimmed version of the raw
  * compliance text; when trimming actually changed something, the full
- * original text is kept visible as a caption so nothing is lost. */
+ * original text is kept visible as a caption so nothing is lost. The input
+ * control itself branches on `field.type` - defaulting to a plain text input
+ * for fields that don't set one, so every pre-existing field keeps working
+ * unchanged. */
 function DppFieldInput({
   field,
   value,
@@ -153,12 +180,29 @@ function DppFieldInput({
       <label className="block text-[12px] font-medium text-(--ds-text-primary) mb-1">
         {label} {field.required && <span className="text-red-400">*</span>}
       </label>
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className={`${inputClass} h-[38px] text-[13px]`}
-      />
+      {field.type === "toggle" ? (
+        <ToggleFieldInput value={value} onChange={onChange} />
+      ) : field.type === "select" ? (
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={`${selectClass} h-[38px] text-[13px]`}
+        >
+          <option value="">— Select —</option>
+          {field.options?.map((o) => (
+            <option key={o} value={o}>
+              {o}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <input
+          type={field.type === "number" || field.type === "date" || field.type === "url" ? field.type : "text"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={`${inputClass} h-[38px] text-[13px]`}
+        />
+      )}
       {wasTrimmed && <p className="mt-1 text-[11px] text-(--ds-text-muted)">{field.text}</p>}
     </div>
   );
@@ -183,7 +227,10 @@ export default function ProductDppPage({ params }: PageProps) {
 
   const [sectionAnswers, setSectionAnswers] = useState<Record<string, Record<string, string>>>({});
   const [packagingLayers, setPackagingLayers] = useState<PackagingLayer[]>([]);
-  const [showOptional, setShowOptional] = useState<Record<string, boolean>>({});
+  // One global switch for every section's optional fields, rather than a
+  // per-section toggle you'd have to flip again on every tab - see the
+  // header where it renders.
+  const [showOptionalFields, setShowOptionalFields] = useState(false);
   const [activeKey, setActiveKey] = useState<string>("identification");
   // Whether the sector's §N sub-sections are expanded in the sidebar -
   // collapsed by default; clicking the sector's own row reveals them (see
@@ -235,28 +282,18 @@ export default function ProductDppPage({ params }: PageProps) {
         setSectionAnswers(answers);
         if (Array.isArray(packaging?.layers)) setPackagingLayers(packaging.layers);
 
-        // Auto-reveal a section's optional fields if it already has one
-        // filled in, so returning to edit doesn't hide existing answers. The
-        // sector section is split into one sidebar row per §N sub-section
-        // (see sidebarItems), each with its own show/hide toggle, so it's
-        // checked group-by-group under keys "sector:0", "sector:1"... rather
-        // than the single "sector" key the answers themselves are stored
-        // under.
-        const nextShow: Record<string, boolean> = {};
-        for (const [key, ans] of Object.entries(answers)) {
+        // Auto-reveal optional fields globally if anything already has one
+        // filled in, so returning to edit doesn't hide existing answers.
+        const hasAnyOptionalAnswered = Object.entries(answers).some(([key, ans]) => {
           if (key === "sector") {
             const groups = loadedSector ? DPP_SECTOR_SECTIONS[loadedSector]?.groups : undefined;
-            groups?.forEach((g, i) => {
-              if (g.fields.some((f) => !f.required && ans[f.text]?.trim())) nextShow[`sector:${i}`] = true;
-            });
-            continue;
+            return !!groups?.some((g) => g.fields.some((f) => !f.required && ans[f.text]?.trim()));
           }
+          if (key === "specifications" && IDENTIFICATION_EXTRA_FIELDS.some((f) => ans[f.text]?.trim())) return true;
           const spec = DPP_SECTIONS.find((s) => s.key === key);
-          if (!spec) continue;
-          const hasOptionalAnswered = flattenFields(spec).some((f) => !f.required && ans[f.text]?.trim());
-          if (hasOptionalAnswered) nextShow[key] = true;
-        }
-        setShowOptional(nextShow);
+          return !!spec && flattenFields(spec).some((f) => !f.required && ans[f.text]?.trim());
+        });
+        if (hasAnyOptionalAnswered) setShowOptionalFields(true);
       }
 
       setLoading(false);
@@ -420,7 +457,22 @@ export default function ProductDppPage({ params }: PageProps) {
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-(--ds-surface-2) text-(--ds-text-secondary)">
             <Package size={18} />
           </span>
-          <h1 className="text-xl font-bold tracking-tight text-(--ds-text-primary)">Digital Product Passport</h1>
+          <h1 className="text-xl font-bold tracking-tight text-(--ds-text-primary) flex-1">Digital Product Passport</h1>
+          <label className="flex items-center gap-2 text-[12px] text-(--ds-text-secondary) cursor-pointer select-none shrink-0">
+            Show optional fields
+            <span
+              onClick={() => setShowOptionalFields((v) => !v)}
+              className={`inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                showOptionalFields ? "bg-(--ds-accent)" : "bg-[#cbd5e1] dark:bg-[#475569]"
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${
+                  showOptionalFields ? "translate-x-4" : "translate-x-0.5"
+                }`}
+              />
+            </span>
+          </label>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-4 items-start">
@@ -606,6 +658,19 @@ export default function ProductDppPage({ params }: PageProps) {
                     This product already has a GTIN on file, so its DPP identifier is fixed to GS1 / GTIN.
                   </p>
                 )}
+
+                {showOptionalFields && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {IDENTIFICATION_EXTRA_FIELDS.map((f) => (
+                      <DppFieldInput
+                        key={f.text}
+                        field={f}
+                        value={sectionAnswers.specifications?.[f.text] ?? ""}
+                        onChange={(v) => setFieldAnswer("specifications", f.text, v)}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -636,8 +701,7 @@ export default function ProductDppPage({ params }: PageProps) {
               <SectionPanel
                 spec={activeItem.spec}
                 answers={sectionAnswers[activeItem.answersKey ?? activeItem.key] ?? {}}
-                showOptional={!!showOptional[activeItem.key]}
-                onToggleOptional={(v) => setShowOptional((prev) => ({ ...prev, [activeItem.key]: v }))}
+                showOptional={showOptionalFields}
                 onFieldChange={(text, value) => setFieldAnswer(activeItem.answersKey ?? activeItem.key, text, value)}
                 extraFieldsBefore={
                   activeItem.key === "manufacturer" ? (
@@ -701,14 +765,12 @@ function SectionPanel({
   spec,
   answers,
   showOptional,
-  onToggleOptional,
   onFieldChange,
   extraFieldsBefore,
 }: {
   spec: DppSectionSpec;
   answers: Record<string, string>;
   showOptional: boolean;
-  onToggleOptional: (v: boolean) => void;
   onFieldChange: (fieldText: string, value: string) => void;
   extraFieldsBefore?: React.ReactNode;
 }) {
@@ -734,24 +796,7 @@ function SectionPanel({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <SectionHeading title={spec.title} directive={spec.directive} />
-        <label className="flex items-center gap-2 text-[12px] text-(--ds-text-secondary) cursor-pointer select-none shrink-0">
-          Show optional fields
-          <span
-            onClick={() => onToggleOptional(!showOptional)}
-            className={`inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-              showOptional ? "bg-(--ds-accent)" : "bg-[#cbd5e1] dark:bg-[#475569]"
-            }`}
-          >
-            <span
-              className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${
-                showOptional ? "translate-x-4" : "translate-x-0.5"
-              }`}
-            />
-          </span>
-        </label>
-      </div>
+      <SectionHeading title={spec.title} directive={spec.directive} />
 
       {spec.groups ? (
         spec.groups.map((group) => (

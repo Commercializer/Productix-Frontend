@@ -1,5 +1,6 @@
 import type { DppSector } from "@productix/db";
 import { DPP_SECTOR_SECTIONS, type DppSectionField } from "./sector-sections";
+import { COUNTRY_OPTIONS } from "./countries";
 
 export type { DppSectionField };
 
@@ -20,6 +21,38 @@ export interface DppSectionSpec {
    * importer's MANUFACTURER / IMPORTER split) instead of a flat field list. */
   groups?: DppFieldGroup[];
 }
+
+/** Brand name / Model number / Product category / HS Code - rendered on the
+ * "Product identification" tab (see the DPP page's hardcoded `identification`
+ * render branch), matching the spreadsheet's own grouping. There used to be
+ * a generic `specifications` section below holding these plus the
+ * CE-marking/compliance fields (now relocated into "substances" - see that
+ * section's "Compliance & certifications" group) - once both moved out, the
+ * `specifications` section had nothing left in it and was removed entirely,
+ * but its answers key lives on: these 4 fields are still stored under
+ * `sectionAnswers.specifications` (see setFieldAnswer("specifications", ...)
+ * in the page and SectionCard's `data.sectionAnswers.specifications` read in
+ * the public view) purely so nothing already saved under that key is lost or
+ * migrated - it's not tied to any section object named "specifications"
+ * anymore. */
+export const IDENTIFICATION_EXTRA_FIELDS: DppSectionField[] = [
+  {
+    "text": "Brand name",
+    "required": false
+  },
+  {
+    "text": "Model number",
+    "required": false
+  },
+  {
+    "text": "Product category",
+    "required": false
+  },
+  {
+    "text": "HS Code",
+    "required": false
+  }
+];
 
 /** Every generic (non sector-specific) DPP section, curated from
  * admin.dpp.gs's section-info API (see
@@ -58,6 +91,16 @@ export const DPP_SECTIONS: DppSectionSpec[] = [
           {
             "text": "Authorized representative in the EU",
             "required": false
+          },
+          {
+            "text": "Manufacturing facility ID (plant code or GS1 GLN - optional, one of the 4 EU DPP Registry identifiers)",
+            "required": false
+          },
+          {
+            "text": "Facility ID scheme",
+            "required": false,
+            "type": "select",
+            "options": ["None", "GLN (GS1)", "EU-OP", "Other"]
           }
         ]
       },
@@ -67,57 +110,14 @@ export const DPP_SECTIONS: DppSectionSpec[] = [
           {
             "text": "Importer name & address (if manufacturer outside EU)",
             "required": true
+          },
+          {
+            "text": "Importer country",
+            "required": false,
+            "type": "select",
+            "options": COUNTRY_OPTIONS
           }
         ]
-      }
-    ]
-  },
-  {
-    "key": "specifications",
-    "sidebarLabel": "Product specifications",
-    "icon": "ClipboardList",
-    "title": "Product Specifications",
-    "directive": "EU Regulation 2024/1781 (ESPR) · Art. 7(2)(d) · CE Marking Directive 93/68/EEC · REACH Reg. 1907/2006 · RoHS Directive 2011/65/EU",
-    "fields": [
-      {
-        "text": "Brand name",
-        "required": false
-      },
-      {
-        "text": "Model number",
-        "required": false
-      },
-      {
-        "text": "HS Code",
-        "required": false
-      },
-      {
-        "text": "CE marking (if applicable)",
-        "required": true
-      },
-      {
-        "text": "Declaration of Conformity",
-        "required": true
-      },
-      {
-        "text": "REACH compliance",
-        "required": false
-      },
-      {
-        "text": "RoHS compliance",
-        "required": false
-      },
-      {
-        "text": "Energy efficiency class",
-        "required": false
-      },
-      {
-        "text": "IP rating",
-        "required": false
-      },
-      {
-        "text": "Third party certifications",
-        "required": false
       }
     ]
   },
@@ -130,27 +130,43 @@ export const DPP_SECTIONS: DppSectionSpec[] = [
     "fields": [
       {
         "text": "Total weight in kg — required for waste-stream calculations",
-        "required": true
+        "required": true,
+        "type": "number"
       },
       {
         "text": "Manufacture date (batteries, perishables, food, cosmetics)",
-        "required": true
+        "required": true,
+        "type": "date"
       },
       {
-        "text": "Width × Height × Depth (mm)",
-        "required": false
+        "text": "Width (mm)",
+        "required": false,
+        "type": "number"
+      },
+      {
+        "text": "Height (mm)",
+        "required": false,
+        "type": "number"
+      },
+      {
+        "text": "Depth (mm)",
+        "required": false,
+        "type": "number"
       },
       {
         "text": "Expected lifetime (years)",
-        "required": false
+        "required": false,
+        "type": "number"
       },
       {
         "text": "Warranty period",
-        "required": false
+        "required": false,
+        "type": "number"
       },
       {
         "text": "Expiry / best-before date",
-        "required": false
+        "required": false,
+        "type": "date"
       }
     ]
   },
@@ -163,23 +179,28 @@ export const DPP_SECTIONS: DppSectionSpec[] = [
     "fields": [
       {
         "text": "Total CO₂ equivalent (batteries mandatory, others phased)",
-        "required": true
+        "required": true,
+        "type": "number"
       },
       {
         "text": "Manufacturing phase",
-        "required": false
+        "required": false,
+        "type": "number"
       },
       {
         "text": "Transport phase",
-        "required": false
+        "required": false,
+        "type": "number"
       },
       {
         "text": "Use phase",
-        "required": false
+        "required": false,
+        "type": "number"
       },
       {
         "text": "End of life phase",
-        "required": false
+        "required": false,
+        "type": "number"
       },
       {
         "text": "Methodology",
@@ -187,7 +208,8 @@ export const DPP_SECTIONS: DppSectionSpec[] = [
       },
       {
         "text": "EPD declaration URL",
-        "required": false
+        "required": false,
+        "type": "url"
       }
     ]
   },
@@ -200,23 +222,28 @@ export const DPP_SECTIONS: DppSectionSpec[] = [
     "fields": [
       {
         "text": "Total recycled content as % by weight of the product (batteries mandatory from 2031)",
-        "required": true
+        "required": true,
+        "type": "number"
       },
       {
         "text": "Pre-consumer recycled %",
-        "required": false
+        "required": false,
+        "type": "number"
       },
       {
         "text": "Post-consumer recycled %",
-        "required": false
+        "required": false,
+        "type": "number"
       },
       {
         "text": "Renewable content %",
-        "required": false
+        "required": false,
+        "type": "number"
       },
       {
         "text": "Recyclability %",
-        "required": false
+        "required": false,
+        "type": "number"
       }
     ]
   },
@@ -236,10 +263,6 @@ export const DPP_SECTIONS: DppSectionSpec[] = [
         "required": true
       },
       {
-        "text": "CAS numbers",
-        "required": false
-      },
-      {
         "text": "Recycled content per material",
         "required": false
       },
@@ -255,22 +278,75 @@ export const DPP_SECTIONS: DppSectionSpec[] = [
     "icon": "FlaskConical",
     "title": "Substances of Concern",
     "directive": "REACH Regulation 1907/2006 · Art. 33 · EU Regulation 2024/1781 (ESPR) · Art. 7(5)(b) · SVHC Candidate List (ECHA)",
-    "fields": [
+    "groups": [
       {
-        "text": "All SVHC substances >0.1% by weight (w/w) in the product",
-        "required": true
+        "label": "Substances of Concern (SVHC)",
+        "fields": [
+          {
+            "text": "All SVHC substances >0.1% by weight (w/w) in the product",
+            "required": true
+          },
+          {
+            "text": "Non-SVHC substances of concern",
+            "required": false
+          },
+          {
+            "text": "CAS numbers",
+            "required": false
+          },
+          {
+            "text": "Location in product",
+            "required": false
+          },
+          {
+            "text": "Safe handling URL",
+            "required": false
+          }
+        ]
       },
       {
-        "text": "Non-SVHC substances of concern",
-        "required": false
-      },
-      {
-        "text": "Location in product",
-        "required": false
-      },
-      {
-        "text": "Safe handling URL",
-        "required": false
+        "label": "Compliance & certifications",
+        "fields": [
+          {
+            "text": "CE marking (if applicable)",
+            "required": true,
+            "type": "toggle"
+          },
+          {
+            "text": "Declaration of Conformity",
+            "required": true,
+            "type": "toggle"
+          },
+          {
+            "text": "REACH compliance",
+            "required": false,
+            "type": "toggle"
+          },
+          {
+            "text": "RoHS compliance",
+            "required": false,
+            "type": "toggle"
+          },
+          {
+            "text": "Energy efficiency class",
+            "required": false,
+            "type": "select",
+            "options": ["A+++", "A++", "A+", "A", "B", "C", "D", "E", "F", "G"]
+          },
+          {
+            "text": "Energy consumption (kWh/year)",
+            "required": false,
+            "type": "number"
+          },
+          {
+            "text": "IP rating",
+            "required": false
+          },
+          {
+            "text": "Third party certifications",
+            "required": false
+          }
+        ]
       }
     ]
   },
@@ -368,23 +444,33 @@ export const DPP_SECTIONS: DppSectionSpec[] = [
     "fields": [
       {
         "text": "Repairability score (phased by product category)",
-        "required": true
+        "required": true,
+        "type": "number"
       },
       {
         "text": "Spare parts availability period",
-        "required": true
+        "required": true,
+        "type": "number"
       },
       {
         "text": "Repair manual URL",
-        "required": false
+        "required": false,
+        "type": "url"
       },
       {
         "text": "Repair network URL",
-        "required": false
+        "required": false,
+        "type": "url"
+      },
+      {
+        "text": "Spare parts URL",
+        "required": false,
+        "type": "url"
       },
       {
         "text": "Disassembly time",
-        "required": false
+        "required": false,
+        "type": "number"
       }
     ]
   },
@@ -396,16 +482,13 @@ export const DPP_SECTIONS: DppSectionSpec[] = [
     "directive": "EU Regulation 2024/1781 (ESPR) · Art. 7(2)(f) · Waste Framework Directive 2008/98/EC",
     "fields": [
       {
-        "text": "Recyclability % by weight (batteries mandatory)",
-        "required": true
-      },
-      {
         "text": "EU Waste code (if applicable)",
         "required": true
       },
       {
         "text": "Disassembly instructions",
-        "required": true
+        "required": true,
+        "type": "url"
       },
       {
         "text": "Recycling instructions",
@@ -413,7 +496,8 @@ export const DPP_SECTIONS: DppSectionSpec[] = [
       },
       {
         "text": "Deposit return scheme",
-        "required": false
+        "required": false,
+        "type": "toggle"
       },
       {
         "text": "Take-back information",
@@ -472,31 +556,44 @@ export const DPP_SECTIONS: DppSectionSpec[] = [
   }
 ];
 
-/** Generic ESPR sections to drop for sectors that admin.dpp.gs's own
- * per-sector notes (see packages/db/prisma/seed-data/dpp-section-info/
- * <sector>.json) mark as sitting outside the ESPR Digital Product Passport
- * mandate: food.json's "food" entry says "Food is excluded from the ESPR
- * Digital Product Passport"; cosmetics.json's "cosmetics" entry says
- * "Cosmetics are outside the ESPR DPP mandate"; medical.json's "medical"
- * entry says medical devices "are outside the ESPR DPP" (they run on
- * UDI/EUDAMED instead). Every one of these generic sections' directive
- * cites "EU Regulation 2024/1781 (ESPR)" as its basis, so once a sector
- * opts out of ESPR they stop applying - the sector's own section already
- * carries the equivalent domain data (nutrition/allergens, INCI/CPNP,
- * UDI/IFU). Medical keeps "specifications" and "documents": CE marking, the
- * Declaration of Conformity and Technical Documentation are still hard
- * MDR/IVDR requirements even though the rest of ESPR doesn't apply to it. */
+/** Generic ESPR sections to drop per sector - reconciled 2026-08-30 against
+ * the user-supplied "DPP Sector & Sections Requirements" spreadsheet (see
+ * dpp-sector-requirements.json at the repo root), which lists each of the 16
+ * sectors' own section set explicitly. This superseded an earlier, less
+ * granular version of this map (FOOD/COSMETICS/MEDICAL only) sourced from
+ * admin.dpp.gs's own per-sector notes (see
+ * packages/db/prisma/seed-data/dpp-section-info/<sector>.json), which turned
+ * out to disagree with the spreadsheet on two points: (1) FOOD/COSMETICS DO
+ * get "Documents & links" per the spreadsheet, not excluded as before; (2)
+ * MEDICAL is NOT a wholesale ESPR opt-out per the spreadsheet - it lists
+ * every generic section (including carbon/recycled/materials/repairability/
+ * eol), contradicting the older source's "medical devices are outside the
+ * ESPR DPP" note. Two other groupings emerge from the spreadsheet that
+ * weren't in the old map at all: TEXTILE/TYRE/FURNITURE drop
+ * carbon/materials/recycled (TEXTILE/TYRE also drop repairability - furniture
+ * keeps it); CHEMICALS/PACKAGING/COSMETICS/FOOD drop
+ * carbon/recycled/materials/substances/repairability/eol entirely, since
+ * their own sector-specific section already carries the equivalent
+ * compliance data (Chemicals' SDS/GHS/CLP, Packaging's own DoC group,
+ * Food/Cosmetics' own labelling regs) instead of the generic ESPR versions.
+ * BATTERY/ELECTRONICS/CONSTRUCTION/TOYS/MACHINERY/VEHICLES/
+ * INTERMEDIATE_PRODUCTS/OTHER get every generic section, per the spreadsheet
+ * (no entry needed - absent from this map means nothing is excluded). */
 const ESPR_EXCLUDED_GENERIC_SECTIONS: Partial<Record<DppSector, string[]>> = {
-  FOOD: ["specifications", "carbon", "recycled", "materials", "substances", "repairability", "eol", "documents"],
-  COSMETICS: ["specifications", "carbon", "recycled", "materials", "substances", "repairability", "eol", "documents"],
-  MEDICAL: ["carbon", "recycled", "materials", "substances", "repairability", "eol"],
+  TEXTILE: ["carbon", "materials", "recycled", "repairability"],
+  TYRE: ["carbon", "materials", "recycled", "repairability"],
+  FURNITURE: ["carbon", "materials", "recycled"],
+  CHEMICALS: ["carbon", "recycled", "materials", "substances", "repairability", "eol"],
+  PACKAGING: ["carbon", "recycled", "materials", "substances", "repairability", "eol"],
+  COSMETICS: ["carbon", "recycled", "materials", "substances", "repairability", "eol"],
+  FOOD: ["carbon", "recycled", "materials", "substances", "repairability", "eol"],
 };
 
 /** The generic sections that normally precede the spliced-in sector section,
  * in DPP_SECTIONS order - used to re-anchor the splice point when one or
  * more of them has been dropped by ESPR_EXCLUDED_GENERIC_SECTIONS (see
  * getOrderedDppSections). */
-const PRE_SECTOR_KEYS = ["manufacturer", "specifications", "physical", "carbon", "recycled", "materials"];
+const PRE_SECTOR_KEYS = ["manufacturer", "physical", "carbon", "recycled", "materials"];
 
 /** DPP_SECTIONS filtered to what actually applies to `sector` (see
  * ESPR_EXCLUDED_GENERIC_SECTIONS), with the sector-specific section (if any)

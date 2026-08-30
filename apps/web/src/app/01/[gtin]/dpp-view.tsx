@@ -6,8 +6,8 @@
 // on the page is the gallery carousel (see gallery-carousel.tsx).
 import type { CSSProperties } from "react";
 import type { DppSector } from "@productix/db";
-import { getOrderedDppSections, type DppSectionField, type DppSectionSpec } from "@/lib/dpp/dpp-sections";
-import { DPP_SECTOR_LABELS } from "@/lib/dpp/sector-sections";
+import { IDENTIFICATION_EXTRA_FIELDS, getOrderedDppSections, type DppSectionField, type DppSectionSpec } from "@/lib/dpp/dpp-sections";
+import { DPP_SECTOR_LABELS, trimFieldLabel } from "@/lib/dpp/sector-sections";
 import type { PackagingLayer } from "@/lib/dpp/packaging-layers";
 import { GalleryCarousel } from "./gallery-carousel";
 import { PackagingLayersView } from "./packaging-layers-view";
@@ -35,29 +35,40 @@ function formatGtinDisplay(gtin: string): string {
   return gtin.replace(/(\d{4})(?=\d)/g, "$1 ").trim();
 }
 
-/** Strips a trailing citation-only parenthetical, same rule as the dashboard
- * editor's field labels (see sector-sections.ts's trimFieldLabel), so the
- * passport reads like plain data rather than a regulation text dump. */
-function trimLabel(text: string): string {
-  const match = text.match(/^(.*)\s\(([^()]*)\)$/);
-  if (!match) return text;
-  const paren = match[2] ?? "";
-  if (/\b(reg\.?|regulation|art\.?|article|directive|annex|iso|dir\.?|eudr|clp|reach|espr|weee|epreL?)\b/i.test(paren) || /\b(19|20)\d{2}\b|\b\d+\/\d+\b/.test(paren)) {
-    return (match[1] ?? "").trim();
-  }
-  return text;
-}
-
 function flattenFields(spec: DppSectionSpec): DppSectionField[] {
   return spec.fields ?? spec.groups?.flatMap((g) => g.fields) ?? [];
 }
 
+/** Brand name / Model number / Product category / HS Code live under
+ * "Product identification" in the dashboard editor (see
+ * IDENTIFICATION_EXTRA_FIELDS in dpp-sections.ts) but are stored under the
+ * `specifications` answers key - this page previously didn't render an
+ * "identification" card at all (identity was just the header chips above),
+ * so synthesize a section spec for them to render as the first card. Key is
+ * deliberately not "specifications" or "identification" to avoid colliding
+ * with either the real specifications section or the dashboard editor's own
+ * sidebar key - see the answers lookup in DppPassportView below. */
+const IDENTIFICATION_SECTION_SPEC: DppSectionSpec = {
+  key: "identification-extra",
+  sidebarLabel: "Product identification",
+  icon: "Package",
+  title: "Product Identification",
+  directive: "EU Regulation 2024/1781 (ESPR) · Art. 7, Annex I",
+  fields: IDENTIFICATION_EXTRA_FIELDS,
+};
+
 function FieldRow({ field, value }: { field: DppSectionField; value: string }) {
   return (
     <div style={{ padding: "10px 0", borderBottom: "1px solid #f1f5f9" }}>
-      <dt style={{ fontSize: 12, color: "#64748b", margin: 0 }}>{trimLabel(field.text)}</dt>
+      <dt style={{ fontSize: 12, color: "#64748b", margin: 0 }}>{trimFieldLabel(field.text)}</dt>
       <dd style={{ fontSize: 14, color: "#0f172a", margin: "2px 0 0", fontWeight: 500, wordBreak: "break-word" }}>
-        {value}
+        {field.type === "url" ? (
+          <a href={value} target="_blank" rel="noopener noreferrer" style={{ color: "#0284c7", wordBreak: "break-word" }}>
+            {value}
+          </a>
+        ) : (
+          value
+        )}
       </dd>
     </div>
   );
@@ -149,7 +160,7 @@ function SectionCard({
 }
 
 export function DppPassportView({ data, batch }: { data: PublicDppData; batch: string | null }) {
-  const sections = getOrderedDppSections(data.sector);
+  const sections = [IDENTIFICATION_SECTION_SPEC, ...getOrderedDppSections(data.sector)];
   const logoUrl = data.logoUrl || data.brand?.logoUrl || data.company.logoUrl;
   const isVerified = data.gtinStatus === "GS1_VERIFIED";
 
@@ -216,7 +227,11 @@ export function DppPassportView({ data, batch }: { data: PublicDppData; batch: s
               <SectionCard
                 key={spec.key}
                 spec={spec}
-                answers={(data.sectionAnswers[spec.key] as Record<string, string> | undefined) ?? {}}
+                answers={
+                  (data.sectionAnswers[spec.key === "identification-extra" ? "specifications" : spec.key] as
+                    | Record<string, string>
+                    | undefined) ?? {}
+                }
                 defaultOpen={i === 0}
               />
             )
