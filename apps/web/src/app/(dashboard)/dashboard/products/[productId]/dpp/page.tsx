@@ -277,11 +277,6 @@ function DppFieldInput({
       <label className="block text-[12px] font-medium text-(--ds-text-primary) mb-1">
         {label} {field.required && <span className="text-red-400">*</span>}
       </label>
-      {field.helperText && (
-        <p className={`mb-1 text-[11px] ${field.helperTextStyle === "lite" ? "text-(--ds-text-muted)/70" : "text-(--ds-text-muted)"}`}>
-          {field.helperText}
-        </p>
-      )}
       {field.type === "toggle" ? (
         <ToggleFieldInput value={value} onChange={onChange} />
       ) : field.type === "select" ? (
@@ -319,6 +314,11 @@ function DppFieldInput({
           placeholder={field.placeholder}
           className={`${inputClass} h-[38px] text-[13px]`}
         />
+      )}
+      {field.helperText && (
+        <p className={`mt-1 text-[11px] ${field.helperTextStyle === "lite" ? "text-(--ds-text-muted)/70" : "text-(--ds-text-muted)"}`}>
+          {field.helperText}
+        </p>
       )}
       {wasTrimmed && <p className="mt-1 text-[11px] text-(--ds-text-muted)">{field.text}</p>}
     </div>
