@@ -256,6 +256,8 @@ export function DppPassportView({ data, batch }: { data: PublicDppData; batch: s
                     title={spec.repeatable!.length > 1 && block.label ? `${spec.title} — ${block.label}` : spec.title}
                     directive={spec.directive}
                     defaultOpen={false}
+                    explainerText={block.explainerText}
+                    explainerText2={block.explainerText2}
                   />
                 ))}
               </Fragment>

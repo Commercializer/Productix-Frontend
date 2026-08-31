@@ -35,16 +35,14 @@
       "label": "Manufacturer & importer",
       "fields": [
         {
-          "text": "Manufacturer",
-          "required": false
-        },
-        {
           "text": "Manufacturer name",
           "required": true
         },
         {
           "text": "Manufacturer country",
-          "required": true
+          "required": true,
+          "type": "country-picker",
+          "searchable": true
         },
         {
           "text": "Manufacturer address",
@@ -59,29 +57,35 @@
           "required": false
         },
         {
-          "text": "Manufacturing facility / site (plant code or GS1 GLN). Optional - one of the 4 EU DPP Registry identifiers.",
-          "required": false
+          "text": "Manufacturing facility / site",
+          "required": false,
+          "helperText": "plant code or GS1 GLN). Optional - one of the 4 EU DPP Registry identifiers."
         },
         {
-          "text": "Facility ID scheme - None / GLN (GS1) / EU-OP / Other (Optional. Pick GLN only if the Facility ID is a GS1 GLN - it's then validated (13 digits).)",
-          "required": false
+          "text": "Facility ID scheme - None / GLN (GS1) / EU-OP / Other",
+          "required": false,
+          "helperText": "Optional. Pick GLN only if the Facility ID is a GS1 GLN - it's then validated (13 digits)."
         },
         {
-          "text": "Importer",
-          "required": false
-        },
-        {
-          "text": "Importer name (Required if manufacturer is outside EU)",
-          "required": false
+          "text": "Importer name",
+          "required": false,
+          "helperText": "Required if manufacturer is outside EU",
+          "helperTextStyle": "lite"
         },
         {
           "text": "Importer country",
-          "required": false
+          "required": false,
+          "type": "country-picker",
+          "searchable": true
         }
       ]
     },
     "product-specifications": {
       "label": "Product specifications",
+      "explainerText": "Free-form commercial info shown on the public viewer. Examples: Volume · Flavour · Packaging format · Serving size · Country of origin.",
+      "explainerText2": "Add the spec rows a consumer would care about. Up to 40 rows.",
+      "explainerTextStyle": "lite",
+      "maxRows": 40,
       "fields": [
         {
           "text": "Add Spec (Custom rows)",
@@ -90,11 +94,13 @@
         },
         {
           "text": "Field Title",
-          "required": false
+          "required": false,
+          "placeholder": "Volume"
         },
         {
           "text": "Field Content",
-          "required": false
+          "required": false,
+          "placeholder": "500 ml, Sparkling"
         }
       ]
     },
@@ -120,7 +126,9 @@
       ]
     },
     "food-product-data": {
-      "label": "Food product data",
+      "label": "Food & Beverage product data",
+      "mainTitle": "Food & Beverage",
+      "showMainTitleOnAllSubsections": true,
       "fields": [
         {
           "text": "Identification",
@@ -128,8 +136,10 @@
           "type": "subtitle"
         },
         {
-          "text": "Food category- (Beverage, Dairy, Bakery, Confectionery, Meat, Fish & seafood, Fruit & vegetables, Cereal & grains, Snacks, Condiment & sauce, Frozen, Supplement, Other)",
-          "required": false
+          "text": "Food category",
+          "required": false,
+          "type": "select",
+          "options": ["Beverage", "Dairy", "Bakery", "Confectionery", "Meat", "Fish & seafood", "Fruit & vegetables", "Cereal & grains", "Snacks", "Condiment & sauce", "Frozen", "Supplement", "Other"]
         },
         {
           "text": "Legal name - not brand (Art 17)",
@@ -153,42 +163,47 @@
           "type": "subtitle"
         },
         {
-          "text": "Ingredient list - descending order of weight (Ex: Tomatoes (148g per 100g), vinegar, sugar, salt, spices...)",
-          "required": true
+          "text": "Ingredient list",
+          "required": true,
+          "helperText": "descending order of weight",
+          "helperTextStyle": "lite",
+          "placeholder": "Tomatoes (148g per 100g), vinegar, sugar, salt, spices..."
         },
         {
           "text": "QUID - emphasised ingredients (%)",
           "required": false,
-          "type": "subtitle"
+          "type": "custom-rows",
+          "rowFields": [
+            {
+              "text": "Ingredient",
+              "required": false
+            },
+            {
+              "text": "%",
+              "required": false
+            }
+          ]
         },
         {
-          "text": "Ingredient",
-          "required": false
-        },
-        {
-          "text": "%",
-          "required": false
-        },
-        {
-          "text": "Add ingredient (Button - New row, above fields again on new ingredients)",
+          "text": "Add ingredient",
           "required": false,
           "type": "button"
         },
         {
           "text": "Allergens (of 14)",
-          "required": true
+          "required": true,
+          "helperText": "Annex II"
         },
         {
-          "text": "Annex II",
-          "required": false
-        },
-        {
-          "text": "Contains GMO— Select ——YesNo",
-          "required": false
+          "text": "Contains GMO",
+          "required": false,
+          "type": "select",
+          "options": ["Yes", "No"]
         },
         {
           "text": "Additives (E-numbers)",
-          "required": false
+          "required": false,
+          "placeholder": "E330, E300"
         },
         {
           "text": "Nutrition declaration",
@@ -198,12 +213,14 @@
         {
           "text": "Basis",
           "required": false,
-          "type": "select"
+          "type": "select",
+          "options": ["per 100g", "per 100 ml"]
         },
         {
           "text": "Nutri-Score",
           "required": false,
-          "type": "select"
+          "type": "select",
+          "options": ["A", "B", "C", "D", "E"]
         },
         {
           "text": "Energy (kJ)",
@@ -249,11 +266,13 @@
         {
           "text": "Durability type",
           "required": false,
-          "type": "select"
+          "type": "select",
+          "options": ["Best before", "Use by"]
         },
         {
           "text": "Date",
-          "required": false
+          "required": false,
+          "type": "date-picker"
         },
         {
           "text": "Min. durability from production (days)",
@@ -265,7 +284,8 @@
         },
         {
           "text": "Storage conditions",
-          "required": false
+          "required": false,
+          "placeholder": "Store in a cool, dry place. Refrigerate after opening."
         },
         {
           "text": "Preparation instructions",
@@ -277,42 +297,50 @@
           "type": "subtitle"
         },
         {
-          "text": "Organic certified (Yes / No)",
+          "text": "Organic certified",
           "required": false,
-          "type": "select"
+          "type": "select",
+          "options": ["Yes", "No"]
         },
         {
           "text": "Organic cert. number",
-          "required": false
+          "required": false,
+          "placeholder": "SK-BIO-003"
         },
         {
-          "text": "Vegan (Yes / No)",
+          "text": "Vegan",
           "required": false,
-          "type": "select"
+          "type": "select",
+          "options": ["Yes", "No"]
         },
         {
-          "text": "Vegetarian (Yes / No)",
+          "text": "Vegetarian",
           "required": false,
-          "type": "select"
+          "type": "select",
+          "options": ["Yes", "No"]
         },
         {
-          "text": "Gluten-free (Yes / No)",
+          "text": "Gluten-free",
           "required": false,
-          "type": "select"
+          "type": "select",
+          "options": ["Yes", "No"]
         },
         {
-          "text": "Halal (Yes / No)",
+          "text": "Halal",
           "required": false,
-          "type": "select"
+          "type": "select",
+          "options": ["Yes", "No"]
         },
         {
-          "text": "Kosher (Yes / No)",
+          "text": "Kosher",
           "required": false,
-          "type": "select"
+          "type": "select",
+          "options": ["Yes", "No"]
         },
         {
           "text": "Nutrition claims",
-          "required": false
+          "required": false,
+          "placeholder": "High in fibre · Source of protein"
         },
         {
           "text": "Origin & traceability",
@@ -334,12 +362,17 @@
         },
         {
           "text": "Certifications",
-          "required": false
+          "required": false,
+          "placeholder": "Fairtrade, PDO"
         },
         {
-          "text": "Quality & sustainability certifications - (Select all that apply, or leave empty.)",
+          "text": "Quality & sustainability certifications",
           "required": false,
-          "type": "checkbox"
+          "type": "tags",
+          "multiple": true,
+          "options": ["ISO 22000", "HACCP", "IFS Food", "BRCGS", "FSSC 22000", "BIO / Organic", "Fairtrade", "Rainforest Alliance", "MSC", "ASC", "RSPO", "Halal", "Kosher", "Other"],
+          "helperText": "Select all that apply, or leave empty.",
+          "helperTextStyle": "lite"
         }
       ]
     },
@@ -362,7 +395,8 @@
         },
         {
           "text": "Layer label",
-          "required": false
+          "required": false,
+          "placeholder": "Primary bottle / Outer carton / Transport pallet"
         },
         {
           "text": "Input mode (Manual / Lookup by GTIN / Extract from DoC)",
@@ -387,7 +421,8 @@
         },
         {
           "text": "Packaging name",
-          "required": false
+          "required": false,
+          "placeholder": "Brown corrugated carton"
         },
         {
           "text": "Packaging manufacturer",
@@ -395,7 +430,9 @@
         },
         {
           "text": "Packaging manufacturer country",
-          "required": false
+          "required": false,
+          "type": "country-picker",
+          "searchable": true
         },
         {
           "text": "Manufacturer role",
@@ -410,7 +447,7 @@
           "required": false
         },
         {
-          "text": "Recyclable (Yes / No)",
+          "text": "Recyclable",
           "required": false,
           "type": "select",
           "options": [
@@ -427,7 +464,7 @@
           "required": false
         },
         {
-          "text": "Reusable (Yes / No)",
+          "text": "Reusable",
           "required": false,
           "type": "select",
           "options": [
@@ -448,7 +485,7 @@
           "required": false
         },
         {
-          "text": "PFAS present (Yes / No)",
+          "text": "PFAS present",
           "required": false,
           "type": "select",
           "options": [
@@ -457,7 +494,7 @@
           ]
         },
         {
-          "text": "Compostable (Yes / No)",
+          "text": "Compostable",
           "required": false,
           "type": "select",
           "options": [
@@ -466,7 +503,7 @@
           ]
         },
         {
-          "text": "Label material (Yes / No)",
+          "text": "Label material",
           "required": false,
           "type": "select",
           "options": [
@@ -475,7 +512,7 @@
           ]
         },
         {
-          "text": "Label – separate collection (Yes / No)",
+          "text": "Label - separate collection",
           "required": false,
           "type": "select",
           "options": [
@@ -527,14 +564,15 @@
         },
         {
           "text": "DoC issue date",
-          "required": false
+          "required": false,
+          "type": "date-picker"
         },
         {
           "text": "DoC signed by",
           "required": false
         },
         {
-          "text": "EU DoC exists (Yes / No)",
+          "text": "EU DoC exists",
           "required": false,
           "type": "select",
           "options": [
@@ -543,7 +581,7 @@
           ]
         },
         {
-          "text": "REACH compliant (Yes / No)",
+          "text": "REACH compliant",
           "required": false,
           "type": "select",
           "options": [
@@ -572,9 +610,13 @@
           "required": false
         },
         {
-          "text": "Mono-material (Yes / No)",
+          "text": "Mono-material",
           "required": false,
-          "type": "select"
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
         },
         {
           "text": "Producer trademark",
@@ -589,33 +631,53 @@
           "required": false
         },
         {
-          "text": "Food-contact (Yes / No)",
+          "text": "Food-contact",
           "required": false,
-          "type": "select"
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
         },
         {
-          "text": "PFAS-free (Yes / No)",
+          "text": "PFAS-free",
           "required": false,
-          "type": "select"
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
         },
         {
           "text": "Total fluorine (ppm)",
           "required": false
         },
         {
-          "text": "Fluorine under limit (Yes / No)",
+          "text": "Fluorine under limit",
           "required": false,
-          "type": "select"
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
         },
         {
-          "text": "Bisphenol-free (BPA) (Yes / No)",
+          "text": "Bisphenol-free (BPA)",
           "required": false,
-          "type": "select"
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
         },
         {
-          "text": "SVHC present (Yes / No)",
+          "text": "SVHC present",
           "required": false,
-          "type": "select"
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
         },
         {
           "text": "SVHC details",
@@ -630,18 +692,26 @@
           "required": false
         },
         {
-          "text": "Separable components (Yes / No)",
+          "text": "Separable components",
           "required": false,
-          "type": "select"
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
         },
         {
           "text": "Compostability standard",
           "required": false
         },
         {
-          "text": "Deposit scheme (Yes / No)",
+          "text": "Deposit scheme",
           "required": false,
-          "type": "select"
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
         },
         {
           "text": "Deposit amount (€)",
@@ -661,7 +731,8 @@
         },
         {
           "text": "Conformity assessment date",
-          "required": false
+          "required": false,
+          "type": "date-picker"
         },
         {
           "text": "Retention (years)",

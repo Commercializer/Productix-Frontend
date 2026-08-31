@@ -9,14 +9,20 @@ import type { DppSector } from "@productix/db";
  * /api/media/upload (same route ProductGallery uses for images), which
  * fills that same string with the resulting file's R2 URL - pasting a link
  * to an already-hosted file still works as a fallback. */
-export type DppFieldType = "text" | "number" | "date" | "url" | "toggle" | "select" | "upload";
+export type DppFieldType = "text" | "number" | "date" | "url" | "toggle" | "select" | "upload" | "country-picker" | "tags";
 
 export interface DppSectionField {
   text: string;
   required: boolean;
   type?: DppFieldType;
-  /** Only meaningful for type: "select" - the fixed list of choices. */
+  /** Only meaningful for type: "select"/"tags" - the fixed list of choices. */
   options?: string[];
+  /** Small caption shown under the label, above the control. */
+  helperText?: string;
+  helperTextStyle?: string;
+  placeholder?: string;
+  /** For type: "tags" - whether more than one option can be selected. */
+  multiple?: boolean;
 }
 
 /** One numbered sub-section (e.g. "§1 Performance & durability") within a
@@ -973,7 +979,7 @@ export function isLongTextField(field: LabeledField): boolean {
  * extra width; everything else (toggle/select/date/number/short text) is
  * compact enough to sit two-up. */
 export function isFullWidthField(field: LabeledField): boolean {
-  if (field.type === "upload" || field.type === "url") return true;
+  if (field.type === "upload" || field.type === "url" || field.type === "tags") return true;
   if (isLongTextField(field)) return true;
   if (!field.type || field.type === "text") return URL_LABEL_RE.test(trimFieldLabel(field.text));
   return false;

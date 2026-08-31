@@ -33,18 +33,61 @@ import toys from "./sector-requirements/toys.json";
 import tyre from "./sector-requirements/tyre.json";
 import vehicles from "./sector-requirements/vehicles.json";
 
-export type RequirementFieldType = "toggle" | "select" | "checkbox" | "upload" | "button" | "note" | "subtitle" | "section-heading" | "date";
+export type RequirementFieldType =
+  | "toggle"
+  | "select"
+  | "checkbox"
+  | "upload"
+  | "button"
+  | "note"
+  | "subtitle"
+  | "section-heading"
+  | "date"
+  | "date-picker"
+  | "country-picker"
+  | "tags"
+  | "custom-rows";
 
 export interface RequirementField {
   text: string;
   required: boolean;
   type?: RequirementFieldType;
   options?: string[];
+  /** Small caption shown alongside the field (e.g. "descending order of
+   * weight") - distinct from the trailing-parenthetical citation text
+   * trimFieldLabel already strips off `text` itself. */
+  helperText?: string;
+  /** "lite" renders helperText more muted/subdued - the only variant the
+   * spreadsheet uses today. */
+  helperTextStyle?: string;
+  placeholder?: string;
+  /** For type: "country-picker" - always rendered as a searchable select
+   * regardless of this flag today, kept for fidelity with the source. */
+  searchable?: boolean;
+  /** For type: "tags" - whether more than one option can be selected. */
+  multiple?: boolean;
+  /** For type: "custom-rows" - an inline repeatable row table's column
+   * schema (e.g. Food's QUID "Ingredient"/"%" rows), distinct from the
+   * subtitle-delimited repeatable tables splitBySubtitle already finds -
+   * see extractCustomRowsBlocks in dpp-sections.ts. */
+  rowFields?: { text: string; required: boolean }[];
 }
 
 export interface RequirementSection {
   label: string;
   fields: RequirementField[];
+  /** Overall heading for the section, repeated across its sub-tabs when
+   * showMainTitleOnAllSubsections is set - presentational only. */
+  mainTitle?: string;
+  showMainTitleOnAllSubsections?: boolean;
+  /** Free-form explainer copy shown above a section that's really one
+   * repeatable table (e.g. product-specifications) - explainerText2 is a
+   * second line, explainerTextStyle "lite" renders both muted. */
+  explainerText?: string;
+  explainerText2?: string;
+  explainerTextStyle?: string;
+  /** Caps how many rows that section's repeatable table can hold. */
+  maxRows?: number;
 }
 
 export interface SectorRequirementsDoc {

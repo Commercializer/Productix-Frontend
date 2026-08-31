@@ -7,13 +7,21 @@ import {
   splitBySubtitle,
   type RequirementField,
 } from "./sector-requirements";
-import { toRowFieldDefs, pruneRows, type Row, type RowFieldDef } from "./repeatable-rows";
+import { toRowFieldDefs, pruneRows, slugifyFieldKey, type Row, type RowFieldDef } from "./repeatable-rows";
 
 export type { DppSectionField };
 
 export interface DppFieldGroup {
   label: string;
   fields: DppSectionField[];
+  /** Inline repeatable table(s) declared on one of this group's own fields
+   * (type: "custom-rows", e.g. Food's QUID ingredient/% list) - see
+   * extractCustomRowsBlocks below. Rendered right after the group's flat
+   * fields. Also folded into the section's own top-level `repeatable` (see
+   * getOrderedDppSections' "sector" push) so pruneSectionAnswers/the public
+   * passport's generic repeatable rendering see it regardless of whether the
+   * dashboard editor is showing this group on its own sidebar page. */
+  repeatable?: DppRepeatableBlock[];
 }
 
 /** One repeatable-row table within a section (Material composition,
@@ -30,6 +38,10 @@ export interface DppRepeatableBlock {
   addLabel: string;
   emptyLabel: string;
   max?: number;
+  /** Explainer copy shown above the table (product-specifications' own
+   * section-level explainerText/explainerText2 - see RequirementSection). */
+  explainerText?: string;
+  explainerText2?: string;
 }
 
 export interface DppSectionSpec {
@@ -91,20 +103,28 @@ function sectionLabel(sector: DppSector, jsonKey: string): string {
   return SECTOR_REQUIREMENTS[sector]?.sections[jsonKey]?.label ?? jsonKey;
 }
 
+function toDppFieldType(t: RequirementField["type"]): DppSectionField["type"] {
+  // "checkbox" (a bare yes/no with no options list, e.g. sector-data's
+  // "FSC (Checkbox)") renders the same as "toggle" - DppFieldType has no
+  // separate checkbox control, and a plain on/off is exactly what one is.
+  if (t === "toggle" || t === "checkbox") return "toggle";
+  if (t === "select" || t === "upload" || t === "country-picker" || t === "tags") return t;
+  // "date-picker" is the same control as the older "date" hint - no
+  // DppFieldType distinction needed, both render <input type="date">.
+  if (t === "date" || t === "date-picker") return "date";
+  return undefined;
+}
+
 function toDppField(f: RequirementField): DppSectionField {
   return {
     text: f.text,
     required: f.required,
-    // "checkbox" (a bare yes/no with no options list, e.g. sector-data's
-    // "FSC (Checkbox)") renders the same as "toggle" - DppFieldType has no
-    // separate checkbox control, and a plain on/off is exactly what one is.
-    type:
-      f.type === "toggle" || f.type === "checkbox"
-        ? "toggle"
-        : f.type === "select" || f.type === "upload" || f.type === "date"
-          ? f.type
-          : undefined,
+    type: toDppFieldType(f.type),
     options: f.options,
+    helperText: f.helperText,
+    helperTextStyle: f.helperTextStyle,
+    placeholder: f.placeholder,
+    multiple: f.multiple,
   };
 }
 
@@ -146,12 +166,53 @@ function toBlock(key: string, segment: { label: string; fields: RequirementField
 
 /** A single flat-field-list section resolved as one repeatable block - used
  * for sections that are entirely a table in the spreadsheet, with no flat
- * fields alongside (Material composition, Product specifications). */
+ * fields alongside (Material composition, Product specifications). Picks up
+ * the section's own maxRows/explainerText(2) (RequirementSection), if any -
+ * only product-specifications sets these today. */
 function getSingleBlockSection(sector: DppSector, jsonKey: string, blockKey: string, addLabel: string, emptyLabel: string): DppRepeatableBlock[] | undefined {
   const raw = getRawFields(sector, jsonKey);
   if (!raw) return undefined;
   const [segment] = splitBySubtitle(raw);
-  return segment ? [toBlock(blockKey, segment, addLabel, emptyLabel)] : undefined;
+  if (!segment) return undefined;
+  const section = SECTOR_REQUIREMENTS[sector]?.sections[jsonKey];
+  return [{ ...toBlock(blockKey, segment, addLabel, emptyLabel), max: section?.maxRows, explainerText: section?.explainerText, explainerText2: section?.explainerText2 }];
+}
+
+/** Pulls any inline `type: "custom-rows"` field (e.g. Food's "QUID -
+ * emphasised ingredients (%)") out of a segment's flat fields into its own
+ * repeatable block - a JSON field can declare a small inline row table
+ * without needing a dedicated subtitle segment the way Materials/SVHC/EOL
+ * do (see splitBySubtitle). `raw` is the section's full unfiltered field
+ * list (before splitBySubtitle drops buttons/subtitles), used only to find
+ * the "Add X" button field text that follows the custom-rows field, if any -
+ * splitBySubtitle already stripped it out of `segFields`. */
+function extractCustomRowsBlocks(raw: RequirementField[], segFields: RequirementField[]): { flat: RequirementField[]; blocks: DppRepeatableBlock[] } {
+  const flat: RequirementField[] = [];
+  const blocks: DppRepeatableBlock[] = [];
+  for (const f of segFields) {
+    if (f.type === "custom-rows" && f.rowFields && f.rowFields.length > 0) {
+      blocks.push({
+        key: slugifyFieldKey(f.text),
+        label: f.text,
+        fields: toRowFieldDefs(f.rowFields),
+        addLabel: findAdjacentButtonLabel(raw, f) ?? "Add row",
+        emptyLabel: "No entries added yet.",
+      });
+    } else {
+      flat.push(f);
+    }
+  }
+  return { flat, blocks };
+}
+
+function findAdjacentButtonLabel(raw: RequirementField[], field: RequirementField): string | undefined {
+  const idx = raw.indexOf(field);
+  for (let i = idx + 1; i < raw.length; i++) {
+    const f = raw[i]!;
+    if (f.type === "button") return f.text;
+    if (f.type === "subtitle" || f.type === "custom-rows") return undefined;
+  }
+  return undefined;
 }
 
 /** Substances of concern: the spreadsheet's own "Substances of Concern
@@ -244,12 +305,18 @@ const SECTOR_DATA_JSON_KEY: Partial<Record<DppSector, string>> = {
  * path, since every sector in SECTOR_DATA_JSON_KEY has had JSON content
  * since the 2026-08-30 sector-requirements fill. Exported so the dashboard
  * DPP editor page can resolve the same groups directly (sidebar
- * completeness/"missing required" checks) without re-deriving them. */
+ * completeness/"missing required" checks) without re-deriving them. Each
+ * group also carries its own `repeatable` for any inline `type:
+ * "custom-rows"` field it declares (e.g. Food's QUID list under
+ * "Ingredients & allergens") - see extractCustomRowsBlocks. */
 export function getSectorDataGroups(sector: DppSector): DppFieldGroup[] | undefined {
   const jsonKey = SECTOR_DATA_JSON_KEY[sector];
   const raw = jsonKey ? getRawFields(sector, jsonKey) : undefined;
   if (raw && raw.length > 0) {
-    const groups = splitBySubtitle(raw).map((seg) => ({ label: seg.label, fields: seg.fields.map(toDppField) }));
+    const groups = splitBySubtitle(raw).map((seg) => {
+      const { flat, blocks } = extractCustomRowsBlocks(raw, seg.fields);
+      return { label: seg.label, fields: flat.map(toDppField), repeatable: blocks.length > 0 ? blocks : undefined };
+    });
     if (groups.length > 0) return groups;
   }
   return DPP_SECTOR_SECTIONS[sector]?.groups;
@@ -306,7 +373,23 @@ export function getOrderedDppSections(sector: DppSector | null): DppSectionSpec[
   const sectorGroups = getSectorDataGroups(sector);
   if (sectorGroups && sectorGroups.length > 0) {
     const { title, directive } = getSectorDataChrome(sector, sectorDataJsonKey, sectorDataJsonKey ? getRawFields(sector, sectorDataJsonKey) : undefined);
-    sections.push({ key: "sector", sidebarLabel: title, icon: "Boxes", title, directive, groups: sectorGroups });
+    // Every group's own inline repeatable block (see DppFieldGroup.repeatable
+    // above) also gets folded into the section's own top-level `repeatable`
+    // - pruneSectionAnswers and the public passport's generic repeatable
+    // rendering both key off the top-level spec for this section (key
+    // "sector"), not per-group, since the dashboard editor's own per-group
+    // sidebar split (see page.tsx's pushSpec) is purely a navigation
+    // convenience over the same single `sectionAnswers.sector` blob.
+    const sectorRepeatable = sectorGroups.flatMap((g) => g.repeatable ?? []);
+    sections.push({
+      key: "sector",
+      sidebarLabel: title,
+      icon: "Boxes",
+      title,
+      directive,
+      groups: sectorGroups,
+      repeatable: sectorRepeatable.length > 0 ? sectorRepeatable : undefined,
+    });
   }
 
   const substancesSpec = getSubstancesSpec(sector);

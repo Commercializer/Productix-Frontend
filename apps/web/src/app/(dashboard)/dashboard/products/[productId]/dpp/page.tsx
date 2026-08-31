@@ -277,6 +277,11 @@ function DppFieldInput({
       <label className="block text-[12px] font-medium text-(--ds-text-primary) mb-1">
         {label} {field.required && <span className="text-red-400">*</span>}
       </label>
+      {field.helperText && (
+        <p className={`mb-1 text-[11px] ${field.helperTextStyle === "lite" ? "text-(--ds-text-muted)/70" : "text-(--ds-text-muted)"}`}>
+          {field.helperText}
+        </p>
+      )}
       {field.type === "toggle" ? (
         <ToggleFieldInput value={value} onChange={onChange} />
       ) : field.type === "select" ? (
@@ -292,6 +297,10 @@ function DppFieldInput({
             </option>
           ))}
         </select>
+      ) : field.type === "tags" ? (
+        <TagsFieldInput options={field.options ?? []} value={value} onChange={onChange} />
+      ) : field.type === "country-picker" ? (
+        <SearchableSelect options={COUNTRY_OPTIONS} value={value} onChange={onChange} searchPlaceholder="Search countries…" />
       ) : field.type === "upload" ? (
         <DocumentUploadInput productId={productId} value={value} onChange={onChange} />
       ) : isLongTextField(field) ? (
@@ -299,6 +308,7 @@ function DppFieldInput({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           rows={3}
+          placeholder={field.placeholder}
           className={`${inputClass} h-auto py-2.5 text-[13px] resize-y`}
         />
       ) : (
@@ -306,10 +316,53 @@ function DppFieldInput({
           type={field.type === "number" || field.type === "date" ? field.type : field.type === "url" ? "url" : "text"}
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          placeholder={field.placeholder}
           className={`${inputClass} h-[38px] text-[13px]`}
         />
       )}
       {wasTrimmed && <p className="mt-1 text-[11px] text-(--ds-text-muted)">{field.text}</p>}
+    </div>
+  );
+}
+
+/** A `type: "tags"` field's control - toggleable pill buttons over a fixed
+ * option list (e.g. Food's "Quality & sustainability certifications"),
+ * stored as one comma-joined string like every other flat field (no schema
+ * change) - same storage convention as repeatable-rows-panel.tsx's
+ * "checkbox"-with-options control. */
+function TagsFieldInput({ options, value, onChange }: { options: string[]; value: string; onChange: (value: string) => void }) {
+  const selected = new Set(
+    value
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+  );
+  const toggle = (option: string) => {
+    const next = new Set(selected);
+    if (next.has(option)) next.delete(option);
+    else next.add(option);
+    onChange([...next].join(", "));
+  };
+  return (
+    <div className="flex flex-wrap gap-2">
+      {options.map((o) => {
+        const active = selected.has(o);
+        return (
+          <button
+            key={o}
+            type="button"
+            onClick={() => toggle(o)}
+            aria-pressed={active}
+            className={`px-3 h-[32px] rounded-full border text-[12px] font-medium transition-colors ${
+              active
+                ? "bg-(--ds-accent) border-(--ds-accent) text-white"
+                : "border-(--ds-border) bg-(--ds-bg) text-(--ds-text-primary) hover:bg-(--ds-surface-2)"
+            }`}
+          >
+            {o}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -476,7 +529,7 @@ export default function ProductDppPage({ params }: PageProps) {
             items.push({
               key: `sector:${i}`,
               kind: "section",
-              spec: { key: `sector:${i}`, sidebarLabel: g.label, icon: spec.icon, title: g.label, directive: spec.directive, fields: g.fields },
+              spec: { key: `sector:${i}`, sidebarLabel: g.label, icon: spec.icon, title: g.label, directive: spec.directive, fields: g.fields, repeatable: g.repeatable },
               answersKey: "sector",
             });
           });
@@ -995,6 +1048,8 @@ function SectionPanel({
           {block.label && (
             <p className="text-[11px] font-semibold uppercase tracking-wide text-(--ds-text-muted)">{block.label}</p>
           )}
+          {block.explainerText && <p className="text-[12px] text-(--ds-text-muted)">{block.explainerText}</p>}
+          {block.explainerText2 && <p className="text-[12px] text-(--ds-text-muted)">{block.explainerText2}</p>}
           <RepeatableRowsPanel
             fields={block.fields}
             rows={rows[block.key] ?? []}

@@ -47,12 +47,16 @@ export function RepeatableRowsView({
   title,
   directive,
   defaultOpen,
+  explainerText,
+  explainerText2,
 }: {
   fields: RowFieldDef[];
   rows: Row[];
   title: string;
   directive: string;
   defaultOpen: boolean;
+  explainerText?: string;
+  explainerText2?: string;
 }) {
   const nonEmptyRows = rows.filter((row) => fields.some((f) => row[f.key]?.trim()));
   if (nonEmptyRows.length === 0) return null;
@@ -63,6 +67,8 @@ export function RepeatableRowsView({
         {title}
       </summary>
       <div style={{ padding: "0 18px 16px" }}>
+        {explainerText && <p style={{ fontSize: 12, color: "#94a3b8", margin: "0 0 8px" }}>{explainerText}</p>}
+        {explainerText2 && <p style={{ fontSize: 12, color: "#94a3b8", margin: "0 0 8px" }}>{explainerText2}</p>}
         {nonEmptyRows.map((row, i) => (
           <RowCard key={i} fields={fields} row={row} index={i} />
         ))}

@@ -22,11 +22,17 @@ export interface RowFieldDef {
 
 export type Row = Record<string, string>;
 
-function slugifyFieldKey(label: string): string {
-  return label
+export function slugifyFieldKey(label: string): string {
+  const slug = label
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+  // A label with no letters/digits at all (e.g. QUID's "%" column) would
+  // otherwise slugify to "", silently colliding every such field onto the
+  // same storage key - fall back to a deterministic key derived from the
+  // label's own character codes instead.
+  if (slug) return slug;
+  return `field-${[...label].map((c) => c.codePointAt(0)).join("")}`;
 }
 
 /** Maps a JSON section's real fields (see isAnswerableField) to the row
