@@ -987,6 +987,312 @@
           "type": "description"
         },
         {
+          "text": "More PPWR data (optional)",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Section 1 & 3 - CLASSIFICATION & MINIMISATION (ART 10)",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Packaging category",
+          "required": false,
+          "placeholder": "e-commerce / grouped / transport"
+        },
+        {
+          "text": "Packaging format",
+          "required": false,
+          "placeholder": "bottle / carton / pallet"
+        },
+        {
+          "text": "Volume (l) — Art. 10",
+          "required": false,
+          "placeholder": "0.5"
+        },
+        {
+          "text": "Dimensions — Art. 10",
+          "required": false,
+          "placeholder": "200×120×80 mm"
+        },
+        {
+          "text": "Total weight (g)",
+          "required": false
+        },
+        {
+          "text": "Empty weight (g)",
+          "required": false
+        },
+        {
+          "text": "Packaging ratio",
+          "required": false
+        },
+        {
+          "text": "Mono-material",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Section 2 - ECONOMIC OPERATOR (ART 15/18)",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Manufacturer role",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Manufacturer",
+            "Importer",
+            "Authorised representative"
+          ]
+        },
+        {
+          "text": "Unique packaging identifier (Art 15(5))",
+          "required": false,
+          "placeholder": "EPR reg / GLN"
+        },
+        {
+          "text": "Producer trademark",
+          "required": false
+        },
+        {
+          "text": "Importer",
+          "required": false
+        },
+        {
+          "text": "Importer address",
+          "required": false
+        },
+        {
+          "text": "Section 4 : SUBSTANCES (ART 5)",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "No exact measured values in the source — substances are declared under the legal limits (heavy metals Σ ≤ 100 mg/kg; PFAS, BPA and total fluorine below limit). Enter a measured value only where a limit is exceeded.",
+          "required": false,
+          "type": "info-banner",
+          "variant": "neutral"
+        },
+        {
+          "text": "Heavy metals Σ Pb+Cd+Hg+CrVI (ppm) - Art. 5",
+          "required": false,
+          "placeholder": "≤ 100"
+        },
+        {
+          "text": "PFAS present - Art. 5",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Food-contact",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "PFAS-free",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Total fluorine (ppm)",
+          "required": false
+        },
+        {
+          "text": "Fluorine under limit",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Bisphenol-free (BPA)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "SVHC present",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "SVHC details",
+          "required": false,
+          "placeholder": "substance · CAS · %"
+        },
+        {
+          "text": "Section 5 : RECYCLABILITY (ART 6-11)",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Recycled content (%)",
+          "required": false,
+          "placeholder": "30"
+        },
+        {
+          "text": "Recyclability (%)",
+          "required": false
+        },
+        {
+          "text": "Recycling stream",
+          "required": false,
+          "placeholder": "PET bottles / paper / glass"
+        },
+        {
+          "text": "Separable components",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Compostable — Art. 9",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Compostability standard",
+          "required": false,
+          "placeholder": "EN 13432"
+        },
+        {
+          "text": "Material label — Art. 12",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Separate-collection label (from 8/2028)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "QR / digital carrier — Art. 12",
+          "required": false,
+          "placeholder": "https://... / GS1 Digital Link"
+        },
+        {
+          "text": "Section 6 : REUSE (ART 11)",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Deposit scheme",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Deposit amount (€)",
+          "required": false,
+          "placeholder": "0.15"
+        },
+        {
+          "text": "Designed reuse cycles",
+          "required": false
+        },
+        {
+          "text": "Reuse system URL",
+          "required": false,
+          "placeholder": "https://..."
+        },
+        {
+          "text": "Return points URL",
+          "required": false,
+          "placeholder": "https://..."
+        },
+        {
+          "text": "Section 8 : CONFORMITY (EXTRA) · FOOTPRINT",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Conformity assessment date",
+          "required": false,
+          "type": "date-picker",
+          "placeholder": "dd/mm/yyyy"
+        },
+        {
+          "text": "Retention (years)",
+          "required": false,
+          "placeholder": "10"
+        },
+        {
+          "text": "Test reports URL",
+          "required": false,
+          "placeholder": "https://..."
+        },
+        {
+          "text": "DoC signed by",
+          "required": false
+        },
+        {
+          "text": "EPR registration (single, legacy)",
+          "required": false,
+          "placeholder": "SK-EPR-12345"
+        },
+        {
+          "text": "Carbon footprint (g CO₂e)",
+          "required": false,
+          "placeholder": "120"
+        },
+        {
+          "text": "Carbon source",
+          "required": false,
+          "type": "select",
+          "options": [
+            "From linked DPP",
+            "Manual entry",
+            "From LCA / EPD",
+            "Other"
+          ]
+        },
+        {
           "text": "Save layer",
           "required": false,
           "type": "button"

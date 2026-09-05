@@ -985,6 +985,7 @@ export default function ProductDppPage({ params }: PageProps) {
                       ? (gtinCheck.data ?? null)
                       : existingGtinData
                   }
+                  showOptional={showOptionalFields}
                 />
               </div>
             )}

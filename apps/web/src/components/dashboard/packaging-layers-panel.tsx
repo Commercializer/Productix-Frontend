@@ -21,8 +21,10 @@ import {
   countMissingRequiredLayerFields,
   GTIN_LOOKUP_DATA_SOURCE,
   MAX_PACKAGING_LAYERS,
+  PACKAGING_CARBON_SOURCE_OPTIONS,
   PACKAGING_DATA_SOURCE_OPTIONS,
   PACKAGING_LAYER_TYPE_OPTIONS,
+  PACKAGING_MANUFACTURER_ROLE_OPTIONS,
   PACKAGING_RECYCLABILITY_GRADE_OPTIONS,
   PACKAGING_YES_NO_OPTIONS,
   type PackagingLayer,
@@ -44,16 +46,20 @@ function Field({ label, required, children }: { label: string; required?: boolea
   );
 }
 
+const groupHeadingClass = "text-[11px] font-semibold uppercase tracking-wide text-(--ds-text-muted) mb-3";
+
 function LayerForm({
   layer,
   onChange,
   productGtin,
   productGtinData,
+  showOptional,
 }: {
   layer: PackagingLayer;
   onChange: (layer: PackagingLayer) => void;
   productGtin: string | null;
   productGtinData: Record<string, unknown> | null;
+  showOptional: boolean;
 }) {
   const set = <K extends keyof PackagingLayer>(key: K, value: PackagingLayer[K]) => onChange({ ...layer, [key]: value });
 
@@ -310,6 +316,252 @@ function LayerForm({
           </Field>
         </div>
       </div>
+
+      {showOptional && (
+        <div className="pt-1 border-t border-(--ds-border) space-y-5">
+          <p className={`${groupHeadingClass} mt-4`}>More PPWR data (optional)</p>
+
+          <div>
+            <p className={groupHeadingClass}>Section 1 &amp; 3 - Classification &amp; minimisation (Art. 10)</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field label="Packaging category">
+                <input type="text" value={layer.packagingCategory} onChange={(e) => set("packagingCategory", e.target.value)} placeholder="e-commerce / grouped / transport" className={inputClass} />
+              </Field>
+              <Field label="Packaging format">
+                <input type="text" value={layer.packagingFormat} onChange={(e) => set("packagingFormat", e.target.value)} placeholder="bottle / carton / pallet" className={inputClass} />
+              </Field>
+              <Field label="Volume (l) — Art. 10">
+                <input type="text" value={layer.volumeLitres} onChange={(e) => set("volumeLitres", e.target.value)} placeholder="0.5" className={inputClass} />
+              </Field>
+              <Field label="Dimensions — Art. 10">
+                <input type="text" value={layer.dimensions} onChange={(e) => set("dimensions", e.target.value)} placeholder="200×120×80 mm" className={inputClass} />
+              </Field>
+              <Field label="Total weight (g)">
+                <input type="text" value={layer.totalWeightGrams} onChange={(e) => set("totalWeightGrams", e.target.value)} className={inputClass} />
+              </Field>
+              <Field label="Empty weight (g)">
+                <input type="text" value={layer.emptyWeightGrams} onChange={(e) => set("emptyWeightGrams", e.target.value)} className={inputClass} />
+              </Field>
+              <Field label="Packaging ratio">
+                <input type="text" value={layer.packagingRatio} onChange={(e) => set("packagingRatio", e.target.value)} className={inputClass} />
+              </Field>
+              <Field label="Mono-material">
+                <select value={layer.monoMaterial} onChange={(e) => set("monoMaterial", e.target.value)} className={selectClass}>
+                  <option value="">— Select —</option>
+                  {PACKAGING_YES_NO_OPTIONS.map((o) => (
+                    <option key={o} value={o}>{o}</option>
+                  ))}
+                </select>
+              </Field>
+            </div>
+          </div>
+
+          <div>
+            <p className={groupHeadingClass}>Section 2 - Economic operator (Art. 15/18)</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field label="Manufacturer role">
+                <select value={layer.manufacturerRole} onChange={(e) => set("manufacturerRole", e.target.value)} className={selectClass}>
+                  <option value="">— Select —</option>
+                  {PACKAGING_MANUFACTURER_ROLE_OPTIONS.map((o) => (
+                    <option key={o} value={o}>{o}</option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Unique packaging identifier (Art 15(5))">
+                <input type="text" value={layer.uniquePackagingIdentifier} onChange={(e) => set("uniquePackagingIdentifier", e.target.value)} placeholder="EPR reg / GLN" className={inputClass} />
+              </Field>
+              <Field label="Producer trademark">
+                <input type="text" value={layer.producerTrademark} onChange={(e) => set("producerTrademark", e.target.value)} className={inputClass} />
+              </Field>
+              <Field label="Importer">
+                <input type="text" value={layer.importer} onChange={(e) => set("importer", e.target.value)} className={inputClass} />
+              </Field>
+              <Field label="Importer address">
+                <input type="text" value={layer.importerAddress} onChange={(e) => set("importerAddress", e.target.value)} className={inputClass} />
+              </Field>
+            </div>
+          </div>
+
+          <div>
+            <p className={groupHeadingClass}>Section 4 : Substances (Art. 5)</p>
+            <div className="rounded-xl border border-(--ds-border) bg-(--ds-surface-2) px-4 py-3 text-[12px] leading-relaxed text-(--ds-text-secondary) mb-4">
+              No exact measured values in the source — substances are declared under the legal limits (heavy metals
+              Σ ≤ 100 mg/kg; PFAS, BPA and total fluorine below limit). Enter a measured value only where a limit is
+              exceeded.
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field label="Heavy metals Σ Pb+Cd+Hg+CrVI (ppm) - Art. 5">
+                <input type="text" value={layer.heavyMetalsPpm} onChange={(e) => set("heavyMetalsPpm", e.target.value)} placeholder="≤ 100" className={inputClass} />
+              </Field>
+              <Field label="PFAS present - Art. 5">
+                <select value={layer.pfasPresent} onChange={(e) => set("pfasPresent", e.target.value)} className={selectClass}>
+                  <option value="">— Select —</option>
+                  {PACKAGING_YES_NO_OPTIONS.map((o) => (
+                    <option key={o} value={o}>{o}</option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Food-contact">
+                <select value={layer.foodContact} onChange={(e) => set("foodContact", e.target.value)} className={selectClass}>
+                  <option value="">— Select —</option>
+                  {PACKAGING_YES_NO_OPTIONS.map((o) => (
+                    <option key={o} value={o}>{o}</option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="PFAS-free">
+                <select value={layer.pfasFree} onChange={(e) => set("pfasFree", e.target.value)} className={selectClass}>
+                  <option value="">— Select —</option>
+                  {PACKAGING_YES_NO_OPTIONS.map((o) => (
+                    <option key={o} value={o}>{o}</option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Total fluorine (ppm)">
+                <input type="text" value={layer.totalFluorinePpm} onChange={(e) => set("totalFluorinePpm", e.target.value)} className={inputClass} />
+              </Field>
+              <Field label="Fluorine under limit">
+                <select value={layer.fluorineUnderLimit} onChange={(e) => set("fluorineUnderLimit", e.target.value)} className={selectClass}>
+                  <option value="">— Select —</option>
+                  {PACKAGING_YES_NO_OPTIONS.map((o) => (
+                    <option key={o} value={o}>{o}</option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Bisphenol-free (BPA)">
+                <select value={layer.bisphenolFree} onChange={(e) => set("bisphenolFree", e.target.value)} className={selectClass}>
+                  <option value="">— Select —</option>
+                  {PACKAGING_YES_NO_OPTIONS.map((o) => (
+                    <option key={o} value={o}>{o}</option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="SVHC present">
+                <select value={layer.svhcPresent} onChange={(e) => set("svhcPresent", e.target.value)} className={selectClass}>
+                  <option value="">— Select —</option>
+                  {PACKAGING_YES_NO_OPTIONS.map((o) => (
+                    <option key={o} value={o}>{o}</option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="SVHC details">
+                <input type="text" value={layer.svhcDetails} onChange={(e) => set("svhcDetails", e.target.value)} placeholder="substance · CAS · %" className={inputClass} />
+              </Field>
+            </div>
+          </div>
+
+          <div>
+            <p className={groupHeadingClass}>Section 5 : Recyclability (Art. 6-11)</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field label="Recycled content (%)">
+                <input type="text" value={layer.recycledContentPercent} onChange={(e) => set("recycledContentPercent", e.target.value)} placeholder="30" className={inputClass} />
+              </Field>
+              <Field label="Recyclability (%)">
+                <input type="text" value={layer.recyclabilityPercent} onChange={(e) => set("recyclabilityPercent", e.target.value)} className={inputClass} />
+              </Field>
+              <Field label="Recycling stream">
+                <input type="text" value={layer.recyclingStream} onChange={(e) => set("recyclingStream", e.target.value)} placeholder="PET bottles / paper / glass" className={inputClass} />
+              </Field>
+              <Field label="Separable components">
+                <select value={layer.separableComponents} onChange={(e) => set("separableComponents", e.target.value)} className={selectClass}>
+                  <option value="">— Select —</option>
+                  {PACKAGING_YES_NO_OPTIONS.map((o) => (
+                    <option key={o} value={o}>{o}</option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Compostable — Art. 9">
+                <select value={layer.compostable} onChange={(e) => set("compostable", e.target.value)} className={selectClass}>
+                  <option value="">— Select —</option>
+                  {PACKAGING_YES_NO_OPTIONS.map((o) => (
+                    <option key={o} value={o}>{o}</option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Compostability standard">
+                <input type="text" value={layer.compostabilityStandard} onChange={(e) => set("compostabilityStandard", e.target.value)} placeholder="EN 13432" className={inputClass} />
+              </Field>
+              <Field label="Material label — Art. 12">
+                <select value={layer.materialLabel} onChange={(e) => set("materialLabel", e.target.value)} className={selectClass}>
+                  <option value="">— Select —</option>
+                  {PACKAGING_YES_NO_OPTIONS.map((o) => (
+                    <option key={o} value={o}>{o}</option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Separate-collection label (from 8/2028)">
+                <select value={layer.separateCollectionLabel} onChange={(e) => set("separateCollectionLabel", e.target.value)} className={selectClass}>
+                  <option value="">— Select —</option>
+                  {PACKAGING_YES_NO_OPTIONS.map((o) => (
+                    <option key={o} value={o}>{o}</option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="QR / digital carrier — Art. 12">
+                <input type="text" value={layer.qrDigitalCarrier} onChange={(e) => set("qrDigitalCarrier", e.target.value)} placeholder="https://... / GS1 Digital Link" className={inputClass} />
+              </Field>
+            </div>
+          </div>
+
+          <div>
+            <p className={groupHeadingClass}>Section 6 : Reuse (Art. 11)</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field label="Deposit scheme">
+                <select value={layer.depositScheme} onChange={(e) => set("depositScheme", e.target.value)} className={selectClass}>
+                  <option value="">— Select —</option>
+                  {PACKAGING_YES_NO_OPTIONS.map((o) => (
+                    <option key={o} value={o}>{o}</option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Deposit amount (€)">
+                <input type="text" value={layer.depositAmount} onChange={(e) => set("depositAmount", e.target.value)} placeholder="0.15" className={inputClass} />
+              </Field>
+              <Field label="Designed reuse cycles">
+                <input type="text" value={layer.designedReuseCycles} onChange={(e) => set("designedReuseCycles", e.target.value)} className={inputClass} />
+              </Field>
+              <Field label="Reuse system URL">
+                <input type="url" value={layer.reuseSystemUrl} onChange={(e) => set("reuseSystemUrl", e.target.value)} placeholder="https://..." className={inputClass} />
+              </Field>
+              <Field label="Return points URL">
+                <input type="url" value={layer.returnPointsUrl} onChange={(e) => set("returnPointsUrl", e.target.value)} placeholder="https://..." className={inputClass} />
+              </Field>
+            </div>
+          </div>
+
+          <div>
+            <p className={groupHeadingClass}>Section 8 : Conformity (extra) · footprint</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field label="Conformity assessment date">
+                <input type="date" value={layer.conformityAssessmentDate} onChange={(e) => set("conformityAssessmentDate", e.target.value)} className={inputClass} />
+              </Field>
+              <Field label="Retention (years)">
+                <input type="text" value={layer.retentionYears} onChange={(e) => set("retentionYears", e.target.value)} placeholder="10" className={inputClass} />
+              </Field>
+              <Field label="Test reports URL">
+                <input type="url" value={layer.testReportsUrl} onChange={(e) => set("testReportsUrl", e.target.value)} placeholder="https://..." className={inputClass} />
+              </Field>
+              <Field label="DoC signed by">
+                <input type="text" value={layer.docSignedBy} onChange={(e) => set("docSignedBy", e.target.value)} className={inputClass} />
+              </Field>
+              <Field label="EPR registration (single, legacy)">
+                <input type="text" value={layer.eprRegistrationLegacy} onChange={(e) => set("eprRegistrationLegacy", e.target.value)} placeholder="SK-EPR-12345" className={inputClass} />
+              </Field>
+              <Field label="Carbon footprint (g CO₂e)">
+                <input type="text" value={layer.carbonFootprint} onChange={(e) => set("carbonFootprint", e.target.value)} placeholder="120" className={inputClass} />
+              </Field>
+              <Field label="Carbon source">
+                <select value={layer.carbonSource} onChange={(e) => set("carbonSource", e.target.value)} className={selectClass}>
+                  <option value="">— Select —</option>
+                  {PACKAGING_CARBON_SOURCE_OPTIONS.map((o) => (
+                    <option key={o} value={o}>{o}</option>
+                  ))}
+                </select>
+              </Field>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -319,11 +571,13 @@ export function PackagingLayersPanel({
   onChange,
   productGtin = null,
   productGtinData = null,
+  showOptional = false,
 }: {
   layers: PackagingLayer[];
   onChange: (layers: PackagingLayer[]) => void;
   productGtin?: string | null;
   productGtinData?: Record<string, unknown> | null;
+  showOptional?: boolean;
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -389,6 +643,7 @@ export function PackagingLayersPanel({
                   onChange={(next) => updateLayer(layer.id, next)}
                   productGtin={productGtin}
                   productGtinData={productGtinData}
+                  showOptional={showOptional}
                 />
               </div>
             )}

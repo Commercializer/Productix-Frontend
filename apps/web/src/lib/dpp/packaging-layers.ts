@@ -48,6 +48,57 @@ export interface PackagingLayer {
   euDocExists: string;
   reachSvhcCompliant: string;
   docUrl: string;
+  /** "More PPWR data (optional)" - Section 1 & 3, Classification &
+   * minimisation (Art. 10). All optional, shown only behind the page's
+   * "Show optional fields" toggle - see packaging-layers-panel.tsx. */
+  packagingCategory: string;
+  packagingFormat: string;
+  volumeLitres: string;
+  dimensions: string;
+  totalWeightGrams: string;
+  emptyWeightGrams: string;
+  packagingRatio: string;
+  monoMaterial: string;
+  /** Section 2, Economic operator (Art. 15/18). */
+  manufacturerRole: string;
+  uniquePackagingIdentifier: string;
+  producerTrademark: string;
+  importer: string;
+  importerAddress: string;
+  /** Section 4, Substances (Art. 5). */
+  heavyMetalsPpm: string;
+  pfasPresent: string;
+  foodContact: string;
+  pfasFree: string;
+  totalFluorinePpm: string;
+  fluorineUnderLimit: string;
+  bisphenolFree: string;
+  svhcPresent: string;
+  svhcDetails: string;
+  /** Section 5, Recyclability (Art. 6-11) - beyond recyclabilityGrade/reusable above. */
+  recycledContentPercent: string;
+  recyclabilityPercent: string;
+  recyclingStream: string;
+  separableComponents: string;
+  compostable: string;
+  compostabilityStandard: string;
+  materialLabel: string;
+  separateCollectionLabel: string;
+  qrDigitalCarrier: string;
+  /** Section 6, Reuse (Art. 11). */
+  depositScheme: string;
+  depositAmount: string;
+  designedReuseCycles: string;
+  reuseSystemUrl: string;
+  returnPointsUrl: string;
+  /** Section 8, Conformity (extra) + footprint. */
+  conformityAssessmentDate: string;
+  retentionYears: string;
+  testReportsUrl: string;
+  docSignedBy: string;
+  eprRegistrationLegacy: string;
+  carbonFootprint: string;
+  carbonSource: string;
 }
 
 /** Packaging Regulation (EU) 2025/40, Art. 12 caps a declaration at 15 layers. */
@@ -56,6 +107,8 @@ export const MAX_PACKAGING_LAYERS = 15;
 export const PACKAGING_LAYER_TYPE_OPTIONS = ["Primary", "Secondary", "Tertiary / transport"];
 export const PACKAGING_RECYCLABILITY_GRADE_OPTIONS = ["A", "B", "C", "D", "E"];
 export const PACKAGING_YES_NO_OPTIONS = ["Yes", "No"];
+export const PACKAGING_MANUFACTURER_ROLE_OPTIONS = ["Manufacturer", "Importer", "Authorised representative"];
+export const PACKAGING_CARBON_SOURCE_OPTIONS = ["From linked DPP", "Manual entry", "From LCA / EPD", "Other"];
 export const DEFAULT_PACKAGING_DATA_SOURCE = "Manual entry";
 /** The only non-manual data source actually wired up - see
  * applyGtinLookupToLayer below. Kept as a named constant (not just a string
@@ -94,6 +147,49 @@ export function createEmptyPackagingLayer(): PackagingLayer {
     euDocExists: "",
     reachSvhcCompliant: "",
     docUrl: "",
+    packagingCategory: "",
+    packagingFormat: "",
+    volumeLitres: "",
+    dimensions: "",
+    totalWeightGrams: "",
+    emptyWeightGrams: "",
+    packagingRatio: "",
+    monoMaterial: "",
+    manufacturerRole: "",
+    uniquePackagingIdentifier: "",
+    producerTrademark: "",
+    importer: "",
+    importerAddress: "",
+    heavyMetalsPpm: "",
+    pfasPresent: "",
+    foodContact: "",
+    pfasFree: "",
+    totalFluorinePpm: "",
+    fluorineUnderLimit: "",
+    bisphenolFree: "",
+    svhcPresent: "",
+    svhcDetails: "",
+    recycledContentPercent: "",
+    recyclabilityPercent: "",
+    recyclingStream: "",
+    separableComponents: "",
+    compostable: "",
+    compostabilityStandard: "",
+    materialLabel: "",
+    separateCollectionLabel: "",
+    qrDigitalCarrier: "",
+    depositScheme: "",
+    depositAmount: "",
+    designedReuseCycles: "",
+    reuseSystemUrl: "",
+    returnPointsUrl: "",
+    conformityAssessmentDate: "",
+    retentionYears: "",
+    testReportsUrl: "",
+    docSignedBy: "",
+    eprRegistrationLegacy: "",
+    carbonFootprint: "",
+    carbonSource: "",
   };
 }
 
@@ -143,6 +239,54 @@ export function countMissingRequiredLayerFields(layer: PackagingLayer): number {
   return required.filter((v) => !v.trim()).length;
 }
 
+/** Every optional "More PPWR data" string field - factored out so
+ * isLayerNonEmpty/prunePackagingLayers don't have to hand-list it twice. */
+const OPTIONAL_PPWR_FIELD_KEYS = [
+  "packagingCategory",
+  "packagingFormat",
+  "volumeLitres",
+  "dimensions",
+  "totalWeightGrams",
+  "emptyWeightGrams",
+  "packagingRatio",
+  "monoMaterial",
+  "manufacturerRole",
+  "uniquePackagingIdentifier",
+  "producerTrademark",
+  "importer",
+  "importerAddress",
+  "heavyMetalsPpm",
+  "pfasPresent",
+  "foodContact",
+  "pfasFree",
+  "totalFluorinePpm",
+  "fluorineUnderLimit",
+  "bisphenolFree",
+  "svhcPresent",
+  "svhcDetails",
+  "recycledContentPercent",
+  "recyclabilityPercent",
+  "recyclingStream",
+  "separableComponents",
+  "compostable",
+  "compostabilityStandard",
+  "materialLabel",
+  "separateCollectionLabel",
+  "qrDigitalCarrier",
+  "depositScheme",
+  "depositAmount",
+  "designedReuseCycles",
+  "reuseSystemUrl",
+  "returnPointsUrl",
+  "conformityAssessmentDate",
+  "retentionYears",
+  "testReportsUrl",
+  "docSignedBy",
+  "eprRegistrationLegacy",
+  "carbonFootprint",
+  "carbonSource",
+] as const satisfies readonly (keyof PackagingLayer)[];
+
 function isLayerNonEmpty(layer: PackagingLayer): boolean {
   return !!(
     layer.label.trim() ||
@@ -159,7 +303,8 @@ function isLayerNonEmpty(layer: PackagingLayer): boolean {
     layer.reachSvhcCompliant.trim() ||
     layer.docUrl.trim() ||
     layer.components.some((c) => c.material.trim()) ||
-    layer.eprRegistrations.some((e) => e.country.trim() || e.registrationNumber.trim())
+    layer.eprRegistrations.some((e) => e.country.trim() || e.registrationNumber.trim()) ||
+    OPTIONAL_PPWR_FIELD_KEYS.some((key) => (layer[key] as string)?.trim())
   );
 }
 
@@ -169,24 +314,30 @@ function isLayerNonEmpty(layer: PackagingLayer): boolean {
 export function prunePackagingLayers(layers: unknown): PackagingLayer[] {
   if (!Array.isArray(layers)) return [];
   return (layers as PackagingLayer[])
-    .map((l) => ({
-      ...l,
-      label: l.label?.trim() ?? "",
-      dataSource: l.dataSource?.trim() || DEFAULT_PACKAGING_DATA_SOURCE,
-      packagingName: l.packagingName?.trim() ?? "",
-      manufacturer: l.manufacturer?.trim() ?? "",
-      manufacturerCountry: l.manufacturerCountry?.trim() ?? "",
-      layerType: l.layerType?.trim() ?? "",
-      weightGrams: l.weightGrams?.trim() ?? "",
-      recyclabilityGrade: l.recyclabilityGrade?.trim() ?? "",
-      reusable: l.reusable?.trim() ?? "",
-      docNumber: l.docNumber?.trim() ?? "",
-      docIssueDate: l.docIssueDate?.trim() ?? "",
-      euDocExists: l.euDocExists?.trim() ?? "",
-      reachSvhcCompliant: l.reachSvhcCompliant?.trim() ?? "",
-      docUrl: l.docUrl?.trim() ?? "",
-      components: (l.components ?? []).filter((c) => c.material?.trim()),
-      eprRegistrations: (l.eprRegistrations ?? []).filter((e) => e.country?.trim() || e.registrationNumber?.trim()),
-    }))
+    .map((l) => {
+      const optionalPpwr = Object.fromEntries(
+        OPTIONAL_PPWR_FIELD_KEYS.map((key) => [key, (l[key] as string | undefined)?.trim() ?? ""])
+      ) as Record<(typeof OPTIONAL_PPWR_FIELD_KEYS)[number], string>;
+      return {
+        ...l,
+        ...optionalPpwr,
+        label: l.label?.trim() ?? "",
+        dataSource: l.dataSource?.trim() || DEFAULT_PACKAGING_DATA_SOURCE,
+        packagingName: l.packagingName?.trim() ?? "",
+        manufacturer: l.manufacturer?.trim() ?? "",
+        manufacturerCountry: l.manufacturerCountry?.trim() ?? "",
+        layerType: l.layerType?.trim() ?? "",
+        weightGrams: l.weightGrams?.trim() ?? "",
+        recyclabilityGrade: l.recyclabilityGrade?.trim() ?? "",
+        reusable: l.reusable?.trim() ?? "",
+        docNumber: l.docNumber?.trim() ?? "",
+        docIssueDate: l.docIssueDate?.trim() ?? "",
+        euDocExists: l.euDocExists?.trim() ?? "",
+        reachSvhcCompliant: l.reachSvhcCompliant?.trim() ?? "",
+        docUrl: l.docUrl?.trim() ?? "",
+        components: (l.components ?? []).filter((c) => c.material?.trim()),
+        eprRegistrations: (l.eprRegistrations ?? []).filter((e) => e.country?.trim() || e.registrationNumber?.trim()),
+      };
+    })
     .filter(isLayerNonEmpty);
 }
