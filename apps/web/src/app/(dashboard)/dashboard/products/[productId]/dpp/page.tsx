@@ -1107,44 +1107,59 @@ function SectionPanel({
   // the generic text-input rendering for the Manufacturer group.
   const skipManufacturerCountry = new Set(extraFieldsBefore ? ["Manufacturer country"] : []);
 
+  const groupsBlock = spec.groups ? (
+    spec.groups.map((group) => (
+      <div key={group.label} className="space-y-3">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-(--ds-text-muted)">{group.label}</p>
+        <CalloutList callouts={group.callouts} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {group.label === "Manufacturer" && extraFieldsBefore}
+          {renderFields(group.fields, group.label === "Manufacturer" ? skipManufacturerCountry : undefined)}
+        </div>
+      </div>
+    ))
+  ) : spec.fields ? (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{renderFields(spec.fields)}</div>
+  ) : null;
+
+  const repeatableBlock = spec.repeatable?.map((block) => (
+    <div key={block.key} className="space-y-3">
+      {block.label && (
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-(--ds-text-muted)">{block.label}</p>
+      )}
+      {block.explainerText && <p className="text-[12px] text-(--ds-text-muted)">{block.explainerText}</p>}
+      {block.explainerText2 && <p className="text-[12px] text-(--ds-text-muted)">{block.explainerText2}</p>}
+      <CalloutList callouts={block.callouts} />
+      <RepeatableRowsPanel
+        fields={block.fields}
+        rows={rows[block.key] ?? []}
+        onChange={(next) => onBlockRowsChange(block.key, next)}
+        addLabel={block.addLabel}
+        emptyLabel={block.emptyLabel}
+        max={block.max}
+      />
+    </div>
+  ));
+
+  // Substances of concern (SVHC) renders its SVHC substance table before its
+  // Compliance & certifications group - every other groups+repeatable
+  // section keeps groups first.
   return (
     <div className="space-y-6">
       <SectionHeading title={spec.title} directive={spec.directive} />
       <CalloutList callouts={spec.callouts} />
 
-      {spec.groups ? (
-        spec.groups.map((group) => (
-          <div key={group.label} className="space-y-3">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-(--ds-text-muted)">{group.label}</p>
-            <CalloutList callouts={group.callouts} />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {group.label === "Manufacturer" && extraFieldsBefore}
-              {renderFields(group.fields, group.label === "Manufacturer" ? skipManufacturerCountry : undefined)}
-            </div>
-          </div>
-        ))
-      ) : spec.fields ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{renderFields(spec.fields)}</div>
-      ) : null}
-
-      {spec.repeatable?.map((block) => (
-        <div key={block.key} className="space-y-3">
-          {block.label && (
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-(--ds-text-muted)">{block.label}</p>
-          )}
-          {block.explainerText && <p className="text-[12px] text-(--ds-text-muted)">{block.explainerText}</p>}
-          {block.explainerText2 && <p className="text-[12px] text-(--ds-text-muted)">{block.explainerText2}</p>}
-          <CalloutList callouts={block.callouts} />
-          <RepeatableRowsPanel
-            fields={block.fields}
-            rows={rows[block.key] ?? []}
-            onChange={(next) => onBlockRowsChange(block.key, next)}
-            addLabel={block.addLabel}
-            emptyLabel={block.emptyLabel}
-            max={block.max}
-          />
-        </div>
-      ))}
+      {spec.key === "substances" ? (
+        <>
+          {repeatableBlock}
+          {groupsBlock}
+        </>
+      ) : (
+        <>
+          {groupsBlock}
+          {repeatableBlock}
+        </>
+      )}
     </div>
   );
 }

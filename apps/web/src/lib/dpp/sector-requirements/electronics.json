@@ -539,7 +539,7 @@
           "type": "subtitle"
         },
         {
-          "text": "Charging port (USB-C, Lightning, Micro-USB, Barrel / DC jack, Proprietary, None / wireless only) - (USB-C mandatory (RED 2022/2380))",
+          "text": "Charging port",
           "required": false,
           "type": "select",
           "options": [

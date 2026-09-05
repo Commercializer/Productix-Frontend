@@ -244,22 +244,36 @@ export function DppPassportView({ data, batch }: { data: PublicDppData; batch: s
             // A repeatable-table section (Materials, Substances, End of
             // life, Repair & usage history) renders its flat fields/groups
             // (if any) in one card via SectionCard, then one extra card per
-            // repeatable block - see repeatable-rows-view.tsx.
+            // repeatable block - see repeatable-rows-view.tsx. Substances of
+            // concern (SVHC) reverses this: its SVHC substance table card
+            // comes before its Compliance & certifications card.
+            const sectionCard = <SectionCard spec={spec} answers={answers} defaultOpen={i === 0} />;
+            const repeatableCards = spec.repeatable?.map((block) => (
+              <RepeatableRowsView
+                key={block.key}
+                fields={block.fields}
+                rows={rowsByBlock[block.key] ?? []}
+                title={spec.repeatable!.length > 1 && block.label ? `${spec.title} — ${block.label}` : spec.title}
+                directive={spec.directive}
+                defaultOpen={false}
+                explainerText={block.explainerText}
+                explainerText2={block.explainerText2}
+              />
+            ));
+
             return (
               <Fragment key={spec.key}>
-                <SectionCard spec={spec} answers={answers} defaultOpen={i === 0} />
-                {spec.repeatable?.map((block) => (
-                  <RepeatableRowsView
-                    key={block.key}
-                    fields={block.fields}
-                    rows={rowsByBlock[block.key] ?? []}
-                    title={spec.repeatable!.length > 1 && block.label ? `${spec.title} — ${block.label}` : spec.title}
-                    directive={spec.directive}
-                    defaultOpen={false}
-                    explainerText={block.explainerText}
-                    explainerText2={block.explainerText2}
-                  />
-                ))}
+                {spec.key === "substances" ? (
+                  <>
+                    {repeatableCards}
+                    {sectionCard}
+                  </>
+                ) : (
+                  <>
+                    {sectionCard}
+                    {repeatableCards}
+                  </>
+                )}
               </Fragment>
             );
           })}

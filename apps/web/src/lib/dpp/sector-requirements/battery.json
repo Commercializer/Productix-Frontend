@@ -354,121 +354,148 @@
         },
         {
           "text": "Capacity (kWh)",
-          "required": true
+          "required": true,
+          "placeholder": "75.0"
         },
         {
           "text": "Capacity (mAh)",
           "required": false,
-          "helperText": "For small batteries"
+          "helperText": "For small batteries",
+          "placeholder": "5000"
         },
         {
           "text": "Nominal voltage (V)",
-          "required": true
+          "required": true,
+          "placeholder": "400"
         },
         {
           "text": "Max voltage (V)",
-          "required": false
+          "required": false,
+          "placeholder": "420"
         },
         {
           "text": "Cycle life",
-          "required": true
+          "required": true,
+          "placeholder": "1500"
         },
         {
           "text": "Operating temp min (°C)",
-          "required": false
+          "required": false,
+          "placeholder": "-20"
         },
         {
           "text": "Operating temp max (°C)",
-          "required": false
+          "required": false,
+          "placeholder": "60"
         },
         {
           "text": "Number of cells",
-          "required": false
+          "required": false,
+          "placeholder": "96"
         },
         {
           "text": "Cathode material",
-          "required": true
+          "required": true,
+          "placeholder": "NMC 811"
         },
         {
           "text": "Anode material",
-          "required": false
+          "required": false,
+          "placeholder": "Graphite"
         },
         {
           "text": "Electrolyte type",
-          "required": false
+          "required": false,
+          "placeholder": "Liquid LiPF6"
         },
         {
           "text": "Lithium content (kg)",
           "required": true,
-          "helperText": "Mandatory under Battery Regulation"
+          "helperText": "Mandatory under Battery Regulation",
+          "placeholder": "36.9"
         },
         {
           "text": "Cobalt content (kg)",
           "required": true,
-          "helperText": "Mandatory under Battery Regulation"
+          "helperText": "Mandatory under Battery Regulation",
+          "placeholder": "27.5"
         },
         {
           "text": "Nickel content (kg)",
-          "required": true
+          "required": true,
+          "placeholder": "55.0"
         },
         {
           "text": "Carbon intensity (kg CO₂/kWh)",
-          "required": false
+          "required": false,
+          "placeholder": "109.3"
         },
         {
           "text": "Recycled cobalt (%)",
           "required": false,
-          "helperText": "Target ≥16% from 2031"
+          "helperText": "Target ≥16% from 2031",
+          "placeholder": "12.0"
         },
         {
           "text": "Recycled lithium (%)",
           "required": false,
-          "helperText": "Target ≥16% from 2031"
+          "helperText": "Target ≥6% from 2031",
+          "placeholder": "0.0"
         },
         {
           "text": "Battery weight (kg)",
           "required": false,
-          "helperText": "Just the battery, excluding packaging"
+          "helperText": "Just the battery, excluding packaging",
+          "placeholder": "450"
         },
         {
           "text": "Round-trip efficiency (%)",
           "required": false,
-          "helperText": "Annex IV parameter"
+          "helperText": "Annex IV parameter",
+          "placeholder": "95"
         },
         {
           "text": "Round-trip efficiency at 50% life (%)",
           "required": false,
-          "helperText": "At 50% of cycle life"
+          "helperText": "At 50% of cycle life",
+          "placeholder": "92"
         },
         {
           "text": "Internal resistance (mΩ)",
-          "required": false
+          "required": false,
+          "placeholder": "0.5"
         },
         {
           "text": "Self-discharge rate (%/month)",
-          "required": false
+          "required": false,
+          "placeholder": "2"
         },
         {
           "text": "Capacity threshold for exhaustion (%)",
           "required": false,
-          "helperText": "EV only. end-of-first-life threshold"
+          "helperText": "EV only - end-of-first-life threshold",
+          "placeholder": "70"
         },
         {
           "text": "Warranty (calendar years)",
-          "required": false
+          "required": false,
+          "placeholder": "8"
         },
         {
           "text": "C-rate reference",
-          "required": false
+          "required": false,
+          "placeholder": "1C"
         },
         {
           "text": "UN number",
           "required": true,
-          "helperText": "Hazmat transport number"
+          "helperText": "Hazmat transport number",
+          "placeholder": "UN3480"
         },
         {
           "text": "Hazmat class",
-          "required": true
+          "required": true,
+          "placeholder": "9"
         },
         {
           "text": "Extinguishing agent",
@@ -477,7 +504,8 @@
         },
         {
           "text": "Supply chain due diligence URL",
-          "required": false
+          "required": false,
+          "placeholder": "https://......./supply-chain-report.pdf"
         },
         {
           "text": "Battery Regulation 2023/1542 - Annex XIII",
@@ -491,27 +519,33 @@
         },
         {
           "text": "Rated capacity (Ah)",
-          "required": true
+          "required": true,
+          "placeholder": "188"
         },
         {
           "text": "Min capacity (Ah)",
-          "required": true
+          "required": true,
+          "placeholder": "180"
         },
         {
           "text": "Usable capacity %",
-          "required": false
+          "required": false,
+          "placeholder": "95"
         },
         {
           "text": "Rated power (W)",
-          "required": true
+          "required": true,
+          "placeholder": "220000"
         },
         {
           "text": "Peak power (W)",
-          "required": false
+          "required": false,
+          "placeholder": "350000"
         },
         {
           "text": "Thermal-runaway temp (°C)",
-          "required": false
+          "required": false,
+          "placeholder": "165"
         },
         {
           "text": "Cycle-life test method",
@@ -578,11 +612,13 @@
         },
         {
           "text": "CRM present % by weight",
-          "required": true
+          "required": true,
+          "placeholder": "18.5"
         },
         {
           "text": "CRM recoverable % by weight",
-          "required": false
+          "required": false,
+          "placeholder": "95"
         },
         {
           "text": "Carbon footprint lifecycle (kg CO₂/kWh)",
@@ -591,19 +627,23 @@
         },
         {
           "text": "Cradle-to-gate",
-          "required": true
+          "required": true,
+          "placeholder": "56"
         },
         {
           "text": "Distribution",
-          "required": false
+          "required": false,
+          "placeholder": "3.2"
         },
         {
           "text": "Use phase",
-          "required": false
+          "required": false,
+          "placeholder": "12"
         },
         {
           "text": "End-of-life (can be negative)",
-          "required": false
+          "required": false,
+          "placeholder": "-4.5"
         },
         {
           "text": "CF audit report URL",
@@ -611,7 +651,8 @@
         },
         {
           "text": "Verified by",
-          "required": false
+          "required": false,
+          "placeholder": "TÜV Süd Battery Testing GmbH"
         },
         {
           "text": "Verified date",
@@ -629,7 +670,8 @@
         },
         {
           "text": "Verified by",
-          "required": false
+          "required": false,
+          "placeholder": "Bureau Veritas"
         },
         {
           "text": "Verified date",
@@ -644,7 +686,8 @@
         {
           "text": "SoH threshold for second life %",
           "required": false,
-          "helperText": "Typically 70-80%"
+          "helperText": "Typically 70-80%",
+          "placeholder": "80"
         },
         {
           "text": "Collection / pickup URL",
