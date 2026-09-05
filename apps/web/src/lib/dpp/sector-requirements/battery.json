@@ -11,7 +11,8 @@
         },
         {
           "text": "GTIN-14",
-          "required": true
+          "required": true,
+          "helperText": "14-digit Global Trade Item Number"
         },
         {
           "text": "Sector",
@@ -39,16 +40,14 @@
       "label": "Manufacturer & importer",
       "fields": [
         {
-          "text": "Manufacturer",
-          "required": false
-        },
-        {
           "text": "Manufacturer name",
           "required": true
         },
         {
           "text": "Manufacturer country",
-          "required": true
+          "required": true,
+          "type": "country-picker",
+          "searchable": true
         },
         {
           "text": "Manufacturer address",
@@ -63,29 +62,35 @@
           "required": false
         },
         {
-          "text": "Manufacturing facility / site (plant code or GS1 GLN). Optional - one of the 4 EU DPP Registry identifiers.",
-          "required": false
+          "text": "Manufacturing facility / site",
+          "required": false,
+          "helperText": "plant code or GS1 GLN). Optional - one of the 4 EU DPP Registry identifiers."
         },
         {
-          "text": "Facility ID scheme - None / GLN (GS1) / EU-OP / Other (Optional. Pick GLN only if the Facility ID is a GS1 GLN - it's then validated (13 digits).)",
-          "required": false
+          "text": "Facility ID scheme - None / GLN (GS1) / EU-OP / Other",
+          "required": false,
+          "helperText": "Optional. Pick GLN only if the Facility ID is a GS1 GLN - it's then validated (13 digits)."
         },
         {
-          "text": "Importer",
-          "required": false
-        },
-        {
-          "text": "Importer name (Required if manufacturer is outside EU)",
-          "required": false
+          "text": "Importer name",
+          "required": false,
+          "helperText": "Required if manufacturer is outside EU",
+          "helperTextStyle": "lite"
         },
         {
           "text": "Importer country",
-          "required": false
+          "required": false,
+          "type": "country-picker",
+          "searchable": true
         }
       ]
     },
     "product-specifications": {
       "label": "Product specifications",
+      "explainerText": "Free-form battery specifications displayed on the public viewer. Examples: Battery chemistry · Nominal voltage · Capacity · Energy capacity · Power output · Cycle life · Operating temperature · Battery type.",
+      "explainerText2": "Add the spec rows a consumer would care about. Up to 40 rows.",
+      "explainerTextStyle": "lite",
+      "maxRows": 40,
       "fields": [
         {
           "text": "Add Spec (Custom rows)",
@@ -93,12 +98,14 @@
           "type": "button"
         },
         {
-          "text": "Field Title",
-          "required": false
+          "text": "Spec Title",
+          "required": false,
+          "placeholder": "Movement"
         },
         {
-          "text": "Field Content",
-          "required": false
+          "text": "Spec Content",
+          "required": false,
+          "placeholder": "Calibre 4131 · Chronograph"
         }
       ]
     },
@@ -131,11 +138,13 @@
         },
         {
           "text": "Manufacture date",
-          "required": false
+          "required": false,
+          "type": "date-picker"
         },
         {
           "text": "Expiry date",
-          "required": false
+          "required": false,
+          "type": "date-picker"
         }
       ]
     },
@@ -143,17 +152,25 @@
       "label": "Carbon footprint",
       "fields": [
         {
-          "text": "Battery Regulation 2023/1542 · Art. 7 - mandatory for batteries ≥2kWh from Feb 2027 Max lifecycle CF thresholds per category are set by a future delegated act (Art. 7(3)); no fixed EU value is in force yet.",
+          "text": "Battery Regulation 2023/1542 · Art. 7 - mandatory for batteries ≥2kWh from Feb 2027",
           "required": false,
           "type": "note"
         },
         {
-          "text": "Total CO₂ equivalent (kg) - (Mandatory for batteries ≥2kWh from Feb 2027)",
-          "required": true
+          "text": "Max lifecycle CF thresholds per category are set by a future delegated act (Art. 7(3)); no fixed EU value is in force yet.",
+          "required": false,
+          "component": "info_banner",
+          "variant": "success"
         },
         {
-          "text": "Methodology (e.g. ISO 14067:2018)",
-          "required": false
+          "text": "Total CO₂ equivalent (kg)",
+          "required": true,
+          "helperText": "Mandatory for batteries ≥2kWh from Feb 2027"
+        },
+        {
+          "text": "Methodology",
+          "required": false,
+          "helperText": "Ex: ISO 14067:2018"
         },
         {
           "text": "Manufacturing phase (kg CO₂)",
@@ -181,13 +198,19 @@
       "label": "Recycled content",
       "fields": [
         {
-          "text": "Battery Regulation 2023/1542 · Art. 8 - mandatory from 2031, Battery targets 2031 – Cobalt ≥16% · Lithium ≥6% · Nickel ≥6% · Lead ≥85%",
+          "text": "Battery Regulation 2023/1542 · Art. 8 - mandatory from 2031",
           "required": false,
           "type": "note"
         },
         {
-          "text": "Total recycled content (%) - (Mandatory for batteries from 2031)",
-          "required": true
+          "component": "info_banner",
+          "variant": "success",
+          "text": "Battery targets 2031 — Cobalt ≥16% · Lithium ≥6% · Nickel ≥6% · Lead ≥85%"
+        },
+        {
+          "text": "Total recycled content (%)",
+          "required": true,
+          "helperText": "Mandatory for batteries from 2031"
         },
         {
           "text": "Pre-consumer recycled (%)",
@@ -211,21 +234,68 @@
       "label": "Material composition",
       "fields": [
         {
-          "text": "ESPR 2024/1781 · Art. 7(5) · Critical Raw Materials Act 2024/1252, Declare all materials >0.1% by weight. Country of origin mandatory for Critical Raw Materials (CRM).",
+          "text": "ESPR 2024/1781 · Art. 7(5) · Critical Raw Materials Act 2024/1252",
           "required": false,
           "type": "note"
         },
         {
-          "text": "Material name (Select or type, Lithium, Cobalt, Nickel, Manganese, Graphite, Rare earth elements, Platinum, Palladium, Indium, Gallium, Germanium, Silicon metal, Titanium, Tungsten, Niobium, Tantalum, Aluminum, Steel, Copper, Iron, Zinc, Lead, Tin, Silver, Gold, Polypropylene (PP), Polyethylene (PE), PET, ABS plastic, Nylon, Polycarbonate, Cotton, Polyester, Glass, Ceramic)",
-          "required": false
+          "text": "Declare all materials >0.1% by weight. Country of origin mandatory for Critical Raw Materials (CRM).",
+          "required": false,
+          "component": "info_banner",
+          "variant": "warning"
+        },
+        {
+          "type": "select",
+          "name": "material_name",
+          "label": "Material name",
+          "required": false,
+          "options": [
+            "Lithium",
+            "Cobalt",
+            "Nickel",
+            "Manganese",
+            "Graphite",
+            "Rare earth elements",
+            "Platinum",
+            "Palladium",
+            "Indium",
+            "Gallium",
+            "Germanium",
+            "Silicon metal",
+            "Titanium",
+            "Tungsten",
+            "Niobium",
+            "Tantalum",
+            "Aluminum",
+            "Steel",
+            "Copper",
+            "Iron",
+            "Zinc",
+            "Lead",
+            "Tin",
+            "Silver",
+            "Gold",
+            "Polypropylene (PP)",
+            "Polyethylene (PE)",
+            "PET",
+            "ABS plastic",
+            "Nylon",
+            "Polycarbonate",
+            "Cotton",
+            "Polyester",
+            "Glass",
+            "Ceramic"
+          ]
         },
         {
           "text": "Share (%)",
           "required": false
         },
         {
-          "text": "Origin (Country picker / search & select)",
-          "required": false
+          "text": "Origin",
+          "required": false,
+          "type": "country-picker",
+          "searchable": true
         },
         {
           "text": "Flags",
@@ -263,20 +333,33 @@
         {
           "text": "Battery Passport mandatory from 18 Feb 2027 for all EV and industrial batteries ≥2kWh. Must be accessible via QR code for 10 years.",
           "required": false,
-          "type": "note"
+          "component": "info_banner",
+          "variant": "warning"
         },
         {
           "text": "Battery chemistry",
           "required": true,
-          "type": "select"
+          "type": "select",
+          "options": [
+            "NMC",
+            "LFP",
+            "NCA",
+            "LTO",
+            "NiMH",
+            "Lead-acid",
+            "Solid-state",
+            "Li-S",
+            "Other"
+          ]
         },
         {
           "text": "Capacity (kWh)",
           "required": true
         },
         {
-          "text": "Capacity (mAh) - (For small batteries)",
-          "required": false
+          "text": "Capacity (mAh)",
+          "required": false,
+          "helperText": "For small batteries"
         },
         {
           "text": "Nominal voltage (V)",
@@ -315,12 +398,14 @@
           "required": false
         },
         {
-          "text": "Lithium content (kg) - (Mandatory under Battery Regulation)",
-          "required": true
+          "text": "Lithium content (kg)",
+          "required": true,
+          "helperText": "Mandatory under Battery Regulation"
         },
         {
-          "text": "Cobalt content (kg) - (Mandatory under Battery Regulation)",
-          "required": true
+          "text": "Cobalt content (kg)",
+          "required": true,
+          "helperText": "Mandatory under Battery Regulation"
         },
         {
           "text": "Nickel content (kg)",
@@ -331,24 +416,29 @@
           "required": false
         },
         {
-          "text": "Recycled cobalt (%) - (Target ≥16% from 2031)",
-          "required": false
+          "text": "Recycled cobalt (%)",
+          "required": false,
+          "helperText": "Target ≥16% from 2031"
         },
         {
-          "text": "Recycled lithium (%) - (Target ≥6% from 2031)",
-          "required": false
+          "text": "Recycled lithium (%)",
+          "required": false,
+          "helperText": "Target ≥16% from 2031"
         },
         {
           "text": "Battery weight (kg)",
-          "required": false
+          "required": false,
+          "helperText": "Just the battery, excluding packaging"
         },
         {
           "text": "Round-trip efficiency (%)",
-          "required": false
+          "required": false,
+          "helperText": "Annex IV parameter"
         },
         {
           "text": "Round-trip efficiency at 50% life (%)",
-          "required": false
+          "required": false,
+          "helperText": "At 50% of cycle life"
         },
         {
           "text": "Internal resistance (mΩ)",
@@ -360,7 +450,8 @@
         },
         {
           "text": "Capacity threshold for exhaustion (%)",
-          "required": false
+          "required": false,
+          "helperText": "EV only. end-of-first-life threshold"
         },
         {
           "text": "Warranty (calendar years)",
@@ -371,8 +462,9 @@
           "required": false
         },
         {
-          "text": "UN number - (Hazmat transport number)",
-          "required": true
+          "text": "UN number",
+          "required": true,
+          "helperText": "Hazmat transport number"
         },
         {
           "text": "Hazmat class",
@@ -380,14 +472,15 @@
         },
         {
           "text": "Extinguishing agent",
-          "required": true
+          "required": true,
+          "placeholder": "Water mist, CO2"
         },
         {
           "text": "Supply chain due diligence URL",
           "required": false
         },
         {
-          "text": "Battery Regulation 2023/1542 - Annex XIIIi",
+          "text": "Battery Regulation 2023/1542 - Annex XIII",
           "required": false,
           "type": "section-heading"
         },
@@ -421,12 +514,15 @@
           "required": false
         },
         {
-          "text": "Cycle-life test method (e.g. IEC 61960-3, ISO 12405-4)",
-          "required": true
+          "text": "Cycle-life test method",
+          "required": true,
+          "placeholder": "IEC 61960-3, ISO 12405-4"
         },
         {
-          "text": "Test conditions (C-rate, depth of discharge, temperature)",
-          "required": false
+          "text": "Test conditions",
+          "required": false,
+          "placeholder": "1C charge / 1C discharge @ 25°C, DOD 80%",
+          "helperText": "C-rate, depth of discharge, temperature"
         },
         {
           "text": "Composition",
@@ -434,36 +530,46 @@
           "type": "subtitle"
         },
         {
-          "text": "Cathode active material composition (JSON) - (Format: {\"Ni\":0.80,\"Mn\":0.10,\"Co\":0.10} for NMC 811)",
-          "required": true
+          "text": "Cathode active material composition (JSON)",
+          "required": true,
+          "placeholder": "{\"Ni\":0.8,\"Mn\":0.1,\"Co\":0.1}",
+          "helperText": "Format: {\"Ni\":0.80,\"Mn\":0.10,\"Co\":0.10} for NMC 811"
         },
         {
-          "text": "Anode active material composition (JSON) - (Format: {\"graphite\":0.90,\"silicon\":0.10})",
-          "required": true
+          "text": "Anode active material composition (JSON)",
+          "required": true,
+          "placeholder": "{\"graphite\":0.9,\"silicon\":0.1}",
+          "helperText": "Format: {\"graphite\":0.90,\"silicon\":0.10}"
         },
         {
           "text": "Separator type",
-          "required": false
+          "required": false,
+          "placeholder": "Ceramic-coated polyethylene, 20 µm"
         },
         {
           "text": "Binder material",
-          "required": false
+          "required": false,
+          "placeholder": "PVDF (cathode) / CMC+SBR (anode)"
         },
         {
           "text": "Current collector (anode)",
-          "required": false
+          "required": false,
+          "placeholder": "Copper foil 8 µm"
         },
         {
           "text": "Current collector (cathode)",
-          "required": false
+          "required": false,
+          "placeholder": "Aluminium foil 12 µm"
         },
         {
           "text": "Electrolyte solvent",
-          "required": false
+          "required": false,
+          "placeholder": "EC/DMC/DEC (1:1:1)"
         },
         {
           "text": "Electrolyte salt",
-          "required": false
+          "required": false,
+          "placeholder": "LiPF6 1.0 mol/L"
         },
         {
           "text": "Critical Raw Materials (CRM Act 2024/1252)",
@@ -509,7 +615,8 @@
         },
         {
           "text": "Verified date",
-          "required": false
+          "required": false,
+          "type": "date-picker"
         },
         {
           "text": "Recycled content verification",
@@ -526,7 +633,8 @@
         },
         {
           "text": "Verified date",
-          "required": false
+          "required": false,
+          "type": "date-picker"
         },
         {
           "text": "End-of-life & second life",
@@ -534,8 +642,9 @@
           "type": "subtitle"
         },
         {
-          "text": "SoH threshold for second life % (Typically 70-80%)",
-          "required": false
+          "text": "SoH threshold for second life %",
+          "required": false,
+          "helperText": "Typically 70-80%"
         },
         {
           "text": "Collection / pickup URL",
@@ -559,7 +668,7 @@
           "required": true
         },
         {
-          "text": "Thermal-runaway propagation test passed (Yes/No)",
+          "text": "Thermal-runaway propagation test passed",
           "required": false,
           "type": "select",
           "options": [
@@ -569,15 +678,19 @@
         },
         {
           "text": "Fire-response class",
-          "required": false
+          "required": false,
+          "placeholder": "Class D - Li-ion NMC"
         },
         {
-          "text": "Gases on thermal runaway (Free text; what first responders should know)",
-          "required": false
+          "text": "Gases on thermal runaway",
+          "required": false,
+          "placeholder": "HF, CO, CO2, POF3, hydrocarbons",
+          "helperText": "Free text; what first responders should know"
         },
         {
           "text": "Recommended suppression agents",
-          "required": false
+          "required": false,
+          "placeholder": "Class D dry powder, water mist with foam additive, AVOID direct water jet"
         },
         {
           "text": "Recycled-content audits",
@@ -585,7 +698,7 @@
           "type": "subtitle"
         },
         {
-          "text": "Substance (Cobalt, Lithium, Nickel, Lead, Graphite)",
+          "text": "Substance",
           "required": false,
           "type": "select",
           "options": [
@@ -597,7 +710,7 @@
           ]
         },
         {
-          "text": "Scope (Mine→Refiner, Refiner→Cell, Cell→Pack, Full chain)",
+          "text": "Scope",
           "required": false,
           "type": "select",
           "options": [
@@ -613,29 +726,32 @@
         },
         {
           "text": "Verifier",
-          "required": true
+          "required": true,
+          "placeholder": "Bureau Veritas"
         },
         {
           "text": "Accreditation",
-          "required": false
+          "required": false,
+          "placeholder": "ISO 17021"
         },
         {
           "text": "Issued (date)",
           "required": true,
-          "type": "date"
+          "type": "date-picker"
         },
         {
           "text": "Expires (date)",
           "required": false,
-          "type": "date"
+          "type": "date-picker"
         },
         {
           "text": "Report URL",
           "required": false
         },
         {
-          "text": "Report SHA-256 (Optional tamper-evidence hash)",
-          "required": false
+          "text": "Report SHA-256",
+          "required": false,
+          "helperText": "Optional tamper-evidence hash"
         },
         {
           "text": "Add Audit (Button - New row, above fields again on new audit)",
@@ -648,7 +764,7 @@
           "type": "subtitle"
         },
         {
-          "text": "Substance (Cobalt, Natural graphite, Lithium, Nickel)",
+          "text": "Substance",
           "required": false,
           "type": "select",
           "options": [
@@ -659,7 +775,7 @@
           ]
         },
         {
-          "text": "Scope (Mine→Refiner, Refiner→Cell, Cell→Pack, Full chain)",
+          "text": "Scope",
           "required": false,
           "type": "select",
           "options": [
@@ -670,7 +786,7 @@
           ]
         },
         {
-          "text": "OECD compliant (Toggle On/Off)",
+          "text": "OECD compliant",
           "required": false,
           "type": "toggle",
           "options": [
@@ -680,21 +796,23 @@
         },
         {
           "text": "Verifier",
-          "required": true
+          "required": true,
+          "placeholder": "RCS Global"
         },
         {
           "text": "Accreditation",
-          "required": false
+          "required": false,
+          "placeholder": "ISO 17021"
         },
         {
           "text": "Issued (date)",
           "required": true,
-          "type": "date"
+          "type": "date-picker"
         },
         {
           "text": "Expires (date)",
           "required": false,
-          "type": "date"
+          "type": "date-picker"
         },
         {
           "text": "Due-diligence policy URL",
@@ -705,22 +823,20 @@
           "required": false
         },
         {
-          "text": "Risk areas assessed (New row, above fields again on new materials)",
-          "required": false
-        },
-        {
-          "text": "CAHRAS red flags (ISO 3166-1 alpha-2 country codes, comma-separated)",
-          "required": false
-        },
-        {
-          "text": "Mitigation measures (On-site audits, supplier training, traceability records)",
+          "text": "Risk areas assessed",
           "required": false,
-          "type": "select",
-          "options": [
-            "On-site audits",
-            "supplier training",
-            "traceability records"
-          ]
+          "placeholder": "child_labour, forced_labour, corruption",
+          "helperText": "Comma-separated. Ex: child_labour, forced_labour, corruption"
+        },
+        {
+          "text": "CAHRAS red flags",
+          "required": false,
+          "helperText": "ISO 3166-1 alpha-2 country codes, comma-separated"
+        },
+        {
+          "text": "Mitigation measures",
+          "required": false,
+          "placeholder": "On-site audits, supplier training, traceability records"
         },
         {
           "text": "Grievance mechanism URL",
@@ -742,17 +858,25 @@
           "type": "subtitle"
         },
         {
-          "text": "REACH 1907/2006 · Art. 33 - mandatory if >0.1% w/w (1000 ppm), Mandatory declaration threshold: >0.1% w/w (1000 ppm) per article. SVHC = Substance of Very High Concern (ECHA Candidate List).",
+          "text": "REACH 1907/2006 · Art. 33 - mandatory if >0.1% w/w (1000 ppm)",
           "required": false,
           "type": "note"
         },
         {
+          "text": "Mandatory declaration threshold: >0.1% w/w (1000 ppm) per article. SVHC = Substance of Very High Concern (ECHA Candidate List).",
+          "required": false,
+          "component": "info_banner",
+          "variant": "danger"
+        },
+        {
           "text": "Substance name",
-          "required": false
+          "required": false,
+          "placeholder": "Cobalt"
         },
         {
           "text": "CAS number",
-          "required": false
+          "required": false,
+          "placeholder": "7440-48-4"
         },
         {
           "text": "Conc. (ppm)",
@@ -760,7 +884,8 @@
         },
         {
           "text": "Location in product",
-          "required": false
+          "required": false,
+          "placeholder": "Battery cell"
         },
         {
           "text": "SVHC",
@@ -819,12 +944,15 @@
           "required": false
         },
         {
-          "text": "IP rating (IEC 60529)",
-          "required": false
+          "text": "IP rating",
+          "required": false,
+          "placeholder": "IP67",
+          "helperText": "IEC 60529"
         },
         {
           "text": "Third party certification",
-          "required": false
+          "required": false,
+          "placeholder": "TÜV · UL · Bureau Veritas"
         }
       ]
     },
@@ -837,7 +965,7 @@
           "type": "subtitle"
         },
         {
-          "text": "Packaging & Packaging Waste Regulation (EU) 2025/40 (PPWR) · ESPR 2024/1781. Declare one row per packaging layer (primary / secondary / tertiary). Look up a packaging DPP by GTIN to auto-fill, or extract from an uploaded Declaration of Conformity.",
+          "text": "Packaging & Packaging Waste Regulation (EU) 2025/40 (PPWR) · ESPR 2024/1781. Declare one row per packaging layer.",
           "required": false,
           "type": "note"
         },
@@ -847,55 +975,158 @@
         },
         {
           "text": "Layer label",
-          "required": false
-        },
-        {
-          "text": "Input mode (Manual / Lookup by GTIN / Extract from DoC)",
-          "required": false
-        },
-        {
-          "text": "Packaging layer (from library) - (Select a shared layer defined via CSV import; referenced, not copied - edit it once and every product using it updates)",
           "required": false,
-          "type": "select"
+          "placeholder": "Primary bottle / Outer carton / Transport pallet"
+        },
+        {
+          "text": "Data source",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Manual entry",
+            "Lookup by GTIN (Productix)",
+            "External passport provider link",
+            "Packaging layer (from library)"
+          ]
+        },
+        {
+          "text": "Packaging layer (from library)",
+          "required": false,
+          "type": "select",
+          "helperText": "Select a shared layer defined via CSV import; referenced, not copied - edit it once and every product using it updates",
+          "conditional": {
+            "field": "Data source",
+            "equals": "Packaging layer (from library)"
+          }
         },
         {
           "text": "Packaging GTIN",
-          "required": false
-        },
-        {
-          "text": "Packaging DPP ID",
-          "required": false
+          "required": false,
+          "conditional": {
+            "field": "Data source",
+            "equals": "Lookup by GTIN (Productix)"
+          }
         },
         {
           "text": "Packaging DPP URL",
-          "required": false
+          "required": false,
+          "placeholder": "https://www.productix.io/01/04796037382921",
+          "conditional": {
+            "field": "Data source",
+            "equals": "External passport provider link"
+          }
         },
         {
           "text": "Packaging name",
-          "required": false
+          "required": false,
+          "placeholder": "Brown corrugated carton",
+          "conditional": {
+            "field": "Data source",
+            "equals": "Manual entry"
+          }
         },
         {
           "text": "Packaging manufacturer",
-          "required": false
+          "required": false,
+          "placeholder": "EcoPack Industries (Pvt) Ltd",
+          "conditional": {
+            "field": "Data source",
+            "equals": "Manual entry"
+          }
         },
         {
           "text": "Packaging manufacturer country",
-          "required": false
+          "required": false,
+          "type": "country-picker",
+          "searchable": true,
+          "conditional": {
+            "field": "Data source",
+            "equals": "Manual entry"
+          }
         },
         {
-          "text": "Manufacturer role",
-          "required": false
+          "text": "Required for the Declaration of Conformity",
+          "required": false,
+          "type": "subtitle"
         },
         {
-          "text": "Packaging material",
-          "required": false
+          "text": "Layer type (PPWR)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Primary",
+            "Secondary",
+            "Tertiary"
+          ]
         },
         {
-          "text": "Packaging weight (kg)",
-          "required": false
+          "text": "Weight (g)",
+          "required": false,
+          "placeholder": "50"
         },
         {
-          "text": "Recyclable (Yes / No)",
+          "text": "Layer composition",
+          "required": false,
+          "type": "nested-section",
+          "helperText": "What this layer is physically made of — one row per material (Ex. bottle body · cap · label).",
+          "fields": [
+            {
+              "text": "Component",
+              "required": false,
+              "placeholder": "Paper tray"
+            },
+            {
+              "text": "Material",
+              "required": true,
+              "type": "select",
+              "options": [
+                "Paper / Cardboard",
+                "PET",
+                "HDPE",
+                "LDPE",
+                "PP",
+                "PS",
+                "Other plastic",
+                "Glass",
+                "Aluminium",
+                "Steel",
+                "Wood",
+                "Composite",
+                "Biopolymer",
+                "Other"
+              ]
+            },
+            {
+              "text": "Weight (g)",
+              "required": false,
+              "placeholder": "g"
+            },
+            {
+              "text": "Recycled %",
+              "required": false,
+              "placeholder": "%"
+            }
+          ],
+          "actions": [
+            {
+              "text": "Add component (New row on above component fields)",
+              "type": "button"
+            }
+          ]
+        },
+        {
+          "text": "Recyclability grade (Art. 6-11)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "A",
+            "B",
+            "C",
+            "Not recyclable"
+          ]
+        },
+        {
+          "text": "Reusable",
           "required": false,
           "type": "select",
           "options": [
@@ -904,122 +1135,53 @@
           ]
         },
         {
-          "text": "Recyclability grade",
-          "required": false
-        },
-        {
-          "text": "Recycled content (%)",
-          "required": false
-        },
-        {
-          "text": "Reusable (Yes / No)",
+          "text": "EPR registration",
           "required": false,
-          "type": "select",
-          "options": [
-            "Yes",
-            "No"
+          "type": "nested-section",
+          "helperText": "Extended Producer Responsibility registration(s) - one row per country.",
+          "fields": [
+            {
+              "text": "Country",
+              "required": true,
+              "type": "country-picker",
+              "searchable": true
+            },
+            {
+              "text": "Scheme name",
+              "required": true,
+              "placeholder": "Scheme name"
+            },
+            {
+              "text": "Registration No.",
+              "required": true,
+              "placeholder": "Registration No."
+            }
+          ],
+          "actions": [
+            {
+              "text": "Add EPR registration (New row on above EPR fields)",
+              "type": "button"
+            }
           ]
         },
         {
-          "text": "Volume (L)",
-          "required": false
-        },
-        {
-          "text": "Dimensions",
-          "required": false
-        },
-        {
-          "text": "Heavy metals sum (ppm)",
-          "required": false
-        },
-        {
-          "text": "PFAS present (Yes / No)",
+          "text": "CONFORMITY & DECLARATION OF CONFORMITY (ART 38/39)",
           "required": false,
-          "type": "select",
-          "options": [
-            "Yes",
-            "No"
-          ]
+          "type": "section-heading"
         },
         {
-          "text": "Compostable (Yes / No)",
+          "text": "DoC number",
           "required": false,
-          "type": "select",
-          "options": [
-            "Yes",
-            "No"
-          ]
-        },
-        {
-          "text": "Label material (Yes / No)",
-          "required": false,
-          "type": "select",
-          "options": [
-            "Yes",
-            "No"
-          ]
-        },
-        {
-          "text": "Label – separate collection (Yes / No)",
-          "required": false,
-          "type": "select",
-          "options": [
-            "Yes",
-            "No"
-          ]
-        },
-        {
-          "text": "QR / digital carrier",
-          "required": false
-        },
-        {
-          "text": "Packaging identifier",
-          "required": false
-        },
-        {
-          "text": "Material components (rows: Component · Material · Weight (kg) · Recycled (%))",
-          "required": false
-        },
-        {
-          "text": "EPR registrations (rows: Country · Scheme · Registration number)",
-          "required": false
-        },
-        {
-          "text": "Carbon footprint (kg)",
-          "required": false
-        },
-        {
-          "text": "Carbon footprint source",
-          "required": false
-        },
-        {
-          "text": "Reuse an existing DoC - (Pick a DoC already declared on another product to prefill this layer)",
-          "required": false,
-          "type": "select"
-        },
-        {
-          "text": "Declaration of conformity URL",
-          "required": false
-        },
-        {
-          "text": "Declaration of conformity (Upload)",
-          "required": false,
-          "type": "upload"
-        },
-        {
-          "text": "DoC ID",
-          "required": false
+          "placeholder": "DoC-2026-001"
         },
         {
           "text": "DoC issue date",
-          "required": false
+          "required": false,
+          "type": "date-picker",
+          "placeholder": "dd/mm/yyyy"
         },
         {
-          "text": "DoC signed by",
-          "required": false
-        },
-        {
-          "text": "EU DoC exists (Yes / No)",
+          "text": "EU DoC exists",
           "required": false,
           "type": "select",
           "options": [
@@ -1028,7 +1190,7 @@
           ]
         },
         {
-          "text": "REACH compliant (Yes / No)",
+          "text": "REACH / SVHC compliant",
           "required": false,
           "type": "select",
           "options": [
@@ -1037,141 +1199,37 @@
           ]
         },
         {
-          "text": "Packaging category",
-          "required": false
-        },
-        {
-          "text": "Packaging format",
-          "required": false
-        },
-        {
-          "text": "Total weight (g)",
-          "required": false
-        },
-        {
-          "text": "Empty weight (g)",
-          "required": false
-        },
-        {
-          "text": "Packaging ratio",
-          "required": false
-        },
-        {
-          "text": "Mono-material (Yes / No)",
+          "text": "Declaration of Conformity URL",
           "required": false,
-          "type": "select"
+          "placeholder": "https://..."
         },
         {
-          "text": "Producer trademark",
-          "required": false
-        },
-        {
-          "text": "Importer",
-          "required": false
-        },
-        {
-          "text": "Importer address",
-          "required": false
-        },
-        {
-          "text": "Food-contact (Yes / No)",
+          "text": "Upload DoC file",
           "required": false,
-          "type": "select"
+          "type": "file-upload"
         },
         {
-          "text": "PFAS-free (Yes / No)",
-          "required": false,
-          "type": "select"
-        },
-        {
-          "text": "Total fluorine (ppm)",
-          "required": false
-        },
-        {
-          "text": "Fluorine under limit (Yes / No)",
-          "required": false,
-          "type": "select"
-        },
-        {
-          "text": "Bisphenol-free (BPA) (Yes / No)",
-          "required": false,
-          "type": "select"
-        },
-        {
-          "text": "SVHC present (Yes / No)",
-          "required": false,
-          "type": "select"
-        },
-        {
-          "text": "SVHC details",
-          "required": false
-        },
-        {
-          "text": "Recyclability (%)",
-          "required": false
-        },
-        {
-          "text": "Recycling stream",
-          "required": false
-        },
-        {
-          "text": "Separable components (Yes / No)",
-          "required": false,
-          "type": "select"
-        },
-        {
-          "text": "Compostability standard",
-          "required": false
-        },
-        {
-          "text": "Deposit scheme (Yes / No)",
-          "required": false,
-          "type": "select"
-        },
-        {
-          "text": "Deposit amount (€)",
-          "required": false
-        },
-        {
-          "text": "Designed reuse cycles",
-          "required": false
-        },
-        {
-          "text": "Reuse system URL",
-          "required": false
-        },
-        {
-          "text": "Return points URL",
-          "required": false
-        },
-        {
-          "text": "Conformity assessment date",
-          "required": false
-        },
-        {
-          "text": "Retention (years)",
-          "required": false
-        },
-        {
-          "text": "Test reports URL",
-          "required": false
-        },
-        {
-          "text": "EPR registration (single, legacy)",
-          "required": false
-        },
-        {
-          "text": "Extract from DoC (Button)",
+          "text": "Extract data from DoC",
           "required": false,
           "type": "button"
         },
         {
-          "text": "Generate layer Declaration of Conformity (Button)",
+          "text": "Generate DoC (preview)",
           "required": false,
           "type": "button"
         },
         {
-          "text": "Add packaging layer (Button)",
+          "text": "Generate + archive DoC",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Generated from the fields above (same template as the sector). Saves the product first. If your company logo/signature are not set, the DoC is generated without them.",
+          "required": false,
+          "type": "description"
+        },
+        {
+          "text": "Save layer",
           "required": false,
           "type": "button"
         }
@@ -1181,9 +1239,15 @@
       "label": "Repairability",
       "fields": [
         {
-          "text": "ESPR 2024/1781 · Art. 7(2)(e) · Right to Repair Directive 2024/1799/EU, Score 1–10 (10 = most repairable) · Spare parts minimum: 5 years (small), 7 years (medium), 10 years (large appliances)",
+          "text": "ESPR 2024/1781 · Art. 7(2)(e) · Right to Repair Directive 2024/1799/EU",
           "required": false,
           "type": "note"
+        },
+        {
+          "text": "Score 1–10 (10 = most repairable) · Spare parts minimum: 5 years (small), 7 years (medium), 10 years (large appliances)",
+          "required": false,
+          "component": "info_banner",
+          "variant": "success"
         },
         {
           "text": "Repairability score (1–10)",
@@ -1226,11 +1290,9 @@
         },
         {
           "text": "EU waste code (EWC)",
-          "required": false
-        },
-        {
-          "text": "European Waste Catalogue code",
-          "required": false
+          "required": false,
+          "placeholder": "16 06 05",
+          "helperText": "European Waste Catalogue code"
         },
         {
           "text": "Part of deposit return scheme",
@@ -1239,7 +1301,8 @@
         },
         {
           "text": "Recycling instructions",
-          "required": false
+          "required": false,
+          "placeholder": "Return to authorised battery recycler. Do not dispose in household waste."
         },
         {
           "text": "Disassembly instructions URL",
@@ -1257,23 +1320,28 @@
         },
         {
           "text": "Assessment result",
-          "required": false
+          "required": false,
+          "placeholder": "Not repairable"
         },
         {
           "text": "Recommended action",
-          "required": false
+          "required": false,
+          "placeholder": "Material Recovery"
         },
         {
           "text": "Updated status",
-          "required": false
+          "required": false,
+          "placeholder": "End-of-life"
         },
         {
           "text": "Date",
-          "required": false
+          "required": false,
+          "type": "date-picker"
         },
         {
           "text": "Serial",
-          "required": false
+          "required": false,
+          "placeholder": "Optional"
         },
         {
           "text": "Evidence URL",
@@ -1357,7 +1425,8 @@
         },
         {
           "text": "Date",
-          "required": false
+          "required": false,
+          "type": "date-picker"
         },
         {
           "text": "Serial",

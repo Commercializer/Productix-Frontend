@@ -11,7 +11,8 @@
         },
         {
           "text": "GTIN-14",
-          "required": true
+          "required": true,
+          "helperText": "14-digit Global Trade Item Number"
         },
         {
           "text": "Sector",
@@ -35,16 +36,14 @@
       "label": "Manufacturer & importer",
       "fields": [
         {
-          "text": "Manufacturer",
-          "required": false
-        },
-        {
           "text": "Manufacturer name",
           "required": true
         },
         {
           "text": "Manufacturer country",
-          "required": true
+          "required": true,
+          "type": "country-picker",
+          "searchable": true
         },
         {
           "text": "Manufacturer address",
@@ -59,29 +58,35 @@
           "required": false
         },
         {
-          "text": "Manufacturing facility / site (plant code or GS1 GLN). Optional - one of the 4 EU DPP Registry identifiers.",
-          "required": false
+          "text": "Manufacturing facility / site",
+          "required": false,
+          "helperText": "plant code or GS1 GLN). Optional - one of the 4 EU DPP Registry identifiers."
         },
         {
-          "text": "Facility ID scheme - None / GLN (GS1) / EU-OP / Other (Optional. Pick GLN only if the Facility ID is a GS1 GLN - it's then validated (13 digits).)",
-          "required": false
+          "text": "Facility ID scheme - None / GLN (GS1) / EU-OP / Other",
+          "required": false,
+          "helperText": "Optional. Pick GLN only if the Facility ID is a GS1 GLN - it's then validated (13 digits)."
         },
         {
-          "text": "Importer",
-          "required": false
-        },
-        {
-          "text": "Importer name (Required if manufacturer is outside EU)",
-          "required": false
+          "text": "Importer name",
+          "required": false,
+          "helperText": "Required if manufacturer is outside EU",
+          "helperTextStyle": "lite"
         },
         {
           "text": "Importer country",
-          "required": false
+          "required": false,
+          "type": "country-picker",
+          "searchable": true
         }
       ]
     },
     "product-specifications": {
       "label": "Product specifications",
+      "explainerText": "Free-form packaging specifications displayed on the public viewer. Examples: Packaging type · Material · Dimensions · Weight · Capacity · Recycled content · Recyclability · Barrier properties · Closure type · Food-contact suitability · Printing method.",
+      "explainerText2": "Add the spec rows a consumer would care about. Up to 40 rows.",
+      "explainerTextStyle": "lite",
+      "maxRows": 40,
       "fields": [
         {
           "text": "Add Spec (Custom rows)",
@@ -89,12 +94,14 @@
           "type": "button"
         },
         {
-          "text": "Field Title",
-          "required": false
+          "text": "Spec Title",
+          "required": false,
+          "placeholder": "Packaging type"
         },
         {
-          "text": "Field Content",
-          "required": false
+          "text": "Spec Content",
+          "required": false,
+          "placeholder": "Flexible Stand-Up Pouch"
         }
       ]
     },
@@ -102,7 +109,7 @@
       "label": "Physical properties",
       "fields": [
         {
-          "text": "Weight (g)",
+          "text": "Weight (kg)",
           "required": true
         },
         {
@@ -127,11 +134,13 @@
         },
         {
           "text": "Manufacture date",
-          "required": false
+          "required": false,
+          "type": "date-picker"
         },
         {
           "text": "Expiry date",
-          "required": false
+          "required": false,
+          "type": "date-picker"
         }
       ]
     },
@@ -141,34 +150,7 @@
         {
           "text": "Packaging data",
           "required": false,
-          "type": "subtitle"
-        },
-        {
-          "text": "Packaging & Packaging Waste Regulation (EU) 2025/40 (PPWR) · ESPR 2024/1781. Full packaging declaration: producer/importer identity, materials, substances of concern, recyclability, reuse and conformity.",
-          "required": false,
-          "type": "note"
-        },
-        {
-          "text": "Material composition (Art 10 / 12)",
-          "required": false,
-          "type": "subtitle"
-        },
-        {
-          "text": "Material composition (rows: Name · Material · Weight (g) · Recycled (%) · Recyclable · Colour)",
-          "required": false
-        },
-        {
-          "text": "EPR registration (Art 44/45)",
-          "required": false,
-          "type": "subtitle"
-        },
-        {
-          "text": "EPR registrations (rows: Country · Scheme · Registration number)",
-          "required": false
-        },
-        {
-          "text": "SVHC substances (rows: Name · CAS / EC · Concentration · Safety · Document URL)",
-          "required": false
+          "type": "section-heading"
         },
         {
           "text": "Classification",
@@ -176,16 +158,16 @@
           "type": "subtitle"
         },
         {
-          "text": "Packaging category (Plastic-rigid / Plastic-flexible / Paper-board / Glass / Metal-aluminium / Metal-steel / Composite / Wood / Textile / Ceramic / Biopolymer / Other)",
+          "text": "Category",
           "required": false,
           "type": "select",
           "options": [
-            "Plastic-rigid",
-            "Plastic-flexible",
-            "Paper-board",
+            "Plastic — rigid",
+            "Plastic — flexible",
+            "Paper / board",
             "Glass",
-            "Metal-aluminium",
-            "Metal-steel",
+            "Metal — aluminium",
+            "Metal — steel",
             "Composite",
             "Wood",
             "Textile",
@@ -195,43 +177,57 @@
           ]
         },
         {
-          "text": "Packaging format",
-          "required": false
+          "text": "Format",
+          "required": false,
+          "placeholder": "bottle",
+          "helperText": "bottle / box / pouch / can / film"
         },
         {
-          "text": "Packaging level (Primary / Secondary / Tertiary / Service / Transport / Grouped)",
+          "text": "Packaging level",
           "required": false,
           "type": "select",
           "options": [
-            "Primary",
-            "Secondary",
-            "Tertiary",
+            "Primary (sales)",
+            "Secondary (grouped)",
+            "Tertiary (transport)",
             "Service",
             "Transport",
             "Grouped"
           ]
         },
         {
+          "text": "Single-use",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Reusable",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "Mono-material",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ],
+          "helperText": "Single material = easiest to recycle"
+        },
+        {
           "text": "Intended use",
-          "required": false
-        },
-        {
-          "text": "Single use (Yes / No)",
           "required": false,
-          "type": "select",
-          "options": [
-            "Yes",
-            "No"
-          ]
-        },
-        {
-          "text": "Reusable (Yes / No)",
-          "required": false,
-          "type": "select",
-          "options": [
-            "Yes",
-            "No"
-          ]
+          "type": "text",
+          "placeholder": "Describe the intended use of the packaging"
         },
         {
           "text": "Economic operators (PPWR Art 15 / 18)",
@@ -239,19 +235,33 @@
           "type": "subtitle"
         },
         {
-          "text": "Producer name",
-          "required": false
+          "text": "Identification that must appear on the packaging from 12 Aug 2026. A GS1 Digital Link satisfies the Art 15(5) identifier and may carry the Art 15(6) producer identification.",
+          "required": false,
+          "type": "note"
+        },
+        {
+          "text": "Producer name (Art 15(6))",
+          "required": true,
+          "placeholder": "Demo Packaging Co."
         },
         {
           "text": "Producer trademark",
-          "required": false
+          "required": true,
+          "placeholder": "AquaPure"
         },
         {
-          "text": "Producer address",
-          "required": false
+          "text": "Unique packaging identifier (Art 15(5))",
+          "required": true,
+          "placeholder": "EPR reg number, GLN or others",
+          "helperText": "Unique packaging ID on the pack from 12 Aug 2026 - EPR registration no., GLN, or your own code"
         },
         {
-          "text": "Importer name",
+          "text": "Producer address(Art 15(6))",
+          "required": true,
+          "placeholder": "Priemyselná 12, 821 09 Bratislava, Slovakia"
+        },
+        {
+          "text": "Importer name (Art 18)",
           "required": false
         },
         {
@@ -263,29 +273,65 @@
           "required": false
         },
         {
-          "text": "Packaging identifier",
-          "required": false
+          "text": "Material composition (Art 10 / 12)",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Component",
+          "required": false,
+          "placeholder": "PET bottle"
+        },
+        {
+          "text": "Material",
+          "required": false,
+          "placeholder": "rPET (recycled PET)"
+        },
+        {
+          "text": "Weight (g)",
+          "required": false,
+          "placeholder": "22.5"
+        },
+        {
+          "text": "Share (%)",
+          "required": false,
+          "placeholder": "25"
+        },
+        {
+          "text": "Recycled %",
+          "required": false,
+          "placeholder": "100"
+        },
+        {
+          "text": "Color",
+          "required": false,
+          "placeholder": "clear"
+        },
+        {
+          "text": "Rec",
+          "required": false,
+          "type": "checkbox"
+        },
+        {
+          "text": "Add material (New row, above fields again on new material)",
+          "required": false,
+          "type": "button"
         },
         {
           "text": "Total weight (g)",
-          "required": false
+          "required": false,
+          "placeholder": "25.4"
         },
         {
           "text": "Empty weight (g)",
-          "required": false
+          "required": false,
+          "placeholder": "25.4"
         },
         {
           "text": "Packaging ratio",
-          "required": false
-        },
-        {
-          "text": "Mono-material (Yes / No)",
           "required": false,
-          "type": "select",
-          "options": [
-            "Yes",
-            "No"
-          ]
+          "placeholder": "0.05",
+          "helperText": "packaging mass ÷ product mass (Art 10)"
         },
         {
           "text": "Substances (PPWR Art 5)",
@@ -298,7 +344,38 @@
           "type": "checkbox"
         },
         {
-          "text": "Food contact (Yes / No)",
+          "type": "info-banner",
+          "variant": "neutral",
+          "title": "Substance status (declared under the legal limits)",
+          "items": [
+            "Total fluorine (ppm): ≤ 50 ppm",
+            "PFAS: No · under limit",
+            "Heavy metals Σ (mg/kg): ≤ 100 mg/kg",
+            "SVHC: None above 0.1% (1000 ppm)"
+          ]
+        },
+        {
+          "text": "Total fluorine (ppm)",
+          "required": true,
+          "type": "select",
+          "options": [
+            "Not detected",
+            "≤ 50 ppm",
+            "> 50 ppm"
+          ]
+        },
+        {
+          "text": "Measured value (ppm)",
+          "required": true,
+          "placeholder": "120",
+          "helperText": "> 50",
+          "conditional": {
+            "field": "Total fluorine (ppm)",
+            "equals": "> 50 ppm"
+          }
+        },
+        {
+          "text": "Food contact",
           "required": false,
           "type": "select",
           "options": [
@@ -308,18 +385,34 @@
         },
         {
           "text": "PFAS individual (ppb)",
-          "required": false
+          "required": false,
+          "placeholder": "0",
+          "helperText": "Limit 25 food-contact",
+          "disabledWhen": {
+            "field": "Food contact",
+            "equals": "No"
+          },
+          "requiredWhen": {
+            "field": "Food contact",
+            "equals": "Yes"
+          }
         },
         {
           "text": "PFAS sum (ppb)",
-          "required": false
+          "required": false,
+          "placeholder": "0",
+          "helperText": "Limit 250",
+          "disabledWhen": {
+            "field": "Food contact",
+            "equals": "No"
+          },
+          "requiredWhen": {
+            "field": "Food contact",
+            "equals": "Yes"
+          }
         },
         {
-          "text": "Total fluorine (ppm)",
-          "required": false
-        },
-        {
-          "text": "PFAS free (Yes / No)",
+          "text": "PFAS free",
           "required": false,
           "type": "select",
           "options": [
@@ -328,16 +421,13 @@
           ]
         },
         {
-          "text": "Heavy metals sum (mg/kg)",
-          "required": false,
-          "type": "select",
-          "options": [
-            "mg",
-            "kg"
-          ]
+          "text": "Heavy metals Σ (mg/kg)",
+          "required": true,
+          "placeholder": "8",
+          "helperText": "Pb+Cd+Hg+CrVI ≤ 100"
         },
         {
-          "text": "Bisphenol free (Yes / No)",
+          "text": "Bisphenol free",
           "required": false,
           "type": "select",
           "options": [
@@ -351,17 +441,63 @@
           "type": "subtitle"
         },
         {
-          "text": "SVHC present (Yes / No)",
-          "required": false,
-          "type": "select",
-          "options": [
-            "Yes",
-            "No"
-          ]
+          "text": "I confirm that the packaging does not contain SVHC (Substances of Very High Concern) above the mandatory notification limit of 0.1% by weight (1000 ppm).",
+          "required": true,
+          "type": "checkbox"
         },
         {
-          "text": "SVHC details",
-          "required": false
+          "text": "SVHC name",
+          "required": true,
+          "placeholder": "DEHP",
+          "conditional": {
+            "field": "I confirm that the packaging does not contain SVHC (Substances of Very High Concern) above the mandatory notification limit of 0.1% by weight (1000 ppm).",
+            "equals": false
+          }
+        },
+        {
+          "text": "CAS / EC",
+          "required": true,
+          "placeholder": "117-81-7",
+          "conditional": {
+            "field": "I confirm that the packaging does not contain SVHC (Substances of Very High Concern) above the mandatory notification limit of 0.1% by weight (1000 ppm).",
+            "equals": false
+          }
+        },
+        {
+          "text": "Concentration",
+          "required": true,
+          "placeholder": "0.2% / 2000 ppm",
+          "conditional": {
+            "field": "I confirm that the packaging does not contain SVHC (Substances of Very High Concern) above the mandatory notification limit of 0.1% by weight (1000 ppm).",
+            "equals": false
+          }
+        },
+        {
+          "text": "Safety instructions",
+          "required": false,
+          "placeholder": "",
+          "conditional": {
+            "field": "I confirm that the packaging does not contain SVHC (Substances of Very High Concern) above the mandatory notification limit of 0.1% by weight (1000 ppm).",
+            "equals": false
+          }
+        },
+        {
+          "text": "Supporting doc / lab report",
+          "required": false,
+          "placeholder": "https://...",
+          "conditional": {
+            "field": "I confirm that the packaging does not contain SVHC (Substances of Very High Concern) above the mandatory notification limit of 0.1% by weight (1000 ppm).",
+            "equals": false
+          }
+        },
+        {
+          "text": "Add SVHC substance ((New row, above fields again on new SVHC substance)",
+          "required": false,
+          "type": "button",
+          "conditional": {
+            "field": "I confirm that the packaging does not contain SVHC (Substances of Very High Concern) above the mandatory notification limit of 0.1% by weight (1000 ppm).",
+            "equals": false
+          }
         },
         {
           "text": "Recyclability & recycled content (Art 6-11)",
@@ -369,19 +505,30 @@
           "type": "subtitle"
         },
         {
-          "text": "Recyclability class (A–E)",
-          "required": false
+          "text": "Recyclability class",
+          "required": false,
+          "helperText": "PPWR design-for-recycling (2028)",
+          "type": "select",
+          "options": [
+            "A (best)",
+            "B",
+            "C",
+            "D",
+            "E (worst)"
+          ]
         },
         {
           "text": "Recyclability (%)",
-          "required": false
+          "required": false,
+          "placeholder": "95"
         },
         {
           "text": "Recycled content (%)",
-          "required": false
+          "required": false,
+          "placeholder": "100"
         },
         {
-          "text": "Recycled content verified (Yes / No)",
+          "text": "Recycled content verified",
           "required": false,
           "type": "select",
           "options": [
@@ -390,7 +537,7 @@
           ]
         },
         {
-          "text": "Recycling stream (PET / HDPE / PP / LDPE / Paper / Glass / Aluminium / Steel / Mixed)",
+          "text": "Recycling stream",
           "required": false,
           "type": "select",
           "options": [
@@ -398,16 +545,17 @@
             "HDPE",
             "PP",
             "LDPE",
-            "Paper",
+            "Paper / board",
             "Glass",
             "Aluminium",
             "Steel",
-            "Mixed"
+            "Mixed / composite"
           ]
         },
         {
-          "text": "Separable components (Yes / No)",
+          "text": "Separable components",
           "required": false,
+          "helperText": "cap/label separable",
           "type": "select",
           "options": [
             "Yes",
@@ -415,7 +563,7 @@
           ]
         },
         {
-          "text": "Compostable (Yes / No)",
+          "text": "Compostable",
           "required": false,
           "type": "select",
           "options": [
@@ -425,7 +573,8 @@
         },
         {
           "text": "Compostability standard",
-          "required": false
+          "required": false,
+          "placeholder": "EN 13432"
         },
         {
           "text": "Reusable Packaging (Art. 11)",
@@ -433,19 +582,22 @@
           "type": "subtitle"
         },
         {
-          "text": "Reuse system URL",
-          "required": false
-        },
-        {
-          "text": "Reuse cycles designed",
-          "required": false
+          "text": "Designed reuse cycles",
+          "required": false,
+          "placeholder": "20"
         },
         {
           "text": "Deposit scheme",
-          "required": false
+          "required": false,
+          "placeholder": "SK Zálohový systém"
         },
         {
-          "text": "Deposit amount (EUR)",
+          "text": "Deposit amount (€)",
+          "required": false,
+          "placeholder": "0.15"
+        },
+        {
+          "text": "Reuse system URL",
           "required": false
         },
         {
@@ -453,85 +605,160 @@
           "required": false
         },
         {
+          "text": "Redirect to producer's product page",
+          "required": false,
+          "type": "checkbox",
+          "helperText": "When enabled, consumers scanning this product's QR code will be redirected directly to the producer's product page instead of the DPP viewer. The DPP data remains accessible via GS1 Digital Link."
+        },
+        {
+          "text": "Producer product page URL",
+          "required": true,
+          "placeholder": "https://example.com/products/my-bottle",
+          "helperText": "Must start with https://",
+          "conditional": {
+            "field": "Redirect to producer's product page",
+            "equals": true
+          }
+        },
+        {
+          "text": "EPR registration (Art 44/45)",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "One registration per member state where the packaging is first placed on the market.",
+          "required": false,
+          "type": "description"
+        },
+        {
+          "text": "Country",
+          "required": false,
+          "type": "country-picker",
+          "searchable": true
+        },
+        {
+          "text": "Scheme",
+          "required": false,
+          "placeholder": "Scheme name"
+        },
+        {
+          "text": "Registration number",
+          "required": false,
+          "placeholder": "SK-2026-000142"
+        },
+        {
+          "text": "Add EPR registration ((New row, above fields again on new EPR registration)",
+          "required": false,
+          "type": "button"
+        },
+        {
           "text": "Conformity Assessment & Declaration of Conformity (Art. 38 / 39)",
           "required": false,
           "type": "subtitle"
         },
         {
-          "text": "Declaration of conformity URL",
-          "required": false
+          "text": "Preview DoC ↗",
+          "required": false,
+          "type": "button"
         },
         {
-          "text": "Supplementary — not part of the DoC (optional)",
+          "text": "Primary DoC ↗",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Download (Word)",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Generate & save DoC",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "View / manage saved DoC in Documents & Links →",
+          "required": false,
+          "type": "description"
+        },
+        {
+          "text": "Generated from these fields with the logo, signature & stamp from Account. Word = edit/sign locally; Save to DPP = store a PDF among documents, visible to authorities only.",
+          "required": false,
+          "type": "description"
+        },
+        {
+          "text": "I confirm that an EU Declaration of Conformity exists for this packaging.",
+          "required": true,
+          "type": "checkbox"
+        },
+        {
+          "text": "Declaration of Conformity number",
+          "required": true,
+          "placeholder": "DOC-2026-001"
+        },
+        {
+          "text": "Declaration date",
+          "required": true,
+          "type": "date-picker",
+          "placeholder": "dd/mm/yyyy"
+        },
+        {
+          "text": "The packaging complies with REACH requirements including SVHC obligations.",
+          "required": false,
+          "type": "checkbox"
+        },
+        {
+          "text": "Third-party certifications (optional)",
+          "required": false,
+          "type": "tag-select",
+          "options": [
+            "RecyClass",
+            "EuCertPlast",
+            "ISCC PLUS",
+            "FSC",
+            "PEFC",
+            "Blue Angel",
+            "Nordic Swan",
+            "Other"
+          ],
+          "helperText": "Select certifications or leave empty."
+        },
+        {
+          "text": "The EU Declaration of Conformity is generated from these fields — use the buttons above. Keep it on file and present it to authorities on request; a signed scan can be uploaded under Documents & links.",
+          "required": false,
+          "type": "description"
+        },
+        {
+          "text": "SUPPLEMENTARY — NOT PART OF THE DOC (OPTIONAL)",
           "required": false,
           "type": "subtitle"
         },
         {
-          "text": "Conformity assessment date",
-          "required": false
+          "text": "Assessment date",
+          "required": false,
+          "type": "date-picker",
+          "placeholder": "dd/mm/yyyy"
         },
         {
           "text": "Test reports URL",
-          "required": false
+          "required": false,
+          "placeholder": ""
         },
         {
           "text": "Retention (years)",
-          "required": false
+          "required": false,
+          "placeholder": "10",
+          "helperText": "5 single-use / 10 reusable"
         },
         {
           "text": "Carbon footprint (g CO₂e)",
-          "required": false
+          "required": false,
+          "placeholder": "42.5"
         },
         {
           "text": "PEF declaration URL",
-          "required": false
-        },
-        {
-          "text": "Certifications",
-          "required": false
-        },
-        {
-          "text": "EU DoC exists (Yes / No)",
           "required": false,
-          "type": "select",
-          "options": [
-            "Yes",
-            "No"
-          ]
-        },
-        {
-          "text": "DoC number",
-          "required": false
-        },
-        {
-          "text": "Declaration date",
-          "required": false
-        },
-        {
-          "text": "REACH compliant (Yes / No)",
-          "required": false,
-          "type": "select",
-          "options": [
-            "Yes",
-            "No"
-          ]
-        },
-        {
-          "text": "Third party certifications",
-          "required": false
-        },
-        {
-          "text": "Producer redirect enabled (Yes / No)",
-          "required": false,
-          "type": "select",
-          "options": [
-            "Yes",
-            "No"
-          ]
-        },
-        {
-          "text": "Producer redirect URL",
-          "required": false
+          "placeholder": ""
         }
       ]
     },
@@ -544,7 +771,7 @@
           "type": "subtitle"
         },
         {
-          "text": "Packaging & Packaging Waste Regulation (EU) 2025/40 (PPWR) · ESPR 2024/1781. Declare one row per packaging layer (primary / secondary / tertiary). Look up a packaging DPP by GTIN to auto-fill, or extract from an uploaded Declaration of Conformity.",
+          "text": "Packaging & Packaging Waste Regulation (EU) 2025/40 (PPWR) · ESPR 2024/1781. Declare one row per packaging layer.",
           "required": false,
           "type": "note"
         },
@@ -554,55 +781,158 @@
         },
         {
           "text": "Layer label",
-          "required": false
-        },
-        {
-          "text": "Input mode (Manual / Lookup by GTIN / Extract from DoC)",
-          "required": false
-        },
-        {
-          "text": "Packaging layer (from library) - (Select a shared layer defined via CSV import; referenced, not copied - edit it once and every product using it updates)",
           "required": false,
-          "type": "select"
+          "placeholder": "Primary bottle / Outer carton / Transport pallet"
+        },
+        {
+          "text": "Data source",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Manual entry",
+            "Lookup by GTIN (Productix)",
+            "External passport provider link",
+            "Packaging layer (from library)"
+          ]
+        },
+        {
+          "text": "Packaging layer (from library)",
+          "required": false,
+          "type": "select",
+          "helperText": "Select a shared layer defined via CSV import; referenced, not copied - edit it once and every product using it updates",
+          "conditional": {
+            "field": "Data source",
+            "equals": "Packaging layer (from library)"
+          }
         },
         {
           "text": "Packaging GTIN",
-          "required": false
-        },
-        {
-          "text": "Packaging DPP ID",
-          "required": false
+          "required": false,
+          "conditional": {
+            "field": "Data source",
+            "equals": "Lookup by GTIN (Productix)"
+          }
         },
         {
           "text": "Packaging DPP URL",
-          "required": false
+          "required": false,
+          "placeholder": "https://www.productix.io/01/04796037382921",
+          "conditional": {
+            "field": "Data source",
+            "equals": "External passport provider link"
+          }
         },
         {
           "text": "Packaging name",
-          "required": false
+          "required": false,
+          "placeholder": "Brown corrugated carton",
+          "conditional": {
+            "field": "Data source",
+            "equals": "Manual entry"
+          }
         },
         {
           "text": "Packaging manufacturer",
-          "required": false
+          "required": false,
+          "placeholder": "EcoPack Industries (Pvt) Ltd",
+          "conditional": {
+            "field": "Data source",
+            "equals": "Manual entry"
+          }
         },
         {
           "text": "Packaging manufacturer country",
-          "required": false
+          "required": false,
+          "type": "country-picker",
+          "searchable": true,
+          "conditional": {
+            "field": "Data source",
+            "equals": "Manual entry"
+          }
         },
         {
-          "text": "Manufacturer role",
-          "required": false
+          "text": "Required for the Declaration of Conformity",
+          "required": false,
+          "type": "subtitle"
         },
         {
-          "text": "Packaging material",
-          "required": false
+          "text": "Layer type (PPWR)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Primary",
+            "Secondary",
+            "Tertiary"
+          ]
         },
         {
-          "text": "Packaging weight (kg)",
-          "required": false
+          "text": "Weight (g)",
+          "required": false,
+          "placeholder": "50"
         },
         {
-          "text": "Recyclable (Yes / No)",
+          "text": "Layer composition",
+          "required": false,
+          "type": "nested-section",
+          "helperText": "What this layer is physically made of — one row per material (Ex. bottle body · cap · label).",
+          "fields": [
+            {
+              "text": "Component",
+              "required": false,
+              "placeholder": "Paper tray"
+            },
+            {
+              "text": "Material",
+              "required": true,
+              "type": "select",
+              "options": [
+                "Paper / Cardboard",
+                "PET",
+                "HDPE",
+                "LDPE",
+                "PP",
+                "PS",
+                "Other plastic",
+                "Glass",
+                "Aluminium",
+                "Steel",
+                "Wood",
+                "Composite",
+                "Biopolymer",
+                "Other"
+              ]
+            },
+            {
+              "text": "Weight (g)",
+              "required": false,
+              "placeholder": "g"
+            },
+            {
+              "text": "Recycled %",
+              "required": false,
+              "placeholder": "%"
+            }
+          ],
+          "actions": [
+            {
+              "text": "Add component (New row on above component fields)",
+              "type": "button"
+            }
+          ]
+        },
+        {
+          "text": "Recyclability grade (Art. 6-11)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "A",
+            "B",
+            "C",
+            "Not recyclable"
+          ]
+        },
+        {
+          "text": "Reusable",
           "required": false,
           "type": "select",
           "options": [
@@ -611,122 +941,53 @@
           ]
         },
         {
-          "text": "Recyclability grade",
-          "required": false
-        },
-        {
-          "text": "Recycled content (%)",
-          "required": false
-        },
-        {
-          "text": "Reusable (Yes / No)",
+          "text": "EPR registration",
           "required": false,
-          "type": "select",
-          "options": [
-            "Yes",
-            "No"
+          "type": "nested-section",
+          "helperText": "Extended Producer Responsibility registration(s) - one row per country.",
+          "fields": [
+            {
+              "text": "Country",
+              "required": true,
+              "type": "country-picker",
+              "searchable": true
+            },
+            {
+              "text": "Scheme name",
+              "required": true,
+              "placeholder": "Scheme name"
+            },
+            {
+              "text": "Registration No.",
+              "required": true,
+              "placeholder": "Registration No."
+            }
+          ],
+          "actions": [
+            {
+              "text": "Add EPR registration (New row on above EPR fields)",
+              "type": "button"
+            }
           ]
         },
         {
-          "text": "Volume (L)",
-          "required": false
-        },
-        {
-          "text": "Dimensions",
-          "required": false
-        },
-        {
-          "text": "Heavy metals sum (ppm)",
-          "required": false
-        },
-        {
-          "text": "PFAS present (Yes / No)",
+          "text": "CONFORMITY & DECLARATION OF CONFORMITY (ART 38/39)",
           "required": false,
-          "type": "select",
-          "options": [
-            "Yes",
-            "No"
-          ]
+          "type": "section-heading"
         },
         {
-          "text": "Compostable (Yes / No)",
+          "text": "DoC number",
           "required": false,
-          "type": "select",
-          "options": [
-            "Yes",
-            "No"
-          ]
-        },
-        {
-          "text": "Label material (Yes / No)",
-          "required": false,
-          "type": "select",
-          "options": [
-            "Yes",
-            "No"
-          ]
-        },
-        {
-          "text": "Label – separate collection (Yes / No)",
-          "required": false,
-          "type": "select",
-          "options": [
-            "Yes",
-            "No"
-          ]
-        },
-        {
-          "text": "QR / digital carrier",
-          "required": false
-        },
-        {
-          "text": "Packaging identifier",
-          "required": false
-        },
-        {
-          "text": "Material components (rows: Component · Material · Weight (kg) · Recycled (%))",
-          "required": false
-        },
-        {
-          "text": "EPR registrations (rows: Country · Scheme · Registration number)",
-          "required": false
-        },
-        {
-          "text": "Carbon footprint (kg)",
-          "required": false
-        },
-        {
-          "text": "Carbon footprint source",
-          "required": false
-        },
-        {
-          "text": "Reuse an existing DoC - (Pick a DoC already declared on another product to prefill this layer)",
-          "required": false,
-          "type": "select"
-        },
-        {
-          "text": "Declaration of conformity URL",
-          "required": false
-        },
-        {
-          "text": "Declaration of conformity (Upload)",
-          "required": false,
-          "type": "upload"
-        },
-        {
-          "text": "DoC ID",
-          "required": false
+          "placeholder": "DoC-2026-001"
         },
         {
           "text": "DoC issue date",
-          "required": false
+          "required": false,
+          "type": "date-picker",
+          "placeholder": "dd/mm/yyyy"
         },
         {
-          "text": "DoC signed by",
-          "required": false
-        },
-        {
-          "text": "EU DoC exists (Yes / No)",
+          "text": "EU DoC exists",
           "required": false,
           "type": "select",
           "options": [
@@ -735,7 +996,7 @@
           ]
         },
         {
-          "text": "REACH compliant (Yes / No)",
+          "text": "REACH / SVHC compliant",
           "required": false,
           "type": "select",
           "options": [
@@ -744,141 +1005,37 @@
           ]
         },
         {
-          "text": "Packaging category",
-          "required": false
-        },
-        {
-          "text": "Packaging format",
-          "required": false
-        },
-        {
-          "text": "Total weight (g)",
-          "required": false
-        },
-        {
-          "text": "Empty weight (g)",
-          "required": false
-        },
-        {
-          "text": "Packaging ratio",
-          "required": false
-        },
-        {
-          "text": "Mono-material (Yes / No)",
+          "text": "Declaration of Conformity URL",
           "required": false,
-          "type": "select"
+          "placeholder": "https://..."
         },
         {
-          "text": "Producer trademark",
-          "required": false
-        },
-        {
-          "text": "Importer",
-          "required": false
-        },
-        {
-          "text": "Importer address",
-          "required": false
-        },
-        {
-          "text": "Food-contact (Yes / No)",
+          "text": "Upload DoC file",
           "required": false,
-          "type": "select"
+          "type": "file-upload"
         },
         {
-          "text": "PFAS-free (Yes / No)",
-          "required": false,
-          "type": "select"
-        },
-        {
-          "text": "Total fluorine (ppm)",
-          "required": false
-        },
-        {
-          "text": "Fluorine under limit (Yes / No)",
-          "required": false,
-          "type": "select"
-        },
-        {
-          "text": "Bisphenol-free (BPA) (Yes / No)",
-          "required": false,
-          "type": "select"
-        },
-        {
-          "text": "SVHC present (Yes / No)",
-          "required": false,
-          "type": "select"
-        },
-        {
-          "text": "SVHC details",
-          "required": false
-        },
-        {
-          "text": "Recyclability (%)",
-          "required": false
-        },
-        {
-          "text": "Recycling stream",
-          "required": false
-        },
-        {
-          "text": "Separable components (Yes / No)",
-          "required": false,
-          "type": "select"
-        },
-        {
-          "text": "Compostability standard",
-          "required": false
-        },
-        {
-          "text": "Deposit scheme (Yes / No)",
-          "required": false,
-          "type": "select"
-        },
-        {
-          "text": "Deposit amount (€)",
-          "required": false
-        },
-        {
-          "text": "Designed reuse cycles",
-          "required": false
-        },
-        {
-          "text": "Reuse system URL",
-          "required": false
-        },
-        {
-          "text": "Return points URL",
-          "required": false
-        },
-        {
-          "text": "Conformity assessment date",
-          "required": false
-        },
-        {
-          "text": "Retention (years)",
-          "required": false
-        },
-        {
-          "text": "Test reports URL",
-          "required": false
-        },
-        {
-          "text": "EPR registration (single, legacy)",
-          "required": false
-        },
-        {
-          "text": "Extract from DoC (Button)",
+          "text": "Extract data from DoC",
           "required": false,
           "type": "button"
         },
         {
-          "text": "Generate layer Declaration of Conformity (Button)",
+          "text": "Generate DoC (preview)",
           "required": false,
           "type": "button"
         },
         {
-          "text": "Add packaging layer (Button)",
+          "text": "Generate + archive DoC",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Generated from the fields above (same template as the sector). Saves the product first. If your company logo/signature are not set, the DoC is generated without them.",
+          "required": false,
+          "type": "description"
+        },
+        {
+          "text": "Save layer",
           "required": false,
           "type": "button"
         }
@@ -986,15 +1143,6 @@
           "text": "Add document (custom documents upload option)",
           "required": false,
           "type": "upload"
-        },
-        {
-          "text": "Redirect to producer's product page (Checkbox)",
-          "required": false,
-          "type": "checkbox"
-        },
-        {
-          "text": "Producer product page URL - (Must start with https://)",
-          "required": false
         },
         {
           "text": "Links",

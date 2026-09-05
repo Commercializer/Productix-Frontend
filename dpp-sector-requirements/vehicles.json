@@ -11,7 +11,8 @@
         },
         {
           "text": "GTIN-14",
-          "required": true
+          "required": true,
+          "helperText": "14-digit Global Trade Item Number"
         },
         {
           "text": "Sector",
@@ -39,16 +40,14 @@
       "label": "Manufacturer & importer",
       "fields": [
         {
-          "text": "Manufacturer",
-          "required": false
-        },
-        {
           "text": "Manufacturer name",
           "required": true
         },
         {
           "text": "Manufacturer country",
-          "required": true
+          "required": true,
+          "type": "country-picker",
+          "searchable": true
         },
         {
           "text": "Manufacturer address",
@@ -63,29 +62,35 @@
           "required": false
         },
         {
-          "text": "Manufacturing facility / site (plant code or GS1 GLN). Optional - one of the 4 EU DPP Registry identifiers.",
-          "required": false
+          "text": "Manufacturing facility / site",
+          "required": false,
+          "helperText": "plant code or GS1 GLN). Optional - one of the 4 EU DPP Registry identifiers."
         },
         {
-          "text": "Facility ID scheme - None / GLN (GS1) / EU-OP / Other (Optional. Pick GLN only if the Facility ID is a GS1 GLN - it's then validated (13 digits).)",
-          "required": false
+          "text": "Facility ID scheme - None / GLN (GS1) / EU-OP / Other",
+          "required": false,
+          "helperText": "Optional. Pick GLN only if the Facility ID is a GS1 GLN - it's then validated (13 digits)."
         },
         {
-          "text": "Importer",
-          "required": false
-        },
-        {
-          "text": "Importer name (Required if manufacturer is outside EU)",
-          "required": false
+          "text": "Importer name",
+          "required": false,
+          "helperText": "Required if manufacturer is outside EU",
+          "helperTextStyle": "lite"
         },
         {
           "text": "Importer country",
-          "required": false
+          "required": false,
+          "type": "country-picker",
+          "searchable": true
         }
       ]
     },
     "product-specifications": {
       "label": "Product specifications",
+      "explainerText": "Free-form vehicle specifications displayed on the public viewer. Examples: Vehicle type · Make & model · Powertrain · Engine/motor capacity · Power output · Fuel/energy type · Battery capacity · Fuel consumption · CO₂ emissions · Vehicle weight · Dimensions · Seating capacity · Safety rating.",
+      "explainerText2": "Add the spec rows a consumer would care about. Up to 40 rows.",
+      "explainerTextStyle": "lite",
+      "maxRows": 40,
       "fields": [
         {
           "text": "Add Spec (Custom rows)",
@@ -93,12 +98,14 @@
           "type": "button"
         },
         {
-          "text": "Field Title",
-          "required": false
+          "text": "Spec Title",
+          "required": false,
+          "placeholder": "Make & model"
         },
         {
-          "text": "Field Content",
-          "required": false
+          "text": "Spec Content",
+          "required": false,
+          "placeholder": "Toyota Corolla Hybrid"
         }
       ]
     },
@@ -131,11 +138,13 @@
         },
         {
           "text": "Manufacture date",
-          "required": false
+          "required": false,
+          "type": "date-picker"
         },
         {
           "text": "Expiry date",
-          "required": false
+          "required": false,
+          "type": "date-picker"
         }
       ]
     },
@@ -148,12 +157,14 @@
           "type": "note"
         },
         {
-          "text": "Total CO₂ equivalent (kg) - (Mandatory for batteries ≥2kWh from Feb 2027)",
-          "required": true
+          "text": "Total CO₂ equivalent (kg)",
+          "required": true,
+          "helperText": "Mandatory for batteries ≥2kWh from Feb 2027"
         },
         {
-          "text": "Methodology (e.g. ISO 14067:2018)",
-          "required": false
+          "text": "Methodology",
+          "required": false,
+          "helperText": "Ex: ISO 14067:2018"
         },
         {
           "text": "Manufacturing phase (kg CO₂)",
@@ -181,13 +192,19 @@
       "label": "Recycled content",
       "fields": [
         {
-          "text": "ESPR 2024/1781 · Art. 7(2)(c) - recycled content, Battery targets 2031 - Cobalt ≥16% · Lithium ≥6% · Nickel ≥6% · Lead ≥85%",
+          "text": "Battery Regulation 2023/1542 · Art. 8 - mandatory from 2031",
           "required": false,
           "type": "note"
         },
         {
-          "text": "Total recycled content (%) - (Mandatory for batteries from 2031)",
-          "required": true
+          "component": "info_banner",
+          "variant": "success",
+          "text": "Battery targets 2031 — Cobalt ≥16% · Lithium ≥6% · Nickel ≥6% · Lead ≥85%"
+        },
+        {
+          "text": "Total recycled content (%)",
+          "required": true,
+          "helperText": "Mandatory for batteries from 2031"
         },
         {
           "text": "Pre-consumer recycled (%)",
@@ -216,16 +233,63 @@
           "type": "note"
         },
         {
-          "text": "Material name (Select or type, Lithium, Cobalt, Nickel, Manganese, Graphite, Rare earth elements, Platinum, Palladium, Indium, Gallium, Germanium, Silicon metal, Titanium, Tungsten, Niobium, Tantalum, Aluminum, Steel, Copper, Iron, Zinc, Lead, Tin, Silver, Gold, Polypropylene (PP), Polyethylene (PE), PET, ABS plastic, Nylon, Polycarbonate, Cotton, Polyester, Glass, Ceramic)",
-          "required": false
+          "text": "Declare all materials >0.1% by weight. Country of origin mandatory for Critical Raw Materials (CRM).",
+          "required": false,
+          "component": "info_banner",
+          "variant": "warning"
+        },
+        {
+          "type": "select",
+          "name": "material_name",
+          "label": "Material name",
+          "required": false,
+          "options": [
+            "Lithium",
+            "Cobalt",
+            "Nickel",
+            "Manganese",
+            "Graphite",
+            "Rare earth elements",
+            "Platinum",
+            "Palladium",
+            "Indium",
+            "Gallium",
+            "Germanium",
+            "Silicon metal",
+            "Titanium",
+            "Tungsten",
+            "Niobium",
+            "Tantalum",
+            "Aluminum",
+            "Steel",
+            "Copper",
+            "Iron",
+            "Zinc",
+            "Lead",
+            "Tin",
+            "Silver",
+            "Gold",
+            "Polypropylene (PP)",
+            "Polyethylene (PE)",
+            "PET",
+            "ABS plastic",
+            "Nylon",
+            "Polycarbonate",
+            "Cotton",
+            "Polyester",
+            "Glass",
+            "Ceramic"
+          ]
         },
         {
           "text": "Share (%)",
           "required": false
         },
         {
-          "text": "Origin (Country picker / search & select)",
-          "required": false
+          "text": "Origin",
+          "required": false,
+          "type": "country-picker",
+          "searchable": true
         },
         {
           "text": "Flags",
@@ -253,51 +317,57 @@
         {
           "text": "Vehicle data",
           "required": false,
+          "type": "section-heading"
+        },
+        {
+          "text": "Identification",
+          "required": false,
           "type": "subtitle"
         },
         {
-          "text": "Type-Approval Framework Regulation (EU) 2018/858 · ELV Directive 2000/53/EC (proposed ELV Regulation) · Euro emission standards · ISO 1043 plastics marking. Approval, emissions, powertrain, recyclability and end-of-life data.",
-          "required": false,
-          "type": "note"
-        },
-        {
-          "text": "Material composition (rows: Material · Weight (kg) · Recyclable)",
-          "required": false
-        },
-        {
-          "text": "Vehicle category (M1 / M2 / M3 / N1 / N2 / N3 / L / O / T)",
-          "required": false,
+          "text": "Vehicle category",
+          "required": true,
           "type": "select",
           "options": [
-            "M1",
-            "M2",
-            "M3",
-            "N1",
-            "N2",
-            "N3",
-            "L",
-            "O",
-            "T"
+            "M1 — Passenger car",
+            "M2 — Bus ≤5t",
+            "M3 — Bus >5t",
+            "N1 — Van ≤3.5t",
+            "N2 — Truck ≤12t",
+            "N3 — Truck >12t",
+            "L — 2/3-wheeler",
+            "O — Trailer",
+            "T — Tractor"
           ]
         },
         {
           "text": "Vehicle type",
-          "required": false
+          "required": false,
+          "placeholder": "Passenger car"
         },
         {
-          "text": "WMI (World Manufacturer Identifier)",
-          "required": false
+          "text": "WMI (VIN prefix)",
+          "required": false,
+          "placeholder": "W0L",
+          "helperText": "World Manufacturer Identifier"
         },
         {
           "text": "Make / model",
-          "required": false
+          "required": true,
+          "placeholder": "Škoda Octavia 1.5 TSI"
+        },
+        {
+          "text": "Type approval & conformity",
+          "required": false,
+          "type": "subtitle"
         },
         {
           "text": "Type-approval number",
-          "required": false
+          "required": true,
+          "placeholder": "e1*2018/858*..."
         },
         {
-          "text": "Whole-vehicle type approval (Yes / No)",
+          "text": "Whole-vehicle type approval",
           "required": false,
           "type": "select",
           "options": [
@@ -306,33 +376,35 @@
           ]
         },
         {
-          "text": "Certificate of Conformity (CoC) URL",
-          "required": false
-        },
-        {
           "text": "Emission standard",
-          "required": false
+          "required": true,
+          "placeholder": "Euro 6d"
         },
         {
           "text": "CO₂ emissions (g/km)",
           "required": false,
-          "type": "select",
-          "options": [
-            "g",
-            "km"
-          ]
+          "placeholder": "118"
         },
         {
-          "text": "Fuel type (Petrol / Diesel / BEV / PHEV / HEV / Hydrogen / LPG / CNG / Other)",
+          "text": "Certificate of Conformity (CoC) URL",
+          "required": false
+        },
+        {
+          "text": "Powertrain",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Fuel type",
           "required": false,
           "type": "select",
           "options": [
             "Petrol",
             "Diesel",
-            "BEV",
-            "PHEV",
-            "HEV",
-            "Hydrogen",
+            "Battery electric (BEV)",
+            "Plug-in hybrid (PHEV)",
+            "Hybrid (HEV)",
+            "Hydrogen (FCEV)",
             "LPG",
             "CNG",
             "Other"
@@ -340,34 +412,49 @@
         },
         {
           "text": "Engine power (kW)",
-          "required": false
-        },
-        {
-          "text": "Battery capacity (kWh)",
-          "required": false
-        },
-        {
-          "text": "Electric range (km)",
-          "required": false
+          "required": false,
+          "placeholder": "110"
         },
         {
           "text": "Transmission",
-          "required": false
+          "required": false,
+          "placeholder": "7-speed DSG"
+        },
+        {
+          "text": "Traction battery (kWh)",
+          "required": false,
+          "placeholder": "77",
+          "helperText": "EV/PHEV"
+        },
+        {
+          "text": "Electric range (km)",
+          "required": false,
+          "placeholder": "450"
+        },
+        {
+          "text": "Environmental (Dir 2000/53 + 2005/64)",
+          "required": false,
+          "type": "subtitle"
         },
         {
           "text": "Recyclability (%)",
-          "required": false
+          "required": false,
+          "placeholder": "85",
+          "helperText": "≥85%"
         },
         {
           "text": "Recoverability (%)",
-          "required": false
+          "required": false,
+          "placeholder": "95",
+          "helperText": "≥95%"
         },
         {
           "text": "Recycled content (%)",
-          "required": false
+          "required": false,
+          "placeholder": "25"
         },
         {
-          "text": "ELV compliant (Yes / No)",
+          "text": "ELV heavy-metal compliant",
           "required": false,
           "type": "select",
           "options": [
@@ -380,6 +467,34 @@
           "required": false
         },
         {
+          "text": "End-of-life",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
+          "text": "Refrigerant type",
+          "required": false,
+          "placeholder": "R1234yf"
+        },
+        {
+          "text": "ATF treatment required",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "text": "ISO 1043 plastics marking",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
           "text": "Depollution instructions URL",
           "required": false
         },
@@ -388,57 +503,69 @@
           "required": false
         },
         {
-          "text": "Refrigerant type",
-          "required": false
+          "text": "Materials",
+          "required": false,
+          "type": "subtitle"
         },
         {
-          "text": "Authorised treatment required (Yes / No)",
+          "text": "Material",
           "required": false,
-          "type": "select",
-          "options": [
-            "Yes",
-            "No"
-          ]
+          "placeholder": "Steel"
+        },
+        {
+          "text": "Weight (kg)",
+          "required": false,
+          "placeholder": "900"
+        },
+        {
+          "text": "Rec",
+          "required": false,
+          "type": "checkbox"
+        },
+        {
+          "text": "Add material (New row, above fields again on new material)",
+          "required": false,
+          "type": "button"
         },
         {
           "text": "Kerb weight (kg)",
-          "required": false
+          "required": false,
+          "placeholder": "1450"
         },
         {
-          "text": "Plastics marking ISO 1043 (Yes / No)",
+          "text": "Lifecycle & service",
           "required": false,
-          "type": "select",
-          "options": [
-            "Yes",
-            "No"
-          ]
+          "type": "subtitle"
         },
         {
           "text": "Warranty (years)",
-          "required": false
+          "required": false,
+          "placeholder": "5"
         },
         {
           "text": "Service interval",
-          "required": false
+          "required": false,
+          "placeholder": "30 000 km / 24 months"
         },
         {
           "text": "Spare parts URL",
           "required": false
         },
         {
+          "text": "Repair info (RMI) URL",
+          "required": false
+        },
+        {
+          "text": "Documents & certifications",
+          "required": false,
+          "type": "subtitle"
+        },
+        {
           "text": "Owner manual URL",
           "required": false
         },
         {
-          "text": "Repair info URL",
-          "required": false
-        },
-        {
           "text": "Certifications",
-          "required": false
-        },
-        {
-          "text": "Notes",
           "required": false
         }
       ]
@@ -452,17 +579,25 @@
           "type": "subtitle"
         },
         {
-          "text": "REACH 1907/2006 · Art. 33 - mandatory if >0.1% w/w (1000 ppm), Mandatory declaration threshold: >0.1% w/w (1000 ppm) per article. SVHC = Substance of Very High Concern (ECHA Candidate List).",
+          "text": "REACH 1907/2006 · Art. 33 - mandatory if >0.1% w/w (1000 ppm)",
           "required": false,
           "type": "note"
         },
         {
+          "text": "Mandatory declaration threshold: >0.1% w/w (1000 ppm) per article. SVHC = Substance of Very High Concern (ECHA Candidate List).",
+          "required": false,
+          "component": "info_banner",
+          "variant": "danger"
+        },
+        {
           "text": "Substance name",
-          "required": false
+          "required": false,
+          "placeholder": "Cobalt"
         },
         {
           "text": "CAS number",
-          "required": false
+          "required": false,
+          "placeholder": "7440-48-4"
         },
         {
           "text": "Conc. (ppm)",
@@ -470,7 +605,8 @@
         },
         {
           "text": "Location in product",
-          "required": false
+          "required": false,
+          "placeholder": "Battery cell"
         },
         {
           "text": "SVHC",
@@ -529,12 +665,15 @@
           "required": false
         },
         {
-          "text": "IP rating (IEC 60529)",
-          "required": false
+          "text": "IP rating",
+          "required": false,
+          "placeholder": "IP67",
+          "helperText": "IEC 60529"
         },
         {
           "text": "Third party certification",
-          "required": false
+          "required": false,
+          "placeholder": "TÜV · UL · Bureau Veritas"
         }
       ]
     },
@@ -547,7 +686,7 @@
           "type": "subtitle"
         },
         {
-          "text": "Packaging & Packaging Waste Regulation (EU) 2025/40 (PPWR) · ESPR 2024/1781. Declare one row per packaging layer (primary / secondary / tertiary). Look up a packaging DPP by GTIN to auto-fill, or extract from an uploaded Declaration of Conformity.",
+          "text": "Packaging & Packaging Waste Regulation (EU) 2025/40 (PPWR) · ESPR 2024/1781. Declare one row per packaging layer.",
           "required": false,
           "type": "note"
         },
@@ -557,55 +696,158 @@
         },
         {
           "text": "Layer label",
-          "required": false
-        },
-        {
-          "text": "Input mode (Manual / Lookup by GTIN / Extract from DoC)",
-          "required": false
-        },
-        {
-          "text": "Packaging layer (from library) - (Select a shared layer defined via CSV import; referenced, not copied - edit it once and every product using it updates)",
           "required": false,
-          "type": "select"
+          "placeholder": "Primary bottle / Outer carton / Transport pallet"
+        },
+        {
+          "text": "Data source",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Manual entry",
+            "Lookup by GTIN (Productix)",
+            "External passport provider link",
+            "Packaging layer (from library)"
+          ]
+        },
+        {
+          "text": "Packaging layer (from library)",
+          "required": false,
+          "type": "select",
+          "helperText": "Select a shared layer defined via CSV import; referenced, not copied - edit it once and every product using it updates",
+          "conditional": {
+            "field": "Data source",
+            "equals": "Packaging layer (from library)"
+          }
         },
         {
           "text": "Packaging GTIN",
-          "required": false
-        },
-        {
-          "text": "Packaging DPP ID",
-          "required": false
+          "required": false,
+          "conditional": {
+            "field": "Data source",
+            "equals": "Lookup by GTIN (Productix)"
+          }
         },
         {
           "text": "Packaging DPP URL",
-          "required": false
+          "required": false,
+          "placeholder": "https://www.productix.io/01/04796037382921",
+          "conditional": {
+            "field": "Data source",
+            "equals": "External passport provider link"
+          }
         },
         {
           "text": "Packaging name",
-          "required": false
+          "required": false,
+          "placeholder": "Brown corrugated carton",
+          "conditional": {
+            "field": "Data source",
+            "equals": "Manual entry"
+          }
         },
         {
           "text": "Packaging manufacturer",
-          "required": false
+          "required": false,
+          "placeholder": "EcoPack Industries (Pvt) Ltd",
+          "conditional": {
+            "field": "Data source",
+            "equals": "Manual entry"
+          }
         },
         {
           "text": "Packaging manufacturer country",
-          "required": false
+          "required": false,
+          "type": "country-picker",
+          "searchable": true,
+          "conditional": {
+            "field": "Data source",
+            "equals": "Manual entry"
+          }
         },
         {
-          "text": "Manufacturer role",
-          "required": false
+          "text": "Required for the Declaration of Conformity",
+          "required": false,
+          "type": "subtitle"
         },
         {
-          "text": "Packaging material",
-          "required": false
+          "text": "Layer type (PPWR)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "Primary",
+            "Secondary",
+            "Tertiary"
+          ]
         },
         {
-          "text": "Packaging weight (kg)",
-          "required": false
+          "text": "Weight (g)",
+          "required": false,
+          "placeholder": "50"
         },
         {
-          "text": "Recyclable (Yes / No)",
+          "text": "Layer composition",
+          "required": false,
+          "type": "nested-section",
+          "helperText": "What this layer is physically made of — one row per material (Ex. bottle body · cap · label).",
+          "fields": [
+            {
+              "text": "Component",
+              "required": false,
+              "placeholder": "Paper tray"
+            },
+            {
+              "text": "Material",
+              "required": true,
+              "type": "select",
+              "options": [
+                "Paper / Cardboard",
+                "PET",
+                "HDPE",
+                "LDPE",
+                "PP",
+                "PS",
+                "Other plastic",
+                "Glass",
+                "Aluminium",
+                "Steel",
+                "Wood",
+                "Composite",
+                "Biopolymer",
+                "Other"
+              ]
+            },
+            {
+              "text": "Weight (g)",
+              "required": false,
+              "placeholder": "g"
+            },
+            {
+              "text": "Recycled %",
+              "required": false,
+              "placeholder": "%"
+            }
+          ],
+          "actions": [
+            {
+              "text": "Add component (New row on above component fields)",
+              "type": "button"
+            }
+          ]
+        },
+        {
+          "text": "Recyclability grade (Art. 6-11)",
+          "required": false,
+          "type": "select",
+          "options": [
+            "A",
+            "B",
+            "C",
+            "Not recyclable"
+          ]
+        },
+        {
+          "text": "Reusable",
           "required": false,
           "type": "select",
           "options": [
@@ -614,122 +856,53 @@
           ]
         },
         {
-          "text": "Recyclability grade",
-          "required": false
-        },
-        {
-          "text": "Recycled content (%)",
-          "required": false
-        },
-        {
-          "text": "Reusable (Yes / No)",
+          "text": "EPR registration",
           "required": false,
-          "type": "select",
-          "options": [
-            "Yes",
-            "No"
+          "type": "nested-section",
+          "helperText": "Extended Producer Responsibility registration(s) - one row per country.",
+          "fields": [
+            {
+              "text": "Country",
+              "required": true,
+              "type": "country-picker",
+              "searchable": true
+            },
+            {
+              "text": "Scheme name",
+              "required": true,
+              "placeholder": "Scheme name"
+            },
+            {
+              "text": "Registration No.",
+              "required": true,
+              "placeholder": "Registration No."
+            }
+          ],
+          "actions": [
+            {
+              "text": "Add EPR registration (New row on above EPR fields)",
+              "type": "button"
+            }
           ]
         },
         {
-          "text": "Volume (L)",
-          "required": false
-        },
-        {
-          "text": "Dimensions",
-          "required": false
-        },
-        {
-          "text": "Heavy metals sum (ppm)",
-          "required": false
-        },
-        {
-          "text": "PFAS present (Yes / No)",
+          "text": "CONFORMITY & DECLARATION OF CONFORMITY (ART 38/39)",
           "required": false,
-          "type": "select",
-          "options": [
-            "Yes",
-            "No"
-          ]
+          "type": "section-heading"
         },
         {
-          "text": "Compostable (Yes / No)",
+          "text": "DoC number",
           "required": false,
-          "type": "select",
-          "options": [
-            "Yes",
-            "No"
-          ]
-        },
-        {
-          "text": "Label material (Yes / No)",
-          "required": false,
-          "type": "select",
-          "options": [
-            "Yes",
-            "No"
-          ]
-        },
-        {
-          "text": "Label – separate collection (Yes / No)",
-          "required": false,
-          "type": "select",
-          "options": [
-            "Yes",
-            "No"
-          ]
-        },
-        {
-          "text": "QR / digital carrier",
-          "required": false
-        },
-        {
-          "text": "Packaging identifier",
-          "required": false
-        },
-        {
-          "text": "Material components (rows: Component · Material · Weight (kg) · Recycled (%))",
-          "required": false
-        },
-        {
-          "text": "EPR registrations (rows: Country · Scheme · Registration number)",
-          "required": false
-        },
-        {
-          "text": "Carbon footprint (kg)",
-          "required": false
-        },
-        {
-          "text": "Carbon footprint source",
-          "required": false
-        },
-        {
-          "text": "Reuse an existing DoC - (Pick a DoC already declared on another product to prefill this layer)",
-          "required": false,
-          "type": "select"
-        },
-        {
-          "text": "Declaration of conformity URL",
-          "required": false
-        },
-        {
-          "text": "Declaration of conformity (Upload)",
-          "required": false,
-          "type": "upload"
-        },
-        {
-          "text": "DoC ID",
-          "required": false
+          "placeholder": "DoC-2026-001"
         },
         {
           "text": "DoC issue date",
-          "required": false
+          "required": false,
+          "type": "date-picker",
+          "placeholder": "dd/mm/yyyy"
         },
         {
-          "text": "DoC signed by",
-          "required": false
-        },
-        {
-          "text": "EU DoC exists (Yes / No)",
+          "text": "EU DoC exists",
           "required": false,
           "type": "select",
           "options": [
@@ -738,7 +911,7 @@
           ]
         },
         {
-          "text": "REACH compliant (Yes / No)",
+          "text": "REACH / SVHC compliant",
           "required": false,
           "type": "select",
           "options": [
@@ -747,141 +920,37 @@
           ]
         },
         {
-          "text": "Packaging category",
-          "required": false
-        },
-        {
-          "text": "Packaging format",
-          "required": false
-        },
-        {
-          "text": "Total weight (g)",
-          "required": false
-        },
-        {
-          "text": "Empty weight (g)",
-          "required": false
-        },
-        {
-          "text": "Packaging ratio",
-          "required": false
-        },
-        {
-          "text": "Mono-material (Yes / No)",
+          "text": "Declaration of Conformity URL",
           "required": false,
-          "type": "select"
+          "placeholder": "https://..."
         },
         {
-          "text": "Producer trademark",
-          "required": false
-        },
-        {
-          "text": "Importer",
-          "required": false
-        },
-        {
-          "text": "Importer address",
-          "required": false
-        },
-        {
-          "text": "Food-contact (Yes / No)",
+          "text": "Upload DoC file",
           "required": false,
-          "type": "select"
+          "type": "file-upload"
         },
         {
-          "text": "PFAS-free (Yes / No)",
-          "required": false,
-          "type": "select"
-        },
-        {
-          "text": "Total fluorine (ppm)",
-          "required": false
-        },
-        {
-          "text": "Fluorine under limit (Yes / No)",
-          "required": false,
-          "type": "select"
-        },
-        {
-          "text": "Bisphenol-free (BPA) (Yes / No)",
-          "required": false,
-          "type": "select"
-        },
-        {
-          "text": "SVHC present (Yes / No)",
-          "required": false,
-          "type": "select"
-        },
-        {
-          "text": "SVHC details",
-          "required": false
-        },
-        {
-          "text": "Recyclability (%)",
-          "required": false
-        },
-        {
-          "text": "Recycling stream",
-          "required": false
-        },
-        {
-          "text": "Separable components (Yes / No)",
-          "required": false,
-          "type": "select"
-        },
-        {
-          "text": "Compostability standard",
-          "required": false
-        },
-        {
-          "text": "Deposit scheme (Yes / No)",
-          "required": false,
-          "type": "select"
-        },
-        {
-          "text": "Deposit amount (€)",
-          "required": false
-        },
-        {
-          "text": "Designed reuse cycles",
-          "required": false
-        },
-        {
-          "text": "Reuse system URL",
-          "required": false
-        },
-        {
-          "text": "Return points URL",
-          "required": false
-        },
-        {
-          "text": "Conformity assessment date",
-          "required": false
-        },
-        {
-          "text": "Retention (years)",
-          "required": false
-        },
-        {
-          "text": "Test reports URL",
-          "required": false
-        },
-        {
-          "text": "EPR registration (single, legacy)",
-          "required": false
-        },
-        {
-          "text": "Extract from DoC (Button)",
+          "text": "Extract data from DoC",
           "required": false,
           "type": "button"
         },
         {
-          "text": "Generate layer Declaration of Conformity (Button)",
+          "text": "Generate DoC (preview)",
           "required": false,
           "type": "button"
         },
         {
-          "text": "Add packaging layer (Button)",
+          "text": "Generate + archive DoC",
+          "required": false,
+          "type": "button"
+        },
+        {
+          "text": "Generated from the fields above (same template as the sector). Saves the product first. If your company logo/signature are not set, the DoC is generated without them.",
+          "required": false,
+          "type": "description"
+        },
+        {
+          "text": "Save layer",
           "required": false,
           "type": "button"
         }
@@ -891,9 +960,15 @@
       "label": "Repairability",
       "fields": [
         {
-          "text": "ESPR 2024/1781 · Art. 7(2)(e) · Right to Repair Directive 2024/1799/EU, Score 1–10 (10 = most repairable) · Spare parts minimum: 5 years (small), 7 years (medium), 10 years (large appliances)",
+          "text": "ESPR 2024/1781 · Art. 7(2)(e) · Right to Repair Directive 2024/1799/EU",
           "required": false,
           "type": "note"
+        },
+        {
+          "text": "Score 1–10 (10 = most repairable) · Spare parts minimum: 5 years (small), 7 years (medium), 10 years (large appliances)",
+          "required": false,
+          "component": "info_banner",
+          "variant": "success"
         },
         {
           "text": "Repairability score (1–10)",
@@ -936,11 +1011,9 @@
         },
         {
           "text": "EU waste code (EWC)",
-          "required": false
-        },
-        {
-          "text": "European Waste Catalogue code",
-          "required": false
+          "required": false,
+          "placeholder": "16 06 05",
+          "helperText": "European Waste Catalogue code"
         },
         {
           "text": "Part of deposit return scheme",
@@ -949,7 +1022,8 @@
         },
         {
           "text": "Recycling instructions",
-          "required": false
+          "required": false,
+          "placeholder": "Return to authorised battery recycler. Do not dispose in household waste."
         },
         {
           "text": "Disassembly instructions URL",
@@ -967,23 +1041,28 @@
         },
         {
           "text": "Assessment result",
-          "required": false
+          "required": false,
+          "placeholder": "Not repairable"
         },
         {
           "text": "Recommended action",
-          "required": false
+          "required": false,
+          "placeholder": "Material Recovery"
         },
         {
           "text": "Updated status",
-          "required": false
+          "required": false,
+          "placeholder": "End-of-life"
         },
         {
           "text": "Date",
-          "required": false
+          "required": false,
+          "type": "date-picker"
         },
         {
           "text": "Serial",
-          "required": false
+          "required": false,
+          "placeholder": "Optional"
         },
         {
           "text": "Evidence URL",
@@ -1067,7 +1146,8 @@
         },
         {
           "text": "Date",
-          "required": false
+          "required": false,
+          "type": "date-picker"
         },
         {
           "text": "Serial",

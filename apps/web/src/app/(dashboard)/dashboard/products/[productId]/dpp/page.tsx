@@ -51,7 +51,16 @@ import { ProductGallery } from "@/components/dashboard/product-gallery";
 import { PackagingLayersPanel } from "@/components/dashboard/packaging-layers-panel";
 import { RepeatableRowsPanel } from "@/components/dashboard/repeatable-rows-panel";
 import { trimFieldLabel, isLongTextField, isFullWidthField, type DppSectionField } from "@/lib/dpp/sector-sections";
-import { getIdentificationExtraFields, getOrderedDppSections, getSectorDataGroups, type DppSectionSpec } from "@/lib/dpp/dpp-sections";
+import {
+  getIdentificationExtraFields,
+  getOrderedDppSections,
+  getSectorDataGroups,
+  isFieldVisible,
+  isFieldRequired,
+  isFieldDisabled,
+  type DppSectionSpec,
+  type RequirementCallout,
+} from "@/lib/dpp/dpp-sections";
 import { COUNTRY_OPTIONS } from "@/lib/dpp/countries";
 import { countMissingRequiredLayerFields, type PackagingLayer } from "@/lib/dpp/packaging-layers";
 import type { Row } from "@/lib/dpp/repeatable-rows";
@@ -262,20 +271,30 @@ function DppFieldInput({
   onChange,
   productId,
   className,
+  required,
+  disabled,
 }: {
   field: DppSectionField;
   value: string;
   onChange: (value: string) => void;
   productId: string;
   className?: string;
+  /** Overrides field.required - e.g. requiredWhen only holds while a sibling
+   * field matches (see isFieldRequired in dpp-sections.ts). */
+  required?: boolean;
+  /** disabledWhen currently matching its sibling field (see isFieldDisabled)
+   * - only the plain select/textarea/input controls honor this today; no
+   * current field needs it on the richer controls below. */
+  disabled?: boolean;
 }) {
   const label = trimFieldLabel(field.text);
   const wasTrimmed = label !== field.text;
+  const isRequired = required ?? field.required;
 
   return (
     <div className={className}>
       <label className="block text-[12px] font-medium text-(--ds-text-primary) mb-1">
-        {label} {field.required && <span className="text-red-400">*</span>}
+        {label} {isRequired && <span className="text-red-400">*</span>}
       </label>
       {field.type === "toggle" ? (
         <ToggleFieldInput value={value} onChange={onChange} />
@@ -283,6 +302,7 @@ function DppFieldInput({
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          disabled={disabled}
           className={`${selectClass} h-[38px] text-[13px]`}
         >
           <option value="">— Select —</option>
@@ -304,7 +324,8 @@ function DppFieldInput({
           onChange={(e) => onChange(e.target.value)}
           rows={3}
           placeholder={field.placeholder}
-          className={`${inputClass} h-auto py-2.5 text-[13px] resize-y`}
+          disabled={disabled}
+          className={`${inputClass} h-auto py-2.5 text-[13px] resize-y disabled:opacity-60 disabled:cursor-not-allowed`}
         />
       ) : (
         <input
@@ -312,7 +333,8 @@ function DppFieldInput({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={field.placeholder}
-          className={`${inputClass} h-[38px] text-[13px]`}
+          disabled={disabled}
+          className={`${inputClass} h-[38px] text-[13px] disabled:opacity-60 disabled:cursor-not-allowed`}
         />
       )}
       {field.helperText && (
@@ -363,6 +385,45 @@ function TagsFieldInput({ options, value, onChange }: { options: string[]; value
           </button>
         );
       })}
+    </div>
+  );
+}
+
+const CALLOUT_STYLE: Record<RequirementCallout["variant"], string> = {
+  success: "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-400",
+  warning: "bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900 text-amber-700 dark:text-amber-400",
+  danger: "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900 text-red-700 dark:text-red-400",
+  neutral: "bg-(--ds-surface-2) border-(--ds-border) text-(--ds-text-secondary)",
+};
+
+/** A regulatory/informational callout box (e.g. Battery's "2031 targets ≥16%
+ * cobalt..." or Packaging's SVHC declaration threshold) - the spreadsheet's
+ * `component: "info_banner"`/`type: "info-banner"` fields, which carry
+ * nothing for the producer to answer (see isCalloutField in
+ * sector-requirements.ts) but are still real content worth showing. */
+function InfoBanner({ callout }: { callout: RequirementCallout }) {
+  return (
+    <div className={`rounded-xl border px-4 py-3 text-[12px] leading-relaxed ${CALLOUT_STYLE[callout.variant]}`}>
+      {callout.title && <p className="font-semibold">{callout.title}</p>}
+      {callout.text && <p className={callout.title ? "mt-1" : undefined}>{callout.text}</p>}
+      {callout.items && callout.items.length > 0 && (
+        <ul className="mt-1 list-disc list-inside space-y-0.5">
+          {callout.items.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function CalloutList({ callouts }: { callouts?: RequirementCallout[] }) {
+  if (!callouts || callouts.length === 0) return null;
+  return (
+    <div className="space-y-2">
+      {callouts.map((c, i) => (
+        <InfoBanner key={i} callout={c} />
+      ))}
     </div>
   );
 }
@@ -529,7 +590,16 @@ export default function ProductDppPage({ params }: PageProps) {
             items.push({
               key: `sector:${i}`,
               kind: "section",
-              spec: { key: `sector:${i}`, sidebarLabel: g.label, icon: spec.icon, title: g.label, directive: spec.directive, fields: g.fields, repeatable: g.repeatable },
+              spec: {
+                key: `sector:${i}`,
+                sidebarLabel: g.label,
+                icon: spec.icon,
+                title: g.label,
+                directive: spec.directive,
+                fields: g.fields,
+                repeatable: g.repeatable,
+                callouts: g.callouts,
+              },
               answersKey: "sector",
             });
           });
@@ -560,24 +630,31 @@ export default function ProductDppPage({ params }: PageProps) {
     }));
   };
 
+  // A field only counts as "missing" while it's actually visible (its own
+  // `conditional`, if any, currently matches) and required (plain `required`,
+  // or `requiredWhen` currently matching) - see isFieldVisible/isFieldRequired
+  // in dpp-sections.ts.
+  const isMissing = (f: DppSectionField, answers: Record<string, string>) =>
+    isFieldVisible(f, answers) && isFieldRequired(f, answers) && !answers[f.text]?.trim();
+
   const hasMissingRequired = (item: SidebarItem): boolean => {
     if (item.kind === "identification") {
       const identifierMissing = identifierType === "GS1_GTIN" ? !gtinLocked && !gtin.trim() : !identifierValue.trim();
       const extraAnswers = sectionAnswers.specifications ?? {};
-      const extraMissing = getIdentificationExtraFields(sector).some((f) => f.required && !extraAnswers[f.text]?.trim());
+      const extraMissing = getIdentificationExtraFields(sector).some((f) => isMissing(f, extraAnswers));
       return identifierMissing || !sector || extraMissing;
     }
     if (item.kind === "gallery") return false;
     if (item.kind === "sector-parent") {
       const groups = sector ? getSectorDataGroups(sector) : undefined;
       const answers = sectionAnswers.sector ?? {};
-      return !!groups?.some((g) => g.fields.some((f) => f.required && !answers[f.text]?.trim()));
+      return !!groups?.some((g) => g.fields.some((f) => isMissing(f, answers)));
     }
     if (item.key === "packaging") {
       return packagingLayers.length === 0 || packagingLayers.some((l) => countMissingRequiredLayerFields(l) > 0);
     }
     const answers = sectionAnswers[item.answersKey ?? item.key] ?? {};
-    return flattenFields(item.spec).some((f) => f.required && !answers[f.text]?.trim());
+    return flattenFields(item.spec).some((f) => isMissing(f, answers));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -862,33 +939,27 @@ export default function ProductDppPage({ params }: PageProps) {
                 )}
 
                 {(() => {
-                  const extraFields = getIdentificationExtraFields(sector);
-                  const requiredExtraFields = extraFields.filter((f) => f.required);
-                  const optionalExtraFields = extraFields.filter((f) => !f.required);
+                  const extraAnswers = sectionAnswers.specifications ?? {};
+                  const extraFields = getIdentificationExtraFields(sector).filter((f) => isFieldVisible(f, extraAnswers));
+                  const requiredExtraFields = extraFields.filter((f) => isFieldRequired(f, extraAnswers));
+                  const optionalExtraFields = extraFields.filter((f) => !isFieldRequired(f, extraAnswers));
                   if (requiredExtraFields.length === 0 && !showOptionalFields) return null;
+                  const renderExtra = (f: DppSectionField) => (
+                    <DppFieldInput
+                      key={f.text}
+                      field={f}
+                      value={extraAnswers[f.text] ?? ""}
+                      onChange={(v) => setFieldAnswer("specifications", f.text, v)}
+                      productId={productId}
+                      className={isFullWidthField(f) ? "sm:col-span-2" : undefined}
+                      required={isFieldRequired(f, extraAnswers)}
+                      disabled={isFieldDisabled(f, extraAnswers)}
+                    />
+                  );
                   return (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {requiredExtraFields.map((f) => (
-                        <DppFieldInput
-                          key={f.text}
-                          field={f}
-                          value={sectionAnswers.specifications?.[f.text] ?? ""}
-                          onChange={(v) => setFieldAnswer("specifications", f.text, v)}
-                          productId={productId}
-                          className={isFullWidthField(f) ? "sm:col-span-2" : undefined}
-                        />
-                      ))}
-                      {showOptionalFields &&
-                        optionalExtraFields.map((f) => (
-                          <DppFieldInput
-                            key={f.text}
-                            field={f}
-                            value={sectionAnswers.specifications?.[f.text] ?? ""}
-                            onChange={(v) => setFieldAnswer("specifications", f.text, v)}
-                            productId={productId}
-                            className={isFullWidthField(f) ? "sm:col-span-2" : undefined}
-                          />
-                        ))}
+                      {requiredExtraFields.map(renderExtra)}
+                      {showOptionalFields && optionalExtraFields.map(renderExtra)}
                     </div>
                   );
                 })()}
@@ -1005,18 +1076,28 @@ function SectionPanel({
   productId: string;
 }) {
   const renderFields = (fields: DppSectionField[], skipTexts: Set<string> = new Set()) => {
-    const required = fields.filter((f) => f.required && !skipTexts.has(f.text));
-    const optional = fields.filter((f) => !f.required && !skipTexts.has(f.text));
+    // A field with a `conditional` that doesn't currently match its sibling
+    // is dropped entirely, not just disabled - see isFieldVisible.
+    const visible = fields.filter((f) => !skipTexts.has(f.text) && isFieldVisible(f, answers));
+    const required = visible.filter((f) => isFieldRequired(f, answers));
+    const optional = visible.filter((f) => !isFieldRequired(f, answers));
     const fieldClass = (f: DppSectionField) => (isFullWidthField(f) ? "sm:col-span-2" : undefined);
+    const renderOne = (f: DppSectionField) => (
+      <DppFieldInput
+        key={f.text}
+        field={f}
+        value={answers[f.text] ?? ""}
+        onChange={(v) => onFieldChange(f.text, v)}
+        productId={productId}
+        className={fieldClass(f)}
+        required={isFieldRequired(f, answers)}
+        disabled={isFieldDisabled(f, answers)}
+      />
+    );
     return (
       <>
-        {required.map((f) => (
-          <DppFieldInput key={f.text} field={f} value={answers[f.text] ?? ""} onChange={(v) => onFieldChange(f.text, v)} productId={productId} className={fieldClass(f)} />
-        ))}
-        {showOptional &&
-          optional.map((f) => (
-            <DppFieldInput key={f.text} field={f} value={answers[f.text] ?? ""} onChange={(v) => onFieldChange(f.text, v)} productId={productId} className={fieldClass(f)} />
-          ))}
+        {required.map(renderOne)}
+        {showOptional && optional.map(renderOne)}
       </>
     );
   };
@@ -1028,11 +1109,13 @@ function SectionPanel({
   return (
     <div className="space-y-6">
       <SectionHeading title={spec.title} directive={spec.directive} />
+      <CalloutList callouts={spec.callouts} />
 
       {spec.groups ? (
         spec.groups.map((group) => (
           <div key={group.label} className="space-y-3">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-(--ds-text-muted)">{group.label}</p>
+            <CalloutList callouts={group.callouts} />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {group.label === "Manufacturer" && extraFieldsBefore}
               {renderFields(group.fields, group.label === "Manufacturer" ? skipManufacturerCountry : undefined)}
@@ -1050,6 +1133,7 @@ function SectionPanel({
           )}
           {block.explainerText && <p className="text-[12px] text-(--ds-text-muted)">{block.explainerText}</p>}
           {block.explainerText2 && <p className="text-[12px] text-(--ds-text-muted)">{block.explainerText2}</p>}
+          <CalloutList callouts={block.callouts} />
           <RepeatableRowsPanel
             fields={block.fields}
             rows={rows[block.key] ?? []}

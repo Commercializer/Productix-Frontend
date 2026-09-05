@@ -11,6 +11,12 @@ import type { DppSector } from "@productix/db";
  * to an already-hosted file still works as a fallback. */
 export type DppFieldType = "text" | "number" | "date" | "url" | "toggle" | "select" | "upload" | "country-picker" | "tags";
 
+/** A field's visibility/required/disabled state can hinge on a sibling
+ * field's current answer (`field` matched against that sibling's own `text`,
+ * `equals` the value it must hold) - see isFieldVisible/isFieldRequired/
+ * isFieldDisabled in dpp-sections.ts. */
+export type DppConditionRule = { field: string; equals: string | boolean };
+
 export interface DppSectionField {
   text: string;
   required: boolean;
@@ -23,6 +29,13 @@ export interface DppSectionField {
   placeholder?: string;
   /** For type: "tags" - whether more than one option can be selected. */
   multiple?: boolean;
+  /** Only rendered while a sibling field matches this - see DppConditionRule. */
+  conditional?: DppConditionRule;
+  /** Rendered disabled while a sibling field matches this. */
+  disabledWhen?: DppConditionRule;
+  /** Overrides `required` while set - only actually required while a sibling
+   * field matches this. */
+  requiredWhen?: DppConditionRule;
 }
 
 /** One numbered sub-section (e.g. "§1 Performance & durability") within a

@@ -46,7 +46,17 @@ export type RequirementFieldType =
   | "date-picker"
   | "country-picker"
   | "tags"
-  | "custom-rows";
+  | "custom-rows"
+  | "text"
+  | "hidden"
+  | "nested-section"
+  | "file-upload"
+  | "tag-select"
+  | "description"
+  | "info-banner"
+  | "info_banner";
+
+export type ConditionRule = { field: string; equals: string | boolean };
 
 export interface RequirementField {
   text: string;
@@ -71,6 +81,24 @@ export interface RequirementField {
    * subtitle-delimited repeatable tables splitBySubtitle already finds -
    * see extractCustomRowsBlocks in dpp-sections.ts. */
   rowFields?: { text: string; required: boolean }[];
+  /** A callout box (component: "info_banner", or type: "info-banner") - see
+   * isCalloutField/toCallout below. `variant` picks the color; either a
+   * plain `text` or a `title` + bullet `items` list, depending on which
+   * shape the spreadsheet used for this particular banner. */
+  component?: string;
+  variant?: "success" | "warning" | "danger" | "neutral";
+  title?: string;
+  items?: string[];
+  /** Show this field only when `field` (matched against its sibling's own
+   * `text`) currently holds `equals` - e.g. Packaging's "Producer product
+   * page URL" only when "Redirect to producer's product page" is Yes. See
+   * isFieldVisible in dpp-sections.ts. */
+  conditional?: ConditionRule;
+  /** Disable (but still show) this field while `field` holds `equals`. */
+  disabledWhen?: ConditionRule;
+  /** This field is only actually required while `field` holds `equals` -
+   * overrides the plain `required` flag when set. See isFieldRequired. */
+  requiredWhen?: ConditionRule;
 }
 
 export interface RequirementSection {
@@ -96,7 +124,34 @@ export interface SectorRequirementsDoc {
   sections: Record<string, RequirementSection>;
 }
 
-export const SECTOR_REQUIREMENTS: Record<DppSector, SectorRequirementsDoc> = {
+/** A small number of fields in the spreadsheet export use `label`/`name` (or,
+ * for a pure info-banner, `title`) instead of `text` for their display copy
+ * (e.g. every sector's Material composition "Material name" select) - `text`
+ * doubles as both the display label and the storage/row key everywhere else
+ * in this app (slugifyFieldKey, trimFieldLabel, the answers map), so a field
+ * missing it outright would crash the first section that renders it. Runs
+ * once at module load over every sector's raw JSON import. */
+function normalizeField(raw: Record<string, unknown>): RequirementField {
+  // Deliberately not falling back to `title` here - a pure info-banner
+  // object (title + items, no text) should stay textless so toCallout below
+  // doesn't render the same string as both a heading and a body paragraph.
+  const text = raw.text ?? raw.label ?? raw.name ?? "";
+  return { ...raw, text } as RequirementField;
+}
+
+function normalizeDoc(doc: SectorRequirementsDoc): SectorRequirementsDoc {
+  return {
+    ...doc,
+    sections: Object.fromEntries(
+      Object.entries(doc.sections).map(([key, section]) => [
+        key,
+        { ...section, fields: (section.fields as unknown as Record<string, unknown>[]).map(normalizeField) },
+      ])
+    ),
+  };
+}
+
+const RAW_SECTOR_REQUIREMENTS: Record<DppSector, SectorRequirementsDoc> = {
   BATTERY: battery as SectorRequirementsDoc,
   CHEMICALS: chemicals as SectorRequirementsDoc,
   CONSTRUCTION: construction as SectorRequirementsDoc,
@@ -115,13 +170,54 @@ export const SECTOR_REQUIREMENTS: Record<DppSector, SectorRequirementsDoc> = {
   VEHICLES: vehicles as SectorRequirementsDoc,
 };
 
+export const SECTOR_REQUIREMENTS: Record<DppSector, SectorRequirementsDoc> = Object.fromEntries(
+  Object.entries(RAW_SECTOR_REQUIREMENTS).map(([sector, doc]) => [sector, normalizeDoc(doc)])
+) as Record<DppSector, SectorRequirementsDoc>;
+
+/** A callout/banner entry (the spreadsheet's `component: "info_banner"`
+ * fields, or a standalone `type: "info-banner"`/"info_banner"` object) -
+ * informational copy with nothing for the producer to answer, never a real
+ * field. See toCallout/getCallouts and dpp-sections.ts's DppFieldGroup/
+ * DppRepeatableBlock `callouts`. */
+export function isCalloutField(field: RequirementField): boolean {
+  return field.component === "info_banner" || field.type === "info-banner" || field.type === "info_banner";
+}
+
 /** A field is real (answerable) unless it's decorative/structural in the
  * source spreadsheet - a regulatory citation ("note"), a group heading
  * ("subtitle" or, for a sector-data section's own top-of-section citation,
- * "section-heading"), or an "Add row" action ("button") with nothing to
- * store. */
+ * "section-heading"), an "Add row" action ("button") with nothing to store,
+ * a callout banner (see isCalloutField), free-standing explainer copy
+ * ("description"), a field with no visible purpose ("hidden"), or a
+ * repeatable sub-table declared inline ("nested-section" - only used inside
+ * product-packaging today, which renders through PackagingLayersPanel/View
+ * instead of this generic path; excluded here as a safety net). */
 export function isAnswerableField(field: RequirementField): boolean {
-  return field.type !== "note" && field.type !== "subtitle" && field.type !== "button" && field.type !== "section-heading";
+  return (
+    field.type !== "note" &&
+    field.type !== "subtitle" &&
+    field.type !== "button" &&
+    field.type !== "section-heading" &&
+    field.type !== "description" &&
+    field.type !== "hidden" &&
+    field.type !== "nested-section" &&
+    !isCalloutField(field)
+  );
+}
+
+export interface RequirementCallout {
+  variant: "success" | "warning" | "danger" | "neutral";
+  text?: string;
+  title?: string;
+  items?: string[];
+}
+
+export function toCallout(field: RequirementField): RequirementCallout {
+  return { variant: field.variant ?? "neutral", text: field.text || undefined, title: field.title, items: field.items };
+}
+
+export function getCallouts(fields: RequirementField[]): RequirementCallout[] {
+  return fields.filter(isCalloutField).map(toCallout);
 }
 
 /** Looks up one JSON section's real (answerable) fields for a sector, or
@@ -140,6 +236,16 @@ export function getRawFields(sector: DppSector, jsonSectionKey: string): Require
   return SECTOR_REQUIREMENTS[sector]?.sections[jsonSectionKey]?.fields;
 }
 
+/** Callout banners for a flat (no-subtitle) section, e.g. Carbon footprint's
+ * "Max lifecycle CF thresholds..." note or Recycled content's 2031 targets -
+ * a subtitled section's own banners come from splitBySubtitle's per-segment
+ * `callouts` instead (see getSingleBlockSection/getSubstancesSpec/
+ * getSectorDataGroups in dpp-sections.ts), so this is only called for
+ * physical/carbon/recycled/repairability in getOrderedDppSections. */
+export function getSectionCallouts(sector: DppSector, jsonSectionKey: string): RequirementCallout[] {
+  return getCallouts(getRawFields(sector, jsonSectionKey) ?? []);
+}
+
 /** Splits a JSON section's raw fields into labeled segments at each
  * "subtitle" field - the spreadsheet's own way of marking sub-groups (e.g.
  * substances-of-concern-svhc's "Substances of Concern" repeatable row schema
@@ -148,11 +254,13 @@ export function getRawFields(sector: DppSector, jsonSectionKey: string): Require
  * Fields before the first subtitle land in a `label: ""` segment. Segments
  * with no real fields (e.g. a trailing subtitle with only a note before the
  * next one) are dropped. */
-export function splitBySubtitle(fields: RequirementField[]): { label: string; fields: RequirementField[] }[] {
-  const segments: { label: string; fields: RequirementField[] }[] = [{ label: "", fields: [] }];
+export function splitBySubtitle(fields: RequirementField[]): { label: string; fields: RequirementField[]; callouts: RequirementCallout[] }[] {
+  const segments: { label: string; fields: RequirementField[]; callouts: RequirementCallout[] }[] = [{ label: "", fields: [], callouts: [] }];
   for (const field of fields) {
     if (field.type === "subtitle") {
-      segments.push({ label: field.text, fields: [] });
+      segments.push({ label: field.text, fields: [], callouts: [] });
+    } else if (isCalloutField(field)) {
+      segments.at(-1)!.callouts.push(toCallout(field));
     } else if (isAnswerableField(field)) {
       segments.at(-1)!.fields.push(field);
     }

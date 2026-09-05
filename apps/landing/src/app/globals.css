@@ -1,0 +1,210 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: "Google Sans Flex", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: var(--font-mono-loaded, ui-monospace, SFMono-Regular, Menlo, Monaco, monospace);
+
+  --color-ink: #0a1120;
+  --color-navy: #0b1220;
+  --color-navy-deep: #060a14;
+  --color-accent: #2f8fea;
+  --color-accent-dim: #1d6fc0;
+  --color-paper: #f6f8fb;
+  --color-cream: #f6f8fb;
+  --color-tint: #eef1f6;
+}
+
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-paper);
+  }
+
+  [id] {
+    scroll-margin-top: 6rem;
+  }
+}
+
+/* ── Reveal-on-scroll (IntersectionObserver driven, class-toggled) ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* ── Industry marquee (the one marquee on the page) ── */
+@keyframes landing-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.marquee-track {
+  animation: landing-marquee 32s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
+}
+
+/* ── Subtle live-pulse dot (semantic: "live/streaming" state only) ── */
+@keyframes landing-pulse-ring {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+.pulse-ring::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentColor;
+  animation: landing-pulse-ring 2s ease-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pulse-ring::before {
+    animation: none;
+  }
+}
+
+/* ── Fine dot-grid texture for dark panels ── */
+.dot-grid {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* ── Glass panels (light and dark variants) ──
+ * Real edge refraction: inner highlight border + inset shadow on top
+ * of backdrop-blur, not just a flat blurred fill. Falls back to a
+ * solid tint when the OS disables transparency effects. */
+.glass-light {
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.62),
+    rgba(255, 255, 255, 0.32)
+  );
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 20px 50px -20px rgba(10, 17, 32, 0.25);
+}
+.glass-dark {
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.03)
+  );
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 20px 50px -20px rgba(0, 0, 0, 0.5);
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glass-light {
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .glass-dark {
+    background: rgba(15, 23, 42, 0.92);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+/* Navy-tinted glass: for chrome (header) that must stay legible over
+ * either a light or dark section scrolling underneath it. */
+.glass-navy {
+  background: rgba(11, 18, 32, 0.78);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glass-navy {
+    background: #0b1220;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+/* ── Hero scene motion (ambient glow, float, scan sweep, pulse) ──
+ * All decorative/state-indicator only; none drive layout or block
+ * interaction. Disabled wholesale under reduced motion below. */
+@keyframes hero-glow-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.06); }
+}
+@keyframes hero-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+@keyframes hero-pulse-ring {
+  0% { opacity: 0.55; transform: scale(0.85); }
+  100% { opacity: 0; transform: scale(1.4); }
+}
+@keyframes hero-dot-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+@keyframes hero-flow {
+  to { stroke-dashoffset: -48; }
+}
+.anim-glow { animation: hero-glow-pulse 5s ease-in-out infinite; }
+.anim-float { animation: hero-float 6s ease-in-out infinite; }
+.anim-pulse-ring { animation: hero-pulse-ring 3s ease-out infinite; }
+.anim-dot-pulse { animation: hero-dot-pulse 1.8s ease-in-out infinite; }
+.anim-flow {
+  stroke-dasharray: 5 11;
+  animation: hero-flow 1.6s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-glow,
+  .anim-float,
+  .anim-pulse-ring,
+  .anim-dot-pulse,
+  .anim-flow {
+    animation: none !important;
+  }
+}

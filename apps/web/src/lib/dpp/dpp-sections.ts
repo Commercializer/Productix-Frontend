@@ -1,15 +1,17 @@
 import type { DppSector } from "@productix/db";
-import { DPP_SECTOR_SECTIONS, type DppSectionField } from "./sector-sections";
+import { DPP_SECTOR_SECTIONS, type DppSectionField, type DppConditionRule } from "./sector-sections";
 import {
   SECTOR_REQUIREMENTS,
   getRequirementFields,
   getRawFields,
+  getSectionCallouts,
   splitBySubtitle,
   type RequirementField,
+  type RequirementCallout,
 } from "./sector-requirements";
 import { toRowFieldDefs, pruneRows, slugifyFieldKey, type Row, type RowFieldDef } from "./repeatable-rows";
 
-export type { DppSectionField };
+export type { DppSectionField, RequirementCallout };
 
 export interface DppFieldGroup {
   label: string;
@@ -22,6 +24,10 @@ export interface DppFieldGroup {
    * passport's generic repeatable rendering see it regardless of whether the
    * dashboard editor is showing this group on its own sidebar page. */
   repeatable?: DppRepeatableBlock[];
+  /** Callout banners (component: "info_banner"/type: "info-banner") declared
+   * within this group's own segment - see splitBySubtitle's per-segment
+   * `callouts`. Rendered above the group's fields grid. */
+  callouts?: RequirementCallout[];
 }
 
 /** One repeatable-row table within a section (Material composition,
@@ -42,6 +48,10 @@ export interface DppRepeatableBlock {
    * section-level explainerText/explainerText2 - see RequirementSection). */
   explainerText?: string;
   explainerText2?: string;
+  /** Callout banners declared within this block's own segment (e.g.
+   * Substances' SVHC "Mandatory declaration threshold..." banner) - see
+   * splitBySubtitle. Rendered above the table. */
+  callouts?: RequirementCallout[];
 }
 
 export interface DppSectionSpec {
@@ -59,6 +69,12 @@ export interface DppSectionSpec {
   /** Repeatable tables rendered after `fields`/`groups`, if any - see
    * DppRepeatableBlock. */
   repeatable?: DppRepeatableBlock[];
+  /** Callout banners for a flat (no-subtitle, no-group) section - see
+   * getSectionCallouts. Only set for physical/carbon/recycled/repairability
+   * today, and (via page.tsx's per-group sidebar split) a sector-data
+   * group's own banners, which land here since that split flattens each
+   * group into its own top-level spec. */
+  callouts?: RequirementCallout[];
 }
 
 /** Maps this app's internal section key to the spreadsheet's own kebab-case
@@ -112,6 +128,12 @@ function toDppFieldType(t: RequirementField["type"]): DppSectionField["type"] {
   // "date-picker" is the same control as the older "date" hint - no
   // DppFieldType distinction needed, both render <input type="date">.
   if (t === "date" || t === "date-picker") return "date";
+  // "file-upload" is the same control as "upload" (paste-a-link + real
+  // upload button) - no separate DppFieldType needed.
+  if (t === "file-upload") return "upload";
+  // "tag-select" is a fixed multi-select pill list - same control as "tags".
+  if (t === "tag-select") return "tags";
+  if (t === "text") return "text";
   return undefined;
 }
 
@@ -125,7 +147,42 @@ function toDppField(f: RequirementField): DppSectionField {
     helperTextStyle: f.helperTextStyle,
     placeholder: f.placeholder,
     multiple: f.multiple,
+    conditional: f.conditional as DppConditionRule | undefined,
+    disabledWhen: f.disabledWhen as DppConditionRule | undefined,
+    requiredWhen: f.requiredWhen as DppConditionRule | undefined,
   };
+}
+
+/** `equals: true`/`false` maps onto the "Yes"/"No" strings every toggle/
+ * checkbox field actually stores its answer as (see toDppFieldType) - a
+ * plain select/text field's rule compares its literal string value instead. */
+function matchesCondition(rule: DppConditionRule | undefined, answers: Record<string, string>): boolean {
+  if (!rule) return true;
+  const actual = answers[rule.field] ?? "";
+  const expected = rule.equals === true ? "Yes" : rule.equals === false ? "No" : rule.equals;
+  return actual === expected;
+}
+
+/** Whether `field` should render at all right now - false hides it entirely
+ * (e.g. Packaging's "Producer product page URL", conditional on "Redirect to
+ * producer's product page" being Yes). A field with no `conditional` is
+ * always visible. */
+export function isFieldVisible(field: DppSectionField, answers: Record<string, string>): boolean {
+  return matchesCondition(field.conditional, answers);
+}
+
+/** Whether `field` currently counts as required - `requiredWhen` overrides
+ * the plain `required` flag while set (e.g. Packaging's PFAS ppb fields,
+ * only required while "Food contact" is Yes). */
+export function isFieldRequired(field: DppSectionField, answers: Record<string, string>): boolean {
+  return field.requiredWhen ? matchesCondition(field.requiredWhen, answers) : field.required;
+}
+
+/** Whether `field`'s control should render disabled - true while
+ * `disabledWhen` is set and currently matches (e.g. Packaging's PFAS ppb
+ * fields, disabled while "Food contact" is No - the limit doesn't apply). */
+export function isFieldDisabled(field: DppSectionField, answers: Record<string, string>): boolean {
+  return !!field.disabledWhen && matchesCondition(field.disabledWhen, answers);
 }
 
 function getFlatFields(sector: DppSector, jsonKey: string): DppSectionField[] | undefined {
@@ -160,8 +217,20 @@ function getManufacturerGroups(sector: DppSector): DppFieldGroup[] | undefined {
   ];
 }
 
-function toBlock(key: string, segment: { label: string; fields: RequirementField[] }, addLabel: string, emptyLabel: string): DppRepeatableBlock {
-  return { key, label: segment.label, fields: toRowFieldDefs(segment.fields), addLabel, emptyLabel };
+function toBlock(
+  key: string,
+  segment: { label: string; fields: RequirementField[]; callouts?: RequirementCallout[] },
+  addLabel: string,
+  emptyLabel: string
+): DppRepeatableBlock {
+  return {
+    key,
+    label: segment.label,
+    fields: toRowFieldDefs(segment.fields),
+    addLabel,
+    emptyLabel,
+    callouts: segment.callouts && segment.callouts.length > 0 ? segment.callouts : undefined,
+  };
 }
 
 /** A single flat-field-list section resolved as one repeatable block - used
@@ -227,7 +296,15 @@ function getSubstancesSpec(sector: DppSector): { groups?: DppFieldGroup[]; repea
   const compliance = segments.find((s) => s.label.toLowerCase().includes("compliance"));
   return {
     repeatable: svhc ? [toBlock("svhc", svhc, "Add substance", "No substances added yet.")] : undefined,
-    groups: compliance ? [{ label: compliance.label, fields: compliance.fields.map(toDppField) }] : undefined,
+    groups: compliance
+      ? [
+          {
+            label: compliance.label,
+            fields: compliance.fields.map(toDppField),
+            callouts: compliance.callouts.length > 0 ? compliance.callouts : undefined,
+          },
+        ]
+      : undefined,
   };
 }
 
@@ -315,7 +392,12 @@ export function getSectorDataGroups(sector: DppSector): DppFieldGroup[] | undefi
   if (raw && raw.length > 0) {
     const groups = splitBySubtitle(raw).map((seg) => {
       const { flat, blocks } = extractCustomRowsBlocks(raw, seg.fields);
-      return { label: seg.label, fields: flat.map(toDppField), repeatable: blocks.length > 0 ? blocks : undefined };
+      return {
+        label: seg.label,
+        fields: flat.map(toDppField),
+        repeatable: blocks.length > 0 ? blocks : undefined,
+        callouts: seg.callouts.length > 0 ? seg.callouts : undefined,
+      };
     });
     if (groups.length > 0) return groups;
   }
@@ -362,9 +444,18 @@ export function getOrderedDppSections(sector: DppSector | null): DppSectionSpec[
   push("custom-specifications", "product-specifications", {
     repeatable: getSingleBlockSection(sector, "product-specifications", "rows", "Add specification", "No custom specifications added yet."),
   });
-  push("physical", "physical-properties", { fields: getFlatFields(sector, "physical-properties") });
-  push("carbon", "carbon-footprint", { fields: getFlatFields(sector, "carbon-footprint") });
-  push("recycled", "recycled-content", { fields: getFlatFields(sector, "recycled-content") });
+  push("physical", "physical-properties", {
+    fields: getFlatFields(sector, "physical-properties"),
+    callouts: getSectionCallouts(sector, "physical-properties"),
+  });
+  push("carbon", "carbon-footprint", {
+    fields: getFlatFields(sector, "carbon-footprint"),
+    callouts: getSectionCallouts(sector, "carbon-footprint"),
+  });
+  push("recycled", "recycled-content", {
+    fields: getFlatFields(sector, "recycled-content"),
+    callouts: getSectionCallouts(sector, "recycled-content"),
+  });
   push("materials", "material-composition", {
     repeatable: getSingleBlockSection(sector, "material-composition", "rows", "Add material", "No materials added yet."),
   });
@@ -403,7 +494,10 @@ export function getOrderedDppSections(sector: DppSector | null): DppSectionSpec[
     directive: "Packaging Regulation (EU) 2025/40, Art. 12 — declaration per packaging layer. Max. 15 layers.",
   });
 
-  push("repairability", "repairability", { fields: getFlatFields(sector, "repairability") });
+  push("repairability", "repairability", {
+    fields: getFlatFields(sector, "repairability"),
+    callouts: getSectionCallouts(sector, "repairability"),
+  });
 
   const eolSpec = getEolSpec(sector);
   push("eol", "end-of-life", { fields: eolSpec?.fields, repeatable: eolSpec?.repeatable });
