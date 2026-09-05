@@ -29,8 +29,14 @@ function GroupHeading({ title, values }: { title: string; values: string[] }) {
 }
 
 function LayerCard({ layer, index }: { layer: PackagingLayer; index: number }) {
-  const componentNames = layer.components.map((c) => c.material).filter(Boolean);
-  const eprRows = layer.eprRegistrations.filter((e) => e.country || e.registrationNumber);
+  const componentRows = layer.components
+    .map((c) =>
+      [c.component, c.material, c.weightGrams && `${c.weightGrams} g`, c.recycledPercent && `${c.recycledPercent}% recycled`]
+        .filter(Boolean)
+        .join(" · ")
+    )
+    .filter(Boolean);
+  const eprRows = layer.eprRegistrations.filter((e) => e.country || e.schemeName || e.registrationNumber);
 
   return (
     <div style={{ padding: "14px 0", borderTop: index > 0 ? "1px solid #f1f5f9" : undefined }}>
@@ -43,12 +49,14 @@ function LayerCard({ layer, index }: { layer: PackagingLayer; index: number }) {
         <Row label="Manufacturer country" value={layer.manufacturerCountry} />
         <Row label="Layer type (PPWR)" value={layer.layerType} />
         <Row label="Weight (g)" value={layer.weightGrams} />
-        <Row label="Layer composition" value={componentNames.join(", ")} />
+        <Row label="Layer composition" value={componentRows.join("; ")} />
         <Row label="Recyclability grade" value={layer.recyclabilityGrade} />
         <Row label="Reusable" value={layer.reusable} />
         <Row
           label="EPR registration"
-          value={eprRows.map((e) => [e.country, e.registrationNumber].filter(Boolean).join(": ")).join(" · ")}
+          value={eprRows
+            .map((e) => [e.country, e.schemeName, e.registrationNumber].filter(Boolean).join(": "))
+            .join(" · ")}
         />
         <Row label="DoC number" value={layer.docNumber} />
         <Row label="DoC issue date" value={layer.docIssueDate} />

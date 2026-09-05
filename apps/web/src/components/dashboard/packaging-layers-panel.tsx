@@ -25,6 +25,7 @@ import {
   PACKAGING_DATA_SOURCE_OPTIONS,
   PACKAGING_LAYER_TYPE_OPTIONS,
   PACKAGING_MANUFACTURER_ROLE_OPTIONS,
+  PACKAGING_MATERIAL_OPTIONS,
   PACKAGING_RECYCLABILITY_GRADE_OPTIONS,
   PACKAGING_YES_NO_OPTIONS,
   type PackagingLayer,
@@ -173,9 +174,20 @@ function LayerForm({
           What this layer is physically made of — one row per material (e.g. bottle body · cap · label).
         </p>
         {layer.components.map((c) => (
-          <div key={c.id} className="flex items-center gap-2">
+          <div key={c.id} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_0.7fr_0.7fr_auto] gap-2 items-center">
             <input
               type="text"
+              value={c.component}
+              onChange={(e) =>
+                set(
+                  "components",
+                  layer.components.map((x) => (x.id === c.id ? { ...x, component: e.target.value } : x))
+                )
+              }
+              placeholder="Paper tray"
+              className={inputClass}
+            />
+            <select
               value={c.material}
               onChange={(e) =>
                 set(
@@ -183,7 +195,37 @@ function LayerForm({
                   layer.components.map((x) => (x.id === c.id ? { ...x, material: e.target.value } : x))
                 )
               }
-              placeholder="e.g. bottle body"
+              className={selectClass}
+            >
+              <option value="">— Material —</option>
+              {PACKAGING_MATERIAL_OPTIONS.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+            <input
+              type="text"
+              value={c.weightGrams}
+              onChange={(e) =>
+                set(
+                  "components",
+                  layer.components.map((x) => (x.id === c.id ? { ...x, weightGrams: e.target.value } : x))
+                )
+              }
+              placeholder="g"
+              className={inputClass}
+            />
+            <input
+              type="text"
+              value={c.recycledPercent}
+              onChange={(e) =>
+                set(
+                  "components",
+                  layer.components.map((x) => (x.id === c.id ? { ...x, recycledPercent: e.target.value } : x))
+                )
+              }
+              placeholder="%"
               className={inputClass}
             />
             <button
@@ -234,7 +276,7 @@ function LayerForm({
           Extended Producer Responsibility registration(s) — one row per country.
         </p>
         {layer.eprRegistrations.map((e) => (
-          <div key={e.id} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2 items-center">
+          <div key={e.id} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_1fr_auto] gap-2 items-center">
             <SearchableSelect
               options={COUNTRY_OPTIONS}
               value={e.country}
@@ -246,6 +288,18 @@ function LayerForm({
               }
               placeholder="— Country —"
               searchPlaceholder="Search countries…"
+            />
+            <input
+              type="text"
+              value={e.schemeName}
+              onChange={(ev) =>
+                set(
+                  "eprRegistrations",
+                  layer.eprRegistrations.map((x) => (x.id === e.id ? { ...x, schemeName: ev.target.value } : x))
+                )
+              }
+              placeholder="Scheme name"
+              className={inputClass}
             />
             <input
               type="text"

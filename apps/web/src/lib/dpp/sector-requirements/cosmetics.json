@@ -1000,9 +1000,7 @@
           "type": "select",
           "options": [
             "From linked DPP",
-            "Manual entry",
-            "From LCA / EPD",
-            "Other"
+            "Manual entry"
           ]
         },
         {

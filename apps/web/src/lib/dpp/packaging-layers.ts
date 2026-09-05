@@ -15,12 +15,16 @@ import { formatGtinValue } from "@/lib/gs1";
 
 export interface PackagingLayerComponent {
   id: string;
+  component: string;
   material: string;
+  weightGrams: string;
+  recycledPercent: string;
 }
 
 export interface PackagingLayerEprRegistration {
   id: string;
   country: string;
+  schemeName: string;
   registrationNumber: string;
 }
 
@@ -108,7 +112,23 @@ export const PACKAGING_LAYER_TYPE_OPTIONS = ["Primary", "Secondary", "Tertiary /
 export const PACKAGING_RECYCLABILITY_GRADE_OPTIONS = ["A", "B", "C", "D", "E"];
 export const PACKAGING_YES_NO_OPTIONS = ["Yes", "No"];
 export const PACKAGING_MANUFACTURER_ROLE_OPTIONS = ["Manufacturer", "Importer", "Authorised representative"];
-export const PACKAGING_CARBON_SOURCE_OPTIONS = ["From linked DPP", "Manual entry", "From LCA / EPD", "Other"];
+export const PACKAGING_CARBON_SOURCE_OPTIONS = ["From linked DPP", "Manual entry"];
+export const PACKAGING_MATERIAL_OPTIONS = [
+  "Paper / Cardboard",
+  "PET",
+  "HDPE",
+  "LDPE",
+  "PP",
+  "PS",
+  "Other plastic",
+  "Glass",
+  "Aluminium",
+  "Steel",
+  "Wood",
+  "Composite",
+  "Biopolymer",
+  "Other",
+];
 export const DEFAULT_PACKAGING_DATA_SOURCE = "Manual entry";
 /** The only non-manual data source actually wired up - see
  * applyGtinLookupToLayer below. Kept as a named constant (not just a string
@@ -194,11 +214,11 @@ export function createEmptyPackagingLayer(): PackagingLayer {
 }
 
 export function createEmptyPackagingComponent(): PackagingLayerComponent {
-  return { id: newId(), material: "" };
+  return { id: newId(), component: "", material: "", weightGrams: "", recycledPercent: "" };
 }
 
 export function createEmptyEprRegistration(): PackagingLayerEprRegistration {
-  return { id: newId(), country: "", registrationNumber: "" };
+  return { id: newId(), country: "", schemeName: "", registrationNumber: "" };
 }
 
 /** Applies the product's own already-verified GTIN data (Product.gtinData -
@@ -302,8 +322,8 @@ function isLayerNonEmpty(layer: PackagingLayer): boolean {
     layer.euDocExists.trim() ||
     layer.reachSvhcCompliant.trim() ||
     layer.docUrl.trim() ||
-    layer.components.some((c) => c.material.trim()) ||
-    layer.eprRegistrations.some((e) => e.country.trim() || e.registrationNumber.trim()) ||
+    layer.components.some((c) => c.component.trim() || c.material.trim() || c.weightGrams.trim() || c.recycledPercent.trim()) ||
+    layer.eprRegistrations.some((e) => e.country.trim() || e.schemeName.trim() || e.registrationNumber.trim()) ||
     OPTIONAL_PPWR_FIELD_KEYS.some((key) => (layer[key] as string)?.trim())
   );
 }
@@ -335,8 +355,12 @@ export function prunePackagingLayers(layers: unknown): PackagingLayer[] {
         euDocExists: l.euDocExists?.trim() ?? "",
         reachSvhcCompliant: l.reachSvhcCompliant?.trim() ?? "",
         docUrl: l.docUrl?.trim() ?? "",
-        components: (l.components ?? []).filter((c) => c.material?.trim()),
-        eprRegistrations: (l.eprRegistrations ?? []).filter((e) => e.country?.trim() || e.registrationNumber?.trim()),
+        components: (l.components ?? []).filter(
+          (c) => c.component?.trim() || c.material?.trim() || c.weightGrams?.trim() || c.recycledPercent?.trim()
+        ),
+        eprRegistrations: (l.eprRegistrations ?? []).filter(
+          (e) => e.country?.trim() || e.schemeName?.trim() || e.registrationNumber?.trim()
+        ),
       };
     })
     .filter(isLayerNonEmpty);
