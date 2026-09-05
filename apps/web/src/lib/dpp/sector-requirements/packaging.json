@@ -351,8 +351,17 @@
             "Total fluorine (ppm): ≤ 50 ppm",
             "PFAS: No · under limit",
             "Heavy metals Σ (mg/kg): ≤ 100 mg/kg",
-            "SVHC: None above 0.1% (1000 ppm)"
-          ]
+            {
+              "field": "I confirm that the packaging does not contain SVHC (Substances of Very High Concern) above the mandatory notification limit of 0.1% by weight (1000 ppm).",
+              "equals": true,
+              "whenTrue": "SVHC: None above 0.1% (1000 ppm)",
+              "whenFalse": "SVHC: -"
+            }
+          ],
+          "conditional": {
+            "field": "I confirm that the total fluorine content of the packaging does not exceed the legal limit of 50 ppm.",
+            "equals": true
+          }
         },
         {
           "text": "Total fluorine (ppm)",
@@ -362,7 +371,11 @@
             "Not detected",
             "≤ 50 ppm",
             "> 50 ppm"
-          ]
+          ],
+          "conditional": {
+            "field": "I confirm that the total fluorine content of the packaging does not exceed the legal limit of 50 ppm.",
+            "equals": false
+          }
         },
         {
           "text": "Measured value (ppm)",
@@ -381,7 +394,11 @@
           "options": [
             "Yes",
             "No"
-          ]
+          ],
+          "conditional": {
+            "field": "I confirm that the total fluorine content of the packaging does not exceed the legal limit of 50 ppm.",
+            "equals": false
+          }
         },
         {
           "text": "PFAS individual (ppb)",
@@ -395,6 +412,10 @@
           "requiredWhen": {
             "field": "Food contact",
             "equals": "Yes"
+          },
+          "conditional": {
+            "field": "I confirm that the total fluorine content of the packaging does not exceed the legal limit of 50 ppm.",
+            "equals": false
           }
         },
         {
@@ -409,6 +430,10 @@
           "requiredWhen": {
             "field": "Food contact",
             "equals": "Yes"
+          },
+          "conditional": {
+            "field": "I confirm that the total fluorine content of the packaging does not exceed the legal limit of 50 ppm.",
+            "equals": false
           }
         },
         {
@@ -418,13 +443,21 @@
           "options": [
             "Yes",
             "No"
-          ]
+          ],
+          "conditional": {
+            "field": "I confirm that the total fluorine content of the packaging does not exceed the legal limit of 50 ppm.",
+            "equals": false
+          }
         },
         {
           "text": "Heavy metals Σ (mg/kg)",
           "required": true,
           "placeholder": "8",
-          "helperText": "Pb+Cd+Hg+CrVI ≤ 100"
+          "helperText": "Pb+Cd+Hg+CrVI ≤ 100",
+          "conditional": {
+            "field": "I confirm that the total fluorine content of the packaging does not exceed the legal limit of 50 ppm.",
+            "equals": false
+          }
         },
         {
           "text": "Bisphenol free",
@@ -433,7 +466,11 @@
           "options": [
             "Yes",
             "No"
-          ]
+          ],
+          "conditional": {
+            "field": "I confirm that the total fluorine content of the packaging does not exceed the legal limit of 50 ppm.",
+            "equals": false
+          }
         },
         {
           "text": "Substances of concern (SVHC)",
@@ -446,58 +483,25 @@
           "type": "checkbox"
         },
         {
-          "text": "SVHC name",
-          "required": true,
-          "placeholder": "DEHP",
-          "conditional": {
-            "field": "I confirm that the packaging does not contain SVHC (Substances of Very High Concern) above the mandatory notification limit of 0.1% by weight (1000 ppm).",
-            "equals": false
-          }
-        },
-        {
-          "text": "CAS / EC",
-          "required": true,
-          "placeholder": "117-81-7",
-          "conditional": {
-            "field": "I confirm that the packaging does not contain SVHC (Substances of Very High Concern) above the mandatory notification limit of 0.1% by weight (1000 ppm).",
-            "equals": false
-          }
-        },
-        {
-          "text": "Concentration",
-          "required": true,
-          "placeholder": "0.2% / 2000 ppm",
-          "conditional": {
-            "field": "I confirm that the packaging does not contain SVHC (Substances of Very High Concern) above the mandatory notification limit of 0.1% by weight (1000 ppm).",
-            "equals": false
-          }
-        },
-        {
-          "text": "Safety instructions",
+          "text": "SVHC substances",
           "required": false,
-          "placeholder": "",
+          "type": "custom-rows",
           "conditional": {
             "field": "I confirm that the packaging does not contain SVHC (Substances of Very High Concern) above the mandatory notification limit of 0.1% by weight (1000 ppm).",
             "equals": false
-          }
+          },
+          "rowFields": [
+            { "text": "SVHC name", "required": true, "placeholder": "DEHP" },
+            { "text": "CAS / EC", "required": true, "placeholder": "117-81-7" },
+            { "text": "Concentration", "required": true, "placeholder": "0.2% / 2000 ppm" },
+            { "text": "Safety instructions", "required": false },
+            { "text": "Supporting doc / lab report", "required": false, "placeholder": "https://..." }
+          ]
         },
         {
-          "text": "Supporting doc / lab report",
+          "text": "Add SVHC substance",
           "required": false,
-          "placeholder": "https://...",
-          "conditional": {
-            "field": "I confirm that the packaging does not contain SVHC (Substances of Very High Concern) above the mandatory notification limit of 0.1% by weight (1000 ppm).",
-            "equals": false
-          }
-        },
-        {
-          "text": "Add SVHC substance ((New row, above fields again on new SVHC substance)",
-          "required": false,
-          "type": "button",
-          "conditional": {
-            "field": "I confirm that the packaging does not contain SVHC (Substances of Very High Concern) above the mandatory notification limit of 0.1% by weight (1000 ppm).",
-            "equals": false
-          }
+          "type": "button"
         },
         {
           "text": "Recyclability & recycled content (Art 6-11)",

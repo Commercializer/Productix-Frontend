@@ -89,12 +89,15 @@ function RowFieldInput({ field, value, onChange }: { field: RowFieldDef; value: 
         value={value}
         onChange={(e) => onChange(e.target.value)}
         rows={3}
+        placeholder={field.placeholder}
         className={`${inputClass} h-auto py-2.5 resize-y`}
       />
     );
   }
 
-  return <input type="text" value={value} onChange={(e) => onChange(e.target.value)} className={inputClass} />;
+  return (
+    <input type="text" value={value} onChange={(e) => onChange(e.target.value)} placeholder={field.placeholder} className={inputClass} />
+  );
 }
 
 function RowForm({ fields, row, onChange }: { fields: RowFieldDef[]; row: Row; onChange: (row: Row) => void }) {

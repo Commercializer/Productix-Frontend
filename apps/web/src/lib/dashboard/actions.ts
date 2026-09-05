@@ -891,6 +891,159 @@ export async function getProductForDppAction(productId: string) {
   return { success: true, product: { ...rest, productName: profiles[0]?.productName ?? "" } };
 }
 
+// ─── DPP version history (audit trail) ──────────────────────────────────
+// Every publish/update captures an immutable ProductDppVersion snapshot (see
+// captureDppVersion below) - unlike ProductProfileVersion these are never
+// pruned or edited after creation, per the versioning spec's "permanently
+// traceable" core principle.
+
+export type DppFieldChange = { path: string; previousValue: unknown; newValue: unknown };
+
+export type DppFieldChanges = {
+  isInitial: boolean;
+  added: DppFieldChange[];
+  removed: DppFieldChange[];
+  modified: DppFieldChange[];
+};
+
+type DppSnapshot = {
+  identifierType: DppIdentifierType;
+  identifierValue: string | null;
+  sector: DppSector | null;
+  sectionAnswers: unknown;
+};
+
+// Recursively flattens sectionAnswers (a nested Record<string, unknown> whose
+// shape varies per section - flat field maps, {layers: [...]}, etc.) into
+// dot/bracket-notation paths, so any section's content can be diffed the same
+// generic way without a per-section-shape special case.
+function flattenDppValue(value: unknown, prefix: string, out: Record<string, unknown>) {
+  if (value === null || value === undefined) return;
+  if (Array.isArray(value)) {
+    value.forEach((item, i) => flattenDppValue(item, `${prefix}[${i}]`, out));
+    return;
+  }
+  if (typeof value === "object") {
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      flattenDppValue(v, prefix ? `${prefix}.${k}` : k, out);
+    }
+    return;
+  }
+  out[prefix] = value;
+}
+
+function flattenDppSnapshot(snap: DppSnapshot): Record<string, unknown> {
+  const out: Record<string, unknown> = {
+    identifierType: snap.identifierType,
+    identifierValue: snap.identifierValue,
+    sector: snap.sector,
+  };
+  flattenDppValue(snap.sectionAnswers, "sectionAnswers", out);
+  return out;
+}
+
+// Structured diff between two DPP snapshots - the basis for both the one-line
+// summary stored on each version and the "detailed record of all changes...
+// previous and new values" requirement. `prev` null means this is the first
+// version.
+function diffDppFields(prev: DppSnapshot | null, next: DppSnapshot): DppFieldChanges {
+  const nextFlat = flattenDppSnapshot(next);
+  if (!prev) {
+    return {
+      isInitial: true,
+      added: Object.entries(nextFlat).map(([path, newValue]) => ({ path, previousValue: null, newValue })),
+      removed: [],
+      modified: [],
+    };
+  }
+
+  const prevFlat = flattenDppSnapshot(prev);
+  const added: DppFieldChange[] = [];
+  const removed: DppFieldChange[] = [];
+  const modified: DppFieldChange[] = [];
+
+  for (const path of new Set([...Object.keys(prevFlat), ...Object.keys(nextFlat)])) {
+    const hasPrev = path in prevFlat;
+    const hasNext = path in nextFlat;
+    if (hasPrev && !hasNext) removed.push({ path, previousValue: prevFlat[path], newValue: null });
+    else if (!hasPrev && hasNext) added.push({ path, previousValue: null, newValue: nextFlat[path] });
+    else if (JSON.stringify(prevFlat[path]) !== JSON.stringify(nextFlat[path])) {
+      modified.push({ path, previousValue: prevFlat[path], newValue: nextFlat[path] });
+    }
+  }
+
+  return { isInitial: false, added, removed, modified };
+}
+
+function summarizeDppChanges(c: DppFieldChanges): string {
+  if (c.isInitial) return "Initial version";
+  const parts: string[] = [];
+  if (c.added.length) parts.push(`Added ${c.added.length} field${c.added.length === 1 ? "" : "s"}`);
+  if (c.removed.length) parts.push(`Removed ${c.removed.length} field${c.removed.length === 1 ? "" : "s"}`);
+  if (c.modified.length) parts.push(`Modified ${c.modified.length} field${c.modified.length === 1 ? "" : "s"}`);
+  return parts.length ? parts.join(" · ") : "No changes";
+}
+
+// Appends an immutable version row for a DPP inside the given transaction, so
+// a version-capture failure rolls back the underlying save rather than
+// silently succeeding without an audit entry - deliberately NOT best-effort
+// like ProductProfile's captureVersion, since the version record IS the
+// compliance requirement here, not an optional edit log. Dedupes identical
+// successive "publish" saves against the latest version; a "restore" is never
+// deduped (restoring back to the current state should still log the restore).
+async function captureDppVersion(
+  tx: Prisma.TransactionClient,
+  dppId: string,
+  snapshot: DppSnapshot,
+  userId: string | null,
+  reason: "publish" | "restore",
+  restoredFromVersion?: number
+) {
+  const latest = await tx.productDppVersion.findFirst({
+    where: { dppId },
+    orderBy: { versionNumber: "desc" },
+  });
+
+  if (
+    reason === "publish" &&
+    latest &&
+    latest.identifierType === snapshot.identifierType &&
+    latest.identifierValue === snapshot.identifierValue &&
+    latest.sector === snapshot.sector &&
+    JSON.stringify(latest.sectionAnswers ?? null) === JSON.stringify(snapshot.sectionAnswers ?? null)
+  ) {
+    return latest;
+  }
+
+  const prevSnapshot: DppSnapshot | null = latest
+    ? {
+        identifierType: latest.identifierType,
+        identifierValue: latest.identifierValue,
+        sector: latest.sector,
+        sectionAnswers: latest.sectionAnswers,
+      }
+    : null;
+  const changes = diffDppFields(prevSnapshot, snapshot);
+  const summary = reason === "restore" ? `Restored version ${restoredFromVersion}` : summarizeDppChanges(changes);
+
+  return tx.productDppVersion.create({
+    data: {
+      dppId,
+      userId,
+      versionNumber: (latest?.versionNumber ?? 0) + 1,
+      identifierType: snapshot.identifierType,
+      identifierValue: snapshot.identifierValue,
+      sector: snapshot.sector,
+      sectionAnswers:
+        snapshot.sectionAnswers == null ? Prisma.DbNull : (snapshot.sectionAnswers as Prisma.InputJsonValue),
+      reason,
+      summary,
+      changeDetail: changes as unknown as Prisma.InputJsonValue,
+      restoredFromVersion: reason === "restore" ? (restoredFromVersion ?? null) : null,
+    },
+  });
+}
+
 /**
  * Creates or updates a product's DPP record. When identifierType is GS1_GTIN
  * and the product doesn't have a GTIN yet, this also sets it via the same
@@ -978,7 +1131,7 @@ export async function createProductDppAction(data: {
       if (gtinUpdate) {
         await tx.product.update({ where: { id: product.id }, data: gtinUpdate });
       }
-      return tx.productDpp.upsert({
+      const record = await tx.productDpp.upsert({
         where: { productId: product.id },
         create: {
           productId: product.id,
@@ -994,6 +1147,24 @@ export async function createProductDppAction(data: {
           sectionAnswers: sectionAnswersValue,
         },
       });
+
+      // Every save is a "publish" for the DPP - there's no separate draft
+      // state (the public passport always reads this row live) - so it
+      // always gets an immutable version snapshot, per the versioning spec.
+      await captureDppVersion(
+        tx,
+        record.id,
+        {
+          identifierType: record.identifierType,
+          identifierValue: record.identifierValue,
+          sector: record.sector,
+          sectionAnswers: record.sectionAnswers,
+        },
+        session.user.id,
+        "publish"
+      );
+
+      return record;
     });
 
     return { success: true, dpp };
@@ -1001,6 +1172,187 @@ export async function createProductDppAction(data: {
     if (error?.code === "P2002" && error?.meta?.target?.includes?.("gtin")) {
       return { error: "This GTIN is already registered to another product." };
     }
+    return { error: error.message };
+  }
+}
+
+export type DppVersionSummary = {
+  versionNumber: number;
+  createdAt: string;
+  reason: string;
+  summary: string | null;
+  email: string | null;
+};
+
+/** List a DPP's version history (newest first), scoped to the caller's company. */
+export async function getDppVersionsAction(productId: string) {
+  if (!isUUID(productId)) return { error: "Invalid product ID" as const };
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" as const };
+
+  const companyId = await getUserCompanyId(session.user.id);
+  if (!companyId) return { error: "No company found for user" as const };
+
+  const product = await prisma.product.findFirst({
+    where: { id: productId, companyId },
+    select: { dpp: { select: { id: true } } },
+  });
+  if (!product?.dpp) return { versions: [] as DppVersionSummary[] };
+  const dppId = product.dpp.id;
+
+  const versions = await prisma.productDppVersion.findMany({
+    where: { dppId },
+    orderBy: { versionNumber: "desc" },
+    select: { versionNumber: true, createdAt: true, reason: true, summary: true, user: { select: { email: true } } },
+  });
+
+  return {
+    versions: versions.map((v) => ({
+      versionNumber: v.versionNumber,
+      createdAt: v.createdAt.toISOString(),
+      reason: v.reason,
+      summary: v.summary,
+      email: v.user?.email ?? null,
+    })) satisfies DppVersionSummary[],
+  };
+}
+
+export type DppVersionDetail = DppVersionSummary & {
+  isCurrent: boolean;
+  identifierType: DppIdentifierType;
+  identifierValue: string | null;
+  sector: DppSector | null;
+  sectionAnswers: Record<string, unknown>;
+  changes: DppFieldChanges | null;
+  restoredFromVersion: number | null;
+};
+
+/**
+ * Full snapshot + structured diff for one DPP version, scoped to the caller's
+ * company - "view the DPP information associated with a previous version".
+ */
+export async function getDppVersionDetailsAction(productId: string, versionNumber: number) {
+  if (!isUUID(productId)) return { error: "Invalid product ID" as const };
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" as const };
+
+  const companyId = await getUserCompanyId(session.user.id);
+  if (!companyId) return { error: "No company found for user" as const };
+
+  const product = await prisma.product.findFirst({
+    where: { id: productId, companyId },
+    select: { dpp: { select: { id: true } } },
+  });
+  if (!product?.dpp) return { error: "DPP not found" as const };
+  const dppId = product.dpp.id;
+
+  const version = await prisma.productDppVersion.findUnique({
+    where: { dppId_versionNumber: { dppId, versionNumber } },
+    select: {
+      versionNumber: true,
+      createdAt: true,
+      reason: true,
+      summary: true,
+      changeDetail: true,
+      restoredFromVersion: true,
+      identifierType: true,
+      identifierValue: true,
+      sector: true,
+      sectionAnswers: true,
+      user: { select: { email: true } },
+    },
+  });
+  if (!version) return { error: "Version not found" as const };
+
+  const latest = await prisma.productDppVersion.findFirst({
+    where: { dppId },
+    orderBy: { versionNumber: "desc" },
+    select: { versionNumber: true },
+  });
+
+  return {
+    version: {
+      versionNumber: version.versionNumber,
+      createdAt: version.createdAt.toISOString(),
+      reason: version.reason,
+      summary: version.summary,
+      email: version.user?.email ?? null,
+      isCurrent: latest?.versionNumber === version.versionNumber,
+      identifierType: version.identifierType,
+      identifierValue: version.identifierValue,
+      sector: version.sector,
+      sectionAnswers: (version.sectionAnswers as Record<string, unknown> | null) ?? {},
+      changes: (version.changeDetail as unknown as DppFieldChanges | null) ?? null,
+      restoredFromVersion: version.restoredFromVersion,
+    } satisfies DppVersionDetail,
+  };
+}
+
+/**
+ * Restore an earlier DPP version onto the live record. Per the versioning
+ * spec, this does NOT delete or overwrite any existing version - it copies
+ * the selected version's snapshot back onto the live ProductDpp row and logs
+ * the restore as a brand-new version (reason "restore"), so the full history
+ * (including the version being restored from) stays intact and the restore
+ * itself is auditable/reversible. Restricted to COMPANY_ADMIN/TENANT_ADMIN -
+ * the spec's "authorized enterprise users" - matching requireCallerCompanyId's
+ * role check in team.ts; a plain COMPANY_USER cannot restore.
+ */
+export async function restoreDppVersionAction(productId: string, versionNumber: number) {
+  if (!isUUID(productId)) return { error: "Invalid product ID" };
+  const session = await auth();
+  const userId = session?.user?.id;
+  const role = (session?.user as any)?.role as string | undefined;
+  if (!userId) return { error: "Not authenticated" };
+  if (role !== "COMPANY_ADMIN" && role !== "TENANT_ADMIN") {
+    return { error: "Only a company or tenant admin can restore a DPP version" };
+  }
+
+  const companyId = await getUserCompanyId(userId);
+  if (!companyId) return { error: "No company found for user" };
+
+  const product = await prisma.product.findFirst({
+    where: { id: productId, companyId },
+    select: { dpp: { select: { id: true } } },
+  });
+  if (!product?.dpp) return { error: "DPP not found" };
+  const dppId = product.dpp.id;
+
+  const target = await prisma.productDppVersion.findUnique({
+    where: { dppId_versionNumber: { dppId, versionNumber } },
+    select: { identifierType: true, identifierValue: true, sector: true, sectionAnswers: true },
+  });
+  if (!target) return { error: "Version not found" };
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const record = await tx.productDpp.update({
+        where: { id: dppId },
+        data: {
+          identifierType: target.identifierType,
+          identifierValue: target.identifierValue,
+          sector: target.sector,
+          sectionAnswers: target.sectionAnswers == null ? Prisma.DbNull : (target.sectionAnswers as Prisma.InputJsonValue),
+        },
+      });
+
+      await captureDppVersion(
+        tx,
+        record.id,
+        {
+          identifierType: record.identifierType,
+          identifierValue: record.identifierValue,
+          sector: record.sector,
+          sectionAnswers: record.sectionAnswers,
+        },
+        userId,
+        "restore",
+        versionNumber
+      );
+    });
+
+    return { success: true };
+  } catch (error: any) {
     return { error: error.message };
   }
 }
@@ -2075,6 +2427,80 @@ export async function getPublicDppByGtinAction(gtin: string) {
   };
 }
 
+export type PublicDppVersionSummary = {
+  versionNumber: number;
+  createdAt: string;
+  reason: string;
+  summary: string | null;
+};
+
+/**
+ * Public version history for the passport at /01/{gtin} - the spec's "Public
+ * DPP Version History", gated by the owning company's showDppVersionHistory
+ * toggle. Returns visible:false (rather than an error) when the company has
+ * turned it off, so the page can just hide the section.
+ */
+export async function getPublicDppVersionsAction(gtin: string) {
+  const product = await prisma.product.findFirst({
+    where: { gtin },
+    select: { dpp: { select: { id: true } }, company: { select: { showDppVersionHistory: true } } },
+  });
+  if (!product?.dpp || !product.company.showDppVersionHistory) {
+    return { visible: false, versions: [] as PublicDppVersionSummary[] };
+  }
+
+  const versions = await prisma.productDppVersion.findMany({
+    where: { dppId: product.dpp.id },
+    orderBy: { versionNumber: "desc" },
+    select: { versionNumber: true, createdAt: true, reason: true, summary: true },
+  });
+
+  return {
+    visible: true,
+    versions: versions.map((v) => ({
+      versionNumber: v.versionNumber,
+      createdAt: v.createdAt.toISOString(),
+      reason: v.reason,
+      summary: v.summary,
+    })) satisfies PublicDppVersionSummary[],
+  };
+}
+
+/**
+ * Public read of one historical version's full passport content - "view the
+ * DPP information associated with a previous version". Same visibility gate
+ * as getPublicDppVersionsAction. Reuses the product's current identity/brand/
+ * gallery info (those aren't versioned) and overlays only the versioned DPP
+ * content (identifier/sector/sectionAnswers) from the snapshot, so the result
+ * is drop-in compatible with the same PublicDppData shape DppPassportView
+ * already renders.
+ */
+export async function getPublicDppVersionContentAction(gtin: string, versionNumber: number) {
+  const current = await getPublicDppByGtinAction(gtin);
+  if (!current) return null;
+
+  const product = await prisma.product.findFirst({
+    where: { gtin },
+    select: { dpp: { select: { id: true } }, company: { select: { showDppVersionHistory: true } } },
+  });
+  if (!product?.dpp || !product.company.showDppVersionHistory) return null;
+
+  const version = await prisma.productDppVersion.findUnique({
+    where: { dppId_versionNumber: { dppId: product.dpp.id, versionNumber } },
+    select: { identifierType: true, sector: true, sectionAnswers: true, createdAt: true },
+  });
+  if (!version) return null;
+
+  return {
+    ...current,
+    identifierType: version.identifierType,
+    sector: version.sector,
+    sectionAnswers: (version.sectionAnswers as Record<string, unknown> | null) ?? {},
+    versionNumber,
+    versionCreatedAt: version.createdAt.toISOString(),
+  };
+}
+
 // ═══════════════════════════════════════════════════════════════
 // PREVIEW PAGE - Authenticated access for previewing pages
 // ═══════════════════════════════════════════════════════════════
@@ -3069,6 +3495,7 @@ export async function getCompanySettingsAction() {
         maximumBrandProfiles: company.maximumBrandProfiles,
         createdAt: company.createdAt.toISOString(),
         requireValidGtin: company.requireValidGtin,
+        showDppVersionHistory: company.showDppVersionHistory,
       }
     };
   } catch (error: any) {
@@ -3087,6 +3514,28 @@ export async function updateGtinPolicyAction(requireValidGtin: boolean) {
   try {
     await prisma.company.update({ where: { id: companyId }, data: { requireValidGtin } });
     return { success: true, requireValidGtin };
+  } catch (error: any) {
+    return { error: error.message };
+  }
+}
+
+/**
+ * Toggles whether this company's DPP version history (version list + past
+ * snapshots) is visible on the public passport page (/01/{gtin}) - see
+ * getPublicDppVersionsAction. Turning this off only hides the history from
+ * the public page; nothing is deleted, and the dashboard's own version
+ * history (getDppVersionsAction) is unaffected.
+ */
+export async function updateDppVersionHistoryVisibilityAction(showDppVersionHistory: boolean) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const companyId = await getUserCompanyId(session.user.id);
+  if (!companyId) return { error: "No company found for user" };
+
+  try {
+    await prisma.company.update({ where: { id: companyId }, data: { showDppVersionHistory } });
+    return { success: true, showDppVersionHistory };
   } catch (error: any) {
     return { error: error.message };
   }

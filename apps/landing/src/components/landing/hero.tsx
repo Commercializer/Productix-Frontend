@@ -1,7 +1,8 @@
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 
 import { HeroScene } from "./hero-scene";
+import { Reveal } from "./reveal";
 import { WordCycle } from "./word-cycle";
 
 export function Hero() {
@@ -40,7 +41,32 @@ export function Hero() {
           </div>
         </div>
 
-        <HeroScene />
+        <div className="relative">
+          <HeroScene />
+
+          <Reveal
+            delay={550}
+            className="pointer-events-none absolute -bottom-10 -left-8 z-10 hidden w-59 lg:block"
+          >
+            <div className="glass-light rounded-2xl p-4">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-accent" />
+                <span className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-ink/50">
+                  Packaging compliance
+                </span>
+              </div>
+              <label className="mt-3 flex items-center gap-2.5">
+                <span className="inline-flex h-5 w-9 shrink-0 items-center rounded-full bg-accent">
+                  <span className="inline-block h-4 w-4 translate-x-4 rounded-full bg-white shadow-sm" />
+                </span>
+                <span className="text-[12px] leading-snug text-ink/80">
+                  I confirm that the total fluorine content of the packaging does not exceed the legal
+                  limit of 50&nbsp;ppm.
+                </span>
+              </label>
+            </div>
+          </Reveal>
+        </div>
       </div>
     </section>
   );

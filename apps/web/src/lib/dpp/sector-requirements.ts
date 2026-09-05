@@ -58,6 +58,15 @@ export type RequirementFieldType =
 
 export type ConditionRule = { field: string; equals: string | boolean };
 
+/** One bullet in an info-banner's `items` list - usually just static text,
+ * but a banner can mix in a line whose wording itself depends on a sibling
+ * field's answer (e.g. Packaging's combined substance-status banner: its
+ * "SVHC: ..." line reads "None above 0.1% (1000 ppm)" while the SVHC confirm
+ * checkbox is checked, or "-" once it's unchecked and a real substance is
+ * being disclosed elsewhere on the same tab) - see resolveCalloutItemText in
+ * dpp-sections.ts. */
+export type RequirementCalloutItem = string | { field: string; equals: string | boolean; whenTrue: string; whenFalse: string };
+
 export interface RequirementField {
   text: string;
   required: boolean;
@@ -80,7 +89,7 @@ export interface RequirementField {
    * schema (e.g. Food's QUID "Ingredient"/"%" rows), distinct from the
    * subtitle-delimited repeatable tables splitBySubtitle already finds -
    * see extractCustomRowsBlocks in dpp-sections.ts. */
-  rowFields?: { text: string; required: boolean }[];
+  rowFields?: { text: string; required: boolean; type?: RequirementFieldType; options?: string[]; placeholder?: string }[];
   /** A callout box (component: "info_banner", or type: "info-banner") - see
    * isCalloutField/toCallout below. `variant` picks the color; either a
    * plain `text` or a `title` + bullet `items` list, depending on which
@@ -88,7 +97,7 @@ export interface RequirementField {
   component?: string;
   variant?: "success" | "warning" | "danger" | "neutral";
   title?: string;
-  items?: string[];
+  items?: RequirementCalloutItem[];
   /** Show this field only when `field` (matched against its sibling's own
    * `text`) currently holds `equals` - e.g. Packaging's "Producer product
    * page URL" only when "Redirect to producer's product page" is Yes. See
@@ -209,11 +218,30 @@ export interface RequirementCallout {
   variant: "success" | "warning" | "danger" | "neutral";
   text?: string;
   title?: string;
-  items?: string[];
+  items?: RequirementCalloutItem[];
+  /** Show this banner only while `field` currently holds `equals` - e.g.
+   * Packaging's "declared under the legal limits" summary, conditional on
+   * its confirm checkbox being checked. Carried straight from the source
+   * field's own `conditional` - see isCalloutVisible in dpp-sections.ts. A
+   * callout with no `conditional` is always visible (every pre-existing
+   * banner). */
+  conditional?: ConditionRule;
+  /** How many of this segment's real fields came before this banner in the
+   * JSON (e.g. Packaging's fluorine confirm checkbox, which sits above its
+   * own "declared under the legal limits" banner) - see splitBySubtitle.
+   * Every other banner in the spreadsheet is the first thing in its segment,
+   * so this is 0 (render before all fields) almost everywhere. */
+  afterFieldCount?: number;
 }
 
 export function toCallout(field: RequirementField): RequirementCallout {
-  return { variant: field.variant ?? "neutral", text: field.text || undefined, title: field.title, items: field.items };
+  return {
+    variant: field.variant ?? "neutral",
+    text: field.text || undefined,
+    title: field.title,
+    items: field.items,
+    conditional: field.conditional,
+  };
 }
 
 export function getCallouts(fields: RequirementField[]): RequirementCallout[] {
@@ -260,7 +288,8 @@ export function splitBySubtitle(fields: RequirementField[]): { label: string; fi
     if (field.type === "subtitle") {
       segments.push({ label: field.text, fields: [], callouts: [] });
     } else if (isCalloutField(field)) {
-      segments.at(-1)!.callouts.push(toCallout(field));
+      const segment = segments.at(-1)!;
+      segment.callouts.push({ ...toCallout(field), afterFieldCount: segment.fields.length });
     } else if (isAnswerableField(field)) {
       segments.at(-1)!.fields.push(field);
     }

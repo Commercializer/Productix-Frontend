@@ -191,6 +191,7 @@ model User {
   // Activity
   feedbackResponses FeedbackResponse[]
   profileVersions   ProductProfileVersion[]
+  dppVersions       ProductDppVersion[]
   mediaAssets       MediaAsset[]
 
   @@map("users")
@@ -245,27 +246,31 @@ model TenantAdmin {
 
 /// Companies belong to a Tenant and contain Brand Profiles & Products.
 model Company {
-  id                   String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  tenantId             String             @map("tenant_id") @db.Uuid
-  name                 String             @db.VarChar(255)
-  email                String             @db.VarChar(255)
-  businessUsername     String             @map("business_username") @db.VarChar(255)
-  customDomain         String?            @map("custom_domain") @db.VarChar(255)
-  logoUrl              String?            @map("logo_url") @db.VarChar(500)
-  maximumBrandProfiles Int                @default(3) @map("maximum_brand_profiles")
-  maximumProducts      Int                @default(20) @map("maximum_products")
-  companyWebsiteUrl    String?            @map("company_website_url") @db.VarChar(500)
-  subscriptionPlan     SubscriptionPlan   @default(FREE) @map("subscription_plan")
-  subscriptionStatus   SubscriptionStatus @default(ACTIVE) @map("subscription_status")
-  maximumUsers         Int                @default(3) @map("maximum_users")
-  subscriptionAmount   Decimal?           @map("subscription_amount") @db.Decimal(10, 2)
-  isActive             Boolean            @default(true) @map("is_active")
+  id                    String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId              String             @map("tenant_id") @db.Uuid
+  name                  String             @db.VarChar(255)
+  email                 String             @db.VarChar(255)
+  businessUsername      String             @map("business_username") @db.VarChar(255)
+  customDomain          String?            @map("custom_domain") @db.VarChar(255)
+  logoUrl               String?            @map("logo_url") @db.VarChar(500)
+  maximumBrandProfiles  Int                @default(3) @map("maximum_brand_profiles")
+  maximumProducts       Int                @default(20) @map("maximum_products")
+  companyWebsiteUrl     String?            @map("company_website_url") @db.VarChar(500)
+  subscriptionPlan      SubscriptionPlan   @default(FREE) @map("subscription_plan")
+  subscriptionStatus    SubscriptionStatus @default(ACTIVE) @map("subscription_status")
+  maximumUsers          Int                @default(3) @map("maximum_users")
+  subscriptionAmount    Decimal?           @map("subscription_amount") @db.Decimal(10, 2)
+  isActive              Boolean            @default(true) @map("is_active")
   /// When true, product creation and publishing are blocked unless the
   /// product has at least a check-digit-valid GTIN. See GtinPolicyCard /
   /// updateGtinPolicyAction.
-  requireValidGtin     Boolean            @default(false) @map("require_valid_gtin")
-  createdAt            DateTime           @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt            DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  requireValidGtin      Boolean            @default(false) @map("require_valid_gtin")
+  /// When true, the DPP version history (version numbers, dates, change
+  /// summaries, and past snapshots) is visible on the public passport page
+  /// (/01/{gtin}) for this company's products. See getPublicDppVersionsAction.
+  showDppVersionHistory Boolean            @default(true) @map("show_dpp_version_history")
+  createdAt             DateTime           @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   tenant            Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -425,37 +430,37 @@ model SubCategory {
 
 /// Core product entity - belongs to a company, optionally under a brand profile.
 model Product {
-  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  brandProfileId      String?  @map("brand_profile_id") @db.Uuid
-  companyId           String   @map("company_id") @db.Uuid
-  categoryId          String?  @map("category_id") @db.Uuid
-  subCategoryId       String?  @map("sub_category_id") @db.Uuid
-  defaultLanguageCode String   @default("en") @map("default_language_code") @db.VarChar(10)
+  id                  String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  brandProfileId      String?               @map("brand_profile_id") @db.Uuid
+  companyId           String                @map("company_id") @db.Uuid
+  categoryId          String?               @map("category_id") @db.Uuid
+  subCategoryId       String?               @map("sub_category_id") @db.Uuid
+  defaultLanguageCode String                @default("en") @map("default_language_code") @db.VarChar(10)
   /// 8-char shareable code used in QR / share links (e.g. /p/a8f3kq7m).
-  shortCode           String?  @unique @map("short_code") @db.VarChar(8)
+  shortCode           String?               @unique @map("short_code") @db.VarChar(8)
   /// When true, visitors landing via shortCode are redirected to the slug URL.
-  slugVisible         Boolean  @default(true) @map("slug_visible")
-  isActive            Boolean  @default(true) @map("is_active")
+  slugVisible         Boolean               @default(true) @map("slug_visible")
+  isActive            Boolean               @default(true) @map("is_active")
   /// Canonical 14-digit, zero-padded GTIN (GS1 Application Identifier 01
   /// value). Set once at creation and immutable thereafter - see
   /// GS1_DIGITAL_LINK_ROADMAP.md for the rationale.
-  gtin                String?  @unique @db.VarChar(14)
+  gtin                String?               @unique @db.VarChar(14)
   /// Local check-digit + external GS1-API verification result. Drives the
   /// "Verified by GS1" vs "Valid GTIN format" badge everywhere.
   gtinStatus          Gs1VerificationStatus @default(UNVERIFIED) @map("gtin_status")
   /// Timestamp of the last verifyGtinAction attempt (success or failure).
-  gtinVerifiedAt      DateTime? @map("gtin_verified_at") @db.Timestamptz
+  gtinVerifiedAt      DateTime?             @map("gtin_verified_at") @db.Timestamptz
   /// Raw data returned by the external GS1 verification API at the moment
   /// gtinStatus was set to GS1_VERIFIED (null otherwise). Persisted so the
   /// "view GTIN details" UI never has to re-hit the external API - it's a
   /// point-in-time snapshot, not a live lookup.
-  gtinData            Json?     @map("gtin_data")
+  gtinData            Json?                 @map("gtin_data")
   /// What /01/{gtin} shows to visitors - see DppDisplayMode doc comment.
   /// BOTH degrades gracefully per-side (e.g. shows DPP alone if the showcase
   /// isn't published yet); GS1/DPP are hard restrictions to that one side.
-  dppDisplayMode      DppDisplayMode @default(BOTH) @map("dpp_display_mode")
-  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt           DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  dppDisplayMode      DppDisplayMode        @default(BOTH) @map("dpp_display_mode")
+  createdAt           DateTime              @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime              @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   brandProfile      BrandProfile?     @relation(fields: [brandProfileId], references: [id], onDelete: SetNull)
@@ -484,11 +489,11 @@ model ProductDpp {
   id        String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   productId String @unique @map("product_id") @db.Uuid
 
-  identifierType DppIdentifierType @map("identifier_type")
+  identifierType  DppIdentifierType @map("identifier_type")
   /// Raw value for non-GTIN schemes. NULL when identifierType is GS1_GTIN -
   /// Product.gtin is the sole source of truth in that case, so there's no
   /// duplicate copy that can drift out of sync on re-verification.
-  identifierValue String? @map("identifier_value") @db.VarChar(255)
+  identifierValue String?           @map("identifier_value") @db.VarChar(255)
 
   sector DppSector?
 
@@ -503,9 +508,55 @@ model ProductDpp {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product  Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+  versions ProductDppVersion[]
 
   @@map("product_dpp")
+}
+
+/// Immutable point-in-time snapshot of a ProductDpp, captured every time the
+/// passport is published/updated (see createProductDppAction) or restored (see
+/// restoreDppVersionAction) - the audit trail required by the DPP versioning
+/// spec. Unlike ProductProfileVersion, rows here are never pruned and no code
+/// path ever updates or deletes an existing row - once written, a version is
+/// permanent (application-level enforcement; see restoreDppVersionAction's doc
+/// comment for why a DB-level trigger wasn't used).
+model ProductDppVersion {
+  id            String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  dppId         String  @map("dpp_id") @db.Uuid
+  userId        String? @map("user_id") @db.Uuid
+  /// Sequential per-DPP version number, starting at 1. Stable identifier for
+  /// restore/lookup and for the "unique version number" shown to users.
+  versionNumber Int     @map("version_number")
+
+  /// Full snapshot of the DPP as of this version - same shape as ProductDpp's
+  /// own identity/content columns.
+  identifierType  DppIdentifierType @map("identifier_type")
+  identifierValue String?           @map("identifier_value") @db.VarChar(255)
+  sector          DppSector?
+  sectionAnswers  Json?             @map("section_answers")
+
+  /// "publish" (created via the normal save flow) | "restore" (copied back
+  /// from an earlier version - see restoreDppVersionAction).
+  reason              String  @default("publish") @db.VarChar(16)
+  /// Human-readable one-line summary of what changed vs the previous version.
+  summary             String? @db.VarChar(600)
+  /// Structured added/modified/removed field diff vs the previous version -
+  /// see diffDppFields. Powers the "detailed record of all changes" and
+  /// "previous/new values" requirements without recomputing on every read.
+  changeDetail        Json?   @map("change_detail")
+  /// Set only when reason = "restore": the version number this one was
+  /// restored from.
+  restoredFromVersion Int?    @map("restored_from_version")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  dpp  ProductDpp @relation(fields: [dppId], references: [id], onDelete: Cascade)
+  user User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@unique([dppId, versionNumber])
+  @@index([dppId, createdAt])
+  @@map("product_dpp_versions")
 }
 
 /// Localized product profile - one per language per product.

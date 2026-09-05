@@ -10,7 +10,13 @@
 // consumers (retailer apps, future resolvers), not just a human landing page.
 import { cache } from "react";
 import type { Metadata, Viewport } from "next";
-import { getPublicPageByGtinAction, getPublicDppByGtinAction, getPublicDppDisplayModeAction } from "@/lib/dashboard/actions";
+import {
+  getPublicPageByGtinAction,
+  getPublicDppByGtinAction,
+  getPublicDppDisplayModeAction,
+  getPublicDppVersionsAction,
+  getPublicDppVersionContentAction,
+} from "@/lib/dashboard/actions";
 import {
   buildPublicMetadataFromPage,
   renderResolvedPage,
@@ -44,6 +50,12 @@ const getDisplayModeByGtin = cache(async (rawGtin: string) => {
   const gtin = parseGtinPathSegment(rawGtin);
   if (!gtin) return null;
   return getPublicDppDisplayModeAction(gtin);
+});
+
+const getDppVersionsByGtin = cache(async (rawGtin: string) => {
+  const gtin = parseGtinPathSegment(rawGtin);
+  if (!gtin) return { visible: false, versions: [] };
+  return getPublicDppVersionsAction(gtin);
 });
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -96,10 +108,11 @@ export default async function GtinDigitalLinkPage({ params, searchParams }: Page
   // it isn't a stored field, just context the passport shows back to the scanner.
   const batch = typeof sp.batch === "string" ? sp.batch : null;
 
-  const [page, dpp, mode] = await Promise.all([
+  const [page, dpp, mode, dppVersions] = await Promise.all([
     getPageByGtin(rawGtin),
     getDppByGtin(rawGtin),
     getDisplayModeByGtin(rawGtin),
+    getDppVersionsByGtin(rawGtin),
   ]);
 
   // The saved per-product setting (see DppDisplayMode) - GS1/DPP are hard
@@ -112,10 +125,28 @@ export default async function GtinDigitalLinkPage({ params, searchParams }: Page
 
   if (!showGs1 && !showDpp) return <NotFoundView />;
 
-  if (showDpp && !showGs1) return <DppPassportView data={dpp!} batch={batch} />;
+  // "?version=N" - view a historical DPP snapshot in place, per the public
+  // version-history requirement. Falls back to the live data if the version
+  // doesn't exist or the company has version history turned off.
+  const versionParam = typeof sp.version === "string" ? Number(sp.version) : null;
+  const viewingVersion =
+    showDpp && versionParam && Number.isInteger(versionParam) && dppVersions.visible ? versionParam : null;
+  const dppData =
+    viewingVersion != null ? (await getPublicDppVersionContentAction(rawGtin, viewingVersion)) ?? dpp : dpp;
+  const dppVersionsList = dppVersions.visible ? dppVersions.versions : undefined;
+
+  if (showDpp && !showGs1) {
+    return <DppPassportView data={dppData!} batch={batch} versions={dppVersionsList} viewingVersion={viewingVersion} />;
+  }
 
   const gs1Content = await renderResolvedPage(page, "GS1", "01", channel, serializeSearch(sp), true);
   if (!showDpp) return gs1Content;
 
-  return <GtinModeSwitcher gs1={gs1Content} dpp={<DppPassportView data={dpp!} batch={batch} />} defaultMode="gs1" />;
+  return (
+    <GtinModeSwitcher
+      gs1={gs1Content}
+      dpp={<DppPassportView data={dppData!} batch={batch} versions={dppVersionsList} viewingVersion={viewingVersion} />}
+      defaultMode="gs1"
+    />
+  );
 }

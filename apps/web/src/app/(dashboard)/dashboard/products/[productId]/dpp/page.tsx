@@ -49,6 +49,7 @@ import { IconSelect, type IconSelectOption } from "@/components/dashboard/icon-s
 import { SearchableSelect } from "@/components/dashboard/searchable-select";
 import { ProductGallery } from "@/components/dashboard/product-gallery";
 import { PackagingLayersPanel } from "@/components/dashboard/packaging-layers-panel";
+import { DppVersionHistoryModal } from "@/components/dashboard/dpp-version-history-modal";
 import { RepeatableRowsPanel } from "@/components/dashboard/repeatable-rows-panel";
 import { trimFieldLabel, isLongTextField, isFullWidthField, type DppSectionField } from "@/lib/dpp/sector-sections";
 import {
@@ -58,7 +59,11 @@ import {
   isFieldVisible,
   isFieldRequired,
   isFieldDisabled,
+  isBlockVisible,
+  isCalloutVisible,
+  resolveCalloutItemText,
   type DppSectionSpec,
+  type DppFieldGroup,
   type RequirementCallout,
 } from "@/lib/dpp/dpp-sections";
 import { COUNTRY_OPTIONS } from "@/lib/dpp/countries";
@@ -135,6 +140,25 @@ type SidebarItem =
 
 function flattenFields(spec: { fields?: DppSectionField[]; groups?: { fields: DppSectionField[] }[] }): DppSectionField[] {
   return spec.fields ?? spec.groups?.flatMap((g) => g.fields) ?? [];
+}
+
+/** Folds consecutive sector sub-sections that are both about "Substances"
+ * (e.g. Packaging's "Substances (PPWR Art 5)" flat fields followed by its
+ * "Substances of concern (SVHC)" repeatable table) into one sidebar tab -
+ * matching the reference editor's single "§N Substances" page instead of two
+ * separate ones. Every other sub-section stays its own tab, one group each. */
+function mergeRelatedSectorGroups(groups: DppFieldGroup[]): DppFieldGroup[][] {
+  const tabs: DppFieldGroup[][] = [];
+  for (const g of groups) {
+    const prevTab = tabs.at(-1);
+    const isSubstances = /substances/i.test(g.label);
+    if (isSubstances && prevTab && /substances/i.test(prevTab[0]!.label)) {
+      prevTab.push(g);
+    } else {
+      tabs.push([g]);
+    }
+  }
+  return tabs;
 }
 
 /** Sector sub-section labels are "§3 Critical Raw Materials (...)" - fine as
@@ -291,14 +315,36 @@ function DppFieldInput({
   const wasTrimmed = label !== field.text;
   const isRequired = required ?? field.required;
 
+  // A toggle/checkbox reads naturally as "[tick] label" on one line (e.g. a
+  // PPWR "I confirm that..." declaration) - every other field keeps the
+  // label-above-control layout below.
+  if (field.type === "toggle") {
+    return (
+      <div className={className}>
+        <label className="flex items-start gap-2 text-[12px] font-medium text-(--ds-text-primary)">
+          <span className="shrink-0 mt-0.5">
+            <ToggleFieldInput value={value} onChange={onChange} />
+          </span>
+          <span>
+            {label} {isRequired && <span className="text-red-400">*</span>}
+          </span>
+        </label>
+        {field.helperText && (
+          <p className={`mt-1 text-[11px] ${field.helperTextStyle === "lite" ? "text-(--ds-text-muted)/70" : "text-(--ds-text-muted)"}`}>
+            {field.helperText}
+          </p>
+        )}
+        {wasTrimmed && <p className="mt-1 text-[11px] text-(--ds-text-muted)">{field.text}</p>}
+      </div>
+    );
+  }
+
   return (
     <div className={className}>
       <label className="block text-[12px] font-medium text-(--ds-text-primary) mb-1">
         {label} {isRequired && <span className="text-red-400">*</span>}
       </label>
-      {field.type === "toggle" ? (
-        <ToggleFieldInput value={value} onChange={onChange} />
-      ) : field.type === "select" ? (
+      {field.type === "select" ? (
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -401,15 +447,15 @@ const CALLOUT_STYLE: Record<RequirementCallout["variant"], string> = {
  * `component: "info_banner"`/`type: "info-banner"` fields, which carry
  * nothing for the producer to answer (see isCalloutField in
  * sector-requirements.ts) but are still real content worth showing. */
-function InfoBanner({ callout }: { callout: RequirementCallout }) {
+function InfoBanner({ callout, answers }: { callout: RequirementCallout; answers: Record<string, string> }) {
   return (
     <div className={`rounded-xl border px-4 py-3 text-[12px] leading-relaxed ${CALLOUT_STYLE[callout.variant]}`}>
       {callout.title && <p className="font-semibold">{callout.title}</p>}
       {callout.text && <p className={callout.title ? "mt-1" : undefined}>{callout.text}</p>}
       {callout.items && callout.items.length > 0 && (
         <ul className="mt-1 list-disc list-inside space-y-0.5">
-          {callout.items.map((item) => (
-            <li key={item}>{item}</li>
+          {callout.items.map((item, i) => (
+            <li key={i}>{resolveCalloutItemText(item, answers)}</li>
           ))}
         </ul>
       )}
@@ -417,12 +463,13 @@ function InfoBanner({ callout }: { callout: RequirementCallout }) {
   );
 }
 
-function CalloutList({ callouts }: { callouts?: RequirementCallout[] }) {
-  if (!callouts || callouts.length === 0) return null;
+function CalloutList({ callouts, answers }: { callouts?: RequirementCallout[]; answers?: Record<string, string> }) {
+  const visible = callouts?.filter((c) => isCalloutVisible(c, answers ?? {}));
+  if (!visible || visible.length === 0) return null;
   return (
     <div className="space-y-2">
-      {callouts.map((c, i) => (
-        <InfoBanner key={i} callout={c} />
+      {visible.map((c, i) => (
+        <InfoBanner key={i} callout={c} answers={answers ?? {}} />
       ))}
     </div>
   );
@@ -462,6 +509,7 @@ export default function ProductDppPage({ params }: PageProps) {
   // collapsed by default; clicking the sector's own row reveals them (see
   // sidebarItems / the sidebar's onClick below).
   const [sectorGroupOpen, setSectorGroupOpen] = useState(false);
+  const [showVersionHistory, setShowVersionHistory] = useState(false);
 
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -586,20 +634,43 @@ export default function ProductDppPage({ params }: PageProps) {
       if (spec.key === "sector" && spec.groups && spec.groups.length > 0) {
         items.push({ key: "sector", kind: "sector-parent", title: spec.title });
         if (sectorGroupOpen) {
-          spec.groups.forEach((g, i) => {
+          mergeRelatedSectorGroups(spec.groups).forEach((tab, i) => {
+            const [first] = tab;
+            // A merged tab's sidebar row drops the trailing citation (e.g.
+            // "Substances (PPWR Art 5)" -> "Substances") since it no longer
+            // names just the first sub-group - the panel's own title keeps
+            // the full text, matching the reference editor.
+            const sidebarLabel = tab.length > 1 ? first!.label.replace(/\s*\(.*\)\s*$/, "") : first!.label;
             items.push({
               key: `sector:${i}`,
               kind: "section",
-              spec: {
-                key: `sector:${i}`,
-                sidebarLabel: g.label,
-                icon: spec.icon,
-                title: g.label,
-                directive: spec.directive,
-                fields: g.fields,
-                repeatable: g.repeatable,
-                callouts: g.callouts,
-              },
+              spec:
+                tab.length > 1
+                  ? {
+                      key: `sector:${i}`,
+                      sidebarLabel,
+                      icon: spec.icon,
+                      title: first!.label,
+                      directive: spec.directive,
+                      groups: tab,
+                      // SectionPanel's groupsBlock only renders each group's
+                      // flat `fields`, not its own `repeatable` - hoist every
+                      // merged sub-group's table up to the panel's own
+                      // `repeatable` (same as the single-group branch below
+                      // already does) so e.g. SVHC's substance table still
+                      // renders once folded into this combined tab.
+                      repeatable: tab.flatMap((g) => g.repeatable ?? []),
+                    }
+                  : {
+                      key: `sector:${i}`,
+                      sidebarLabel,
+                      icon: spec.icon,
+                      title: first!.label,
+                      directive: spec.directive,
+                      fields: first!.fields,
+                      repeatable: first!.repeatable,
+                      callouts: first!.callouts,
+                    },
               answersKey: "sector",
             });
           });
@@ -737,6 +808,14 @@ export default function ProductDppPage({ params }: PageProps) {
             <Package size={18} />
           </span>
           <h1 className="text-xl font-bold tracking-tight text-(--ds-text-primary) flex-1">Digital Product Passport</h1>
+          <button
+            type="button"
+            onClick={() => setShowVersionHistory(true)}
+            className="flex items-center gap-1.5 rounded-lg border border-(--ds-border) px-2.5 py-1.5 text-[12px] font-medium text-(--ds-text-primary) transition-colors hover:bg-(--ds-surface-2) shrink-0"
+          >
+            <History size={14} />
+            Version history
+          </button>
           <label className="flex items-center gap-2 text-[12px] text-(--ds-text-secondary) cursor-pointer select-none shrink-0">
             Show optional fields
             <span
@@ -1033,6 +1112,13 @@ export default function ProductDppPage({ params }: PageProps) {
           </div>
         </form>
       </section>
+      {showVersionHistory && (
+        <DppVersionHistoryModal
+          productId={productId}
+          onClose={() => setShowVersionHistory(false)}
+          onRestored={() => window.location.reload()}
+        />
+      )}
     </div>
   );
 }
@@ -1108,28 +1194,46 @@ function SectionPanel({
   const skipManufacturerCountry = new Set(extraFieldsBefore ? ["Manufacturer country"] : []);
 
   const groupsBlock = spec.groups ? (
-    spec.groups.map((group) => (
-      <div key={group.label} className="space-y-3">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-(--ds-text-muted)">{group.label}</p>
-        <CalloutList callouts={group.callouts} />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {group.label === "Manufacturer" && extraFieldsBefore}
-          {renderFields(group.fields, group.label === "Manufacturer" ? skipManufacturerCountry : undefined)}
+    spec.groups.map((group) => {
+      // A group's own banner is almost always the first thing in its
+      // segment (afterFieldCount 0), rendered before every field exactly as
+      // before - but e.g. Packaging's fluorine confirm checkbox sits above
+      // its "declared under the legal limits" banner in the source
+      // spreadsheet, so split the fields around the banner's own position
+      // instead of always rendering it first. See splitBySubtitle's
+      // afterFieldCount.
+      const splitAt = group.callouts?.[0]?.afterFieldCount ?? 0;
+      const before = group.fields.slice(0, splitAt);
+      const after = group.fields.slice(splitAt);
+      return (
+        <div key={group.label} className="space-y-3">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-(--ds-text-muted)">{group.label}</p>
+          {before.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {group.label === "Manufacturer" && extraFieldsBefore}
+              {renderFields(before, group.label === "Manufacturer" ? skipManufacturerCountry : undefined)}
+            </div>
+          )}
+          <CalloutList callouts={group.callouts} answers={answers} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {before.length === 0 && group.label === "Manufacturer" && extraFieldsBefore}
+            {renderFields(after, before.length === 0 && group.label === "Manufacturer" ? skipManufacturerCountry : undefined)}
+          </div>
         </div>
-      </div>
-    ))
+      );
+    })
   ) : spec.fields ? (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{renderFields(spec.fields)}</div>
   ) : null;
 
-  const repeatableBlock = spec.repeatable?.map((block) => (
+  const repeatableBlock = spec.repeatable?.filter((block) => isBlockVisible(block, answers)).map((block) => (
     <div key={block.key} className="space-y-3">
       {block.label && (
         <p className="text-[11px] font-semibold uppercase tracking-wide text-(--ds-text-muted)">{block.label}</p>
       )}
       {block.explainerText && <p className="text-[12px] text-(--ds-text-muted)">{block.explainerText}</p>}
       {block.explainerText2 && <p className="text-[12px] text-(--ds-text-muted)">{block.explainerText2}</p>}
-      <CalloutList callouts={block.callouts} />
+      <CalloutList callouts={block.callouts} answers={answers} />
       <RepeatableRowsPanel
         fields={block.fields}
         rows={rows[block.key] ?? []}
@@ -1147,7 +1251,7 @@ function SectionPanel({
   return (
     <div className="space-y-6">
       <SectionHeading title={spec.title} directive={spec.directive} />
-      <CalloutList callouts={spec.callouts} />
+      <CalloutList callouts={spec.callouts} answers={answers} />
 
       {spec.key === "substances" ? (
         <>

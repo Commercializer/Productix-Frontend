@@ -8,10 +8,11 @@ import {
   splitBySubtitle,
   type RequirementField,
   type RequirementCallout,
+  type RequirementCalloutItem,
 } from "./sector-requirements";
 import { toRowFieldDefs, pruneRows, slugifyFieldKey, type Row, type RowFieldDef } from "./repeatable-rows";
 
-export type { DppSectionField, RequirementCallout };
+export type { DppSectionField, RequirementCallout, RequirementCalloutItem };
 
 export interface DppFieldGroup {
   label: string;
@@ -52,6 +53,13 @@ export interface DppRepeatableBlock {
    * Substances' SVHC "Mandatory declaration threshold..." banner) - see
    * splitBySubtitle. Rendered above the table. */
   callouts?: RequirementCallout[];
+  /** Show this whole table only when `field` (matched against its sibling's
+   * own text) currently holds `equals` - e.g. Packaging's SVHC substance
+   * table, conditional on its own confirm checkbox being unchecked. Carried
+   * through from the source `type: "custom-rows"` field's own `conditional`
+   * - see extractCustomRowsBlocks. A block with no `conditional` is always
+   * visible, matching every pre-existing repeatable block. */
+  conditional?: DppConditionRule;
 }
 
 export interface DppSectionSpec {
@@ -153,14 +161,25 @@ function toDppField(f: RequirementField): DppSectionField {
   };
 }
 
-/** `equals: true`/`false` maps onto the "Yes"/"No" strings every toggle/
- * checkbox field actually stores its answer as (see toDppFieldType) - a
- * plain select/text field's rule compares its literal string value instead. */
+/** `equals: true`/`false` targets a toggle/checkbox field (see
+ * toDppFieldType), which only ever really has two states - checked or not -
+ * even though a never-touched one has no stored answer yet. Comparing the
+ * raw stored string against the literal "Yes"/"No" would make an untouched
+ * field match `equals: true` correctly (unanswered ≠ "Yes", hidden - the
+ * toggle also renders "off" by default, so this is consistent) but NOT
+ * `equals: false` (unanswered ≠ "No" either, so it'd also hide - even though
+ * the toggle's default "off" visual state is exactly what `equals: false`
+ * means). That mismatch was Packaging's SVHC/fluorine tables staying hidden
+ * on first load and only appearing after toggling the checkbox twice. Coerce
+ * to a real boolean first (unanswered/anything-but-"Yes" reads as false, same
+ * as the toggle's own default) so both directions agree with what's on
+ * screen. A plain select/text field's rule still compares its literal string
+ * value, unaffected. */
 function matchesCondition(rule: DppConditionRule | undefined, answers: Record<string, string>): boolean {
   if (!rule) return true;
   const actual = answers[rule.field] ?? "";
-  const expected = rule.equals === true ? "Yes" : rule.equals === false ? "No" : rule.equals;
-  return actual === expected;
+  if (typeof rule.equals === "boolean") return (actual === "Yes") === rule.equals;
+  return actual === rule.equals;
 }
 
 /** Whether `field` should render at all right now - false hides it entirely
@@ -183,6 +202,34 @@ export function isFieldRequired(field: DppSectionField, answers: Record<string, 
  * fields, disabled while "Food contact" is No - the limit doesn't apply). */
 export function isFieldDisabled(field: DppSectionField, answers: Record<string, string>): boolean {
   return !!field.disabledWhen && matchesCondition(field.disabledWhen, answers);
+}
+
+/** Whether a repeatable table should render at all right now - mirrors
+ * isFieldVisible for DppRepeatableBlock's own optional `conditional` (e.g.
+ * Packaging's SVHC substance table, conditional on its own confirm checkbox
+ * being unchecked). A block with no `conditional` is always visible. */
+export function isBlockVisible(block: DppRepeatableBlock, answers: Record<string, string>): boolean {
+  return matchesCondition(block.conditional, answers);
+}
+
+/** Whether a callout banner should render at all right now - mirrors
+ * isFieldVisible for RequirementCallout's own optional `conditional` (e.g.
+ * Packaging's "declared under the legal limits" summary, conditional on its
+ * confirm checkbox being checked). A callout with no `conditional` is always
+ * visible (every pre-existing banner). */
+export function isCalloutVisible(callout: RequirementCallout, answers: Record<string, string>): boolean {
+  return matchesCondition(callout.conditional as DppConditionRule | undefined, answers);
+}
+
+/** Resolves one banner bullet to its display text - a plain string passes
+ * through unchanged; a conditional item (e.g. Packaging's combined substance
+ * banner, whose "SVHC: ..." line depends on a *different* checkbox than the
+ * one gating the banner's own overall visibility - see isCalloutVisible)
+ * picks `whenTrue`/`whenFalse` the same way every other field/block
+ * conditional does. */
+export function resolveCalloutItemText(item: RequirementCalloutItem, answers: Record<string, string>): string {
+  if (typeof item === "string") return item;
+  return matchesCondition(item as DppConditionRule, answers) ? item.whenTrue : item.whenFalse;
 }
 
 function getFlatFields(sector: DppSector, jsonKey: string): DppSectionField[] | undefined {
@@ -266,6 +313,7 @@ function extractCustomRowsBlocks(raw: RequirementField[], segFields: Requirement
         fields: toRowFieldDefs(f.rowFields),
         addLabel: findAdjacentButtonLabel(raw, f) ?? "Add row",
         emptyLabel: "No entries added yet.",
+        conditional: f.conditional as DppConditionRule | undefined,
       });
     } else {
       flat.push(f);

@@ -18,6 +18,9 @@ export interface RowFieldDef {
   /** For "select": the fixed choices. For "checkbox": a multi-select group
    * (e.g. materials' Flags: CRM/Recycled) instead of a single Yes/No box. */
   options?: string[];
+  /** Example text shown in the empty input (e.g. SVHC's "DEHP", "117-81-7") -
+   * see RowFieldInput in repeatable-rows-panel.tsx. */
+  placeholder?: string;
 }
 
 export type Row = Record<string, string>;
@@ -46,6 +49,7 @@ export function toRowFieldDefs(fields: RequirementField[]): RowFieldDef[] {
     label: f.text,
     type: f.type === "toggle" || f.type === "select" || f.type === "checkbox" ? f.type : undefined,
     options: f.options,
+    placeholder: f.placeholder,
   }));
 }
 

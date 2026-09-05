@@ -10,6 +10,7 @@ import { getIdentificationExtraFields, getOrderedDppSections, type DppSectionFie
 import { DPP_SECTOR_LABELS, trimFieldLabel } from "@/lib/dpp/sector-sections";
 import type { PackagingLayer } from "@/lib/dpp/packaging-layers";
 import type { Row } from "@/lib/dpp/repeatable-rows";
+import type { PublicDppVersionSummary } from "@/lib/dashboard/actions";
 import { GalleryCarousel } from "./gallery-carousel";
 import { PackagingLayersView } from "./packaging-layers-view";
 import { RepeatableRowsView } from "./repeatable-rows-view";
@@ -167,7 +168,19 @@ function SectionCard({
   );
 }
 
-export function DppPassportView({ data, batch }: { data: PublicDppData; batch: string | null }) {
+export function DppPassportView({
+  data,
+  batch,
+  versions,
+  viewingVersion,
+}: {
+  data: PublicDppData;
+  batch: string | null;
+  /** Public version history list - omitted/empty when the owning company has it turned off. */
+  versions?: PublicDppVersionSummary[];
+  /** Set when rendering a past version's snapshot instead of the live passport. */
+  viewingVersion?: number | null;
+}) {
   const sections = [buildIdentificationSectionSpec(data.sector), ...getOrderedDppSections(data.sector)];
   const logoUrl = data.logoUrl || data.brand?.logoUrl || data.company.logoUrl;
   const isVerified = data.gtinStatus === "GS1_VERIFIED";
@@ -216,6 +229,32 @@ export function DppPassportView({ data, batch }: { data: PublicDppData; batch: s
             {data.sector && <span style={chipStyle}>{DPP_SECTOR_LABELS[data.sector]}</span>}
           </div>
         </div>
+
+        {viewingVersion != null && (
+          <div
+            style={{
+              background: "#fffbeb",
+              border: "1px solid #fde68a",
+              borderRadius: 12,
+              padding: "10px 16px",
+              marginBottom: 16,
+              fontSize: 12,
+              color: "#92400e",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 8,
+            }}
+          >
+            <span>Viewing version {viewingVersion} — historical data, not the current passport.</span>
+            <a
+              href={`/01/${data.gtin}`}
+              style={{ color: "#92400e", fontWeight: 600, textDecoration: "underline", whiteSpace: "nowrap" }}
+            >
+              Back to current
+            </a>
+          </div>
+        )}
 
         {/* Gallery */}
         <GalleryCarousel images={data.gallery} />
@@ -278,6 +317,54 @@ export function DppPassportView({ data, batch }: { data: PublicDppData; batch: s
             );
           })}
         </div>
+
+        {versions && versions.length > 0 && (
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: 16,
+              border: "1px solid #e2e8f0",
+              padding: 20,
+              marginTop: 10,
+            }}
+          >
+            <h2 style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", margin: "0 0 12px" }}>Version history</h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {versions.map((v, i) => (
+                <div
+                  key={v.versionNumber}
+                  style={{
+                    display: "flex",
+                    alignItems: "baseline",
+                    justifyContent: "space-between",
+                    gap: 10,
+                    fontSize: 12,
+                    borderBottom: i === versions.length - 1 ? "none" : "1px solid #f1f5f9",
+                    paddingBottom: 8,
+                  }}
+                >
+                  <div style={{ minWidth: 0 }}>
+                    <span style={{ fontWeight: 700, color: "#0f172a" }}>v{v.versionNumber}</span>
+                    <span style={{ color: "#94a3b8", marginLeft: 6 }}>{new Date(v.createdAt).toLocaleString()}</span>
+                    {v.summary && <div style={{ color: "#64748b", marginTop: 2 }}>{v.summary}</div>}
+                  </div>
+                  {v.versionNumber === viewingVersion ? (
+                    <span style={{ color: "#92400e", fontWeight: 600, whiteSpace: "nowrap" }}>Viewing</span>
+                  ) : i === 0 && viewingVersion == null ? (
+                    <span style={{ color: "#059669", fontWeight: 600, whiteSpace: "nowrap" }}>Current</span>
+                  ) : (
+                    <a
+                      href={`/01/${data.gtin}?version=${v.versionNumber}`}
+                      style={{ color: data.themeColor, fontWeight: 600, whiteSpace: "nowrap", textDecoration: "none" }}
+                    >
+                      View
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <footer style={{ marginTop: 32, textAlign: "center" }}>
           <p style={{ fontSize: 11, color: "#cbd5e1", margin: "0 0 8px" }}>

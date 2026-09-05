@@ -994,6 +994,11 @@ export function isLongTextField(field: LabeledField): boolean {
 export function isFullWidthField(field: LabeledField): boolean {
   if (field.type === "upload" || field.type === "url" || field.type === "tags") return true;
   if (isLongTextField(field)) return true;
+  // A toggle/checkbox with a long sentence-style label (e.g. a PPWR
+  // "I confirm that..." declaration) needs the same full-row treatment as a
+  // long plain-text field - isLongTextField only checks text-typed fields,
+  // since a toggle never becomes a textarea regardless of label length.
+  if (field.type === "toggle" && trimFieldLabel(field.text).length > 85) return true;
   if (!field.type || field.type === "text") return URL_LABEL_RE.test(trimFieldLabel(field.text));
   return false;
 }
