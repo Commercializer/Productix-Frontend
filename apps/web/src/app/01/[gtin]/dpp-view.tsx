@@ -14,6 +14,7 @@ import type { PublicDppVersionSummary } from "@/lib/dashboard/actions";
 import { GalleryCarousel } from "./gallery-carousel";
 import { PackagingLayersView } from "./packaging-layers-view";
 import { RepeatableRowsView } from "./repeatable-rows-view";
+import { DppLanguagePicker } from "./dpp-language-picker";
 
 export interface PublicDppData {
   productName: string;
@@ -31,6 +32,8 @@ export interface PublicDppData {
   // field map every other section uses - see packaging-layers.ts.
   sectionAnswers: Record<string, unknown>;
   gallery: { url: string; name: string }[];
+  /** Company-wide setting (Company.showDppTranslation) - see DppTranslationCard. */
+  translationEnabled: boolean;
 }
 
 /** "08523456790018" -> "0852 3456 7900 18" - purely cosmetic grouping. */
@@ -66,7 +69,11 @@ function FieldRow({ field, value }: { field: DppSectionField; value: string }) {
   return (
     <div style={{ padding: "10px 0", borderBottom: "1px solid #f1f5f9" }}>
       <dt style={{ fontSize: 12, color: "#64748b", margin: 0 }}>{trimFieldLabel(field.text)}</dt>
-      <dd style={{ fontSize: 14, color: "#0f172a", margin: "2px 0 0", fontWeight: 500, wordBreak: "break-word" }}>
+      <dd
+        className="notranslate"
+        translate="no"
+        style={{ fontSize: 14, color: "#0f172a", margin: "2px 0 0", fontWeight: 500, wordBreak: "break-word" }}
+      >
         {field.type === "upload" ? (
           <a href={value} target="_blank" rel="noopener noreferrer" style={{ color: "#0284c7", wordBreak: "break-word" }}>
             View document ↗
@@ -187,6 +194,7 @@ export function DppPassportView({
 
   return (
     <div style={{ minHeight: "100vh", background: "#f8fafc", fontFamily: "var(--font-sans)" }}>
+      {data.translationEnabled && <DppLanguagePicker />}
       <div style={{ maxWidth: 640, margin: "0 auto", padding: "32px 20px 56px" }}>
         {/* Header / identity */}
         <div
@@ -210,14 +218,20 @@ export function DppPassportView({
               style={{ width: 72, height: 72, objectFit: "contain", borderRadius: 16, margin: "0 auto 14px" }}
             />
           )}
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: "#0f172a", margin: "0 0 4px" }}>{data.productName}</h1>
-          {data.tagline && <p style={{ fontSize: 13, color: "#64748b", margin: "0 0 10px" }}>{data.tagline}</p>}
-          <p style={{ fontSize: 12, color: "#94a3b8", margin: "0 0 16px" }}>
+          <h1 className="notranslate" translate="no" style={{ fontSize: 22, fontWeight: 700, color: "#0f172a", margin: "0 0 4px" }}>
+            {data.productName}
+          </h1>
+          {data.tagline && (
+            <p className="notranslate" translate="no" style={{ fontSize: 13, color: "#64748b", margin: "0 0 10px" }}>
+              {data.tagline}
+            </p>
+          )}
+          <p className="notranslate" translate="no" style={{ fontSize: 12, color: "#94a3b8", margin: "0 0 16px" }}>
             {data.brand?.name ?? data.company.name}
           </p>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
-            <span style={chipStyle}>
+            <span className="notranslate" translate="no" style={chipStyle}>
               GTIN {formatGtinDisplay(data.gtin)}
             </span>
             {isVerified && (
@@ -225,7 +239,11 @@ export function DppPassportView({
                 ✓ Verified via GS1 Registry
               </span>
             )}
-            {batch && <span style={chipStyle}>Batch {batch}</span>}
+            {batch && (
+              <span style={chipStyle}>
+                Batch <span className="notranslate" translate="no">{batch}</span>
+              </span>
+            )}
             {data.sector && <span style={chipStyle}>{DPP_SECTOR_LABELS[data.sector]}</span>}
           </div>
         </div>
@@ -346,7 +364,11 @@ export function DppPassportView({
                   <div style={{ minWidth: 0 }}>
                     <span style={{ fontWeight: 700, color: "#0f172a" }}>v{v.versionNumber}</span>
                     <span style={{ color: "#94a3b8", marginLeft: 6 }}>{new Date(v.createdAt).toLocaleString()}</span>
-                    {v.summary && <div style={{ color: "#64748b", marginTop: 2 }}>{v.summary}</div>}
+                    {v.summary && (
+                      <div className="notranslate" translate="no" style={{ color: "#64748b", marginTop: 2 }}>
+                        {v.summary}
+                      </div>
+                    )}
                   </div>
                   {v.versionNumber === viewingVersion ? (
                     <span style={{ color: "#92400e", fontWeight: 600, whiteSpace: "nowrap" }}>Viewing</span>
@@ -368,7 +390,11 @@ export function DppPassportView({
 
         <footer style={{ marginTop: 32, textAlign: "center" }}>
           <p style={{ fontSize: 11, color: "#cbd5e1", margin: "0 0 8px" }}>
-            Passport data provided by {data.company.name}, per EU Regulation 2024/1781 (ESPR).
+            Passport data provided by{" "}
+            <span className="notranslate" translate="no">
+              {data.company.name}
+            </span>
+            , per EU Regulation 2024/1781 (ESPR).
           </p>
           <a
             href="/"

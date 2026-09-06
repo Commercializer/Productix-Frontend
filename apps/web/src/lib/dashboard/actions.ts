@@ -2390,7 +2390,7 @@ export async function getPublicDppByGtinAction(gtin: string) {
       gtinStatus: true,
       gtinVerifiedAt: true,
       dpp: true,
-      company: { select: { name: true, logoUrl: true } },
+      company: { select: { name: true, logoUrl: true, showDppTranslation: true } },
       brandProfile: { select: { brandName: true, brandLogoUrl: true, themeColor: true } },
       profiles: {
         select: { productName: true, tagline: true, logoUrl: true, themeColor: true },
@@ -2424,6 +2424,7 @@ export async function getPublicDppByGtinAction(gtin: string) {
     sector: product.dpp.sector,
     sectionAnswers: (product.dpp.sectionAnswers as Record<string, unknown> | null) ?? {},
     gallery: product.galleryImages,
+    translationEnabled: product.company.showDppTranslation,
   };
 }
 
@@ -3496,6 +3497,7 @@ export async function getCompanySettingsAction() {
         createdAt: company.createdAt.toISOString(),
         requireValidGtin: company.requireValidGtin,
         showDppVersionHistory: company.showDppVersionHistory,
+        showDppTranslation: company.showDppTranslation,
       }
     };
   } catch (error: any) {
@@ -3536,6 +3538,28 @@ export async function updateDppVersionHistoryVisibilityAction(showDppVersionHist
   try {
     await prisma.company.update({ where: { id: companyId }, data: { showDppVersionHistory } });
     return { success: true, showDppVersionHistory };
+  } catch (error: any) {
+    return { error: error.message };
+  }
+}
+
+/**
+ * Toggles whether the public passport page (/01/{gtin}) offers a language
+ * picker that machine-translates DPP terms (section titles, field labels,
+ * static copy) via Google Translate. Turning this off hides the picker
+ * entirely - see getPublicDppByGtinAction's translationEnabled flag, read by
+ * DppPassportView. Product/answer data is never translated either way.
+ */
+export async function updateDppTranslationVisibilityAction(showDppTranslation: boolean) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const companyId = await getUserCompanyId(session.user.id);
+  if (!companyId) return { error: "No company found for user" };
+
+  try {
+    await prisma.company.update({ where: { id: companyId }, data: { showDppTranslation } });
+    return { success: true, showDppTranslation };
   } catch (error: any) {
     return { error: error.message };
   }

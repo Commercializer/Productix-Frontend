@@ -7,6 +7,7 @@ import { ChangePasswordCard } from "@/components/dashboard/change-password-card"
 import { LinkTypesCard } from "@/components/dashboard/link-types-card";
 import { GtinPolicyCard } from "@/components/dashboard/gtin-policy-card";
 import { DppVersionHistoryCard } from "@/components/dashboard/dpp-version-history-card";
+import { DppTranslationCard } from "@/components/dashboard/dpp-translation-card";
 
 export default function SettingsPage() {
   const { settings, loading } = useSettings();
@@ -90,6 +91,8 @@ export default function SettingsPage() {
             <GtinPolicyCard />
 
             <DppVersionHistoryCard />
+
+            <DppTranslationCard />
 
             <ChangePasswordCard />
 

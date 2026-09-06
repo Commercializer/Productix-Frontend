@@ -269,6 +269,12 @@ model Company {
   /// summaries, and past snapshots) is visible on the public passport page
   /// (/01/{gtin}) for this company's products. See getPublicDppVersionsAction.
   showDppVersionHistory Boolean            @default(true) @map("show_dpp_version_history")
+  /// When true, the public passport page (/01/{gtin}) shows a language
+  /// picker that machine-translates DPP terms (section titles, field
+  /// labels, static copy) via Google Translate - never the underlying
+  /// product/answer data, which is always marked non-translatable. See
+  /// DppTranslationCard / updateDppTranslationVisibilityAction.
+  showDppTranslation    Boolean            @default(true) @map("show_dpp_translation")
   createdAt             DateTime           @default(now()) @map("created_at") @db.Timestamptz
   updatedAt             DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 

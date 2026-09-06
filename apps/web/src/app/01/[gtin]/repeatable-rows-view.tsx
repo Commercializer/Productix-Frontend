@@ -13,7 +13,11 @@ function FieldRow({ field, value }: { field: RowFieldDef; value: string }) {
   return (
     <div style={{ padding: "8px 0", borderBottom: "1px solid #f1f5f9" }}>
       <dt style={{ fontSize: 12, color: "#64748b", margin: 0 }}>{field.label}</dt>
-      <dd style={{ fontSize: 14, color: "#0f172a", margin: "2px 0 0", fontWeight: 500, wordBreak: "break-word" }}>
+      <dd
+        className="notranslate"
+        translate="no"
+        style={{ fontSize: 14, color: "#0f172a", margin: "2px 0 0", fontWeight: 500, wordBreak: "break-word" }}
+      >
         {field.type === "url" ? (
           <a href={value} target="_blank" rel="noopener noreferrer" style={{ color: "#0284c7", wordBreak: "break-word" }}>
             {value}

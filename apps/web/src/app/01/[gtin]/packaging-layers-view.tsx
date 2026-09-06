@@ -11,7 +11,13 @@ function Row({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ padding: "8px 0", borderBottom: "1px solid #f1f5f9" }}>
       <dt style={{ fontSize: 12, color: "#64748b", margin: 0 }}>{label}</dt>
-      <dd style={{ fontSize: 14, color: "#0f172a", margin: "2px 0 0", fontWeight: 500, wordBreak: "break-word" }}>{value}</dd>
+      <dd
+        className="notranslate"
+        translate="no"
+        style={{ fontSize: 14, color: "#0f172a", margin: "2px 0 0", fontWeight: 500, wordBreak: "break-word" }}
+      >
+        {value}
+      </dd>
     </div>
   );
 }
@@ -40,7 +46,7 @@ function LayerCard({ layer, index }: { layer: PackagingLayer; index: number }) {
 
   return (
     <div style={{ padding: "14px 0", borderTop: index > 0 ? "1px solid #f1f5f9" : undefined }}>
-      <p style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", margin: "0 0 6px" }}>
+      <p className="notranslate" translate="no" style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", margin: "0 0 6px" }}>
         {layer.label || `Layer ${index + 1}`}
       </p>
       <dl style={{ margin: 0 }}>
