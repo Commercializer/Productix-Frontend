@@ -69,21 +69,29 @@ function FieldRow({ field, value }: { field: DppSectionField; value: string }) {
   return (
     <div style={{ padding: "10px 0", borderBottom: "1px solid #f1f5f9" }}>
       <dt style={{ fontSize: 12, color: "#64748b", margin: 0 }}>{trimFieldLabel(field.text)}</dt>
-      <dd
-        className="notranslate"
-        translate="no"
-        style={{ fontSize: 14, color: "#0f172a", margin: "2px 0 0", fontWeight: 500, wordBreak: "break-word" }}
-      >
+      <dd style={{ fontSize: 14, color: "#0f172a", margin: "2px 0 0", fontWeight: 500, wordBreak: "break-word" }}>
         {field.type === "upload" ? (
+          // "View document ↗" is our own system-generated label, not user
+          // data - left translatable. Only the href (an attribute, never
+          // translated regardless) carries the actual uploaded file's data.
           <a href={value} target="_blank" rel="noopener noreferrer" style={{ color: "#0284c7", wordBreak: "break-word" }}>
             View document ↗
           </a>
         ) : field.type === "url" ? (
-          <a href={value} target="_blank" rel="noopener noreferrer" style={{ color: "#0284c7", wordBreak: "break-word" }}>
+          <a
+            href={value}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="notranslate"
+            translate="no"
+            style={{ color: "#0284c7", wordBreak: "break-word" }}
+          >
             {value}
           </a>
         ) : (
-          value
+          <span className="notranslate" translate="no">
+            {value}
+          </span>
         )}
       </dd>
     </div>
