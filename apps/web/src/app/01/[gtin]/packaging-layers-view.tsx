@@ -5,18 +5,42 @@
 // Server-rendered, same <details>/<summary> disclosure pattern as
 // SectionCard so it sits consistently among the other sections.
 import type { PackagingLayer } from "@/lib/dpp/packaging-layers";
+import { SectionChevron, SectionInfoIcon } from "./summary-chevron";
+
+/** PackagingLayer's fields aren't typed (unlike DppSectionField/RowFieldDef
+ * elsewhere), so a toggle-style field can't be detected up front - a value
+ * that's exactly "Yes"/"No" (this schema has no free-text field a producer
+ * could coincidentally type either into) gets the same dot treatment as the
+ * other sections' `type: "toggle"` fields instead. */
+function ToggleDot({ value }: { value: string }) {
+  return (
+    <span
+      aria-hidden
+      style={{ width: 7, height: 7, borderRadius: 999, flexShrink: 0, background: value.trim().toLowerCase() === "yes" ? "#059669" : "#94a3b8" }}
+    />
+  );
+}
 
 function Row({ label, value }: { label: string; value: string }) {
   if (!value.trim()) return null;
+  const normalized = value.trim().toLowerCase();
+  const isToggle = normalized === "yes" || normalized === "no";
   return (
-    <div style={{ padding: "8px 0", borderBottom: "1px solid #f1f5f9" }}>
-      <dt style={{ fontSize: 12, color: "#64748b", margin: 0 }}>{label}</dt>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 16, padding: "8px 0", borderBottom: "1px solid #f1f5f9" }}>
+      <dt style={{ fontSize: 12, color: "#64748b", margin: 0, flex: "0 1 auto", maxWidth: "45%" }}>{label}</dt>
       <dd
         className="notranslate"
         translate="no"
-        style={{ fontSize: 14, color: "#0f172a", margin: "2px 0 0", fontWeight: 500, wordBreak: "break-word" }}
+        style={{ fontSize: 13, color: "#0f172a", margin: 0, fontWeight: 600, flex: "1 1 auto", minWidth: 0, textAlign: "right", wordBreak: "break-word" }}
       >
-        {value}
+        {isToggle ? (
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6, justifyContent: "flex-end" }}>
+            <ToggleDot value={value} />
+            {value}
+          </span>
+        ) : (
+          value
+        )}
       </dd>
     </div>
   );
@@ -199,19 +223,35 @@ export function PackagingLayersView({
 
   return (
     <details
+      name="dpp-section"
       open={defaultOpen}
       style={{ background: "#fff", borderRadius: 14, border: "1px solid #e2e8f0", overflow: "hidden" }}
     >
       <summary
-        style={{ padding: "14px 18px", cursor: "pointer", fontSize: 14, fontWeight: 600, color: "#0f172a", listStyle: "none" }}
+        className="dpp-summary"
+        style={{
+          padding: "14px 18px",
+          cursor: "pointer",
+          fontSize: 14,
+          fontWeight: 600,
+          color: "#0f172a",
+          listStyle: "none",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 8,
+        }}
       >
-        {title}
+        <span style={{ flex: 1, minWidth: 0 }}>{title}</span>
+        <span style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+          <SectionInfoIcon directive={directive} />
+          <SectionChevron />
+        </span>
       </summary>
       <div style={{ padding: "0 18px 16px" }}>
         {layers.map((layer, i) => (
           <LayerCard key={layer.id} layer={layer} index={i} />
         ))}
-        <p style={{ fontSize: 11, color: "#cbd5e1", margin: "10px 0 0" }}>{directive}</p>
       </div>
     </details>
   );

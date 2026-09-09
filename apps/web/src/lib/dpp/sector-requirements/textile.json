@@ -130,7 +130,6 @@
     "product-specifications": {
       "label": "Product specifications",
       "explainerText": "Free-form textile specifications displayed on the public viewer. Examples: Material composition · Fabric type · Fabric weight · Fiber content · Recycled content · Fabric finish · Color · Size.",
-      "explainerText2": "Add the spec rows a consumer would care about. Up to 40 rows.",
       "explainerTextStyle": "lite",
       "maxRows": 40,
       "fields": [

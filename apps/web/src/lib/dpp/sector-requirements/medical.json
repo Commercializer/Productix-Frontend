@@ -88,7 +88,6 @@
     "product-specifications": {
       "label": "Product specifications",
       "explainerText": "Free-form medical product specifications displayed on the public viewer. Examples: Product type · Intended use · Active ingredient · Dosage form · Strength · Size / quantity · Route of administration · Sterility · Storage conditions · Shelf life · Regulatory classification.",
-      "explainerText2": "Add the spec rows a consumer would care about. Up to 40 rows.",
       "explainerTextStyle": "lite",
       "maxRows": 40,
       "fields": [

@@ -84,7 +84,6 @@
     "product-specifications": {
       "label": "Product specifications",
       "explainerText": "Free-form packaging specifications displayed on the public viewer. Examples: Packaging type · Material · Dimensions · Weight · Capacity · Recycled content · Recyclability · Barrier properties · Closure type · Food-contact suitability · Printing method.",
-      "explainerText2": "Add the spec rows a consumer would care about. Up to 40 rows.",
       "explainerTextStyle": "lite",
       "maxRows": 40,
       "fields": [

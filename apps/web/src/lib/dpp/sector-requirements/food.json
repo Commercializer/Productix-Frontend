@@ -84,7 +84,6 @@
     "product-specifications": {
       "label": "Product specifications",
       "explainerText": "Free-form commercial info shown on the public viewer. Examples: Volume · Flavour · Packaging format · Serving size · Country of origin.",
-      "explainerText2": "Add the spec rows a consumer would care about. Up to 40 rows.",
       "explainerTextStyle": "lite",
       "maxRows": 40,
       "fields": [

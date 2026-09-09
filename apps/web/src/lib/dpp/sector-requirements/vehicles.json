@@ -88,7 +88,6 @@
     "product-specifications": {
       "label": "Product specifications",
       "explainerText": "Free-form vehicle specifications displayed on the public viewer. Examples: Vehicle type · Make & model · Powertrain · Engine/motor capacity · Power output · Fuel/energy type · Battery capacity · Fuel consumption · CO₂ emissions · Vehicle weight · Dimensions · Seating capacity · Safety rating.",
-      "explainerText2": "Add the spec rows a consumer would care about. Up to 40 rows.",
       "explainerTextStyle": "lite",
       "maxRows": 40,
       "fields": [

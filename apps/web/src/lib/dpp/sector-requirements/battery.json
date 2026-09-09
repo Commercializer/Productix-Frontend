@@ -88,7 +88,6 @@
     "product-specifications": {
       "label": "Product specifications",
       "explainerText": "Free-form battery specifications displayed on the public viewer. Examples: Battery chemistry · Nominal voltage · Capacity · Energy capacity · Power output · Cycle life · Operating temperature · Battery type.",
-      "explainerText2": "Add the spec rows a consumer would care about. Up to 40 rows.",
       "explainerTextStyle": "lite",
       "maxRows": 40,
       "fields": [

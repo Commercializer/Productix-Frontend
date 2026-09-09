@@ -111,7 +111,7 @@ const SECTION_JSON_KEY: Record<string, string> = {
  * own `label` for that section instead of a second hand-typed copy. */
 const SECTION_CHROME: Record<string, { icon: string; directive: string }> = {
   manufacturer: { icon: "Building2", directive: "EU Regulation 2024/1781 (ESPR) · Art. 7(2)(a) · Market Surveillance Regulation 2019/1020" },
-  "custom-specifications": { icon: "ClipboardList", directive: "Custom producer-defined specification rows" },
+  "custom-specifications": { icon: "ClipboardList", directive: "" },
   physical: { icon: "Ruler", directive: "EU Regulation 2024/1781 (ESPR) · Art. 7(1) · Packaging & Packaging Waste Regulation 2025/40" },
   carbon: { icon: "Cloud", directive: "EU Regulation 2024/1781 (ESPR) · Art. 7(2)(b)" },
   recycled: { icon: "Recycle", directive: "EU Regulation 2024/1781 (ESPR) · Art. 7(2)(c)" },

@@ -88,7 +88,6 @@
     "product-specifications": {
       "label": "Product specifications",
       "explainerText": "Free-form machinery specifications displayed on the public viewer. Examples: Machine type · Rated power · Operating voltage · Capacity · Dimensions · Weight · Operating speed · Performance · Fuel/energy type · Operating temperature · Safety rating.",
-      "explainerText2": "Add the spec rows a consumer would care about. Up to 40 rows.",
       "explainerTextStyle": "lite",
       "maxRows": 40,
       "fields": [

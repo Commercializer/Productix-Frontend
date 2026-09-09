@@ -523,10 +523,13 @@ model ProductDpp {
 /// Immutable point-in-time snapshot of a ProductDpp, captured every time the
 /// passport is published/updated (see createProductDppAction) or restored (see
 /// restoreDppVersionAction) - the audit trail required by the DPP versioning
-/// spec. Unlike ProductProfileVersion, rows here are never pruned and no code
-/// path ever updates or deletes an existing row - once written, a version is
-/// permanent (application-level enforcement; see restoreDppVersionAction's doc
-/// comment for why a DB-level trigger wasn't used).
+/// spec. Unlike ProductProfileVersion, rows here are never pruned. Immutability
+/// is enforced both in application code (no code path updates or deletes an
+/// existing row) AND at the DB level by a trigger
+/// (trg_product_dpp_versions_immutable, see
+/// migrations/add_product_dpp_versions_immutability_trigger.sql) that blocks
+/// UPDATE/DELETE outright while still allowing the legitimate FK cascade when
+/// the owning product/DPP is deleted entirely.
 model ProductDppVersion {
   id            String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   dppId         String  @map("dpp_id") @db.Uuid

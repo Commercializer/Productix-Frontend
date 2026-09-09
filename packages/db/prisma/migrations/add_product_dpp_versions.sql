@@ -3,10 +3,10 @@
 -- every publish/update/restore - the audit trail required for regulatory
 -- traceability. Unlike product_profile_versions, rows here are NEVER pruned
 -- (retention is permanent) and no application code path ever updates or
--- deletes an existing row - see ProductDppVersion's doc comment in
--- schema.prisma for why this is enforced at the application level rather than
--- with a DB trigger (this table's FK cascades from product_dpp/products, and a
--- blanket trigger would also break that legitimate cascade delete).
+-- deletes an existing row. As of
+-- add_product_dpp_versions_immutability_trigger.sql, this is also enforced at
+-- the DB level via a trigger that blocks UPDATE/DELETE while still allowing
+-- the legitimate FK cascade from product_dpp/products.
 CREATE TABLE "product_dpp_versions" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "dpp_id" UUID NOT NULL,

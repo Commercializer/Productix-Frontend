@@ -1,12 +1,16 @@
 // Public "DPP" view offered alongside the GS1 showcase at /01/{gtin} (see
 // gtin-mode-switcher.tsx). Renders the product's Digital Product Passport -
 // identity + every filled-in compliance section - in a read-only, document-
-// style layout modeled on GS1's own dpp.gs passport pages. Server-rendered;
-// section disclosure uses native <details>/<summary>, so the only client JS
-// on the page is the gallery carousel (see gallery-carousel.tsx).
+// style layout modeled on GS1's own dpp.gs passport pages (single-line
+// label/value rows, a mandatory-field legend, a section info icon in place
+// of printed small print, a dark identity header with an on-page QR code).
+// Server-rendered; section disclosure uses native <details>/<summary> and
+// the info icon's tooltip is a native `title` attribute, so the only client
+// JS on the page is the gallery carousel, QR badge, copy-link row and
+// language picker (each its own small "use client" component).
 import { Fragment, type CSSProperties } from "react";
 import type { DppSector } from "@productix/db";
-import { getIdentificationExtraFields, getOrderedDppSections, type DppSectionField, type DppSectionSpec } from "@/lib/dpp/dpp-sections";
+import { getIdentificationExtraFields, getOrderedDppSections, isFieldRequired, type DppSectionField, type DppSectionSpec } from "@/lib/dpp/dpp-sections";
 import { DPP_SECTOR_LABELS, trimFieldLabel } from "@/lib/dpp/sector-sections";
 import type { PackagingLayer } from "@/lib/dpp/packaging-layers";
 import type { Row } from "@/lib/dpp/repeatable-rows";
@@ -15,6 +19,9 @@ import { GalleryCarousel } from "./gallery-carousel";
 import { PackagingLayersView } from "./packaging-layers-view";
 import { RepeatableRowsView } from "./repeatable-rows-view";
 import { DppLanguagePicker } from "./dpp-language-picker";
+import { SectionChevron, SectionChevronStyle, SectionInfoIcon } from "./summary-chevron";
+import { PassportQrCode } from "./passport-qr-code";
+import { CopyLinkRow } from "./copy-link-row";
 
 export interface PublicDppData {
   productName: string;
@@ -65,11 +72,31 @@ function buildIdentificationSectionSpec(sector: DppSector | null): DppSectionSpe
   };
 }
 
-function FieldRow({ field, value }: { field: DppSectionField; value: string }) {
+/** Small colored dot before a `type: "toggle"` field's Yes/No value -
+ * matches the reference layout's checkmark/cross treatment for compliance
+ * booleans, without implying pass/fail for non-compliance toggles (e.g.
+ * "Reusable") - green only marks "Yes", "No" stays a neutral gray. */
+function ToggleDot({ value }: { value: string }) {
   return (
-    <div style={{ padding: "10px 0", borderBottom: "1px solid #f1f5f9" }}>
-      <dt style={{ fontSize: 12, color: "#64748b", margin: 0 }}>{trimFieldLabel(field.text)}</dt>
-      <dd style={{ fontSize: 14, color: "#0f172a", margin: "2px 0 0", fontWeight: 500, wordBreak: "break-word" }}>
+    <span
+      aria-hidden
+      style={{ width: 7, height: 7, borderRadius: 999, flexShrink: 0, background: value.trim().toLowerCase() === "yes" ? "#059669" : "#94a3b8" }}
+    />
+  );
+}
+
+function FieldRow({ field, value, required }: { field: DppSectionField; value: string; required: boolean }) {
+  return (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 16, padding: "10px 0", borderBottom: "1px solid #f1f5f9" }}>
+      <dt style={{ fontSize: 12, color: "#64748b", margin: 0, flex: "0 1 auto", maxWidth: "45%" }}>
+        {trimFieldLabel(field.text)}
+        {required && (
+          <span aria-hidden style={{ color: "#f59e0b", marginLeft: 4 }}>
+            •
+          </span>
+        )}
+      </dt>
+      <dd style={{ fontSize: 13, color: "#0f172a", margin: 0, fontWeight: 600, flex: "1 1 auto", minWidth: 0, textAlign: "right", wordBreak: "break-word" }}>
         {field.type === "upload" ? (
           // "View document ↗" is our own system-generated label, not user
           // data - left translatable. Only the href (an attribute, never
@@ -88,6 +115,13 @@ function FieldRow({ field, value }: { field: DppSectionField; value: string }) {
           >
             {value}
           </a>
+        ) : field.type === "toggle" ? (
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6, justifyContent: "flex-end" }}>
+            <ToggleDot value={value} />
+            <span className="notranslate" translate="no">
+              {value}
+            </span>
+          </span>
         ) : (
           <span className="notranslate" translate="no">
             {value}
@@ -115,10 +149,12 @@ function SectionCard({
 
     return (
       <details
+        name="dpp-section"
         open={defaultOpen}
         style={{ background: "#fff", borderRadius: 14, border: "1px solid #e2e8f0", overflow: "hidden" }}
       >
         <summary
+          className="dpp-summary"
           style={{
             padding: "14px 18px",
             cursor: "pointer",
@@ -126,9 +162,17 @@ function SectionCard({
             fontWeight: 600,
             color: "#0f172a",
             listStyle: "none",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 8,
           }}
         >
-          {spec.title}
+          <span style={{ flex: 1, minWidth: 0 }}>{spec.title}</span>
+          <span style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+            <SectionInfoIcon directive={spec.directive} />
+            <SectionChevron />
+          </span>
         </summary>
         <div style={{ padding: "0 18px 16px" }}>
           {groups.map((g) => (
@@ -138,14 +182,11 @@ function SectionCard({
               </p>
               <dl style={{ margin: 0 }}>
                 {g.fields.map((f) => (
-                  <FieldRow key={f.text} field={f} value={answers[f.text]!} />
+                  <FieldRow key={f.text} field={f} value={answers[f.text]!} required={isFieldRequired(f, answers)} />
                 ))}
               </dl>
             </div>
           ))}
-          {spec.directive && (
-            <p style={{ fontSize: 11, color: "#cbd5e1", margin: "10px 0 0" }}>{spec.directive}</p>
-          )}
         </div>
       </details>
     );
@@ -156,10 +197,12 @@ function SectionCard({
 
   return (
     <details
+      name="dpp-section"
       open={defaultOpen}
       style={{ background: "#fff", borderRadius: 14, border: "1px solid #e2e8f0", overflow: "hidden" }}
     >
       <summary
+        className="dpp-summary"
         style={{
           padding: "14px 18px",
           cursor: "pointer",
@@ -167,17 +210,24 @@ function SectionCard({
           fontWeight: 600,
           color: "#0f172a",
           listStyle: "none",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 8,
         }}
       >
-        {spec.title}
+        <span style={{ flex: 1, minWidth: 0 }}>{spec.title}</span>
+        <span style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+          <SectionInfoIcon directive={spec.directive} />
+          <SectionChevron />
+        </span>
       </summary>
       <div style={{ padding: "0 18px 16px" }}>
         <dl style={{ margin: 0 }}>
           {fields.map((f) => (
-            <FieldRow key={f.text} field={f} value={answers[f.text]!} />
+            <FieldRow key={f.text} field={f} value={answers[f.text]!} required={isFieldRequired(f, answers)} />
           ))}
         </dl>
-        {spec.directive && <p style={{ fontSize: 11, color: "#cbd5e1", margin: "10px 0 0" }}>{spec.directive}</p>}
       </div>
     </details>
   );
@@ -202,57 +252,63 @@ export function DppPassportView({
 
   return (
     <div style={{ minHeight: "100vh", background: "#f8fafc", fontFamily: "var(--font-sans)" }}>
+      <SectionChevronStyle />
       {data.translationEnabled && <DppLanguagePicker />}
       <div style={{ maxWidth: 640, margin: "0 auto", padding: "32px 20px 56px" }}>
         {/* Header / identity */}
         <div
           style={{
-            background: "#fff",
+            background: "#0f172a",
             borderRadius: 20,
-            border: "1px solid #e2e8f0",
-            padding: "28px 24px",
-            textAlign: "center",
-            marginBottom: 20,
+            padding: "24px",
+            marginBottom: 16,
           }}
         >
-          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: data.themeColor, margin: "0 0 14px" }}>
-            Digital Product Passport
-          </p>
-          {logoUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={logoUrl}
-              alt={data.productName}
-              style={{ width: 72, height: 72, objectFit: "contain", borderRadius: 16, margin: "0 auto 14px" }}
-            />
-          )}
-          <h1 className="notranslate" translate="no" style={{ fontSize: 22, fontWeight: 700, color: "#0f172a", margin: "0 0 4px" }}>
-            {data.productName}
-          </h1>
-          {data.tagline && (
-            <p className="notranslate" translate="no" style={{ fontSize: 13, color: "#64748b", margin: "0 0 10px" }}>
-              {data.tagline}
-            </p>
-          )}
-          <p className="notranslate" translate="no" style={{ fontSize: 12, color: "#94a3b8", margin: "0 0 16px" }}>
-            {data.brand?.name ?? data.company.name}
-          </p>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(255,255,255,0.5)", margin: "0 0 12px" }}>
+                Digital Product Passport
+              </p>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+                {logoUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={logoUrl}
+                    alt={data.productName}
+                    style={{ width: 36, height: 36, objectFit: "contain", borderRadius: 8, background: "#fff", flexShrink: 0 }}
+                  />
+                )}
+                <h1 className="notranslate" translate="no" style={{ fontSize: 20, fontWeight: 700, color: "#fff", margin: 0, wordBreak: "break-word" }}>
+                  {data.productName}
+                </h1>
+              </div>
+              {data.tagline && (
+                <p className="notranslate" translate="no" style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", margin: "0 0 4px" }}>
+                  {data.tagline}
+                </p>
+              )}
+              <p className="notranslate" translate="no" style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", margin: "0 0 14px" }}>
+                {data.brand?.name ?? data.company.name}
+              </p>
 
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
-            <span className="notranslate" translate="no" style={chipStyle}>
-              GTIN {formatGtinDisplay(data.gtin)}
-            </span>
-            {isVerified && (
-              <span style={{ ...chipStyle, color: "#059669", background: "#ecfdf5", borderColor: "#a7f3d0" }}>
-                ✓ Verified via GS1 Registry
-              </span>
-            )}
-            {batch && (
-              <span style={chipStyle}>
-                Batch <span className="notranslate" translate="no">{batch}</span>
-              </span>
-            )}
-            {data.sector && <span style={chipStyle}>{DPP_SECTOR_LABELS[data.sector]}</span>}
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                <span className="notranslate" translate="no" style={darkChipStyle}>
+                  GTIN {formatGtinDisplay(data.gtin)}
+                </span>
+                {isVerified && (
+                  <span style={{ ...darkChipStyle, color: "#6ee7b7", background: "rgba(5,150,105,0.2)" }}>
+                    ✓ Verified via GS1 Registry
+                  </span>
+                )}
+                {batch && (
+                  <span style={darkChipStyle}>
+                    Batch <span className="notranslate" translate="no">{batch}</span>
+                  </span>
+                )}
+                {data.sector && <span style={darkChipStyle}>{DPP_SECTOR_LABELS[data.sector]}</span>}
+              </div>
+            </div>
+            <PassportQrCode gtin={data.gtin} />
           </div>
         </div>
 
@@ -284,6 +340,15 @@ export function DppPassportView({
 
         {/* Gallery */}
         <GalleryCarousel images={data.gallery} />
+        <CopyLinkRow gtin={data.gtin} />
+
+        <p style={{ fontSize: 11, color: "#94a3b8", margin: "0 0 10px", textAlign: "center" }}>
+          Fields marked{" "}
+          <span aria-hidden style={{ color: "#f59e0b" }}>
+            •
+          </span>{" "}
+          are mandatory under EU regulation.
+        </p>
 
         {/* Compliance sections */}
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -427,14 +492,13 @@ export function DppPassportView({
   );
 }
 
-const chipStyle: CSSProperties = {
+const darkChipStyle: CSSProperties = {
   display: "inline-flex",
   alignItems: "center",
-  padding: "6px 12px",
+  padding: "5px 10px",
   borderRadius: 999,
-  border: "1px solid #e2e8f0",
-  background: "#f8fafc",
-  fontSize: 12,
+  background: "rgba(255,255,255,0.1)",
+  fontSize: 11,
   fontWeight: 600,
-  color: "#334155",
+  color: "rgba(255,255,255,0.85)",
 };
