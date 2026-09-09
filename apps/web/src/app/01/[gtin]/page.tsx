@@ -69,10 +69,30 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   // instead of "Page Not Found".
   const dpp = await getDppByGtin(gtin);
   if (dpp) {
+    const title = `${dpp.productName} | ${dpp.company.name}`;
+    const description = `Digital Product Passport for ${dpp.productName} by ${dpp.company.name}.`;
+    // First gallery photo (image-only, see getPublicDppByGtinAction) makes
+    // the best share preview; fall back to the resolved brand/company logo
+    // so a share link still gets *an* image even before photos are uploaded.
+    const ogImage = dpp.gallery[0]?.url || dpp.logoUrl || undefined;
+
     return {
-      title: `${dpp.productName} | ${dpp.company.name}`,
-      description: `Digital Product Passport for ${dpp.productName} by ${dpp.company.name}.`,
+      title,
+      description,
       robots: { index: true, follow: true },
+      openGraph: {
+        type: "website",
+        title: dpp.productName,
+        description,
+        siteName: dpp.company.name,
+        ...(ogImage && { images: [{ url: ogImage, width: 1200, height: 630 }] }),
+      },
+      twitter: {
+        card: ogImage ? "summary_large_image" : "summary",
+        title: dpp.productName,
+        description,
+        ...(ogImage && { images: [ogImage] }),
+      },
     };
   }
 

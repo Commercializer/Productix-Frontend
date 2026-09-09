@@ -2398,6 +2398,7 @@ export async function getPublicDppByGtinAction(gtin: string) {
         take: 1,
       },
       galleryImages: {
+        where: { mediaType: "IMAGE" },
         select: { url: true, name: true },
         orderBy: { createdAt: "asc" },
       },
