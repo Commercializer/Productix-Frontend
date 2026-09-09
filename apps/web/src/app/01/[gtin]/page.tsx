@@ -59,6 +59,20 @@ const getDppVersionsByGtin = cache(async (rawGtin: string) => {
   return getPublicDppVersionsAction(gtin);
 });
 
+// Gallery photos come straight off R2 at whatever resolution the user
+// uploaded (often several MB) - link-preview crawlers like WhatsApp's are
+// far stricter than a browser about og:image size and silently drop the
+// preview if fetching/decoding it is too slow. Route it through Next's own
+// image optimizer (capped to a default deviceSize, see next.config.ts) so
+// the crawler fetches a compressed copy instead of the original.
+function resolveOgImageUrl(rawUrl: string): string {
+  const base = (process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(
+    /\/$/,
+    "",
+  );
+  return `${base}/_next/image?url=${encodeURIComponent(rawUrl)}&w=1200&q=75`;
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { gtin } = await params;
   const page = await getPageByGtin(gtin);
@@ -74,7 +88,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     // First gallery photo (image-only, see getPublicDppByGtinAction) makes
     // the best share preview; fall back to the resolved brand/company logo
     // so a share link still gets *an* image even before photos are uploaded.
-    const ogImage = dpp.gallery[0]?.url || dpp.logoUrl || undefined;
+    const rawOgImage = dpp.gallery[0]?.url || dpp.logoUrl || undefined;
+    const ogImage = rawOgImage ? resolveOgImageUrl(rawOgImage) : undefined;
 
     return {
       title,
@@ -85,7 +100,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         title: dpp.productName,
         description,
         siteName: dpp.company.name,
-        ...(ogImage && { images: [{ url: ogImage, width: 1200, height: 630 }] }),
+        // No fixed width/height here - the optimizer preserves the source's
+        // aspect ratio at w=1200, so a declared 630 height would often be
+        // wrong and some crawlers treat a mismatch as a signal to skip the
+        // image rather than just resample it.
+        ...(ogImage && { images: [{ url: ogImage }] }),
       },
       twitter: {
         card: ogImage ? "summary_large_image" : "summary",

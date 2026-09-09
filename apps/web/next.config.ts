@@ -16,6 +16,11 @@ const nextConfig: NextConfig = {
         hostname: "**",
       },
     ],
+    // Default is "attachment", which makes crawlers (WhatsApp, etc.) treat an
+    // og:image served through /_next/image as a file download instead of an
+    // inline preview image. Safe here since remotePatterns only ever proxies
+    // our own validated image uploads (see isAllowedImage in lib/r2.ts).
+    contentDispositionType: "inline",
   },
   experimental: {
     serverActions: {
