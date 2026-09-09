@@ -1,92 +1,74 @@
-import { Building2 } from "lucide-react";
-import Image from "next/image";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+
+import { industriesByGroup } from "@/content/industries";
 
 import { Reveal } from "./reveal";
 
-const SECTORS = [
-  {
-    name: "FMCG & packaged foods",
-    desc: "Interactive packaging, ingredient transparency, campaigns, and loyalty activations.",
-    seed: "productix-fmcg-foods",
-  },
-  {
-    name: "Beverage brands",
-    desc: "Event activations, limited campaigns, customer engagement, and regional storytelling.",
-    seed: "productix-beverage-brand",
-  },
-  {
-    name: "Cosmetics & personal care",
-    desc: "Usage guides, tutorials, influencer campaigns, and personalized product experiences.",
-    seed: "productix-cosmetics-shelf",
-  },
-  {
-    name: "Nutrition & wellness",
-    desc: "Authenticity verification, educational content, certifications, and retention programs.",
-    seed: "productix-nutrition-wellness",
-  },
-  {
-    name: "Retail & distribution",
-    desc: "Regionalized product communication and channel-specific engagement experiences.",
-    seed: "productix-retail-distribution",
-  },
-];
-
 export function Industries() {
+  const groups = industriesByGroup();
+
   return (
-    <section id="industries" className="bg-white px-6 py-24 md:py-28">
-      <div className="mx-auto max-w-7xl">
+    <section id="industries" className="bg-cream px-6 py-24 md:py-28">
+      <div className="mx-auto max-w-6xl">
         <Reveal className="mx-auto max-w-2xl text-center">
           <span className="text-[12px] font-semibold uppercase tracking-[0.16em] text-accent-dim">
-            Industries
+            Built for Product-Led Industries
           </span>
           <h2 className="mt-3 text-[clamp(1.9rem,4vw,2.9rem)] font-medium leading-[1.1] tracking-[-0.02em] text-ink">
-            Built for modern consumer brand ecosystems.
+            One Platform. Many Product Ecosystems.
           </h2>
+          <p className="mx-auto mt-5 max-w-xl text-[15px] leading-[1.7] text-ink/60">
+            From consumer goods and packaging to industrial products,
+            Productix provides the digital infrastructure to connect
+            products, compliance data, packaging and experiences across the
+            product lifecycle.
+          </p>
         </Reveal>
 
-        <div className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {SECTORS.map((s, i) => (
-            <Reveal key={s.name} delay={i * 70}>
-              <div className="group h-full overflow-hidden rounded-2xl border border-ink/10">
-                <div className="relative h-40 overflow-hidden">
-                  <Image
-                    src={`https://picsum.photos/seed/${s.seed}/640/420`}
-                    alt=""
-                    fill
-                    sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 90vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                </div>
-                <div className="p-6">
-                  <h3 className="text-[17px] font-medium text-ink">
-                    {s.name}
-                  </h3>
-                  <p className="mt-2 text-[13.5px] leading-relaxed text-ink/55">
-                    {s.desc}
-                  </p>
-                </div>
+        <div className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {groups.map(({ group, items }, i) => (
+            <Reveal key={group} delay={i * 80}>
+              <div
+                id={group.toLowerCase().replace(/[^a-z0-9]+/g, "-")}
+                className="h-full rounded-2xl border border-ink/10 bg-white p-6"
+              >
+                <h3 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-ink/45">
+                  {group}
+                </h3>
+                <ul className="mt-4 flex flex-col gap-3">
+                  {items.map((item) => (
+                    <li key={item.slug}>
+                      <Link
+                        href={`/industries/${item.slug}`}
+                        className="group flex items-center gap-2.5 text-[14px] text-ink/70 transition-colors hover:text-ink"
+                      >
+                        <item.icon className="h-4 w-4 shrink-0 text-accent" />
+                        <span className="group-hover:underline group-hover:decoration-ink/30 group-hover:underline-offset-2">
+                          {item.name}
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </Reveal>
           ))}
-
-          <Reveal delay={SECTORS.length * 70}>
-            <Link
-              href="#sales"
-              className="flex h-full min-h-56 flex-col items-center justify-center rounded-2xl border border-dashed border-ink/20 p-8 text-center transition-colors hover:border-ink/40"
-            >
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-ink text-white">
-                <Building2 className="h-5 w-5" />
-              </div>
-              <h3 className="mt-4 text-[16px] font-medium text-ink">
-                Your category
-              </h3>
-              <p className="mt-1.5 max-w-52 text-[13px] leading-relaxed text-ink/50">
-                Architecting a new enterprise rollout? Talk to our team.
-              </p>
-            </Link>
-          </Reveal>
         </div>
+
+        <Reveal delay={150} className="mt-14 flex flex-col items-center gap-5 text-center">
+          <p className="max-w-xl text-[15px] leading-relaxed text-ink/60">
+            Built to support evolving product, packaging and digital identity
+            requirements across markets.
+          </p>
+          <Link
+            href="/industries"
+            className="group inline-flex h-11 items-center gap-2 rounded-full bg-ink px-6 text-[14px] font-semibold text-white transition-colors hover:bg-navy-deep"
+          >
+            Explore Industries
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+          </Link>
+        </Reveal>
       </div>
     </section>
   );

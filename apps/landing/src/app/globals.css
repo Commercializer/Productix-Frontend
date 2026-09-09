@@ -5,10 +5,12 @@
   --font-mono: var(--font-mono-loaded, ui-monospace, SFMono-Regular, Menlo, Monaco, monospace);
 
   --color-ink: #0a1120;
-  --color-navy: #0b1220;
-  --color-navy-deep: #060a14;
-  --color-accent: #2f8fea;
-  --color-accent-dim: #1d6fc0;
+  --color-navy: #192a3a;
+  --color-navy-deep: #101c28;
+  --color-accent: #10d6e5;
+  --color-accent-dim: #26b9cc;
+  --color-teal: #00ccc6;
+  --color-sky: #39a5db;
   --color-paper: #f6f8fb;
   --color-cream: #f6f8fb;
   --color-tint: #eef1f6;
@@ -36,27 +38,38 @@
   }
 }
 
-/* ── Reveal-on-scroll (IntersectionObserver driven, class-toggled) ── */
-.reveal {
-  opacity: 0;
-  transform: translateY(18px);
-  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.reveal.is-visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .reveal {
-    opacity: 1;
-    transform: none;
-    transition: none;
-  }
   html {
     scroll-behavior: auto;
   }
+}
+
+/* ── Brand gradient (teal → cyan → mid-cyan → sky), used for headline
+ * accents, the AnimatedBeam stroke, and hover glows ── */
+.text-gradient-brand {
+  background-image: linear-gradient(90deg, #00ccc6, #10d6e5, #26b9cc, #39a5db);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+/* ── Octagon tile (hero hub-and-spoke nodes) ── */
+.octagon {
+  clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+}
+
+/* ── Standards / credibility badge pill ── */
+.badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(10, 17, 32, 0.1);
+  background: rgba(255, 255, 255, 0.7);
+  padding: 0.4rem 0.85rem;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(10, 17, 32, 0.6);
 }
 
 /* ── Industry marquee (the one marquee on the page) ── */

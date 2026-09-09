@@ -1,29 +1,27 @@
-import { CaseStudies } from "@/components/landing/case-studies";
+import { BecomingDigital } from "@/components/landing/becoming-digital";
+import { BeyondCompliance } from "@/components/landing/beyond-compliance";
 import { FinalCta } from "@/components/landing/final-cta";
 import { Footer } from "@/components/landing/footer";
 import { Header } from "@/components/landing/header";
 import { Hero } from "@/components/landing/hero";
 import { Industries } from "@/components/landing/industries";
-import { Manifesto } from "@/components/landing/manifesto";
-import { Security } from "@/components/landing/security";
-import { SolutionsList } from "@/components/landing/solutions-list";
-import { Stats } from "@/components/landing/stats";
+import { PlatformPillars } from "@/components/landing/platform-pillars";
+import { ProductIntelligence } from "@/components/landing/product-intelligence";
 import { TrustMarquee } from "@/components/landing/trust-marquee";
-import { Vision } from "@/components/landing/vision";
+import { WhatsNext } from "@/components/landing/whats-next";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-[100dvh] bg-paper text-ink antialiased">
+    <div className="min-h-dvh bg-paper text-ink antialiased">
       <Header />
       <Hero />
       <TrustMarquee />
-      <Manifesto />
-      <SolutionsList />
-      <CaseStudies />
+      <BecomingDigital />
+      <PlatformPillars />
+      <WhatsNext />
+      <BeyondCompliance />
+      <ProductIntelligence />
       <Industries />
-      <Stats />
-      <Vision />
-      <Security />
       <FinalCta />
       <Footer />
     </div>
