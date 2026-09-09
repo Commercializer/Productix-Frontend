@@ -1,16 +1,23 @@
 import { ArrowRight } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 import { industriesByGroup } from "@/content/industries";
 
 import { Reveal } from "./reveal";
+import { SectionGlow } from "./section-glow";
 
 export function Industries() {
   const groups = industriesByGroup();
 
   return (
-    <section id="industries" className="bg-cream px-6 py-24 md:py-28">
-      <div className="mx-auto max-w-6xl">
+    <section id="industries" className="relative overflow-hidden bg-cream px-6 py-24 md:py-28">
+      <SectionGlow />
+      <div className="pointer-events-none absolute inset-0 z-0 opacity-[0.16]" aria-hidden="true">
+        <Image src="/images/industries.jpg" alt="" fill sizes="100vw" className="object-cover" />
+      </div>
+      <div className="pointer-events-none absolute inset-0 z-0 bg-cream/70" aria-hidden="true" />
+      <div className="relative z-10 mx-auto max-w-6xl">
         <Reveal className="mx-auto max-w-2xl text-center">
           <span className="text-[12px] font-semibold uppercase tracking-[0.16em] text-accent-dim">
             Built for Product-Led Industries
@@ -31,7 +38,7 @@ export function Industries() {
             <Reveal key={group} delay={i * 80}>
               <div
                 id={group.toLowerCase().replace(/[^a-z0-9]+/g, "-")}
-                className="h-full rounded-2xl border border-ink/10 bg-white p-6"
+                className="glass-light h-full rounded-2xl p-6"
               >
                 <h3 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-ink/45">
                   {group}

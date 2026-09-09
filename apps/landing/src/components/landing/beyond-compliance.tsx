@@ -1,7 +1,9 @@
 import { ArrowRight, Check, MessageSquareHeart, QrCode, Smartphone } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 import { Reveal } from "./reveal";
+import { SectionGlow } from "./section-glow";
 
 const COLUMNS = [
   {
@@ -50,8 +52,9 @@ const COLUMNS = [
 
 export function BeyondCompliance() {
   return (
-    <section id="experience" className="bg-cream px-6 py-24 md:py-28">
-      <div className="mx-auto max-w-6xl">
+    <section id="experience" className="relative overflow-hidden bg-cream px-6 py-24 md:py-28">
+      <SectionGlow />
+      <div className="relative mx-auto max-w-6xl">
         <Reveal className="mx-auto max-w-2xl text-center">
           <span className="text-[12px] font-semibold uppercase tracking-[0.16em] text-accent-dim">
             Beyond Compliance
@@ -67,10 +70,21 @@ export function BeyondCompliance() {
           </p>
         </Reveal>
 
-        <div className="mt-14 grid grid-cols-1 gap-5 md:grid-cols-3">
+        <div className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <Reveal delay={0} className="h-full">
+            <div className="relative h-full min-h-70 overflow-hidden rounded-3xl ring-1 ring-ink/10">
+              <Image
+                src="/images/beyond-compliance.jpg"
+                alt="A hand holding a phone, scanning a QR code on a product package"
+                fill
+                sizes="(min-width: 1024px) 300px, (min-width: 640px) 50vw, 100vw"
+                className="object-cover"
+              />
+            </div>
+          </Reveal>
           {COLUMNS.map((col, i) => (
-            <Reveal key={col.name} delay={i * 90}>
-              <div className="flex h-full flex-col rounded-3xl border border-ink/10 bg-white p-7">
+            <Reveal key={col.name} delay={(i + 1) * 90}>
+              <div className="glass-light flex h-full flex-col rounded-3xl p-7">
                 <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent/10 text-accent">
                   <col.icon className="h-5 w-5" />
                 </span>

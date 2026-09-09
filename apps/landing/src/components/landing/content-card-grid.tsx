@@ -29,7 +29,7 @@ export function ContentCardGrid({
         <Reveal key={item.slug} delay={i * 80}>
           <Link
             href={`${basePath}/${item.slug}`}
-            className="group flex h-full flex-col rounded-3xl border border-ink/10 bg-white p-7 transition-shadow hover:shadow-[0_20px_44px_-24px_rgba(10,17,32,0.3)]"
+            className="glass-light group flex h-full flex-col rounded-3xl p-7 transition-transform hover:-translate-y-1"
           >
             <div className="flex items-center gap-3">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-accent/10 text-accent">

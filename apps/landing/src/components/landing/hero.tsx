@@ -2,6 +2,7 @@ import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 import { HeroBeamScene } from "./hero-beam-scene";
+import { SectionGlow } from "./section-glow";
 
 const STANDARDS = [
   "Built on GS1 Standards",
@@ -13,7 +14,8 @@ const STANDARDS = [
 export function Hero() {
   return (
     <section className="relative overflow-hidden bg-cream pt-32 pb-20 md:pb-28">
-      <div className="dot-grid pointer-events-none absolute inset-0 opacity-[0.15] [mask-image:radial-gradient(ellipse_at_top_right,black,transparent_65%)]" />
+      <SectionGlow strong />
+      <div className="dot-grid pointer-events-none absolute inset-0 opacity-[0.4] [mask-image:radial-gradient(ellipse_at_top_right,black,transparent_65%)]" />
 
       <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-16 px-6 lg:grid-cols-[1.05fr_1fr]">
         <div>
@@ -53,7 +55,7 @@ export function Hero() {
       </div>
 
       <div className="relative mt-12 flex justify-center px-6 md:mt-16">
-        <div className="inline-flex max-w-full flex-wrap items-center justify-center gap-1.5 rounded-2xl border border-ink/10 bg-white/60 p-1.5 sm:rounded-full">
+        <div className="glass-light inline-flex max-w-full flex-wrap items-center justify-center gap-1.5 rounded-2xl p-1.5 sm:rounded-full">
           {STANDARDS.map((label) => (
             <span
               key={label}

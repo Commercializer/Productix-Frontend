@@ -2,15 +2,17 @@ import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 import { Reveal } from "./reveal";
+import { SectionGlow } from "./section-glow";
 
 export function FinalCta() {
   return (
-    <section className="bg-navy px-6 py-24 md:py-28">
-      <Reveal className="mx-auto max-w-2xl text-center">
-        <h2 className="text-[clamp(2rem,4.5vw,3.2rem)] font-medium leading-[1.1] tracking-[-0.02em] text-white">
+    <section className="relative overflow-hidden bg-linear-to-b from-white to-cream px-6 py-24 md:py-28">
+      <SectionGlow strong flip />
+      <Reveal className="glass-panel relative mx-auto max-w-2xl rounded-[2.5rem] px-8 py-14 text-center sm:px-16">
+        <h2 className="text-[clamp(2rem,4.5vw,3.2rem)] font-medium leading-[1.1] tracking-[-0.02em] text-ink">
           Ready Your Products for What&rsquo;s Next.
         </h2>
-        <p className="mx-auto mt-5 max-w-md text-[15.5px] leading-[1.6] text-white/55">
+        <p className="mx-auto mt-5 max-w-md text-[15.5px] leading-[1.6] text-ink/60">
           Build a connected digital foundation for your products, packaging
           and compliance requirements.
         </p>
@@ -24,7 +26,7 @@ export function FinalCta() {
           </Link>
           <Link
             href="/company/contact"
-            className="glass-dark inline-flex h-12 items-center rounded-full px-6 text-[14px] font-medium text-white/85 transition-colors hover:text-white"
+            className="inline-flex h-12 items-center rounded-full border border-ink/15 px-6 text-[14px] font-medium text-ink/80 transition-colors hover:border-ink/30 hover:text-ink"
           >
             Contact Us
           </Link>

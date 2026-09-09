@@ -77,10 +77,10 @@ export function Header() {
 
   return (
     <div ref={rootRef} className="fixed inset-x-0 top-4 z-50 px-4 sm:px-6">
-      <header className="glass-navy mx-auto flex h-14 max-w-6xl items-center justify-between rounded-full pl-5 pr-1.5">
+      <header className="glass-light mx-auto flex h-14 max-w-6xl items-center justify-between rounded-full pl-5 pr-1.5">
         <Link href="/" className="flex shrink-0 items-center gap-2.5">
           <Image
-            src="/logo-dark.png"
+            src="/logo-light.png"
             alt="Productix"
             width={128}
             height={28}
@@ -97,7 +97,7 @@ export function Header() {
                 type="button"
                 onClick={() => setOpenDesktopMenu((v) => (v === entry.label ? null : entry.label))}
                 aria-expanded={openDesktopMenu === entry.label}
-                className="flex items-center gap-1 rounded-full px-3.5 py-2 text-[13.5px] font-medium text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+                className="flex items-center gap-1 rounded-full px-3.5 py-2 text-[13.5px] font-medium text-ink/65 transition-colors hover:bg-ink/5 hover:text-ink"
               >
                 {entry.label}
                 <ChevronDown
@@ -108,7 +108,7 @@ export function Header() {
               <Link
                 key={entry.label}
                 href={entry.href}
-                className="rounded-full px-3.5 py-2 text-[13.5px] font-medium text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+                className="rounded-full px-3.5 py-2 text-[13.5px] font-medium text-ink/65 transition-colors hover:bg-ink/5 hover:text-ink"
               >
                 {entry.label}
               </Link>
@@ -119,7 +119,7 @@ export function Header() {
         <div className="hidden shrink-0 items-center gap-2 lg:flex">
           <a
             href={APP_URL}
-            className="inline-flex h-11 items-center rounded-full px-4 text-[13.5px] font-medium text-white/75 transition-colors hover:text-white"
+            className="inline-flex h-11 items-center rounded-full px-4 text-[13.5px] font-medium text-ink/70 transition-colors hover:text-ink"
           >
             Dashboard
           </a>
@@ -139,7 +139,7 @@ export function Header() {
           onClick={() => setMenuOpen((v) => !v)}
           aria-label={menuOpen ? "Close menu" : "Open menu"}
           aria-expanded={menuOpen}
-          className="flex h-10 w-10 items-center justify-center rounded-full text-white/80 lg:hidden"
+          className="flex h-10 w-10 items-center justify-center rounded-full text-ink/70 lg:hidden"
         >
           {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
@@ -153,7 +153,7 @@ export function Header() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            className="glass-light mx-auto mt-2 hidden max-w-6xl rounded-3xl p-6 lg:block"
+            className="mx-auto mt-2 hidden max-w-6xl rounded-3xl border border-ink/5 bg-white p-6 shadow-[0_20px_50px_-20px_rgba(10,17,32,0.25)] lg:block"
           >
             <div className="grid grid-cols-2 gap-x-8 gap-y-1 xl:grid-cols-3">
               {activeEntry.items.map((item) => (

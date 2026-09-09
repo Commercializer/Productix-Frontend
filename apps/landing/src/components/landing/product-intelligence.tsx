@@ -1,7 +1,9 @@
 import { ArrowRight, BarChart3, MessageSquareHeart, Target, Users } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 import { Reveal } from "./reveal";
+import { SectionGlow } from "./section-glow";
 
 const ITEMS = [
   {
@@ -28,8 +30,9 @@ const ITEMS = [
 
 export function ProductIntelligence() {
   return (
-    <section id="intelligence" className="bg-white px-6 py-24 md:py-28">
-      <div className="mx-auto max-w-5xl">
+    <section id="intelligence" className="relative overflow-hidden bg-white px-6 py-24 md:py-28">
+      <SectionGlow flip />
+      <div className="relative mx-auto max-w-5xl">
         <Reveal className="mx-auto max-w-2xl text-center">
           <span className="text-[12px] font-semibold uppercase tracking-[0.16em] text-accent-dim">
             Product Intelligence
@@ -44,22 +47,36 @@ export function ProductIntelligence() {
           </p>
         </Reveal>
 
-        <div className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2">
-          {ITEMS.map((item, i) => (
-            <Reveal key={item.name} delay={i * 80}>
-              <div className="flex items-start gap-4 rounded-2xl border border-ink/10 bg-cream p-6">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-accent shadow-sm">
-                  <item.icon className="h-5 w-5" />
-                </span>
-                <div>
-                  <h3 className="text-[16px] font-medium text-ink">{item.name}</h3>
-                  <p className="mt-1 text-[13.5px] leading-relaxed text-ink/55">
-                    {item.description}
-                  </p>
+        <div className="mt-14 grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-stretch">
+          <Reveal className="h-full">
+            <div className="relative h-full min-h-80 overflow-hidden rounded-3xl ring-1 ring-ink/10">
+              <Image
+                src="/images/product-intelligence.jpg"
+                alt="A laptop screen displaying a soft, glowing analytics dashboard with charts"
+                fill
+                sizes="(min-width: 1024px) 480px, 100vw"
+                className="object-cover"
+              />
+            </div>
+          </Reveal>
+
+          <div className="grid grid-cols-1 gap-5">
+            {ITEMS.map((item, i) => (
+              <Reveal key={item.name} delay={i * 80}>
+                <div className="glass-light flex items-start gap-4 rounded-2xl p-6">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
+                    <item.icon className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <h3 className="text-[16px] font-medium text-ink">{item.name}</h3>
+                    <p className="mt-1 text-[13.5px] leading-relaxed text-ink/55">
+                      {item.description}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </Reveal>
-          ))}
+              </Reveal>
+            ))}
+          </div>
         </div>
 
         <Reveal delay={150} className="mt-14 flex flex-col items-center gap-5 text-center">

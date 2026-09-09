@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 
-export function EmailSignup({ variant = "light" }: { variant?: "light" | "dark" }) {
+export function EmailSignup() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
-  const dark = variant === "dark";
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -19,11 +18,7 @@ export function EmailSignup({ variant = "light" }: { variant?: "light" | "dark" 
   }
 
   if (submitted) {
-    return (
-      <p className={`text-[14px] font-medium ${dark ? "text-white" : "text-ink"}`}>
-        Thanks, you are on the list.
-      </p>
-    );
+    return <p className="text-[14px] font-medium text-ink">Thanks, you are on the list.</p>;
   }
 
   return (
@@ -39,25 +34,17 @@ export function EmailSignup({ variant = "light" }: { variant?: "light" | "dark" 
           placeholder="you@company.com"
           aria-invalid={Boolean(error)}
           aria-describedby={error ? "footer-email-error" : undefined}
-          className={
-            dark
-              ? "h-11 flex-1 rounded-full border border-white/15 bg-white/5 px-4 text-[13.5px] text-white placeholder:text-white/35 focus:border-accent focus:outline-none"
-              : "h-11 flex-1 rounded-full border border-ink/15 bg-white px-4 text-[13.5px] text-ink placeholder:text-ink/40 focus:border-accent focus:outline-none"
-          }
+          className="h-11 flex-1 rounded-full border border-ink/15 bg-white/70 px-4 text-[13.5px] text-ink placeholder:text-ink/40 focus:border-accent focus:outline-none"
         />
         <button
           type="submit"
-          className={
-            dark
-              ? "inline-flex h-11 items-center rounded-full bg-accent px-5 text-[13.5px] font-semibold text-navy transition-colors hover:bg-teal"
-              : "inline-flex h-11 items-center rounded-full bg-ink px-5 text-[13.5px] font-semibold text-white transition-colors hover:bg-navy-deep"
-          }
+          className="inline-flex h-11 items-center rounded-full bg-ink px-5 text-[13.5px] font-semibold text-white transition-colors hover:bg-navy-deep"
         >
           Submit
         </button>
       </div>
       {error && (
-        <p id="footer-email-error" className={`text-[12px] ${dark ? "text-accent" : "text-accent-dim"}`}>
+        <p id="footer-email-error" className="text-[12px] text-accent-dim">
           {error}
         </p>
       )}

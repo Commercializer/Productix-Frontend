@@ -1,12 +1,19 @@
 import { PLATFORM_PILLARS } from "@/content/platform";
 
-import { ContentCardGrid } from "./content-card-grid";
+import { BentoCard, BentoGrid } from "./magicui/bento-grid";
 import { Reveal } from "./reveal";
+import { SectionGlow } from "./section-glow";
+
+// Connect leads (wide), Compliance runs tall alongside it, Experience and
+// Intelligence fill the remaining row underneath - a real bento mix instead
+// of four equal tiles.
+const SPANS = ["lg:col-span-2", "lg:col-span-1 lg:row-span-2", "lg:col-span-1", "lg:col-span-1"];
 
 export function PlatformPillars() {
   return (
-    <section id="platform" className="bg-cream px-6 py-24 md:py-28">
-      <div className="mx-auto max-w-6xl">
+    <section id="platform" className="relative overflow-hidden bg-cream px-6 py-24 md:py-28">
+      <SectionGlow flip />
+      <div className="relative mx-auto max-w-6xl">
         <Reveal className="mx-auto max-w-2xl text-center">
           <span className="text-[12px] font-semibold uppercase tracking-[0.16em] text-accent-dim">
             Platform
@@ -24,7 +31,22 @@ export function PlatformPillars() {
         </Reveal>
 
         <div className="mt-14">
-          <ContentCardGrid items={PLATFORM_PILLARS} basePath="/platform" columnsClassName="sm:grid-cols-2" />
+          <BentoGrid>
+            {PLATFORM_PILLARS.map((pillar, i) => (
+              <Reveal key={pillar.slug} delay={i * 90} className={SPANS[i]}>
+                <BentoCard
+                  name={pillar.name}
+                  title={pillar.title}
+                  description={pillar.description}
+                  keyTerms={pillar.keyTerms}
+                  href={`/platform/${pillar.slug}`}
+                  Icon={pillar.icon}
+                  featured={i === 0}
+                  className="h-full"
+                />
+              </Reveal>
+            ))}
+          </BentoGrid>
         </div>
       </div>
     </section>
