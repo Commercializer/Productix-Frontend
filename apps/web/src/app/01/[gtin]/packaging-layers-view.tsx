@@ -5,6 +5,7 @@
 // Server-rendered, same <details>/<summary> disclosure pattern as
 // SectionCard so it sits consistently among the other sections.
 import type { PackagingLayer } from "@/lib/dpp/packaging-layers";
+import { translateDpp, translateDppTemplate } from "@/lib/dpp/i18n/translate";
 import { SectionChevron, SectionInfoIcon } from "./summary-chevron";
 
 /** PackagingLayer's fields aren't typed (unlike DppSectionField/RowFieldDef
@@ -21,18 +22,14 @@ function ToggleDot({ value }: { value: string }) {
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({ label, value, lang }: { label: string; value: string; lang: string }) {
   if (!value.trim()) return null;
   const normalized = value.trim().toLowerCase();
   const isToggle = normalized === "yes" || normalized === "no";
   return (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 16, padding: "8px 0", borderBottom: "1px solid #f1f5f9" }}>
-      <dt style={{ fontSize: 12, color: "#64748b", margin: 0, flex: "0 1 auto", maxWidth: "45%" }}>{label}</dt>
-      <dd
-        className="notranslate"
-        translate="no"
-        style={{ fontSize: 13, color: "#0f172a", margin: 0, fontWeight: 600, flex: "1 1 auto", minWidth: 0, textAlign: "right", wordBreak: "break-word" }}
-      >
+      <dt style={{ fontSize: 12, color: "#64748b", margin: 0, flex: "0 1 auto", maxWidth: "45%" }}>{translateDpp(label, lang)}</dt>
+      <dd style={{ fontSize: 13, color: "#0f172a", margin: 0, fontWeight: 600, flex: "1 1 auto", minWidth: 0, textAlign: "right", wordBreak: "break-word" }}>
         {isToggle ? (
           <span style={{ display: "inline-flex", alignItems: "center", gap: 6, justifyContent: "flex-end" }}>
             <ToggleDot value={value} />
@@ -49,16 +46,16 @@ function Row({ label, value }: { label: string; value: string }) {
 /** A sub-group label for the "More PPWR data" rows below - only rendered
  * when at least one field in that group actually has a value, so an empty
  * optional group never leaves a dangling heading. */
-function GroupHeading({ title, values }: { title: string; values: string[] }) {
+function GroupHeading({ title, values, lang }: { title: string; values: string[]; lang: string }) {
   if (!values.some((v) => v.trim())) return null;
   return (
     <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.3, color: "#94a3b8", margin: "16px 0 4px" }}>
-      {title}
+      {translateDpp(title, lang)}
     </p>
   );
 }
 
-function LayerCard({ layer, index }: { layer: PackagingLayer; index: number }) {
+function LayerCard({ layer, index, lang }: { layer: PackagingLayer; index: number; lang: string }) {
   const componentRows = layer.components
     .map((c) =>
       [c.component, c.material, c.weightGrams && `${c.weightGrams} g`, c.recycledPercent && `${c.recycledPercent}% recycled`]
@@ -70,29 +67,30 @@ function LayerCard({ layer, index }: { layer: PackagingLayer; index: number }) {
 
   return (
     <div style={{ padding: "14px 0", borderTop: index > 0 ? "1px solid #f1f5f9" : undefined }}>
-      <p className="notranslate" translate="no" style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", margin: "0 0 6px" }}>
-        {layer.label || `Layer ${index + 1}`}
+      <p style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", margin: "0 0 6px" }}>
+        {layer.label || translateDppTemplate("Layer {n}", lang, index + 1)}
       </p>
       <dl style={{ margin: 0 }}>
-        <Row label="Packaging name" value={layer.packagingName} />
-        <Row label="Manufacturer" value={layer.manufacturer} />
-        <Row label="Manufacturer country" value={layer.manufacturerCountry} />
-        <Row label="Layer type (PPWR)" value={layer.layerType} />
-        <Row label="Weight (g)" value={layer.weightGrams} />
-        <Row label="Layer composition" value={componentRows.join("; ")} />
-        <Row label="Recyclability grade" value={layer.recyclabilityGrade} />
-        <Row label="Reusable" value={layer.reusable} />
+        <Row label="Packaging name" value={layer.packagingName} lang={lang} />
+        <Row label="Manufacturer" value={layer.manufacturer} lang={lang} />
+        <Row label="Manufacturer country" value={layer.manufacturerCountry} lang={lang} />
+        <Row label="Layer type (PPWR)" value={layer.layerType} lang={lang} />
+        <Row label="Weight (g)" value={layer.weightGrams} lang={lang} />
+        <Row label="Layer composition" value={componentRows.join("; ")} lang={lang} />
+        <Row label="Recyclability grade" value={layer.recyclabilityGrade} lang={lang} />
+        <Row label="Reusable" value={layer.reusable} lang={lang} />
         <Row
           label="EPR registration"
           value={eprRows
             .map((e) => [e.country, e.schemeName, e.registrationNumber].filter(Boolean).join(": "))
             .join(" · ")}
+          lang={lang}
         />
-        <Row label="DoC number" value={layer.docNumber} />
-        <Row label="DoC issue date" value={layer.docIssueDate} />
-        <Row label="EU DoC exists" value={layer.euDocExists} />
-        <Row label="REACH / SVHC compliant" value={layer.reachSvhcCompliant} />
-        <Row label="Declaration of Conformity" value={layer.docUrl} />
+        <Row label="DoC number" value={layer.docNumber} lang={lang} />
+        <Row label="DoC issue date" value={layer.docIssueDate} lang={lang} />
+        <Row label="EU DoC exists" value={layer.euDocExists} lang={lang} />
+        <Row label="REACH / SVHC compliant" value={layer.reachSvhcCompliant} lang={lang} />
+        <Row label="Declaration of Conformity" value={layer.docUrl} lang={lang} />
 
         <GroupHeading
           title="Classification & minimisation"
@@ -106,25 +104,27 @@ function LayerCard({ layer, index }: { layer: PackagingLayer; index: number }) {
             layer.packagingRatio,
             layer.monoMaterial,
           ]}
+        lang={lang}
         />
-        <Row label="Packaging category" value={layer.packagingCategory} />
-        <Row label="Packaging format" value={layer.packagingFormat} />
-        <Row label="Volume (l)" value={layer.volumeLitres} />
-        <Row label="Dimensions" value={layer.dimensions} />
-        <Row label="Total weight (g)" value={layer.totalWeightGrams} />
-        <Row label="Empty weight (g)" value={layer.emptyWeightGrams} />
-        <Row label="Packaging ratio" value={layer.packagingRatio} />
-        <Row label="Mono-material" value={layer.monoMaterial} />
+        <Row label="Packaging category" value={layer.packagingCategory} lang={lang} />
+        <Row label="Packaging format" value={layer.packagingFormat} lang={lang} />
+        <Row label="Volume (l)" value={layer.volumeLitres} lang={lang} />
+        <Row label="Dimensions" value={layer.dimensions} lang={lang} />
+        <Row label="Total weight (g)" value={layer.totalWeightGrams} lang={lang} />
+        <Row label="Empty weight (g)" value={layer.emptyWeightGrams} lang={lang} />
+        <Row label="Packaging ratio" value={layer.packagingRatio} lang={lang} />
+        <Row label="Mono-material" value={layer.monoMaterial} lang={lang} />
 
         <GroupHeading
           title="Economic operator"
           values={[layer.manufacturerRole, layer.uniquePackagingIdentifier, layer.producerTrademark, layer.importer, layer.importerAddress]}
+        lang={lang}
         />
-        <Row label="Manufacturer role" value={layer.manufacturerRole} />
-        <Row label="Unique packaging identifier" value={layer.uniquePackagingIdentifier} />
-        <Row label="Producer trademark" value={layer.producerTrademark} />
-        <Row label="Importer" value={layer.importer} />
-        <Row label="Importer address" value={layer.importerAddress} />
+        <Row label="Manufacturer role" value={layer.manufacturerRole} lang={lang} />
+        <Row label="Unique packaging identifier" value={layer.uniquePackagingIdentifier} lang={lang} />
+        <Row label="Producer trademark" value={layer.producerTrademark} lang={lang} />
+        <Row label="Importer" value={layer.importer} lang={lang} />
+        <Row label="Importer address" value={layer.importerAddress} lang={lang} />
 
         <GroupHeading
           title="Substances"
@@ -139,16 +139,17 @@ function LayerCard({ layer, index }: { layer: PackagingLayer; index: number }) {
             layer.svhcPresent,
             layer.svhcDetails,
           ]}
+        lang={lang}
         />
-        <Row label="Heavy metals Σ Pb+Cd+Hg+CrVI (ppm)" value={layer.heavyMetalsPpm} />
-        <Row label="PFAS present" value={layer.pfasPresent} />
-        <Row label="Food-contact" value={layer.foodContact} />
-        <Row label="PFAS-free" value={layer.pfasFree} />
-        <Row label="Total fluorine (ppm)" value={layer.totalFluorinePpm} />
-        <Row label="Fluorine under limit" value={layer.fluorineUnderLimit} />
-        <Row label="Bisphenol-free (BPA)" value={layer.bisphenolFree} />
-        <Row label="SVHC present" value={layer.svhcPresent} />
-        <Row label="SVHC details" value={layer.svhcDetails} />
+        <Row label="Heavy metals Σ Pb+Cd+Hg+CrVI (ppm)" value={layer.heavyMetalsPpm} lang={lang} />
+        <Row label="PFAS present" value={layer.pfasPresent} lang={lang} />
+        <Row label="Food-contact" value={layer.foodContact} lang={lang} />
+        <Row label="PFAS-free" value={layer.pfasFree} lang={lang} />
+        <Row label="Total fluorine (ppm)" value={layer.totalFluorinePpm} lang={lang} />
+        <Row label="Fluorine under limit" value={layer.fluorineUnderLimit} lang={lang} />
+        <Row label="Bisphenol-free (BPA)" value={layer.bisphenolFree} lang={lang} />
+        <Row label="SVHC present" value={layer.svhcPresent} lang={lang} />
+        <Row label="SVHC details" value={layer.svhcDetails} lang={lang} />
 
         <GroupHeading
           title="Recyclability"
@@ -163,26 +164,28 @@ function LayerCard({ layer, index }: { layer: PackagingLayer; index: number }) {
             layer.separateCollectionLabel,
             layer.qrDigitalCarrier,
           ]}
+        lang={lang}
         />
-        <Row label="Recycled content (%)" value={layer.recycledContentPercent} />
-        <Row label="Recyclability (%)" value={layer.recyclabilityPercent} />
-        <Row label="Recycling stream" value={layer.recyclingStream} />
-        <Row label="Separable components" value={layer.separableComponents} />
-        <Row label="Compostable" value={layer.compostable} />
-        <Row label="Compostability standard" value={layer.compostabilityStandard} />
-        <Row label="Material label" value={layer.materialLabel} />
-        <Row label="Separate-collection label" value={layer.separateCollectionLabel} />
-        <Row label="QR / digital carrier" value={layer.qrDigitalCarrier} />
+        <Row label="Recycled content (%)" value={layer.recycledContentPercent} lang={lang} />
+        <Row label="Recyclability (%)" value={layer.recyclabilityPercent} lang={lang} />
+        <Row label="Recycling stream" value={layer.recyclingStream} lang={lang} />
+        <Row label="Separable components" value={layer.separableComponents} lang={lang} />
+        <Row label="Compostable" value={layer.compostable} lang={lang} />
+        <Row label="Compostability standard" value={layer.compostabilityStandard} lang={lang} />
+        <Row label="Material label" value={layer.materialLabel} lang={lang} />
+        <Row label="Separate-collection label" value={layer.separateCollectionLabel} lang={lang} />
+        <Row label="QR / digital carrier" value={layer.qrDigitalCarrier} lang={lang} />
 
         <GroupHeading
           title="Reuse"
           values={[layer.depositScheme, layer.depositAmount, layer.designedReuseCycles, layer.reuseSystemUrl, layer.returnPointsUrl]}
+        lang={lang}
         />
-        <Row label="Deposit scheme" value={layer.depositScheme} />
-        <Row label="Deposit amount (€)" value={layer.depositAmount} />
-        <Row label="Designed reuse cycles" value={layer.designedReuseCycles} />
-        <Row label="Reuse system URL" value={layer.reuseSystemUrl} />
-        <Row label="Return points URL" value={layer.returnPointsUrl} />
+        <Row label="Deposit scheme" value={layer.depositScheme} lang={lang} />
+        <Row label="Deposit amount (€)" value={layer.depositAmount} lang={lang} />
+        <Row label="Designed reuse cycles" value={layer.designedReuseCycles} lang={lang} />
+        <Row label="Reuse system URL" value={layer.reuseSystemUrl} lang={lang} />
+        <Row label="Return points URL" value={layer.returnPointsUrl} lang={lang} />
 
         <GroupHeading
           title="Conformity (extra) & footprint"
@@ -195,14 +198,15 @@ function LayerCard({ layer, index }: { layer: PackagingLayer; index: number }) {
             layer.carbonFootprint,
             layer.carbonSource,
           ]}
+        lang={lang}
         />
-        <Row label="Conformity assessment date" value={layer.conformityAssessmentDate} />
-        <Row label="Retention (years)" value={layer.retentionYears} />
-        <Row label="Test reports URL" value={layer.testReportsUrl} />
-        <Row label="DoC signed by" value={layer.docSignedBy} />
-        <Row label="EPR registration (single, legacy)" value={layer.eprRegistrationLegacy} />
-        <Row label="Carbon footprint (g CO₂e)" value={layer.carbonFootprint} />
-        <Row label="Carbon source" value={layer.carbonSource} />
+        <Row label="Conformity assessment date" value={layer.conformityAssessmentDate} lang={lang} />
+        <Row label="Retention (years)" value={layer.retentionYears} lang={lang} />
+        <Row label="Test reports URL" value={layer.testReportsUrl} lang={lang} />
+        <Row label="DoC signed by" value={layer.docSignedBy} lang={lang} />
+        <Row label="EPR registration (single, legacy)" value={layer.eprRegistrationLegacy} lang={lang} />
+        <Row label="Carbon footprint (g CO₂e)" value={layer.carbonFootprint} lang={lang} />
+        <Row label="Carbon source" value={layer.carbonSource} lang={lang} />
       </dl>
     </div>
   );
@@ -213,11 +217,13 @@ export function PackagingLayersView({
   title,
   directive,
   defaultOpen,
+  lang,
 }: {
   layers: PackagingLayer[];
   title: string;
   directive: string;
   defaultOpen: boolean;
+  lang: string;
 }) {
   if (layers.length === 0) return null;
 
@@ -242,7 +248,7 @@ export function PackagingLayersView({
           gap: 8,
         }}
       >
-        <span style={{ flex: 1, minWidth: 0 }}>{title}</span>
+        <span style={{ flex: 1, minWidth: 0 }}>{translateDpp(title, lang)}</span>
         <span style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
           <SectionInfoIcon directive={directive} />
           <SectionChevron />
@@ -250,7 +256,7 @@ export function PackagingLayersView({
       </summary>
       <div style={{ padding: "0 18px 16px" }}>
         {layers.map((layer, i) => (
-          <LayerCard key={layer.id} layer={layer} index={i} />
+          <LayerCard key={layer.id} layer={layer} index={i} lang={lang} />
         ))}
       </div>
     </details>

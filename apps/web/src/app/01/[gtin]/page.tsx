@@ -25,6 +25,7 @@ import {
   NotFoundView,
 } from "../../p/[slug]/page";
 import { parseGtinPathSegment } from "@/lib/gs1/digital-link";
+import { normalizeDppLang } from "@/lib/dpp/i18n/languages";
 import { DppPassportView } from "./dpp-view";
 import { GtinModeSwitcher } from "./gtin-mode-switcher";
 
@@ -107,6 +108,10 @@ export default async function GtinDigitalLinkPage({ params, searchParams }: Page
   // GS1 Digital Link AI 10 (batch/lot), passed straight through for display -
   // it isn't a stored field, just context the passport shows back to the scanner.
   const batch = typeof sp.batch === "string" ? sp.batch : null;
+  // Selected UI language for the DPP passport's fixed copy (labels, titles) -
+  // see DppLanguagePicker/translateDpp. Falls back to English for anything
+  // not in DPP_LANGUAGES. Never affects the actual product/answer data.
+  const lang = normalizeDppLang(typeof sp.lang === "string" ? sp.lang : undefined);
 
   const [page, dpp, mode, dppVersions] = await Promise.all([
     getPageByGtin(rawGtin),
@@ -136,7 +141,7 @@ export default async function GtinDigitalLinkPage({ params, searchParams }: Page
   const dppVersionsList = dppVersions.visible ? dppVersions.versions : undefined;
 
   if (showDpp && !showGs1) {
-    return <DppPassportView data={dppData!} batch={batch} versions={dppVersionsList} viewingVersion={viewingVersion} />;
+    return <DppPassportView data={dppData!} batch={batch} versions={dppVersionsList} viewingVersion={viewingVersion} lang={lang} />;
   }
 
   const gs1Content = await renderResolvedPage(page, "GS1", "01", channel, serializeSearch(sp), true);
@@ -145,7 +150,7 @@ export default async function GtinDigitalLinkPage({ params, searchParams }: Page
   return (
     <GtinModeSwitcher
       gs1={gs1Content}
-      dpp={<DppPassportView data={dppData!} batch={batch} versions={dppVersionsList} viewingVersion={viewingVersion} />}
+      dpp={<DppPassportView data={dppData!} batch={batch} versions={dppVersionsList} viewingVersion={viewingVersion} lang={lang} />}
       defaultMode="gs1"
     />
   );

@@ -15,6 +15,7 @@ import { DPP_SECTOR_LABELS, trimFieldLabel } from "@/lib/dpp/sector-sections";
 import type { PackagingLayer } from "@/lib/dpp/packaging-layers";
 import type { Row } from "@/lib/dpp/repeatable-rows";
 import type { PublicDppVersionSummary } from "@/lib/dashboard/actions";
+import { translateDpp } from "@/lib/dpp/i18n/translate";
 import { GalleryCarousel } from "./gallery-carousel";
 import { PackagingLayersView } from "./packaging-layers-view";
 import { RepeatableRowsView } from "./repeatable-rows-view";
@@ -85,11 +86,11 @@ function ToggleDot({ value }: { value: string }) {
   );
 }
 
-function FieldRow({ field, value, required }: { field: DppSectionField; value: string; required: boolean }) {
+function FieldRow({ field, value, required, lang }: { field: DppSectionField; value: string; required: boolean; lang: string }) {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 16, padding: "10px 0", borderBottom: "1px solid #f1f5f9" }}>
       <dt style={{ fontSize: 12, color: "#64748b", margin: 0, flex: "0 1 auto", maxWidth: "45%" }}>
-        {trimFieldLabel(field.text)}
+        {trimFieldLabel(translateDpp(field.text, lang))}
         {required && (
           <span aria-hidden style={{ color: "#f59e0b", marginLeft: 4 }}>
             •
@@ -99,33 +100,22 @@ function FieldRow({ field, value, required }: { field: DppSectionField; value: s
       <dd style={{ fontSize: 13, color: "#0f172a", margin: 0, fontWeight: 600, flex: "1 1 auto", minWidth: 0, textAlign: "right", wordBreak: "break-word" }}>
         {field.type === "upload" ? (
           // "View document ↗" is our own system-generated label, not user
-          // data - left translatable. Only the href (an attribute, never
+          // data - translated. Only the href (an attribute, never
           // translated regardless) carries the actual uploaded file's data.
           <a href={value} target="_blank" rel="noopener noreferrer" style={{ color: "#0284c7", wordBreak: "break-word" }}>
-            View document ↗
+            {translateDpp("View document ↗", lang)}
           </a>
         ) : field.type === "url" ? (
-          <a
-            href={value}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="notranslate"
-            translate="no"
-            style={{ color: "#0284c7", wordBreak: "break-word" }}
-          >
+          <a href={value} target="_blank" rel="noopener noreferrer" style={{ color: "#0284c7", wordBreak: "break-word" }}>
             {value}
           </a>
         ) : field.type === "toggle" ? (
           <span style={{ display: "inline-flex", alignItems: "center", gap: 6, justifyContent: "flex-end" }}>
             <ToggleDot value={value} />
-            <span className="notranslate" translate="no">
-              {value}
-            </span>
+            <span>{value}</span>
           </span>
         ) : (
-          <span className="notranslate" translate="no">
-            {value}
-          </span>
+          <span>{value}</span>
         )}
       </dd>
     </div>
@@ -136,10 +126,12 @@ function SectionCard({
   spec,
   answers,
   defaultOpen,
+  lang,
 }: {
   spec: DppSectionSpec;
   answers: Record<string, string>;
   defaultOpen: boolean;
+  lang: string;
 }) {
   if (spec.groups) {
     const groups = spec.groups
@@ -168,7 +160,7 @@ function SectionCard({
             gap: 8,
           }}
         >
-          <span style={{ flex: 1, minWidth: 0 }}>{spec.title}</span>
+          <span style={{ flex: 1, minWidth: 0 }}>{translateDpp(spec.title, lang)}</span>
           <span style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
             <SectionInfoIcon directive={spec.directive} />
             <SectionChevron />
@@ -178,11 +170,11 @@ function SectionCard({
           {groups.map((g) => (
             <div key={g.label} style={{ marginBottom: 8 }}>
               <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: "#94a3b8", margin: "8px 0 2px" }}>
-                {g.label}
+                {translateDpp(g.label, lang)}
               </p>
               <dl style={{ margin: 0 }}>
                 {g.fields.map((f) => (
-                  <FieldRow key={f.text} field={f} value={answers[f.text]!} required={isFieldRequired(f, answers)} />
+                  <FieldRow key={f.text} field={f} value={answers[f.text]!} required={isFieldRequired(f, answers)} lang={lang} />
                 ))}
               </dl>
             </div>
@@ -216,7 +208,7 @@ function SectionCard({
           gap: 8,
         }}
       >
-        <span style={{ flex: 1, minWidth: 0 }}>{spec.title}</span>
+        <span style={{ flex: 1, minWidth: 0 }}>{translateDpp(spec.title, lang)}</span>
         <span style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
           <SectionInfoIcon directive={spec.directive} />
           <SectionChevron />
@@ -225,7 +217,7 @@ function SectionCard({
       <div style={{ padding: "0 18px 16px" }}>
         <dl style={{ margin: 0 }}>
           {fields.map((f) => (
-            <FieldRow key={f.text} field={f} value={answers[f.text]!} required={isFieldRequired(f, answers)} />
+            <FieldRow key={f.text} field={f} value={answers[f.text]!} required={isFieldRequired(f, answers)} lang={lang} />
           ))}
         </dl>
       </div>
@@ -238,6 +230,7 @@ export function DppPassportView({
   batch,
   versions,
   viewingVersion,
+  lang = "en",
 }: {
   data: PublicDppData;
   batch: string | null;
@@ -245,15 +238,20 @@ export function DppPassportView({
   versions?: PublicDppVersionSummary[];
   /** Set when rendering a past version's snapshot instead of the live passport. */
   viewingVersion?: number | null;
+  /** Selected UI language for fixed copy (labels/titles/static strings) -
+   * see translateDpp/DppLanguagePicker. Defaults to English for callers
+   * (e.g. gtin-mode-switcher's static-generation paths) that don't pass one. */
+  lang?: string;
 }) {
   const sections = [buildIdentificationSectionSpec(data.sector), ...getOrderedDppSections(data.sector)];
   const logoUrl = data.logoUrl || data.brand?.logoUrl || data.company.logoUrl;
   const isVerified = data.gtinStatus === "GS1_VERIFIED";
+  const t = (text: string) => translateDpp(text, lang);
 
   return (
     <div style={{ minHeight: "100vh", background: "#f8fafc", fontFamily: "var(--font-sans)" }}>
       <SectionChevronStyle />
-      {data.translationEnabled && <DppLanguagePicker />}
+      {data.translationEnabled && <DppLanguagePicker lang={lang} />}
       <div style={{ maxWidth: 640, margin: "0 auto", padding: "32px 20px 56px" }}>
         {/* Header / identity */}
         <div
@@ -267,7 +265,7 @@ export function DppPassportView({
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
             <div style={{ minWidth: 0, flex: 1 }}>
               <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(255,255,255,0.5)", margin: "0 0 12px" }}>
-                Digital Product Passport
+                {t("Digital Product Passport")}
               </p>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
                 {logoUrl && (
@@ -278,34 +276,26 @@ export function DppPassportView({
                     style={{ width: 36, height: 36, objectFit: "contain", borderRadius: 8, background: "#fff", flexShrink: 0 }}
                   />
                 )}
-                <h1 className="notranslate" translate="no" style={{ fontSize: 20, fontWeight: 700, color: "#fff", margin: 0, wordBreak: "break-word" }}>
-                  {data.productName}
-                </h1>
+                <h1 style={{ fontSize: 20, fontWeight: 700, color: "#fff", margin: 0, wordBreak: "break-word" }}>{data.productName}</h1>
               </div>
-              {data.tagline && (
-                <p className="notranslate" translate="no" style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", margin: "0 0 4px" }}>
-                  {data.tagline}
-                </p>
-              )}
-              <p className="notranslate" translate="no" style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", margin: "0 0 14px" }}>
-                {data.brand?.name ?? data.company.name}
-              </p>
+              {data.tagline && <p style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", margin: "0 0 4px" }}>{data.tagline}</p>}
+              <p style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", margin: "0 0 14px" }}>{data.brand?.name ?? data.company.name}</p>
 
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                <span className="notranslate" translate="no" style={darkChipStyle}>
-                  GTIN {formatGtinDisplay(data.gtin)}
+                <span style={darkChipStyle}>
+                  {t("GTIN")} {formatGtinDisplay(data.gtin)}
                 </span>
                 {isVerified && (
                   <span style={{ ...darkChipStyle, color: "#6ee7b7", background: "rgba(5,150,105,0.2)" }}>
-                    ✓ Verified via GS1 Registry
+                    {t("✓ Verified via GS1 Registry")}
                   </span>
                 )}
                 {batch && (
                   <span style={darkChipStyle}>
-                    Batch <span className="notranslate" translate="no">{batch}</span>
+                    {t("Batch")} {batch}
                   </span>
                 )}
-                {data.sector && <span style={darkChipStyle}>{DPP_SECTOR_LABELS[data.sector]}</span>}
+                {data.sector && <span style={darkChipStyle}>{t(DPP_SECTOR_LABELS[data.sector])}</span>}
               </div>
             </div>
             <PassportQrCode gtin={data.gtin} />
@@ -328,26 +318,26 @@ export function DppPassportView({
               gap: 8,
             }}
           >
-            <span>Viewing version {viewingVersion} — historical data, not the current passport.</span>
+            <span>{translateDpp("Viewing version {n} — historical data, not the current passport.", lang).replace("{n}", String(viewingVersion))}</span>
             <a
               href={`/01/${data.gtin}`}
               style={{ color: "#92400e", fontWeight: 600, textDecoration: "underline", whiteSpace: "nowrap" }}
             >
-              Back to current
+              {t("Back to current")}
             </a>
           </div>
         )}
 
         {/* Gallery */}
         <GalleryCarousel images={data.gallery} />
-        <CopyLinkRow gtin={data.gtin} />
+        <CopyLinkRow gtin={data.gtin} lang={lang} />
 
         <p style={{ fontSize: 11, color: "#94a3b8", margin: "0 0 10px", textAlign: "center" }}>
-          Fields marked{" "}
+          {t("Fields marked")}{" "}
           <span aria-hidden style={{ color: "#f59e0b" }}>
             •
           </span>{" "}
-          are mandatory under EU regulation.
+          {t("are mandatory under EU regulation.")}
         </p>
 
         {/* Compliance sections */}
@@ -361,6 +351,7 @@ export function DppPassportView({
                   directive={spec.directive}
                   layers={(data.sectionAnswers.packaging as { layers?: PackagingLayer[] } | undefined)?.layers ?? []}
                   defaultOpen={i === 0}
+                  lang={lang}
                 />
               );
             }
@@ -377,17 +368,18 @@ export function DppPassportView({
             // repeatable block - see repeatable-rows-view.tsx. Substances of
             // concern (SVHC) reverses this: its SVHC substance table card
             // comes before its Compliance & certifications card.
-            const sectionCard = <SectionCard spec={spec} answers={answers} defaultOpen={i === 0} />;
+            const sectionCard = <SectionCard spec={spec} answers={answers} defaultOpen={i === 0} lang={lang} />;
             const repeatableCards = spec.repeatable?.map((block) => (
               <RepeatableRowsView
                 key={block.key}
                 fields={block.fields}
                 rows={rowsByBlock[block.key] ?? []}
-                title={spec.repeatable!.length > 1 && block.label ? `${spec.title} — ${block.label}` : spec.title}
+                title={spec.repeatable!.length > 1 && block.label ? `${t(spec.title)} — ${t(block.label)}` : t(spec.title)}
                 directive={spec.directive}
                 defaultOpen={false}
                 explainerText={block.explainerText}
                 explainerText2={block.explainerText2}
+                lang={lang}
               />
             ));
 
@@ -419,7 +411,7 @@ export function DppPassportView({
               marginTop: 10,
             }}
           >
-            <h2 style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", margin: "0 0 12px" }}>Version history</h2>
+            <h2 style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", margin: "0 0 12px" }}>{t("Version history")}</h2>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {versions.map((v, i) => (
                 <div
@@ -437,22 +429,18 @@ export function DppPassportView({
                   <div style={{ minWidth: 0 }}>
                     <span style={{ fontWeight: 700, color: "#0f172a" }}>v{v.versionNumber}</span>
                     <span style={{ color: "#94a3b8", marginLeft: 6 }}>{new Date(v.createdAt).toLocaleString()}</span>
-                    {v.summary && (
-                      <div className="notranslate" translate="no" style={{ color: "#64748b", marginTop: 2 }}>
-                        {v.summary}
-                      </div>
-                    )}
+                    {v.summary && <div style={{ color: "#64748b", marginTop: 2 }}>{v.summary}</div>}
                   </div>
                   {v.versionNumber === viewingVersion ? (
-                    <span style={{ color: "#92400e", fontWeight: 600, whiteSpace: "nowrap" }}>Viewing</span>
+                    <span style={{ color: "#92400e", fontWeight: 600, whiteSpace: "nowrap" }}>{t("Viewing")}</span>
                   ) : i === 0 && viewingVersion == null ? (
-                    <span style={{ color: "#059669", fontWeight: 600, whiteSpace: "nowrap" }}>Current</span>
+                    <span style={{ color: "#059669", fontWeight: 600, whiteSpace: "nowrap" }}>{t("Current")}</span>
                   ) : (
                     <a
-                      href={`/01/${data.gtin}?version=${v.versionNumber}`}
+                      href={`/01/${data.gtin}?version=${v.versionNumber}${lang !== "en" ? `&lang=${lang}` : ""}`}
                       style={{ color: data.themeColor, fontWeight: 600, whiteSpace: "nowrap", textDecoration: "none" }}
                     >
-                      View
+                      {t("View")}
                     </a>
                   )}
                 </div>
@@ -463,11 +451,8 @@ export function DppPassportView({
 
         <footer style={{ marginTop: 32, textAlign: "center" }}>
           <p style={{ fontSize: 11, color: "#cbd5e1", margin: "0 0 8px" }}>
-            Passport data provided by{" "}
-            <span className="notranslate" translate="no">
-              {data.company.name}
-            </span>
-            , per EU Regulation 2024/1781 (ESPR).
+            {t("Passport data provided by")} {data.company.name}
+            {t(", per EU Regulation 2024/1781 (ESPR).")}
           </p>
           <a
             href="/"
@@ -482,7 +467,7 @@ export function DppPassportView({
               textDecoration: "none",
             }}
           >
-            Powered by
+            {t("Powered by")}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo-light.png" alt="Productix" style={{ height: 12, width: "auto", display: "block" }} />
           </a>

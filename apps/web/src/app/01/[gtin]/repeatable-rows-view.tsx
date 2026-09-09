@@ -7,6 +7,7 @@
 // lists its filled fields directly (no synthetic "Row N" heading) - a
 // divider between entries is enough to tell them apart.
 import type { Row, RowFieldDef } from "@/lib/dpp/repeatable-rows";
+import { translateDpp } from "@/lib/dpp/i18n/translate";
 import { SectionChevron, SectionInfoIcon } from "./summary-chevron";
 
 /** Small colored dot before a `type: "toggle"` field's Yes/No value - "Yes"
@@ -43,16 +44,12 @@ function FieldValue({ field, value }: { field: RowFieldDef; value: string }) {
   return <>{value}</>;
 }
 
-function FieldRow({ field, value }: { field: RowFieldDef; value: string }) {
+function FieldRow({ field, value, lang }: { field: RowFieldDef; value: string; lang: string }) {
   if (!value.trim()) return null;
   return (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 16, padding: "8px 0", borderBottom: "1px solid #f1f5f9" }}>
-      <dt style={{ fontSize: 12, color: "#64748b", margin: 0, flex: "0 1 auto", maxWidth: "45%" }}>{field.label}</dt>
-      <dd
-        className="notranslate"
-        translate="no"
-        style={{ fontSize: 13, color: "#0f172a", margin: 0, fontWeight: 600, flex: "1 1 auto", minWidth: 0, textAlign: "right", wordBreak: "break-word" }}
-      >
+      <dt style={{ fontSize: 12, color: "#64748b", margin: 0, flex: "0 1 auto", maxWidth: "45%" }}>{translateDpp(field.label, lang)}</dt>
+      <dd style={{ fontSize: 13, color: "#0f172a", margin: 0, fontWeight: 600, flex: "1 1 auto", minWidth: 0, textAlign: "right", wordBreak: "break-word" }}>
         <FieldValue field={field} value={value} />
       </dd>
     </div>
@@ -81,7 +78,7 @@ function isCompactTable(fields: RowFieldDef[]): boolean {
   return fields.length >= 2 && fields.length <= 3 && !isTitleContentPair(fields);
 }
 
-function CompactRowsTable({ fields, rows }: { fields: RowFieldDef[]; rows: Row[] }) {
+function CompactRowsTable({ fields, rows, lang }: { fields: RowFieldDef[]; rows: Row[]; lang: string }) {
   return (
     <div style={{ overflowX: "auto" }}>
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -102,7 +99,7 @@ function CompactRowsTable({ fields, rows }: { fields: RowFieldDef[]; rows: Row[]
                   whiteSpace: "nowrap",
                 }}
               >
-                {f.label}
+                {translateDpp(f.label, lang)}
               </th>
             ))}
           </tr>
@@ -113,8 +110,6 @@ function CompactRowsTable({ fields, rows }: { fields: RowFieldDef[]; rows: Row[]
               {fields.map((f, j) => (
                 <td
                   key={f.key}
-                  className="notranslate"
-                  translate="no"
                   style={{
                     textAlign: j === 0 ? "left" : "right",
                     padding: "8px 0",
@@ -136,7 +131,7 @@ function CompactRowsTable({ fields, rows }: { fields: RowFieldDef[]; rows: Row[]
   );
 }
 
-function RowCard({ fields, row, index }: { fields: RowFieldDef[]; row: Row; index: number }) {
+function RowCard({ fields, row, index, lang }: { fields: RowFieldDef[]; row: Row; index: number; lang: string }) {
   const border = { borderTop: index > 0 ? "1px solid #f1f5f9" : undefined };
 
   if (isTitleContentPair(fields)) {
@@ -154,16 +149,8 @@ function RowCard({ fields, row, index }: { fields: RowFieldDef[]; row: Row; inde
             gap: "4px 16px",
           }}
         >
-          <dt className="notranslate" translate="no" style={{ fontSize: 13, color: "#64748b", margin: 0, wordBreak: "break-word" }}>
-            {title}
-          </dt>
-          <dd
-            className="notranslate"
-            translate="no"
-            style={{ fontSize: 13, color: "#0f172a", margin: 0, fontWeight: 600, wordBreak: "break-word", textAlign: "right" }}
-          >
-            {content}
-          </dd>
+          <dt style={{ fontSize: 13, color: "#64748b", margin: 0, wordBreak: "break-word" }}>{title}</dt>
+          <dd style={{ fontSize: 13, color: "#0f172a", margin: 0, fontWeight: 600, wordBreak: "break-word", textAlign: "right" }}>{content}</dd>
         </dl>
       </div>
     );
@@ -176,7 +163,7 @@ function RowCard({ fields, row, index }: { fields: RowFieldDef[]; row: Row; inde
     <div style={{ padding: "14px 0", ...border }}>
       <dl style={{ margin: 0 }}>
         {filled.map((f) => (
-          <FieldRow key={f.key} field={f} value={row[f.key]!} />
+          <FieldRow key={f.key} field={f} value={row[f.key]!} lang={lang} />
         ))}
       </dl>
     </div>
@@ -191,6 +178,7 @@ export function RepeatableRowsView({
   defaultOpen,
   explainerText,
   explainerText2,
+  lang,
 }: {
   fields: RowFieldDef[];
   rows: Row[];
@@ -199,6 +187,7 @@ export function RepeatableRowsView({
   defaultOpen: boolean;
   explainerText?: string;
   explainerText2?: string;
+  lang: string;
 }) {
   const nonEmptyRows = rows.filter((row) => fields.some((f) => row[f.key]?.trim()));
   if (nonEmptyRows.length === 0) return null;
@@ -231,12 +220,12 @@ export function RepeatableRowsView({
         </span>
       </summary>
       <div style={{ padding: "0 18px 16px" }}>
-        {explainerText && <p style={{ fontSize: 12, color: "#94a3b8", margin: "0 0 8px" }}>{explainerText}</p>}
-        {explainerText2 && <p style={{ fontSize: 12, color: "#94a3b8", margin: "0 0 8px" }}>{explainerText2}</p>}
+        {explainerText && <p style={{ fontSize: 12, color: "#94a3b8", margin: "0 0 8px" }}>{translateDpp(explainerText, lang)}</p>}
+        {explainerText2 && <p style={{ fontSize: 12, color: "#94a3b8", margin: "0 0 8px" }}>{translateDpp(explainerText2, lang)}</p>}
         {isCompactTable(fields) ? (
-          <CompactRowsTable fields={fields} rows={nonEmptyRows} />
+          <CompactRowsTable fields={fields} rows={nonEmptyRows} lang={lang} />
         ) : (
-          nonEmptyRows.map((row, i) => <RowCard key={i} fields={fields} row={row} index={i} />)
+          nonEmptyRows.map((row, i) => <RowCard key={i} fields={fields} row={row} index={i} lang={lang} />)
         )}
       </div>
     </details>

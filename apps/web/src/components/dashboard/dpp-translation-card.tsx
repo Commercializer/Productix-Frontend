@@ -35,9 +35,9 @@ export function DppTranslationCard() {
     <div className="bg-(--ds-surface) border border-(--ds-border) rounded-xl p-8">
       <h3 className="text-lg font-semibold text-(--ds-text-primary) mb-1 tracking-tight">DPP Translation</h3>
       <p className="text-[13px] text-(--ds-text-secondary) mb-6">
-        Controls whether the public passport page (/01/&#123;gtin&#125;) shows a language picker that machine-translates
-        DPP terms - section titles, field labels, and static copy - via Google Translate. Your product data (names,
-        descriptions, and every value entered for the passport) is never translated, whether this is on or off.
+        Controls whether the public passport page (/01/&#123;gtin&#125;) shows a language picker that translates
+        DPP terms - section titles, field labels, and static copy - using built-in translations. Your product data
+        (names, descriptions, and every value entered for the passport) is never translated, whether this is on or off.
       </p>
 
       {loading ? (

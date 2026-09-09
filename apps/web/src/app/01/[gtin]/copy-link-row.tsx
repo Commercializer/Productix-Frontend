@@ -6,14 +6,15 @@
 // window.location.origin (respects a company's custom domain).
 import { useEffect, useState } from "react";
 import { Link2, Copy, Check } from "lucide-react";
+import { translateDpp } from "@/lib/dpp/i18n/translate";
 
-export function CopyLinkRow({ gtin }: { gtin: string }) {
+export function CopyLinkRow({ gtin, lang }: { gtin: string; lang: string }) {
   const [url, setUrl] = useState(`/01/${gtin}`);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    setUrl(`${window.location.origin}/01/${gtin}`);
-  }, [gtin]);
+    setUrl(`${window.location.origin}/01/${gtin}${lang !== "en" ? `?lang=${lang}` : ""}`);
+  }, [gtin, lang]);
 
   const onCopy = async () => {
     try {
@@ -39,11 +40,7 @@ export function CopyLinkRow({ gtin }: { gtin: string }) {
       }}
     >
       <Link2 size={14} color="#94a3b8" style={{ flexShrink: 0 }} />
-      <span
-        className="notranslate"
-        translate="no"
-        style={{ fontSize: 12, color: "#64748b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}
-      >
+      <span style={{ fontSize: 12, color: "#64748b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}>
         {url}
       </span>
       <button
@@ -65,7 +62,7 @@ export function CopyLinkRow({ gtin }: { gtin: string }) {
         }}
       >
         {copied ? <Check size={13} /> : <Copy size={13} />}
-        {copied ? "Copied" : "Copy link"}
+        {copied ? translateDpp("Copied", lang) : translateDpp("Copy link", lang)}
       </button>
     </div>
   );
