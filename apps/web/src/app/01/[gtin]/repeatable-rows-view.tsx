@@ -65,7 +65,7 @@ function FieldRow({ field, value, lang }: { field: RowFieldDef; value: string; l
  * - so a two-field title/content row uses the merchant's own title text as
  * the label instead of the schema's static caption. */
 function isTitleContentPair(fields: RowFieldDef[]): boolean {
-  return fields.length === 2 && /title$/i.test(fields[0].label) && /content$/i.test(fields[1].label);
+  return fields.length === 2 && /title$/i.test(fields[0]!.label) && /content$/i.test(fields[1]!.label);
 }
 
 /** A short, same-shape row schema (e.g. Food's QUID "Ingredient"/"%" list)
@@ -135,7 +135,7 @@ function RowCard({ fields, row, index, lang }: { fields: RowFieldDef[]; row: Row
   const border = { borderTop: index > 0 ? "1px solid #f1f5f9" : undefined };
 
   if (isTitleContentPair(fields)) {
-    const [titleField, contentField] = fields;
+    const [titleField, contentField] = fields as [RowFieldDef, RowFieldDef];
     const title = row[titleField.key]?.trim();
     const content = row[contentField.key]?.trim();
     if (!title || !content) return null;
