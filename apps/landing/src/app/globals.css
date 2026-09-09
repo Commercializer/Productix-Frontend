@@ -58,6 +58,11 @@
   clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
 }
 
+/* ── Softer octagon (hero ecosystem-diagram hub) ── */
+.octagon-soft {
+  clip-path: polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%);
+}
+
 /* ── Standards / credibility badge pill ── */
 .badge-pill {
   display: inline-flex;

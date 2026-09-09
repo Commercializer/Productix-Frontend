@@ -7,7 +7,6 @@ import { Hero } from "@/components/landing/hero";
 import { Industries } from "@/components/landing/industries";
 import { PlatformPillars } from "@/components/landing/platform-pillars";
 import { ProductIntelligence } from "@/components/landing/product-intelligence";
-import { TrustMarquee } from "@/components/landing/trust-marquee";
 import { WhatsNext } from "@/components/landing/whats-next";
 
 export default function LandingPage() {
@@ -15,7 +14,6 @@ export default function LandingPage() {
     <div className="min-h-dvh bg-paper text-ink antialiased">
       <Header />
       <Hero />
-      <TrustMarquee />
       <BecomingDigital />
       <PlatformPillars />
       <WhatsNext />

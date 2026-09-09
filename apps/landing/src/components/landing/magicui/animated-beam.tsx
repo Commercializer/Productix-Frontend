@@ -9,6 +9,13 @@ export interface AnimatedBeamProps {
   fromRef: RefObject<HTMLElement | null>;
   toRef: RefObject<HTMLElement | null>;
   curvature?: number;
+  /**
+   * "curve" draws a smooth quadratic bezier (the default). "elbow" draws a
+   * circuit-trace-style path: a 45° diagonal segment near the start point
+   * followed by a flat run to the end point, with no bend at all when the
+   * two points already share a Y.
+   */
+  route?: "curve" | "elbow";
   reverse?: boolean;
   duration?: number;
   delay?: number;
@@ -21,6 +28,18 @@ export interface AnimatedBeamProps {
   startYOffset?: number;
   endXOffset?: number;
   endYOffset?: number;
+  showStartDot?: boolean;
+  showEndDot?: boolean;
+  dotRadius?: number;
+  /**
+   * When true, the endpoints are pulled in from each element's center to
+   * its actual measured edge (facing the other element) instead of
+   * terminating in the middle of it. Assumes a roughly horizontal
+   * approach between the two elements.
+   */
+  stopAtEdge?: boolean;
+  /** Extra breathing room (px) pulled back past the measured edge when stopAtEdge is set. */
+  edgeGap?: number;
 }
 
 /**
@@ -35,6 +54,7 @@ export function AnimatedBeam({
   fromRef,
   toRef,
   curvature = 0,
+  route = "curve",
   reverse = false,
   duration = 4,
   delay = 0,
@@ -47,10 +67,16 @@ export function AnimatedBeam({
   startYOffset = 0,
   endXOffset = 0,
   endYOffset = 0,
+  showStartDot = false,
+  showEndDot = false,
+  dotRadius = 4,
+  stopAtEdge = false,
+  edgeGap = 8,
 }: AnimatedBeamProps) {
   const id = useId();
   const [pathD, setPathD] = useState("");
   const [svgDimensions, setSvgDimensions] = useState({ width: 0, height: 0 });
+  const [points, setPoints] = useState({ startX: 0, startY: 0, endX: 0, endY: 0 });
 
   useEffect(() => {
     const updatePath = () => {
@@ -64,15 +90,40 @@ export function AnimatedBeam({
       const svgHeight = containerRect.height;
       setSvgDimensions({ width: svgWidth, height: svgHeight });
 
-      const startX = fromRect.left - containerRect.left + fromRect.width / 2 + startXOffset;
-      const startY = fromRect.top - containerRect.top + fromRect.height / 2 + startYOffset;
-      const endX = toRect.left - containerRect.left + toRect.width / 2 + endXOffset;
-      const endY = toRect.top - containerRect.top + toRect.height / 2 + endYOffset;
+      const rawStartX = fromRect.left - containerRect.left + fromRect.width / 2;
+      const rawStartY = fromRect.top - containerRect.top + fromRect.height / 2;
+      const rawEndX = toRect.left - containerRect.left + toRect.width / 2;
+      const rawEndY = toRect.top - containerRect.top + toRect.height / 2;
 
-      const controlX = startX + (endX - startX) / 2;
-      const controlY = startY + (endY - startY) / 2 - curvature;
+      // Pull each endpoint in from the element's center to its real edge
+      // (plus a small gap) facing the other element, instead of landing
+      // in the middle of it.
+      const dir = rawEndX >= rawStartX ? 1 : -1;
+      const startX =
+        (stopAtEdge ? rawStartX + dir * (fromRect.width / 2 + edgeGap) : rawStartX) + startXOffset;
+      const endX =
+        (stopAtEdge ? rawEndX - dir * (toRect.width / 2 + edgeGap) : rawEndX) + endXOffset;
+      const startY = rawStartY + startYOffset;
+      const endY = rawEndY + endYOffset;
 
-      setPathD(`M ${startX},${startY} Q ${controlX},${controlY} ${endX},${endY}`);
+      let d: string;
+      if (route === "elbow") {
+        if (Math.abs(endY - startY) < 0.5) {
+          d = `M ${startX},${startY} L ${endX},${endY}`;
+        } else {
+          const bendDir = endX >= startX ? 1 : -1;
+          const rawBendX = startX + bendDir * Math.abs(endY - startY);
+          const bendX = bendDir === 1 ? Math.min(rawBendX, endX) : Math.max(rawBendX, endX);
+          d = `M ${startX},${startY} L ${bendX},${endY} L ${endX},${endY}`;
+        }
+      } else {
+        const controlX = startX + (endX - startX) / 2;
+        const controlY = startY + (endY - startY) / 2 - curvature;
+        d = `M ${startX},${startY} Q ${controlX},${controlY} ${endX},${endY}`;
+      }
+
+      setPathD(d);
+      setPoints({ startX, startY, endX, endY });
     };
 
     const resizeObserver = new ResizeObserver(() => updatePath());
@@ -80,7 +131,19 @@ export function AnimatedBeam({
     updatePath();
 
     return () => resizeObserver.disconnect();
-  }, [containerRef, fromRef, toRef, curvature, startXOffset, startYOffset, endXOffset, endYOffset]);
+  }, [
+    containerRef,
+    fromRef,
+    toRef,
+    curvature,
+    route,
+    startXOffset,
+    startYOffset,
+    endXOffset,
+    endYOffset,
+    stopAtEdge,
+    edgeGap,
+  ]);
 
   return (
     <svg
@@ -96,8 +159,17 @@ export function AnimatedBeam({
         strokeWidth={pathWidth}
         strokeOpacity={pathOpacity}
         strokeLinecap="round"
+        strokeLinejoin="round"
       />
-      <path d={pathD} stroke={`url(#${id})`} strokeWidth={pathWidth} strokeLinecap="round" />
+      <path
+        d={pathD}
+        stroke={`url(#${id})`}
+        strokeWidth={pathWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {showStartDot && <circle cx={points.startX} cy={points.startY} r={dotRadius} fill={gradientStartColor} />}
+      {showEndDot && <circle cx={points.endX} cy={points.endY} r={dotRadius} fill={gradientStopColor} />}
       <defs>
         <motion.linearGradient
           className="transform-gpu"
