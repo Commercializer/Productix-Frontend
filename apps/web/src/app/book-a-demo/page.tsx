@@ -16,7 +16,7 @@ export default function BookADemoPage() {
       <section className="bg-cream px-6 pb-24 pt-40 md:pt-48">
         <div className="mx-auto max-w-lg">
           <div className="text-center">
-            <span className="text-[12px] font-semibold uppercase tracking-[0.16em] text-accent-dim">
+            <span className="text-[12px] font-semibold uppercase tracking-[0.16em] text-brand-accent-dim">
               Book a Demo
             </span>
             <h1 className="mt-3 text-[clamp(2rem,4.5vw,3.2rem)] font-medium leading-[1.1] tracking-[-0.02em] text-ink">
