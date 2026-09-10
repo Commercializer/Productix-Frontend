@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { MotionConfig } from "motion/react";
 
 import { fontSans, fontMono } from "@/lib/fonts";
 import { cn } from "@productix/utils";
@@ -9,14 +10,18 @@ import { getGoogleFontsHref } from "@productix/editor";
 
 import "./globals.css";
 
+const SITE_URL = "https://www.productix.io";
+const SITE_TITLE = "Productix | Connected Products, DPP, PPWR & GS1 Digital Link";
+const SITE_DESCRIPTION =
+  "Productix connects physical products with digital identity, DPP and PPWR data, GS1 Digital Link, connected experiences and actionable product intelligence.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
-    default:
-      "Productix - Product Experience Infrastructure for Modern Consumer Brands",
+    default: SITE_TITLE,
     template: "%s | Productix",
   },
-  description:
-    "Productix transforms physical products into connected digital experiences through dynamic product engagement, consumer intelligence, packaging analytics, and activation infrastructure - built for FMCG and packaged-product brands at enterprise scale.",
+  description: SITE_DESCRIPTION,
   keywords: [
     "product experience infrastructure",
     "connected packaging",
@@ -28,12 +33,37 @@ export const metadata: Metadata = {
     "multilingual product delivery",
     "brand activation",
   ],
+  alternates: {
+    canonical: "/",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  authors: [{ name: "Productix", url: SITE_URL }],
+  creator: "Productix",
+  publisher: "Productix",
+  openGraph: {
+    type: "website",
+    url: "/",
+    siteName: "Productix",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [{ url: `${SITE_URL}/og-image.jpeg`, width: 1200, height: 633, alt: SITE_TITLE }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [`${SITE_URL}/og-image.jpeg`],
+  },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
+  themeColor: "#1fb9b7",
 };
 
 export default function RootLayout({
@@ -59,7 +89,9 @@ export default function RootLayout({
         )}
       >
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <MotionConfig reducedMotion="user">{children}</MotionConfig>
+          </AuthProvider>
         </ThemeProvider>
       </body>
       <GoogleAnalytics gaId="G-17LH6RDHYD" />
