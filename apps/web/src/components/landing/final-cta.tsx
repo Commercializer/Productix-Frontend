@@ -17,13 +17,16 @@ export function FinalCta() {
           and compliance requirements.
         </p>
         <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Link
-            href="/book-a-demo"
+          <button
+            type="button"
+            data-cal-namespace="productix-discovery-call"
+            data-cal-link="commercializer/productix-discovery-call"
+            data-cal-config='{"layout":"month_view","useSlotsViewOnSmallScreen":"true"}'
             className="group inline-flex h-12 items-center gap-2 rounded-full bg-brand-accent px-7 text-[14px] font-semibold text-navy transition-colors hover:bg-teal"
           >
             Book an Assessment
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-          </Link>
+          </button>
           <Link
             href="/company/contact"
             className="inline-flex h-12 items-center rounded-full border border-ink/15 px-6 text-[14px] font-medium text-ink/80 transition-colors hover:border-ink/30 hover:text-ink"

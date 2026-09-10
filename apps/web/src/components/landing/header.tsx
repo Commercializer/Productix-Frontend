@@ -137,15 +137,18 @@ export function Header() {
               >
                 Login
               </Link>
-              <Link
-                href="/book-a-demo"
+              <button
+                type="button"
+                data-cal-namespace="productix-discovery-call"
+                data-cal-link="commercializer/productix-discovery-call"
+                data-cal-config='{"layout":"month_view","useSlotsViewOnSmallScreen":"true"}'
                 className="group inline-flex h-11 items-center gap-3 rounded-full bg-brand-accent pl-5 pr-1.5 text-[13.5px] font-semibold text-navy transition-colors hover:bg-teal"
               >
                 Book a demo
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-navy/15 transition-transform group-hover:translate-x-0.5">
                   <ArrowRight className="h-4 w-4" />
                 </span>
-              </Link>
+              </button>
             </>
           )}
         </div>
@@ -287,13 +290,16 @@ export function Header() {
                   >
                     Login
                   </Link>
-                  <Link
-                    href="/book-a-demo"
+                  <button
+                    type="button"
+                    data-cal-namespace="productix-discovery-call"
+                    data-cal-link="commercializer/productix-discovery-call"
+                    data-cal-config='{"layout":"month_view","useSlotsViewOnSmallScreen":"true"}'
                     onClick={() => setMenuOpen(false)}
                     className="inline-flex h-11 w-full items-center justify-center rounded-full bg-ink text-[14px] font-semibold text-white"
                   >
                     Book a demo
-                  </Link>
+                  </button>
                 </>
               )}
             </div>

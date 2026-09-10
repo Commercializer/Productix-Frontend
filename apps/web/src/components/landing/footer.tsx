@@ -67,7 +67,7 @@ export function Footer() {
             <p className="mt-4 max-w-xs text-[12px] italic leading-relaxed text-ink/40">
               Productix is part of the{" "}
               <a
-                href="https://commercializer.com"
+                href="https://www.commercializer.global"
                 className="underline decoration-ink/20 underline-offset-2 transition-colors hover:text-ink hover:decoration-ink/50"
               >
                 Commercializer
