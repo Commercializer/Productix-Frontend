@@ -58,7 +58,7 @@ export const metadata: Metadata = {
     description:
       "Connect structured product and packaging information to support DPP, PPWR, EPR and evolving digital product requirements.",
     url: CANONICAL,
-    images: [{ url: "/images/beyond-compliance.jpg", alt: "Productix product and packaging compliance data platform" }],
+    images: [{ url: "/images/scan-image.png", alt: "Productix product and packaging compliance data platform" }],
   },
 };
 

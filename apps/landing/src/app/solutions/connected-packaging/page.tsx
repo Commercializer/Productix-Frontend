@@ -65,7 +65,7 @@ export const metadata: Metadata = {
     description:
       "Connect physical packaging to digital product identity, compliance information, engaging experiences and actionable product intelligence.",
     url: CANONICAL,
-    images: [{ url: "/images/beyond-compliance.jpg", alt: "Productix connected packaging platform" }],
+    images: [{ url: "/images/scan-image.png", alt: "Productix connected packaging platform" }],
   },
 };
 

@@ -67,7 +67,7 @@ export const metadata: Metadata = {
     description:
       "Create rich, branded and multilingual digital product experiences that connect customers with product information, stories and engagement.",
     url: CANONICAL,
-    images: [{ url: "/images/product-intelligence.jpg", alt: "Productix digital product experience platform" }],
+    images: [{ url: "/images/Intelligence-image.png", alt: "Productix digital product experience platform" }],
   },
 };
 

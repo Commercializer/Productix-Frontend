@@ -37,7 +37,7 @@ export function ComplianceInMotion() {
         ref={videoRef}
         className="absolute inset-0 h-full w-full object-cover"
         src="/videos/vid2.mp4"
-        poster="/images/beyond-compliance.jpg"
+        poster="/images/scan-image.png"
         autoPlay
         muted
         loop

@@ -69,7 +69,7 @@ export const metadata: Metadata = {
     url: CANONICAL,
     images: [
       {
-        url: "/images/product-intelligence.jpg",
+        url: "/images/Intelligence-image.png",
         alt: "Productix connected product intelligence and analytics",
       },
     ],

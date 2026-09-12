@@ -54,7 +54,7 @@ export const metadata: Metadata = {
     description:
       "Understand connected product interactions through scan, country, product, device, engagement and customer feedback analytics.",
     url: CANONICAL,
-    images: [{ url: "/images/product-intelligence.jpg", alt: "Productix connected product analytics and intelligence platform" }],
+    images: [{ url: "/images/Intelligence-image.png", alt: "Productix connected product analytics and intelligence platform" }],
   },
 };
 

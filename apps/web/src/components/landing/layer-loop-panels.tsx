@@ -1,109 +1,159 @@
 "use client";
 
-import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { BarChart3, ChevronDown, Package, Radio, ShieldCheck, Sparkles, type LucideIcon } from "lucide-react";
-import { useRef, type ReactNode } from "react";
+import { BarChart3, Package, Radio, ShieldCheck, Sparkles, type LucideIcon } from "lucide-react";
+import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "motion/react";
+import Image from "next/image";
+import { useRef, useState, type ReactNode } from "react";
 
-gsap.registerPlugin(ScrollTrigger);
-
-type Layer = { label: string; icon: LucideIcon; color: string };
+type Layer = { label: string; description: string; icon: LucideIcon; color: string; image: string };
 
 const LAYERS: Layer[] = [
-  { label: "Physical Product", icon: Package, color: "#0a1120" },
-  { label: "Digital Identity", icon: Radio, color: "#00ccc6" },
-  { label: "Compliance", icon: ShieldCheck, color: "#10d6e5" },
-  { label: "Experience", icon: Sparkles, color: "#26b9cc" },
-  { label: "Intelligence", icon: BarChart3, color: "#39a5db" },
+  {
+    label: "Physical Product",
+    description:
+      "The tangible product and packaging your customer holds - the starting point for every connected experience.",
+    icon: Package,
+    color: "#192a3a",
+    image: "/images/1.png",
+  },
+  {
+    label: "Digital Identity",
+    description:
+      "A unique digital identity for every product, ready to scan, verify and explore via GS1 Digital Link.",
+    icon: Radio,
+    color: "#00ccc6",
+    image: "/images/2.png",
+  },
+  {
+    label: "Compliance",
+    description:
+      "Structured, verified compliance data for DPP, PPWR and EU regulation, connected directly to the product.",
+    icon: ShieldCheck,
+    color: "#10d6e5",
+    image: "/images/3.png",
+  },
+  {
+    label: "Experience",
+    description:
+      "Branded content and storytelling delivered the moment a product is scanned, explored and remembered.",
+    icon: Sparkles,
+    color: "#26b9cc",
+    image: "/images/4.png",
+  },
+  {
+    label: "Intelligence",
+    description:
+      "Real-time analytics on scans, engagement and sustainability impact across every market.",
+    icon: BarChart3,
+    color: "#39a5db",
+    image: "/images/5.png",
+  },
 ];
 
-// Layered pinning, adapted from GSAP's own demo
-// (https://codepen.io/GreenSock/pen/VwbywPd): each full-viewport panel pins
-// in place ("pinSpacing: false") as the next one scrolls up to cover it.
-// This runs on the real page scroll and isn't looped - once "Intelligence"
-// has covered the rest, scrolling continues straight into whatever section
-// comes next on the page.
+// Each layer gets 65vh of scroll distance to itself while the row below
+// stays pinned in view - the sidebar, image and copy swap as the active
+// layer changes, instead of stacking all five in the normal document flow.
+const STEP_VH = 65;
+
 export function LayerLoopPanels({ heading }: { heading?: ReactNode }) {
-  const rootRef = useRef<HTMLDivElement>(null);
-  const stackRef = useRef<HTMLDivElement>(null);
-  const panelRefs = useRef<HTMLElement[]>([]);
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState(0);
 
-  useGSAP(
-    () => {
-      const mm = gsap.matchMedia();
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start start", "end end"],
+  });
 
-      mm.add("(prefers-reduced-motion: no-preference)", () => {
-        panelRefs.current.forEach((panel) => {
-          ScrollTrigger.create({
-            trigger: panel,
-            start: "top top",
-            pin: true,
-            pinSpacing: false,
-          });
-        });
+  useMotionValueEvent(scrollYProgress, "change", (latest) => {
+    const idx = Math.min(LAYERS.length - 1, Math.max(0, Math.floor(latest * LAYERS.length)));
+    setActive(idx);
+  });
 
-        // Snap the section's own scroll range to the nearest panel.
-        ScrollTrigger.create({
-          trigger: stackRef.current,
-          start: "top top",
-          end: "bottom bottom",
-          snap: 1 / LAYERS.length,
-        });
-      });
-
-      return () => mm.revert();
-    },
-    { scope: rootRef },
-  );
+  const layer = LAYERS[active];
 
   return (
-    <div ref={rootRef} className="relative">
-      {heading}
+    <div className="relative z-10 mx-auto max-w-5xl">
+      <div ref={sectionRef} className="relative" style={{ height: `${LAYERS.length * STEP_VH}vh` }}>
+        <div className="sticky top-20">
+          {heading}
 
-      {/* -mx-6 cancels the parent section's px-6 so panels reach the true
-          viewport edges - full-bleed, matching the reference demo. */}
-      <div ref={stackRef} className="relative -mx-6 mt-16">
-        {LAYERS.map((layer, i) => (
-          <section
-            key={layer.label}
-            ref={(el) => {
-              if (el) panelRefs.current[i] = el;
-            }}
-            className="relative flex h-screen w-full flex-col items-center justify-center gap-6 overflow-hidden px-6 text-center"
-            style={{
-              background: `radial-gradient(120% 90% at 50% -10%, ${layer.color}40, transparent 60%), linear-gradient(180deg, #101c28 0%, #0a1120 100%)`,
-            }}
-          >
-            <span
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0 flex items-center justify-center text-[14rem] leading-none font-black select-none sm:text-[18rem]"
-              style={{ color: layer.color, opacity: 0.12 }}
+          <div className="mt-6 grid grid-cols-1 gap-4 md:mt-8 md:grid-cols-[220px_1fr_320px] md:gap-6">
+            <div className="hidden flex-col rounded-[20px] bg-[#0c1220] p-6 md:flex">
+              <h3 className="text-[1.15rem] leading-tight font-semibold text-white">How Productix Works</h3>
+              <ul className="mt-5 flex flex-col gap-2.5">
+                {LAYERS.map((l, i) => (
+                  <li
+                    key={l.label}
+                    className={`flex items-center gap-2.5 text-[14.5px] transition-colors duration-300 ${
+                      i === active ? "font-medium text-white" : "text-white/40"
+                    }`}
+                  >
+                    <span
+                      className={`relative inline-flex h-1.5 w-1.5 shrink-0 rounded-full transition-colors duration-300 ${
+                        i === active ? "pulse-ring bg-teal text-teal" : "bg-white/20"
+                      }`}
+                      aria-hidden="true"
+                    />
+                    {l.label}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div
+              className="relative aspect-4/3 overflow-hidden rounded-[20px] transition-shadow duration-500 md:aspect-auto md:h-90"
+              style={{ boxShadow: `inset 0 0 0 1px ${layer.color}40` }}
             >
-              {String(i + 1).padStart(2, "0")}
-            </span>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={layer.image}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.35, ease: "easeInOut" }}
+                  className="absolute inset-0"
+                >
+                  <Image
+                    src={layer.image}
+                    alt={layer.label}
+                    fill
+                    sizes="(min-width: 768px) 560px, 100vw"
+                    className="object-cover"
+                  />
+                </motion.div>
+              </AnimatePresence>
+            </div>
 
-            <span
-              className="relative z-10 flex h-20 w-20 items-center justify-center rounded-full"
-              style={{ backgroundColor: `${layer.color}26`, boxShadow: `inset 0 0 0 1px ${layer.color}40` }}
-            >
-              <layer.icon className="h-9 w-9" style={{ color: layer.color }} />
-            </span>
-            <span className="relative z-10 text-[11px] font-semibold tracking-[0.2em] text-white/50 uppercase">
-              Layer {i + 1} / {LAYERS.length}
-            </span>
-            <span className="relative z-10 text-[2rem] leading-[1.15] font-medium tracking-[-0.01em] text-white sm:text-[2.75rem]">
-              {layer.label}
-            </span>
-
-            {i === 0 && (
-              <span className="absolute bottom-10 z-10 flex flex-col items-center gap-1 text-[11px] font-medium tracking-[0.2em] text-white/40 uppercase">
-                Scroll
-                <ChevronDown className="h-4 w-4 animate-bounce" />
-              </span>
-            )}
-          </section>
-        ))}
+            <div className="relative flex flex-col justify-center overflow-hidden rounded-[20px] bg-tint p-6 md:h-90">
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full blur-3xl transition-colors duration-500"
+                style={{ backgroundColor: `${layer.color}33` }}
+              />
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={layer.label}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  className="relative"
+                >
+                  <span
+                    className="flex h-11 w-11 items-center justify-center rounded-2xl"
+                    style={{ backgroundColor: `${layer.color}1a`, color: layer.color }}
+                  >
+                    <layer.icon className="h-5 w-5" />
+                  </span>
+                  <h3 className="mt-5 text-[1.6rem] leading-[1.2] font-medium tracking-[-0.01em] text-ink">
+                    {layer.label}
+                  </h3>
+                  <p className="mt-3 text-[15px] leading-[1.7] text-ink/60">{layer.description}</p>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

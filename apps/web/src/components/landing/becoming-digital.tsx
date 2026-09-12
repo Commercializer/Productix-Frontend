@@ -1,5 +1,3 @@
-import Image from "next/image";
-
 import { LayerLoopPanels } from "./layer-loop-panels";
 import { Reveal } from "./reveal";
 import { SectionGlow } from "./section-glow";
@@ -8,12 +6,6 @@ export function BecomingDigital() {
   return (
     <section className="relative bg-white px-6 py-24 md:py-28">
       <SectionGlow />
-      <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-[70%] overflow-hidden opacity-[0.15] [mask-image:linear-gradient(to_bottom,transparent,black_35%,black_85%,transparent)]"
-        aria-hidden="true"
-      >
-        <Image src="/images/becoming-digital.jpg" alt="" fill sizes="100vw" className="object-cover" />
-      </div>
       <LayerLoopPanels
         heading={
           <Reveal className="relative z-10 mx-auto max-w-2xl text-center">

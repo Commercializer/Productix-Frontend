@@ -51,7 +51,7 @@ export function ProductIntelligence() {
           <Reveal className="h-full">
             <div className="relative h-full min-h-80 overflow-hidden rounded-3xl ring-1 ring-ink/10">
               <Image
-                src="/images/product-intelligence.jpg"
+                src="/images/Intelligence-image.png"
                 alt="A laptop screen displaying a soft, glowing analytics dashboard with charts"
                 fill
                 sizes="(min-width: 1024px) 480px, 100vw"

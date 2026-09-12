@@ -37,7 +37,7 @@ export function ExperienceInMotion() {
         ref={videoRef}
         className="absolute inset-0 h-full w-full object-cover"
         src="/videos/vid3.mp4"
-        poster="/images/product-intelligence.jpg"
+        poster="/images/Intelligence-image.png"
         autoPlay
         muted
         loop

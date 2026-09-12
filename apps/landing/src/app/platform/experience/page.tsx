@@ -53,7 +53,7 @@ export const metadata: Metadata = {
     description:
       "Build branded, multilingual digital product experiences with a flexible visual builder that lets you launch, update and evolve content in seconds.",
     url: CANONICAL,
-    images: [{ url: "/images/product-intelligence.jpg", alt: "Productix digital product experience builder" }],
+    images: [{ url: "/images/Intelligence-image.png", alt: "Productix digital product experience builder" }],
   },
 };
 
