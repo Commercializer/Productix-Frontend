@@ -80,9 +80,9 @@ export function Header() {
       <header className="glass-light mx-auto flex h-14 max-w-6xl items-center justify-between rounded-full pl-5 pr-1.5">
         <Link href="/" className="flex shrink-0 items-center gap-2.5">
           <Image
-            src="/logo-light.png"
+            src="/logo-svg-light.svg"
             alt="Productix"
-            width={128}
+            width={156}
             height={28}
             priority
             className="h-6 w-auto select-none"

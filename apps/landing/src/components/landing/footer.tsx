@@ -54,9 +54,9 @@ export function Footer() {
         <div className="grid grid-cols-2 gap-10 pt-12 sm:grid-cols-3 lg:grid-cols-5">
           <div className="col-span-2">
             <Image
-              src="/logo-light.png"
+              src="/logo-svg-light.svg"
               alt="Productix"
-              width={160}
+              width={201}
               height={36}
               className="h-8 w-auto select-none"
             />
