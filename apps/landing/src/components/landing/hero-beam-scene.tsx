@@ -86,7 +86,7 @@ function SustainableIcon({ className }: IconProps) {
 
 type Node = {
   label: string;
-  description: [string, string];
+  description: [string, string?];
   icon: (props: IconProps) => ReactNode;
   color: string;
   /** Node tile position/size in the 1456x1092 design canvas. */
@@ -270,7 +270,7 @@ const NODES: Node[] = [
   },
   {
     label: "Consumers",
-    description: ["Engage & Build Trust", "Meaningful Connections"],
+    description: ["Engage & Build Trust"],
     icon: ConsumersIcon,
     color: BLUE,
     tile: tile(...BOTTOM_CENTER),
@@ -282,7 +282,7 @@ const NODES: Node[] = [
     },
   },
   {
-    label: "A Sustainable Future",
+    label: "Sustainable Future",
     description: ["Transparency", "Circular Economy"],
     icon: SustainableIcon,
     color: TEAL,
@@ -423,8 +423,12 @@ function NodeTileLabel({ node }: { node: Node }) {
       </p>
       <p className="mt-1 hidden text-[9.5px] leading-snug text-ink/45 sm:block lg:text-[10.5px]">
         {node.description[0]}
-        <br />
-        {node.description[1]}
+        {node.description[1] !== undefined ? (
+          <>
+            <br />
+            {node.description[1]}
+          </>
+        ) : null}
       </p>
     </div>
   );

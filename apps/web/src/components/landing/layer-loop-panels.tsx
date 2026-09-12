@@ -69,7 +69,7 @@ export function LayerLoopPanels({ heading }: { heading?: ReactNode }) {
     setActive(idx);
   });
 
-  const layer = LAYERS[active];
+  const layer = LAYERS[active]!;
 
   return (
     <div className="relative z-10 mx-auto max-w-5xl">
