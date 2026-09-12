@@ -74,7 +74,7 @@ export function BeyondCompliance() {
           <Reveal delay={0} className="h-full">
             <div className="relative h-full min-h-70 overflow-hidden rounded-3xl ring-1 ring-ink/10">
               <Image
-                src="/images/beyond-compliance.jpg"
+                src="/images/scan-image.png"
                 alt="A hand holding a phone, scanning a QR code on a product package"
                 fill
                 sizes="(min-width: 1024px) 300px, (min-width: 640px) 50vw, 100vw"

@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, useMotionValue } from "motion/react";
+import Image from "next/image";
 import { Fragment, useId, useRef, useState, type ReactNode, type RefObject } from "react";
 
 /**
@@ -572,9 +573,13 @@ export function HeroBeamScene() {
         }}
       >
         <div className="flex h-full w-full flex-col items-center justify-center gap-0.5 rounded-[18%] bg-white">
-          <span className="text-[15px] font-extrabold italic leading-none text-gradient-brand sm:text-[18px] lg:text-[20px]">
-            Px
-          </span>
+          <Image
+            src="/icon.png"
+            alt="Productix"
+            width={64}
+            height={64}
+            className="h-[46%] w-[46%] select-none"
+          />
           <span className="text-[6px] font-semibold uppercase tracking-[0.08em] text-ink/60 sm:text-[7px] lg:text-[8px]">
             productix
           </span>

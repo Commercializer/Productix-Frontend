@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart3, Package, Radio, ShieldCheck, Sparkles, type LucideIcon } from "lucide-react";
+import { ArrowDown, BarChart3, Package, Radio, ShieldCheck, Sparkles, type LucideIcon } from "lucide-react";
 import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "motion/react";
 import Image from "next/image";
 import { useRef, useState, type ReactNode } from "react";
@@ -71,6 +71,22 @@ export function LayerLoopPanels({ heading }: { heading?: ReactNode }) {
 
   const layer = LAYERS[active]!;
 
+  const goToLayer = (i: number) => {
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const rect = section.getBoundingClientRect();
+    const sectionTop = rect.top + window.scrollY;
+    const scrollRange = rect.height - window.innerHeight;
+    const progress = (i + 0.5) / LAYERS.length;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    window.scrollTo({
+      top: sectionTop + progress * scrollRange,
+      behavior: reduceMotion ? "auto" : "smooth",
+    });
+  };
+
   return (
     <div className="relative z-10 mx-auto max-w-5xl">
       <div ref={sectionRef} className="relative" style={{ height: `${LAYERS.length * STEP_VH}vh` }}>
@@ -80,21 +96,37 @@ export function LayerLoopPanels({ heading }: { heading?: ReactNode }) {
           <div className="mt-6 grid grid-cols-1 gap-4 md:mt-8 md:grid-cols-[220px_1fr_320px] md:gap-6">
             <div className="hidden flex-col rounded-[20px] bg-[#0c1220] p-6 md:flex">
               <h3 className="text-[1.15rem] leading-tight font-semibold text-white">How Productix Works</h3>
-              <ul className="mt-5 flex flex-col gap-2.5">
+              <ul className="mt-5 flex flex-col">
                 {LAYERS.map((l, i) => (
-                  <li
-                    key={l.label}
-                    className={`flex items-center gap-2.5 text-[14.5px] transition-colors duration-300 ${
-                      i === active ? "font-medium text-white" : "text-white/40"
-                    }`}
-                  >
-                    <span
-                      className={`relative inline-flex h-1.5 w-1.5 shrink-0 rounded-full transition-colors duration-300 ${
-                        i === active ? "pulse-ring bg-teal text-teal" : "bg-white/20"
+                  <li key={l.label} className="flex flex-col">
+                    <button
+                      type="button"
+                      onClick={() => goToLayer(i)}
+                      aria-current={i === active ? "step" : undefined}
+                      className={`-mx-1.5 flex items-center gap-2.5 rounded-md px-1.5 py-0.5 text-left text-[14.5px] transition-colors duration-300 hover:text-white/80 ${
+                        i === active ? "font-medium text-white" : "text-white/40"
                       }`}
-                      aria-hidden="true"
-                    />
-                    {l.label}
+                    >
+                      <span className="flex h-4 w-4 shrink-0 items-center justify-center">
+                        <span
+                          className={`relative inline-flex h-1.5 w-1.5 rounded-full transition-colors duration-300 ${
+                            i === active ? "pulse-ring bg-teal text-teal" : "bg-white/20"
+                          }`}
+                          aria-hidden="true"
+                        />
+                      </span>
+                      {l.label}
+                    </button>
+                    {i < LAYERS.length - 1 && (
+                      <div className="flex h-5 w-full items-center justify-start pl-[42px]" aria-hidden="true">
+                        <ArrowDown
+                          className={`h-3 w-3 transition-colors duration-300 ${
+                            i < active ? "text-teal" : "text-white/15"
+                          }`}
+                          strokeWidth={2.25}
+                        />
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
