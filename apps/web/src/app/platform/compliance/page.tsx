@@ -30,6 +30,7 @@ import {
   Statement,
 } from "@/components/landing/detail-sections";
 import { CalButton } from "@/components/landing/cal-button";
+import { ComplianceInMotion } from "@/components/landing/compliance-in-motion";
 import { Footer } from "@/components/landing/footer";
 import { Header } from "@/components/landing/header";
 import { Reveal } from "@/components/landing/reveal";
@@ -169,6 +170,8 @@ export default function CompliancePage() {
         primary={{ label: "Assess Your Readiness", href: "/book-a-demo" }}
         secondary={{ label: "Explore Productix Connect", href: "/platform/connect" }}
       />
+
+      <ComplianceInMotion />
 
       <DetailSection bg="white">
         <SectionHeading
