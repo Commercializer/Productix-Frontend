@@ -1,14 +1,10 @@
 import {
-  Blocks,
   Building2,
   CheckCircle2,
   Copy,
   Globe,
   Layers,
-  LayoutGrid,
-  MousePointer2,
   Package,
-  Palette,
   ScanLine,
   Send,
   Sparkles,
@@ -31,6 +27,7 @@ import { ExperienceInMotion } from "@/components/landing/experience-in-motion";
 import { Footer } from "@/components/landing/footer";
 import { Header } from "@/components/landing/header";
 import { Reveal } from "@/components/landing/reveal";
+import { VisualBuilderShowcase } from "@/components/landing/visual-builder-showcase";
 
 const CANONICAL = "https://www.productix.io/platform/experience";
 
@@ -59,30 +56,6 @@ export const metadata: Metadata = {
     images: [{ url: "/images/product-intelligence.jpg", alt: "Productix digital product experience builder" }],
   },
 };
-
-const BUILDER_FEATURES: { icon: LucideIcon; title: string; description: string }[] = [
-  { icon: MousePointer2, title: "Drag & Drop", description: "Build and arrange content visually." },
-  {
-    icon: LayoutGrid,
-    title: "Flexible Layouts",
-    description: "Create the structure your product needs instead of forcing content into a fixed template.",
-  },
-  {
-    icon: Blocks,
-    title: "Rich Content",
-    description: "Combine text, images, video, documents, links, buttons and interactive content.",
-  },
-  {
-    icon: Palette,
-    title: "Brand Control",
-    description: "Bring your visual identity, storytelling and campaign language directly into the product experience.",
-  },
-  {
-    icon: Copy,
-    title: "Reusable Components",
-    description: "Create consistent building blocks across products and markets.",
-  },
-];
 
 const BRAND_CONTROLS = [
   "Brand identity",
@@ -158,22 +131,7 @@ export default function ExperiencePage() {
         </Reveal>
       </DetailSection>
 
-      <DetailSection id="builder" bg="cream" flip>
-        <SectionHeading
-          eyebrow="Visual Experience Builder"
-          title="Build Product Experiences Without Code."
-          description="Create rich, mobile-first product pages with a visual builder designed for marketing and product teams."
-        />
-        <p className="mt-12 text-center text-[13px] font-semibold uppercase tracking-[0.14em] text-ink/40">
-          Feature points
-        </p>
-        <div className="mt-6">
-          <IconGrid items={BUILDER_FEATURES} columns="sm:grid-cols-2 lg:grid-cols-3" />
-        </div>
-        <Reveal delay={150} className="mt-10">
-          <Statement>If you can build a page, you can build a Productix experience.</Statement>
-        </Reveal>
-      </DetailSection>
+      <VisualBuilderShowcase />
 
       <DetailSection bg="white" maxWidth="max-w-3xl">
         <SectionHeading

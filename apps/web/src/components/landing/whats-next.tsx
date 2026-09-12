@@ -64,7 +64,7 @@ export function WhatsNext() {
           ))}
         </div>
 
-        <Reveal delay={120}>
+        <Reveal delay={120} className="mt-14">
           <div className="glass-panel relative flex flex-col items-start gap-6 overflow-hidden rounded-3xl px-8 py-10 sm:flex-row sm:items-center sm:justify-between">
             <div
               className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-linear-to-br from-teal/25 to-sky/25 blur-2xl"
