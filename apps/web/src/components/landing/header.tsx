@@ -20,8 +20,8 @@ const NAV: NavEntry[] = [
   {
     label: "Platform",
     items: PLATFORM_PILLARS.map((p) => ({
-      label: p.title,
-      description: p.name,
+      label: p.name,
+      description: p.title,
       href: `/platform/${p.slug}`,
       icon: p.icon,
     })),

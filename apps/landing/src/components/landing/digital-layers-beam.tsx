@@ -69,20 +69,28 @@ function LayerCard({
       .toString(16)
       .padStart(2, "0")}`,
   );
+  // Icon gets its own pop-in (scale + rotate) on top of the card's fade/lift,
+  // so the reveal reads as two coordinated motions instead of one flat one.
+  const iconScale = useTransform(scrollYProgress, (v) => interpolate(v, [rampStart, rampEnd], [0.5, 1]));
+  const iconRotate = useTransform(scrollYProgress, (v) => interpolate(v, [rampStart, rampEnd], [-20, 0]));
 
   return (
     <motion.div
       ref={cardRef}
       style={{ opacity, y, scale, boxShadow }}
-      className="glass-light relative z-10 flex w-32 flex-col items-center gap-2 rounded-2xl px-3 py-4 text-center"
+      className="glass-light relative z-10 flex w-32 flex-col items-center gap-2 rounded-2xl px-3 pt-4 pb-4 text-center"
     >
-      <span
-        className="flex h-9 w-9 items-center justify-center rounded-full"
-        style={{ backgroundColor: `${layer.color}1a` }}
+      <motion.span
+        style={{ scale: iconScale, rotate: iconRotate, backgroundColor: `${layer.color}1a` }}
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
       >
         <layer.icon className="h-4 w-4" style={{ color: layer.color }} />
-      </span>
-      <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-ink/70">
+      </motion.span>
+      {/* Fixed-height slot (fits the longest, two-line labels) so every
+          card is the same total height regardless of its label's line
+          count - otherwise items-center centers each card on its own
+          height and the icons drift off a shared line. */}
+      <span className="flex min-h-[28px] w-full items-center justify-center text-[11px] font-semibold uppercase leading-[1.15] tracking-[0.06em] text-ink/70">
         {layer.label}
       </span>
     </motion.div>
