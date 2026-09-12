@@ -27,6 +27,7 @@ import {
   SectionHeading,
   Statement,
 } from "@/components/landing/detail-sections";
+import { ExperienceInMotion } from "@/components/landing/experience-in-motion";
 import { Footer } from "@/components/landing/footer";
 import { Header } from "@/components/landing/header";
 import { Reveal } from "@/components/landing/reveal";
@@ -127,6 +128,8 @@ export default function ExperiencePage() {
         primary={{ label: "Explore the Experience Builder", href: "#builder" }}
         secondary={{ label: "Book a Demo", href: "/book-a-demo" }}
       />
+
+      <ExperienceInMotion />
 
       <DetailSection bg="white">
         <SectionHeading
